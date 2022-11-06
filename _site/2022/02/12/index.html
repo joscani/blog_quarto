@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.258">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="jlcr">
+<meta name="dcterms.date" content="2022-02-12">
+
+<title>Muestrear no es pecado - Mediator. Full luxury bayes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-posts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Posts</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-posts">    
+        <li>
+    <a class="dropdown-item" href="../../../archive.html">
+ <span class="dropdown-text">Posts_nuevos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../2022.html">
+ <span class="dropdown-text">Posts 2022</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Mediator. Full luxury bayes</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">bayesian</div>
+                <div class="quarto-category">estadística</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>jlcr </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 12, 2022</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#datos-simulados" id="toc-datos-simulados" class="nav-link active" data-scroll-target="#datos-simulados">Datos simulados</a></li>
+  <li><a href="#full-luxury-bayes" id="toc-full-luxury-bayes" class="nav-link" data-scroll-target="#full-luxury-bayes">Full luxury bayes</a></li>
+  <li><a href="#pensamientos-finales" id="toc-pensamientos-finales" class="nav-link" data-scroll-target="#pensamientos-finales">Pensamientos finales</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>Continuando con la serie sobre cosas de inferencia causal y full luxury bayes, antes de que empiece mi amigo <a href="https://www.datanalytics.com/">Carlos Gil</a>, y dónde seguramente se aprenderá más.</p>
+<p>Este ejemplo viene motivado precisamente por una charla que tuve el otro día con él.</p>
+<p>Sea el siguiente diagrama causal</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(dagitty)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggdag)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">dagitty</span>(<span class="st">"dag{ </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="st">  x -&gt; y ;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="st">  z -&gt; y ;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="st">  x -&gt; z</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st"> }"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggdag</span>(g) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="index_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Se tiene que <code>z</code> es un mediador entre x e y, y la teoría nos dice que si quiero obtener el efecto directo de x sobre y he de condicionar por <code>z</code> , y efectivamente, así nos lo dice el backdoor criterio. Mientras que si quiero el efecto total de x sobre y no he de condicionar por <code>z</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adjustmentSets</span>(g, <span class="at">exposure =</span> <span class="st">"x"</span>, <span class="at">outcome =</span> <span class="st">"y"</span>, <span class="at">effect =</span> <span class="st">"total"</span>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> {}</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adjustmentSets</span>(g, <span class="at">exposure =</span> <span class="st">"x"</span>, <span class="at">outcome =</span> <span class="st">"y"</span>, <span class="at">effect =</span> <span class="st">"direct"</span>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{ z }</code></pre>
+</div>
+</div>
+<section id="datos-simulados" class="level2">
+<h2 class="anchored" data-anchor-id="datos-simulados">Datos simulados</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">155</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">1000</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N, <span class="dv">2</span>, <span class="dv">1</span>) </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N, <span class="dv">4</span><span class="sc">+</span> <span class="dv">4</span><span class="sc">*</span>x , <span class="dv">2</span> ) <span class="co"># a z le ponemos más variabilidad, pero daría igual</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N, <span class="dv">2</span><span class="sc">+</span> <span class="dv">3</span><span class="sc">*</span>x <span class="sc">+</span> z, <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Efecto total de x sobre y </strong></p>
+<p>Tal y como hemos simulado los datos, se esperaría que el efecto <em>total</em> de x sobre y fuera</p>
+<p><span class="math display">\[ \dfrac{cov(x,y)} {var(x)} \approx 7 \]</span></p>
+<p>Y qué el efecto <em>directo</em> fuera de 3</p>
+<p>Efectivamente</p>
+<p>Efecto total</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># efecto total</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y<span class="sc">~</span>x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y ~ x)
+
+Coefficients:
+(Intercept)            x  
+      5.881        7.112  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># efecto directo</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y<span class="sc">~</span>x<span class="sc">+</span>z)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y ~ x + z)
+
+Coefficients:
+(Intercept)            x            z  
+     2.0318       3.0339       0.9945  </code></pre>
+</div>
+</div>
+</section>
+<section id="full-luxury-bayes" class="level2">
+<h2 class="anchored" data-anchor-id="full-luxury-bayes">Full luxury bayes</h2>
+<p>Hagamos lo mismo pero estimando el dag completo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cmdstanr)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rethinking)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set_cmdstan_path</span>(<span class="st">"~/Descargas/cmdstan/"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">N =</span> N,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> x,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> y,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> z</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1908</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>flbi <span class="ot">&lt;-</span> <span class="fu">ulam</span>(</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">alist</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># x model, si quiero estimar la media de x sino, no me hace falta</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">~</span> <span class="fu">normal</span>(mux, k),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    mux <span class="ot">&lt;-</span> a0,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    z <span class="sc">~</span> <span class="fu">normal</span>( mu , sigma ),</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    mu <span class="ot">&lt;-</span> a1 <span class="sc">+</span> bx <span class="sc">*</span> x,</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    y <span class="sc">~</span> <span class="fu">normal</span>( nu , tau ),</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    nu <span class="ot">&lt;-</span> a2 <span class="sc">+</span> bx2 <span class="sc">*</span> x <span class="sc">+</span> bz <span class="sc">*</span> z,</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># priors</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(a0,a1,a2,bx,bx2, bz) <span class="sc">~</span> <span class="fu">normal</span>( <span class="dv">0</span> , <span class="fl">0.5</span> ),</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(sigma,tau, k) <span class="sc">~</span> <span class="fu">exponential</span>( <span class="dv">1</span> )</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  ), <span class="at">data=</span>dat , <span class="at">chains=</span><span class="dv">10</span> , <span class="at">cores=</span><span class="dv">10</span> , <span class="at">warmup =</span> <span class="dv">500</span>, <span class="at">iter=</span><span class="dv">2000</span> , <span class="at">cmdstan=</span><span class="cn">TRUE</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Running MCMC with 10 parallel chains, with 1 thread(s) per chain...
+
+Chain 1 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 2 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 3 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 3 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 4 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 5 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 6 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 7 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 8 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 9 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 10 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 4 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 8 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 1 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 7 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 9 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 5 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 6 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 10 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 2 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 6 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 9 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 10 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 3 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 5 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 1 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 8 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 4 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 6 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 7 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 10 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 6 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 2 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 5 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 10 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 1 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 3 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 9 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 8 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 4 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 6 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 6 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 7 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 10 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 10 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 2 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 5 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 9 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 1 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 6 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 3 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 8 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 4 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 6 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 10 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 2 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 7 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 5 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 5 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 9 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 9 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 6 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 1 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 1 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 3 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 3 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 8 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 8 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 10 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 4 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 4 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 6 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 5 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 7 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 7 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 9 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 2 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 2 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 8 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 10 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 1 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 3 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 6 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 4 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 5 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 6 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 8 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 10 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 9 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 2 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 7 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 1 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 6 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 3 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 8 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 10 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 5 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 4 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 6 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 9 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 2 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 7 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 1 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 8 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 3 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 6 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 10 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 5 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 6 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 9 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 2 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 4 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 8 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 7 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 10 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 1 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 3 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 6 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 5 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 8 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 9 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 6 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 10 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 2 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 4 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 1 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 7 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 3 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 8 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 6 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 10 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 5 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 9 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 2 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 6 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 8 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 1 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 3 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 4 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 10 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 7 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 5 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 6 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 9 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 6 finished in 7.9 seconds.
+Chain 2 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 8 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 1 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 10 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 3 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 4 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 5 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 7 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 9 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 8 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 10 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 2 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 5 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 9 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 1 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 3 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 8 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 4 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 10 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 5 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 7 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 9 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 1 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 2 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 3 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 5 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 8 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 10 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 9 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 4 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 5 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 7 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 9 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 2 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 8 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 10 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 10 finished in 10.1 seconds.
+Chain 1 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 3 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 5 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 9 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 4 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 8 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 3 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 7 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 1 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 2 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 5 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 9 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 4 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 3 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 8 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 8 finished in 11.0 seconds.
+Chain 9 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 5 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 5 finished in 11.2 seconds.
+Chain 9 finished in 11.2 seconds.
+Chain 1 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 2 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 3 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 7 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 4 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 2 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 1 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 3 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 7 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 4 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 1 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 2 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 7 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 3 finished in 12.2 seconds.
+Chain 4 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 2 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 1 finished in 12.5 seconds.
+Chain 7 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 4 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 2 finished in 12.8 seconds.
+Chain 7 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 4 finished in 13.1 seconds.
+Chain 7 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 7 finished in 13.2 seconds.
+
+All 10 chains finished successfully.
+Mean chain execution time: 11.5 seconds.
+Total execution time: 13.3 seconds.</code></pre>
+</div>
+</div>
+<p>Y recuperamos los coeficientes y varianzas</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">precis</span>(flbi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           mean         sd      5.5%    94.5%     n_eff     Rhat4
+bz    1.0131931 0.01557219 0.9883466 1.038241  8226.042 1.0005919
+bx2   2.9610334 0.07098661 2.8447278 3.073501  9640.122 1.0004040
+bx    4.1535508 0.06180592 4.0552767 4.252771  8753.661 1.0001456
+a2    1.9440850 0.09315785 1.7952495 2.093027 11266.267 1.0001373
+a1    3.7089914 0.13578637 3.4916007 3.926010  8709.448 1.0002893
+a0    1.9857103 0.03108199 1.9357773 2.035712 16252.310 0.9997523
+k     0.9719412 0.02166791 0.9378896 1.007410 15276.158 0.9999036
+tau   0.9859183 0.02216068 0.9512944 1.021932 15735.140 1.0001540
+sigma 1.9636543 0.04382554 1.8950489 2.034130 15855.098 1.0000898</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># extraemos 10000 muestras de la posteriori </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>post <span class="ot">&lt;-</span> <span class="fu">extract.samples</span>(flbi, <span class="at">n =</span> <span class="dv">10000</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y el efecto directo de x sobre y sería</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(post<span class="sc">$</span>bx2, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    2.5%      50%    97.5% 
+2.823659 2.962330 3.099855 </code></pre>
+</div>
+</div>
+<p>En este ejemplo sencillo, podríamos estimar el efecto causal de x sobre y simplemente sumando las posterioris</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(post<span class="sc">$</span>bx <span class="sc">+</span> post<span class="sc">$</span>bx2, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    2.5%      50%    97.5% 
+6.928046 7.114180 7.299252 </code></pre>
+</div>
+</div>
+<p>También podríamos obtener el efecto causal total de x sobre y simulando una intervención. En este caso, al ser la variable continua, lo que queremos obtener como de diferente es y cuando <span class="math inline">\(X = x_i\)</span> versus cuando <span class="math inline">\(X = x_i+1\)</span>.</p>
+<p>Siempre podríamos ajustar otro modelo bayesiano dónde no tuviéramos en cuenta a z y obtendríamos la estimación de ese efecto total de x sobre y, pero siguiendo a Rubin y Gelman, la idea es incluir en nuestro modelo toda la información disponible. Y tal y como dice Richard McElreath , <a href="https://github.com/rmcelreath/stat_rethinking_2022">Statistical Rethinking 2022</a>, el efecto causal se puede estimar simulando la intervención.</p>
+<p>Así que el objetivo es dado nuestro modelo que incluye la variable z, simular la intervención cuando <span class="math inline">\(X = x_i\)</span> y cuando <span class="math inline">\(X = x_i+1\)</span> y una estimación del efecto directo es la resta de ambas distribuciones a posteriori de y.</p>
+<p>Creamos función para calcular el efecto de la intervención <code>y_do_x</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>get_total_effect <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">x_value =</span> <span class="dv">0</span>, <span class="at">incremento =</span> <span class="fl">0.5</span>) {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">length</span>(post<span class="sc">$</span>bx)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(post, {</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># simulate z, y  for x= x_value</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    z_x0 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, a1 <span class="sc">+</span> bx <span class="sc">*</span> x_value  , sigma)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    y_x0 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, a2  <span class="sc">+</span> bz <span class="sc">*</span> z_x0 <span class="sc">+</span> bx <span class="sc">*</span> x_value , tau)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># simulate z,y for x= x_value +1 </span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    z_x1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, a1 <span class="sc">+</span> bx <span class="sc">*</span> (x_value <span class="sc">+</span> incremento)  , sigma)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    y_x1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, a2  <span class="sc">+</span> bz <span class="sc">*</span> z_x1 <span class="sc">+</span> bx2 <span class="sc">*</span> (x_value <span class="sc">+</span> incremento) , tau)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># compute contrast</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    y_do_x <span class="ot">&lt;-</span> (y_x1 <span class="sc">-</span> y_x0) <span class="sc">/</span> incremento</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(y_do_x)</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Dado un valor de x, podemos calcular el efecto total</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>y_do_x_0_2 <span class="ot">&lt;-</span> <span class="fu">get_total_effect</span>(<span class="at">x_value =</span> <span class="fl">0.2</span>) </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(y_do_x_0_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        0%        25%        50%        75%       100% 
+-15.324628   2.395551   6.702379  10.987520  28.909002 </code></pre>
+</div>
+</div>
+<p>Podríamos hacer lo mismo para varios valores de x</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>x_seq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="at">length =</span> <span class="dv">1000</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>y_do_x <span class="ot">&lt;-</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mclapply</span>(x_seq,  <span class="cf">function</span>(lambda)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">get_total_effect</span>(<span class="at">x_value =</span> lambda))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y para cada uno de estos 1000 valores tendría 10000 valores de su efecto total de x sobre y.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(y_do_x[[<span class="dv">500</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(y_do_x[[<span class="dv">500</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]   9.839792  14.319618   4.533996  16.899879  15.140380 -12.237945</code></pre>
+</div>
+</div>
+<p>Calculamos los intervalos de credibilidad del efecto total de x sobre y para cada valor de x.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lo hacemos simplemente por cuantiles, aunque podríamos calcular el hdi también, </span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>intervalos_credibilidad <span class="ot">&lt;-</span>  <span class="fu">mclapply</span>( y_do_x, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>)))</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Media e intervalor de credibilidad para el valor de x_seq en la posición 500 </span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(y_do_x[[<span class="dv">500</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7.157054</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>intervalos_credibilidad[[<span class="dv">500</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     2.5%       50%     97.5% 
+-5.108428  7.108147 19.521261 </code></pre>
+</div>
+</div>
+<p><strong>intervalo de predicción clásico con el lm</strong></p>
+<p>Habría que calcular la predicción de y para un valor de x y para el de x + 1, podemos calcular los intervalos de predicción clásicos parea cada valor de x, pero no para la diferencia ( al menos con la función predict)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>mt_lm <span class="ot">&lt;-</span> <span class="fu">lm</span>(y<span class="sc">~</span>x)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(mt_lm, <span class="at">newdata =</span> <span class="fu">list</span>(<span class="at">x=</span> x_seq[[<span class="dv">500</span>]]), <span class="at">interval  =</span> <span class="st">"prediction"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       fit      lwr     upr
+1 5.877439 1.578777 10.1761</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(mt_lm, <span class="at">newdata =</span> <span class="fu">list</span>(<span class="at">x=</span> x_seq[[<span class="dv">500</span>]] <span class="sc">+</span><span class="dv">1</span>), <span class="at">interval  =</span> <span class="st">"prediction"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       fit      lwr     upr
+1 12.98993 8.698051 17.2818</code></pre>
+</div>
+</div>
+<p><strong>Pero como sería obtener el intervalo de credibilidad para la media de los efectos totales?</strong></p>
+<p>Calculando para cada valor de x la media de la posteriori del efecto global y juntando todas las medias.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>slopes_mean <span class="ot">&lt;-</span> <span class="fu">lapply</span>(y_do_x, mean)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(<span class="fu">unlist</span>(slopes_mean), <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    2.5%      50%    97.5% 
+6.020193 7.160083 8.307472 </code></pre>
+</div>
+</div>
+<p>Que tiene mucha menos variabilidad que el efecto global en un valor concreto de x, o si juntamos todas las estimaciones</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(<span class="fu">unlist</span>(y_do_x),  <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     2.5%       50%     97.5% 
+-5.226904  7.174074 19.556935 </code></pre>
+</div>
+</div>
+<p>Evidentemente, podríamos simplemente no haber tenido en cuenta la variable z en nuestro modelo bayesiano.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>flbi_2 <span class="ot">&lt;-</span> <span class="fu">ulam</span>(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">alist</span>(</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># x model, si quiero estimar la media de x sino, no me hace falta</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">~</span> <span class="fu">normal</span>(mux, k),</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    mux <span class="ot">&lt;-</span> a1,</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    y <span class="sc">~</span> <span class="fu">normal</span>( nu , tau ),</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    nu <span class="ot">&lt;-</span> a2 <span class="sc">+</span> bx <span class="sc">*</span> x ,</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># priors</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(a1,a2,bx) <span class="sc">~</span> <span class="fu">normal</span>( <span class="dv">0</span> , <span class="fl">0.5</span> ),</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(tau, k) <span class="sc">~</span> <span class="fu">exponential</span>( <span class="dv">1</span> )</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>  ), <span class="at">data=</span>dat , <span class="at">chains=</span><span class="dv">10</span> , <span class="at">cores=</span><span class="dv">10</span> , <span class="at">warmup =</span> <span class="dv">500</span>, <span class="at">iter=</span><span class="dv">2000</span> , <span class="at">cmdstan=</span><span class="cn">TRUE</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Running MCMC with 10 parallel chains, with 1 thread(s) per chain...
+
+Chain 1 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 1 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 1 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 1 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 1 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 2 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 2 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 2 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 2 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 2 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 3 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 3 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 3 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 4 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 4 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 4 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 4 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 5 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 5 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 5 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 5 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 5 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 6 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 6 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 7 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 7 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 7 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 8 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 8 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 8 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 9 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 9 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 9 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 10 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 10 Iteration:  100 / 2000 [  5%]  (Warmup) 
+Chain 1 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 1 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 1 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 2 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 2 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 2 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 3 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 3 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 4 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 4 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 4 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 4 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 5 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 5 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 6 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 6 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 6 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 7 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 7 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 8 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 9 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 10 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 1 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 1 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 2 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 3 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 3 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 4 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 4 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 5 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 5 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 6 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 6 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 6 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 7 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 7 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 8 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 8 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 8 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 9 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 9 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 9 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 10 Iteration:  300 / 2000 [ 15%]  (Warmup) 
+Chain 1 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 2 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 2 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 3 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 3 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 4 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 4 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 5 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 6 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 6 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 7 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 8 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 9 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 10 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 1 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 2 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 3 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 4 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 4 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 5 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 6 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 6 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 6 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 7 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 8 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 9 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 9 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 10 Iteration:  500 / 2000 [ 25%]  (Warmup) 
+Chain 10 Iteration:  501 / 2000 [ 25%]  (Sampling) 
+Chain 10 Iteration:  600 / 2000 [ 30%]  (Sampling) 
+Chain 1 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 1 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 2 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 2 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 3 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 4 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 4 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 4 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 5 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 5 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 6 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 6 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 7 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 8 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 8 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 9 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 10 Iteration:  700 / 2000 [ 35%]  (Sampling) 
+Chain 1 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 2 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 3 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 3 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 4 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 4 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 5 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 6 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 6 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 7 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 8 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 9 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 10 Iteration:  800 / 2000 [ 40%]  (Sampling) 
+Chain 10 Iteration:  900 / 2000 [ 45%]  (Sampling) 
+Chain 1 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 2 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 3 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 4 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 4 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 5 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 6 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 6 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 7 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 7 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 8 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 8 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 9 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 9 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 10 Iteration: 1000 / 2000 [ 50%]  (Sampling) 
+Chain 1 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 1 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 2 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 2 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 3 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 3 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 5 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 6 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 6 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 6 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 7 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 8 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 9 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 10 Iteration: 1100 / 2000 [ 55%]  (Sampling) 
+Chain 10 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 4 finished in 1.1 seconds.
+Chain 6 finished in 1.1 seconds.
+Chain 1 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 2 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 3 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 3 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 3 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 5 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 5 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 7 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 7 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 8 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 8 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 9 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 9 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 10 Iteration: 1300 / 2000 [ 65%]  (Sampling) 
+Chain 1 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 1 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 2 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 2 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 3 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 3 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 5 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 7 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 7 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 8 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 9 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 10 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 5 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 5 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 7 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 7 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 8 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 8 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 9 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 9 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 10 Iteration: 1500 / 2000 [ 75%]  (Sampling) 
+Chain 10 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 1 finished in 1.5 seconds.
+Chain 2 finished in 1.5 seconds.
+Chain 3 finished in 1.4 seconds.
+Chain 5 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 7 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 7 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 8 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 8 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 9 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 9 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 10 Iteration: 1700 / 2000 [ 85%]  (Sampling) 
+Chain 10 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 10 Iteration: 1900 / 2000 [ 95%]  (Sampling) 
+Chain 5 finished in 1.5 seconds.
+Chain 7 finished in 1.5 seconds.
+Chain 8 finished in 1.5 seconds.
+Chain 9 finished in 1.5 seconds.
+Chain 10 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 10 finished in 1.5 seconds.
+
+All 10 chains finished successfully.
+Mean chain execution time: 1.4 seconds.
+Total execution time: 1.8 seconds.</code></pre>
+</div>
+</div>
+<p>Y obtenemos directamente el efecto total de x sobre y.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">precis</span>(flbi_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         mean         sd      5.5%    94.5%    n_eff     Rhat4
+bx  7.1948083 0.06787458 7.0863389 7.302933 10446.14 1.0001211
+a2  5.6085615 0.14948341 5.3685467 5.848723 10598.69 1.0001680
+a1  1.9860307 0.03058033 1.9368689 2.034631 14116.13 1.0004122
+k   0.9721054 0.02159773 0.9382407 1.006761 15044.78 0.9995902
+tau 2.1898100 0.04953736 2.1120600 2.269831 14995.33 0.9999084</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>post2 <span class="ot">&lt;-</span> <span class="fu">extract.samples</span>(flbi_2,  <span class="at">n =</span> <span class="dv">10000</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(post2<span class="sc">$</span>bx, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    2.5%      50%    97.5% 
+7.061389 7.194525 7.327361 </code></pre>
+</div>
+</div>
+</section>
+<section id="pensamientos-finales" class="level2">
+<h2 class="anchored" data-anchor-id="pensamientos-finales">Pensamientos finales</h2>
+<ul>
+<li><p>Parece que no es tan mala idea incluir en tu modelo bayesiano toda la información disponible.</p></li>
+<li><p>Ser pluralista es una buena idea, usando el backdoor criterio dado que nuestro dag sea correcto, nos puede llevar a un modelo más simple y fácil de estimar.</p></li>
+<li><p>Como dije en el último <a href="https://muestrear-no-es-pecado.netlify.app/2022/02/09/2022-02-09/">post</a>, estimar todo el dag de forma conjunta puede ser útil en varias situaciones.</p></li>
+<li><p>Ya en 2009 se hablaba de esto <a href="https://statmodeling.stat.columbia.edu/2009/07/10/rubinism_separa/">aquí</a></p></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"loop":true,"selector":".lightbox","descPosition":"bottom","closeEffect":"zoom","openEffect":"zoom"});</script>
+
+
+
+</body></html>
