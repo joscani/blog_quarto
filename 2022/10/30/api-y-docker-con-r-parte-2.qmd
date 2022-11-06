@@ -1,0 +1,349 @@
+---
+title: Api y docker con R. parte 2
+execute: 
+  eval: false
+author: jlcr
+date: '2022-10-30'
+categories:
+  - api
+  - docker
+  - R
+---
+
+En la entrada de [api y docker con R parte I](https://muestrear-no-es-pecado.netlify.app/2022/10/12/api-y-docker-con-r-parte-1/) veíamos que es muy fácil construir una api y dockerizarla para tener un modelo bayesiano en producción.
+Pero hay un pequeño incoveniente, el docker que hemos creado se base en [rocker/verse](https://rocker-project.org/images/) que se basan en ubuntu.
+Y ubuntu ocupa mucho.
+Pero gracias a gente como Gabor Csardi (autor entre otras librerías de `igraph`), tenemos [r-hub/minimal](https://github.com/r-hub/r-minimal), que permiten tener una imagen de docker con R basadas en alpine, de hecho una imagen de docker con R y dplyr son unos 50 mb.
+
+Lo primero de todo es ver cuánto ocupa el docker creado en el primer post.
+
+``` bash
+╰─ $ ▶ docker image ls mi_modelo_brms
+REPOSITORY       TAG       IMAGE ID       CREATED       SIZE
+mi_modelo_brms   latest    9e641ec2c150   3 weeks ago   3.42GB
+```
+
+Pues son unos cuántos gigas, mayoritariamente al estar basado en ubuntu y al que los docker de rocker/verse instalan todo el software de R recomendado, los ficheros de ayuda, las capacidades gráficas, etc..
+
+Pero con r-hub/minimal podemos dejar bastante limpio el tema.
+Leyendo el Readme del repo vemos que han configurado una utilidad a la que llaman `installr` que permite instalar librerías del sistema o de R, instalando los compiladores de C, fortran etc que haga falta y eliminarlos una vez están compiladas la librerías.
+
+Sin más, cambiamos el Dockerfile del otro día por este otro .
+
+``` bash
+
+# Docker file para modelo brms
+
+FROM rhub/r-minimal:4.2.1
+
+
+RUN installr -d -a linux-headers ps
+
+RUN installr -d -a "curl-dev linux-headers gfortran libcurl libxml2 libsodium-dev libsodium automake autoconf"
+
+RUN installr -d Matrix MASS mgcv future codetools brms plumber tidybayes
+
+## Copio el modelo y el fichero de la api
+COPY brms_model.rds /opt/ml/brms_model.rds
+COPY plumber.R /opt/ml/plumber.R
+
+# exponemos el puerto
+EXPOSE 8081
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb('/opt/ml/plumber.R'); pr$run(host = '0.0.0.0', port = 8081)"]
+```
+
+Y haciendo `docker build -t mi_modelo_brms_rminimal .` pasado un rato puesto que ha de compilar las librerías tenemos nuestra api dockerizada con la misma funcionalidad que el otro día.
+
+Y con un tamaño mucho más contenido
+
+``` bash
+  ╰─ $ ▶ docker image ls
+REPOSITORY                    TAG                    IMAGE ID       CREATED         SIZE
+mi_modelo_brms_rminimal       latest                 8d791d2ebc74   2 hours ago     665MB
+```
+
+que se va a unos 655 mb, de los cuales unos 300 MB se deben a `stan` y `rstan`.
+Pero vamos, no está mal, pasar de 3.4 Gb a 665MB.
+
+## Actualización, usando renv
+
+Por temas de buenas prácticas es recomendable usar `renv` para crear el archivo `renv.lock` dónde se guarda qué versión de las librerías estamos usando, y además porque usa por defecto un repo con las librerías compiladas.
+
+Lo primero que hago es crearme un nuevo proyecto dónde pongo el modelo entrenado que queremos usar `brms_model.rds` que entrené en el primer post y el fichero `plumber.R` y ningún fichero más.
+
+Fichero **plumber.R**
+
+```{r, eval =FALSE}
+
+#
+# This is a Plumber API. In RStudio 1.2 or newer you can run the API by
+# clicking the 'Run API' button above.
+#
+# In RStudio 1.1 or older, see the Plumber documentation for details
+# on running the API.
+#
+# Find out more about building APIs with Plumber here:
+#
+#    https://www.rplumber.io/
+#
+# save as bos_rf_score.R
+
+library(brms)
+library(plumber)
+library(tidybayes)
+
+brms_model <- readRDS("brms_model.rds")
+
+
+#* @apiTitle brms predict Api
+#* @apiDescription Endpoints for working with brms model
+## ---- filter-logger
+#* Log some information about the incoming request
+#* @filter logger
+function(req){
+    cat(as.character(Sys.time()), "-",
+        req$REQUEST_METHOD, req$PATH_INFO, "-",
+        req$HTTP_USER_AGENT, "@", req$REMOTE_ADDR, "\n")
+    forward()
+}
+
+## ---- post-data
+#* Submit data and get a prediction in return
+#* @post /predict
+function(req, res) {
+    data <- tryCatch(jsonlite::parse_json(req$postBody, simplifyVector = TRUE),
+                     error = function(e) NULL)
+    if (is.null(data)) {
+        res$status <- 400
+        return(list(error = "No data submitted"))
+    }
+    
+    predict(brms_model, data) |>
+        as.data.frame()
+}
+
+
+#* @post /full_posterior
+function(req, res) {
+    data <- tryCatch(jsonlite::parse_json(req$postBody, simplifyVector = TRUE),
+                     error = function(e) NULL)
+    if (is.null(data)) {
+        res$status <- 400
+        return(list(error = "No data submitted"))
+    }
+    
+    add_epred_draws(data, brms_model) 
+    
+}
+
+
+```
+
+A continuación activo `renv` en el proyecto
+
+```{r, eval = FALSE}
+ renv::activate()
+* Project '~/Rstudio_projects/r-api-minimal' loaded. [renv 0.16.0]
+
+
+```
+
+Una vez que está activado y el fichero plumber.R está creado en el directorio uso `hydrate` para que encuentre qué librerías se usan en el proyecto
+
+```{r, eval = FALSE}
+
+> renv::hydrate()
+* Discovering package dependencies ... Done!
+* Copying packages into the cache ... Done!
+```
+
+y ya podemos crear el fichero `renv::snapshot()`, donde pone todas las librerías que se van a instalar y si vienen de CRAN , de GitHub o de RSPM(rstudio package manager)
+
+```{r, eval = FALSE}
+renv::snapshot()
+The following package(s) will be updated in the lockfile:
+
+# CRAN ===============================
+- Matrix           [* -> 1.5-1]
+- R6               [* -> 2.5.1]
+- RColorBrewer     [* -> 1.1-3]
+- Rcpp             [* -> 1.0.9]
+- base64enc        [* -> 0.1-3]
+- bslib            [* -> 0.4.0]
+- cachem           [* -> 1.0.6]
+- codetools        [* -> 0.2-18]
+- colorspace       [* -> 2.0-3]
+- ellipsis         [* -> 0.3.2]
+- fansi            [* -> 1.0.3]
+- farver           [* -> 2.1.1]
+- fastmap          [* -> 1.1.0]
+- generics         [* -> 0.1.3]
+- ggplot2          [* -> 3.3.6]
+- htmltools        [* -> 0.5.3]
+- jquerylib        [* -> 0.1.4]
+- labeling         [* -> 0.4.2]
+- lattice          [* -> 0.20-45]
+- lifecycle        [* -> 1.0.3]
+- magrittr         [* -> 2.0.3]
+- memoise          [* -> 2.0.1]
+- mgcv             [* -> 1.8-40]
+- mime             [* -> 0.12]
+- munsell          [* -> 0.5.0]
+- pkgconfig        [* -> 2.0.3]
+- prettyunits      [* -> 1.1.1]
+- processx         [* -> 3.7.0]
+- ps               [* -> 1.7.1]
+- rappdirs         [* -> 0.3.3]
+- rprojroot        [* -> 2.0.3]
+- sass             [* -> 0.4.2]
+- stringi          [* -> 1.7.8]
+- tibble           [* -> 3.1.8]
+- utf8             [* -> 1.2.2]
+- withr            [* -> 2.5.0]
+
+# GitHub =============================
+- glue             [* -> jimhester/fstrings@HEAD]
+
+# RSPM ===============================
+- BH               [* -> 1.78.0-0]
+- Brobdingnag      [* -> 1.2-9]
+- DT               [* -> 0.26]
+- HDInterval       [* -> 0.2.2]
+- MASS             [* -> 7.3-58.1]
+- RcppEigen        [* -> 0.3.3.9.2]
+- RcppParallel     [* -> 5.1.5]
+- StanHeaders      [* -> 2.21.0-7]
+- abind            [* -> 1.4-5]
+- arrayhelpers     [* -> 1.1-0]
+- backports        [* -> 1.4.1]
+- bayesplot        [* -> 1.9.0]
+- bridgesampling   [* -> 1.1-2]
+- brms             [* -> 2.18.0]
+- callr            [* -> 3.7.2]
+- checkmate        [* -> 2.1.0]
+- cli              [* -> 3.4.1]
+- coda             [* -> 0.19-4]
+- colourpicker     [* -> 1.1.1]
+- commonmark       [* -> 1.8.1]
+- cpp11            [* -> 0.4.3]
+- crayon           [* -> 1.5.2]
+- crosstalk        [* -> 1.2.0]
+- curl             [* -> 4.3.3]
+- desc             [* -> 1.4.2]
+- digest           [* -> 0.6.30]
+- distributional   [* -> 0.3.1]
+- dplyr            [* -> 1.0.10]
+- dygraphs         [* -> 1.1.1.6]
+- fontawesome      [* -> 0.3.0]
+- fs               [* -> 1.5.2]
+- future           [* -> 1.28.0]
+- ggdist           [* -> 3.2.0]
+- ggridges         [* -> 0.5.4]
+- globals          [* -> 0.16.1]
+- gridExtra        [* -> 2.3]
+- gtable           [* -> 0.3.1]
+- gtools           [* -> 3.9.3]
+- htmlwidgets      [* -> 1.5.4]
+- httpuv           [* -> 1.6.6]
+- igraph           [* -> 1.3.5]
+- inline           [* -> 0.3.19]
+- isoband          [* -> 0.2.6]
+- jsonlite         [* -> 1.8.2]
+- later            [* -> 1.3.0]
+- lazyeval         [* -> 0.2.2]
+- listenv          [* -> 0.8.0]
+- loo              [* -> 2.5.1]
+- markdown         [* -> 1.2]
+- matrixStats      [* -> 0.62.0]
+- miniUI           [* -> 0.1.1.1]
+- mvtnorm          [* -> 1.1-3]
+- nleqslv          [* -> 3.3.3]
+- nlme             [* -> 3.1-160]
+- numDeriv         [* -> 2016.8-1.1]
+- parallelly       [* -> 1.32.1]
+- pillar           [* -> 1.8.1]
+- pkgbuild         [* -> 1.3.1]
+- plumber          [* -> 1.2.1]
+- plyr             [* -> 1.8.7]
+- posterior        [* -> 1.3.1]
+- promises         [* -> 1.2.0.1]
+- purrr            [* -> 0.3.5]
+- renv             [* -> 0.16.0]
+- reshape2         [* -> 1.4.4]
+- rlang            [* -> 1.0.6]
+- rstan            [* -> 2.21.7]
+- rstantools       [* -> 2.2.0]
+- scales           [* -> 1.2.1]
+- shiny            [* -> 1.7.2]
+- shinyjs          [* -> 2.1.0]
+- shinystan        [* -> 2.6.0]
+- shinythemes      [* -> 1.2.0]
+- sodium           [* -> 1.2.1]
+- sourcetools      [* -> 0.1.7]
+- stringr          [* -> 1.4.1]
+- svUnit           [* -> 1.0.6]
+- swagger          [* -> 3.33.1]
+- tensorA          [* -> 0.36.2]
+- threejs          [* -> 0.3.3]
+- tidybayes        [* -> 3.0.2]
+- tidyr            [* -> 1.2.1]
+- tidyselect       [* -> 1.2.0]
+- vctrs            [* -> 0.4.2]
+- viridisLite      [* -> 0.4.1]
+- webutils         [* -> 1.1]
+- xfun             [* -> 0.34]
+- xtable           [* -> 1.8-4]
+- xts              [* -> 0.12.2]
+- yaml             [* -> 2.3.6]
+- zoo              [* -> 1.8-11]
+
+The version of R recorded in the lockfile will be updated:
+- R                [*] -> [4.2.1]
+
+Do you want to proceed? [y/N]: y
+* Lockfile written to '~/Rstudio_projects/r-api-minimal/renv.lock'.
+
+
+```
+
+Y ya sólo queda crear el Dockerfile usando como base r-hub/minimal
+
+**Dockerfile**
+
+``` bash
+# Docker file para modelo brms
+
+FROM rhub/r-minimal:4.2.1
+
+# copio fichero de las librerías
+COPY renv.lock renv.lock
+
+# uso -c para que se queden instaladas los compiladores de c y fortran
+
+RUN installr -c -a "curl-dev linux-headers gfortran libcurl libxml2 libsodium-dev libsodium automake autoconf"
+
+#instalo renv
+RUN installr -c renv
+
+# uso renv para instlar la versión de las librerías que hay en renv.lock
+RUN Rscript -e "renv::restore()"
+
+## Copio el modelo y el fichero de la api
+COPY brms_model.rds /opt/ml/brms_model.rds
+COPY plumber.R /opt/ml/plumber.R
+
+# exponemos el puerto
+EXPOSE 8081
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb('/opt/ml/plumber.R'); pr$run(host = '0.0.0.0', port = 8081)"]
+```
+
+y como antes construimos el docker image
+
+``` bash
+docker build -t mi_modelo_brms_rminimal_renv .
+```
+
+El docker usando renv es sustancialmente más pesado, ocupa 1.29 Gb
+
+Seguramente se puede optimizar más si no usara `brms`, puesto que importa shinystan, bayesplot y otras librerías que no son estrictamente necesarias para nuestro propósito.
+Habrá que esperar a que [Virgilio](https://twitter.com/precariobecario) haga la función predict de INLA para darle una vuelta a esto

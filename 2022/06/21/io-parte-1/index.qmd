@@ -1,0 +1,363 @@
+---
+title: IO Parte 1
+author: jlcr
+date: '2022-06-21'
+slug: io-parte-1
+categories:
+  - estadística
+  - R python
+  - R
+tags:
+  - estadística
+  - Investigación operativa
+  - R
+  - Julia
+  - julia
+description: ''
+topics: []
+---
+
+
+Allá por el año 1997 más o menos andaba yo estudiando Investigación Operativa  en la Universidad de Granada. Recuerdo aprender el archiconocido algoritmo del simplex y algo también sobre programación entera (dónde el dominio de las variables está en $\mathcal{Z}$ ).  No se me daba muy bien al principio, pero si recuerdo que luego me acabó gustando y el día que encuentre mis apuntes os pondré una demostración que desarrollé para un teorema que tenía algo que ver con la relación entre espacio primal y el dual. 
+
+Bueno, dejando de lado las batallitas de final del siglo pasado y debido a que estuve hace poco en la SEIO 2022 en Granada y coincidí con grandes profesionales de este tema, como por ejemplo el gran [Alberto Torrejón Valenzuela](https://twitter.com/albertorrejval), estoy convencido de que la investigación operativa es una de las grandes áreas que aún queda por explotar en las empresas. 
+
+Se lleva haciendo Investigación Operativa desde hace tiempo, véase [esto](https://es.wikipedia.org/wiki/George_Dantzig). Por otro lado creo que va a ser el próximo _hype_  por las señales que estoy viendo, la primera de ellas es el cambio de nombre de la materia, ahora estoy empezando escuchar __*Analítica prescriptiva*__ en vez de Investigación Operativa. Y como es norma en este mundillo, el cambio de nombre precede a la ¿burbuja?. 
+
+
+Pues vamos al grano, en esto de la investigación operativa se ha desarrollado mucho software para resolver este tipo de problemas, a partir de ahora los llamaremos _solvers_. Dentro de estos podemos destacar solvers comerciales como CPlex y Gurobi, pero también hay software libre como [GLPK](https://www.gnu.org/software/glpk/) dentro del proyecto GNU, o sin olvidarnos de la fundación  [COIN-OR](https://www.coin-or.org/) dónde se han desarrollado muchos _solvers_ de manera opensource.
+
+
+
+Dentro de nuestros 3 lenguajes favoritos (R, Julia y Python) hay librerías que permiten hacer de _API_ para los diferentes _solvers_, tanto los de software libre como los comerciales. Paso a enumerar 3 proyectos, uno para cada lenguaje  y pongo enlace.
+
+* R: [R Optimization Infrastructure](https://roi.r-forge.r-project.org/)
+* Julia: [JuMP](https://jump.dev/JuMP.jl/stable/)
+* Python: [Pyomo](http://www.pyomo.org/)
+
+
+En realidad, en principio uno podría decir que se trata sólo de sintaxis y que da igual cual uses pues al final todos utilizan los mismos solvers en el  _backend_ . No obstante, hay problemas en los que la misma construcción del mismo para pasárselo al solver puede tardar bastante y, según [esto](https://arxiv.org/pdf/1508.01982.pdf),  JuMP parece estar a la altura con respecto a los softwares comerciales como GAMS en la  generación del modelo y envío al solver.
+
+![](Jump_benchmark.png)
+
+
+
+Veamos ahora un ejemplillo tonto de programación lineal y cual es la sintaxis (al fin y al cabo es sólo eso) en cada uno de los lenguajes. 
+
+
+Tenemos el siguiente problema de programación lineal 
+
+![](pl_example.png)
+
+Y el objetivo es encontrar los valores de x e y que cumpliendo las restricciones minimicen la función 7x + 8y. Para los 3 lenguajes vamos a usar __GLPK__ como solver
+
+
+## R
+
+
+
+```r
+library(ROI)
+```
+
+```
+## ROI: R Optimization Infrastructure
+```
+
+```
+## Registered solver plugins: nlminb, alabama, glpk.
+```
+
+```
+## Default solver: auto.
+```
+
+```r
+library(ROI.plugin.glpk)
+```
+
+Hay que definir el objetivo, las restricciones y los límites de la variable. Para las restricciones en R hay que poner los coeficientes en forma de matriz , de ahí el uso de rbind
+
+
+
+```r
+objetivo          = L_objective(c(7, 8), names = c("x", "y"))
+restricciones     = L_constraint(L = rbind(c(3, 4), c(2, 1)),
+                                   dir = c("==", ">="),
+                                   rhs = c(9, 3))
+limites_variables = V_bound(
+  li = 1:2,
+  ui = 1:2,
+  lb = c(-100, -Inf),
+  ub = c(Inf, 100)
+)
+```
+
+
+Ahora usamos la función `OP` que es el constructor del problema, por defecto considera que se trata de un problema de maximización `OP(objective, constraints, types, bounds, maximum = FALSE)` 
+
+
+```r
+lp  <- OP(
+  objective = objetivo,
+  constraints = restricciones,
+  bounds = limites_variables
+)
+ROI_applicable_solvers(lp)
+```
+
+```
+## [1] "alabama" "glpk"
+```
+
+
+Resolvemos con  `glpk`
+
+
+```r
+(sol <- ROI_solve(lp, solver = "glpk"))
+```
+
+```
+## Optimal solution found.
+## The objective value is: 1.860000e+01
+```
+
+Y vemos cuáles son los valores de x e y que minimizan la función objetivo
+
+```r
+solution(sol)
+```
+
+```
+##   x   y 
+## 0.6 1.8
+```
+
+
+## Julia
+
+En Julia tenemos [este librito online](https://juliabook.chkwon.net/book/frontmatter)  que va contando estupendamente como usar `JuMP` y las diferentes formas de utilizarlo. 
+
+
+
+```julia
+
+
+using JuMP, GLPK
+
+m = Model(GLPK.Optimizer)
+```
+
+```
+## A JuMP Model
+## Feasibility problem with:
+## Variables: 0
+## Model mode: AUTOMATIC
+## CachingOptimizer state: EMPTY_OPTIMIZER
+## Solver name: GLPK
+```
+
+```julia
+
+# Variables y límites
+@variable(m, -100 <= x)
+```
+
+```
+## x
+```
+
+```julia
+@variable(m, y <= 100)
+```
+
+```
+## y
+```
+
+```julia
+
+# Objtivo
+@objective(m, Min, 7x + 8y)
+```
+
+```
+## 7 x + 8 y
+```
+
+```julia
+
+# restricciones
+@constraint(m, constraint1, 3x +  4y == 9)
+```
+
+```
+## constraint1 : 3 x + 4 y = 9.0
+```
+
+```julia
+@constraint(m, constraint2,  2x + 1y  >= 3)
+```
+
+```
+## constraint2 : 2 x + y ≥ 3.0
+```
+
+```julia
+
+# Solving the optimization problem
+JuMP.optimize!(m)
+
+# Printing the optimal solutions obtained
+println("Optimal Solutions:")
+```
+
+```
+## Optimal Solutions:
+```
+
+```julia
+println("x = ", JuMP.value(x))
+```
+
+```
+## x = 0.5999999999999943
+```
+
+```julia
+println("y = ", JuMP.value(y))
+```
+
+```
+## y = 1.8000000000000114
+```
+
+La verdad que me ha gustado la sintaxis de `JuMP` , es casi un calco de como lo escribirías a mano. Como curiosidad fijaros en que se puede poner 
+`3x +  4y == 9` , y no hace falta poner `3 * x  + 4 * y` 
+
+Otra curiosidad es que desde Julia puedes obtener el modelo en latex 
+
+
+```julia
+latex_formulation(m)
+```
+
+```
+## $$ \begin{aligned}
+## \min\quad & 7 x + 8 y\\
+## \text{Subject to} \quad & 3 x + 4 y = 9.0\\
+##  & 2 x + y \geq 3.0\\
+##  & x \geq -100.0\\
+##  & y \leq 100.0\\
+## \end{aligned} $$
+```
+
+
+## Python
+
+En python usaremos pyomo, el cual también tiene una sintaxis clara. 
+
+
+
+
+```python
+from pyomo.environ import *
+```
+
+
+```python
+
+model = ConcreteModel()
+model.x = Var(domain=NonNegativeReals)
+model.y = Var(domain=NonNegativeReals)
+
+model.objetivo = Objective(expr = 7*model.x + 8*model.y, sense=minimize)
+
+model.constraint1 = Constraint(expr = 3* model.x +  4*model.y == 9)
+model.constraint2 = Constraint(expr = 2*model.x + 1*model.y  >= 3)
+```
+
+
+```python
+results = SolverFactory('glpk').solve(model)
+```
+
+
+
+```python
+if results.solver.status == 'ok':
+    model.pprint()
+```
+
+```
+## 2 Var Declarations
+##     x : Size=1, Index=None
+##         Key  : Lower : Value : Upper : Fixed : Stale : Domain
+##         None :     0 :   0.6 :  None : False : False : NonNegativeReals
+##     y : Size=1, Index=None
+##         Key  : Lower : Value : Upper : Fixed : Stale : Domain
+##         None :     0 :   1.8 :  None : False : False : NonNegativeReals
+## 
+## 1 Objective Declarations
+##     objetivo : Size=1, Index=None, Active=True
+##         Key  : Active : Sense    : Expression
+##         None :   True : minimize : 7*x + 8*y
+## 
+## 2 Constraint Declarations
+##     constraint1 : Size=1, Index=None, Active=True
+##         Key  : Lower : Body      : Upper : Active
+##         None :   9.0 : 3*x + 4*y :   9.0 :   True
+##     constraint2 : Size=1, Index=None, Active=True
+##         Key  : Lower : Body    : Upper : Active
+##         None :   3.0 : 2*x + y :  +Inf :   True
+## 
+## 5 Declarations: x y objetivo constraint1 constraint2
+```
+
+
+
+
+```python
+print('Objetivo = ', model.objetivo())
+```
+
+```
+## Objetivo =  18.6
+```
+
+```python
+print('\nDecision Variables')
+```
+
+```
+## 
+## Decision Variables
+```
+
+```python
+print('x = ', model.x())
+```
+
+```
+## x =  0.6
+```
+
+```python
+print('y = ', model.y())
+```
+
+```
+## y =  1.8
+```
+
+## Miscelánea
+
+La investigación operativa es un campo muy amplio, desde problemas de asignación de turnos, optimizar contenedores en grandes buques  que pasan por varios puertos, optimización de gasto en medios para maximizar ventas (Marketing Mix Modelling), problemas de localización (dónde poner una tienda o gasolinera nueva dada una demanda existente y competencia), problemas de grafos, etc.  
+
+Hay muchos investigadores que se están dedicando a resolver este tipo de cosas, y dónde no se trata tanto de usar tal o cual solver, sino de formular bien el problema, ya que diferentes formulaciones del mismo problema igualmente válidas dan lugar a tiempos de cómputo muy diferentes. No es de extrañar que se tarden muchas horas en encontrar soluciones a problemas determinados. 
+
+Por otro lado, no puedo dejar de señalar el problema de los incentivos perversos. Me explico, a los investigadores que están en estos temas se les valora por paper publicado en revista de alto impacto, por lo que una vez le han publicado un artículo pasan al siguiente, olvidando la necesaria transferencia entre universidad y empresa. No es culpa suya, el sistema funciona así. Así que animo a todos aquellos que se dedican en serio a estos temas a meter la patita en el mundo de la empresa. Hay mucho trabajo que hacer y dinero que ganar. 
+
+
+

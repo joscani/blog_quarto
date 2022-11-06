@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.258">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="jlcr">
+<meta name="dcterms.date" content="2022-10-30">
+
+<title>Muestrear no es pecado - Api y docker con R. parte 2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-posts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Posts</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-posts">    
+        <li>
+    <a class="dropdown-item" href="../../../archive.html">
+ <span class="dropdown-text">Posts_nuevos</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../2022.html">
+ <span class="dropdown-text">Posts 2022</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Api y docker con R. parte 2</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">api</div>
+                <div class="quarto-category">docker</div>
+                <div class="quarto-category">R</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>jlcr </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">October 30, 2022</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#actualización-usando-renv" id="toc-actualización-usando-renv" class="nav-link active" data-scroll-target="#actualización-usando-renv">Actualización, usando renv</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>En la entrada de <a href="https://muestrear-no-es-pecado.netlify.app/2022/10/12/api-y-docker-con-r-parte-1/">api y docker con R parte I</a> veíamos que es muy fácil construir una api y dockerizarla para tener un modelo bayesiano en producción. Pero hay un pequeño incoveniente, el docker que hemos creado se base en <a href="https://rocker-project.org/images/">rocker/verse</a> que se basan en ubuntu. Y ubuntu ocupa mucho. Pero gracias a gente como Gabor Csardi (autor entre otras librerías de <code>igraph</code>), tenemos <a href="https://github.com/r-hub/r-minimal">r-hub/minimal</a>, que permiten tener una imagen de docker con R basadas en alpine, de hecho una imagen de docker con R y dplyr son unos 50 mb.</p>
+<p>Lo primero de todo es ver cuánto ocupa el docker creado en el primer post.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">╰─</span> $ ▶ docker image ls mi_modelo_brms</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">REPOSITORY</span>       TAG       IMAGE ID       CREATED       SIZE</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mi_modelo_brms</span>   latest    9e641ec2c150   3 weeks ago   3.42GB</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Pues son unos cuántos gigas, mayoritariamente al estar basado en ubuntu y al que los docker de rocker/verse instalan todo el software de R recomendado, los ficheros de ayuda, las capacidades gráficas, etc..</p>
+<p>Pero con r-hub/minimal podemos dejar bastante limpio el tema. Leyendo el Readme del repo vemos que han configurado una utilidad a la que llaman <code>installr</code> que permite instalar librerías del sistema o de R, instalando los compiladores de C, fortran etc que haga falta y eliminarlos una vez están compiladas la librerías.</p>
+<p>Sin más, cambiamos el Dockerfile del otro día por este otro .</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Docker file para modelo brms</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">FROM</span> rhub/r-minimal:4.2.1</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> installr <span class="at">-d</span> <span class="at">-a</span> linux-headers ps</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> installr <span class="at">-d</span> <span class="at">-a</span> <span class="st">"curl-dev linux-headers gfortran libcurl libxml2 libsodium-dev libsodium automake autoconf"</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> installr <span class="at">-d</span> Matrix MASS mgcv future codetools brms plumber tidybayes</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">## Copio el modelo y el fichero de la api</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">COPY</span> brms_model.rds /opt/ml/brms_model.rds</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ex">COPY</span> plumber.R /opt/ml/plumber.R</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># exponemos el puerto</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="ex">EXPOSE</span> 8081</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="ex">ENTRYPOINT</span> [<span class="st">"R"</span>, <span class="st">"-e"</span>, <span class="st">"pr &lt;- plumber::plumb('/opt/ml/plumber.R'); pr</span><span class="va">$run</span><span class="st">(host = '0.0.0.0', port = 8081)"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Y haciendo <code>docker build -t mi_modelo_brms_rminimal .</code> pasado un rato puesto que ha de compilar las librerías tenemos nuestra api dockerizada con la misma funcionalidad que el otro día.</p>
+<p>Y con un tamaño mucho más contenido</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="ex">╰─</span> $ ▶ docker image ls</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">REPOSITORY</span>                    TAG                    IMAGE ID       CREATED         SIZE</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mi_modelo_brms_rminimal</span>       latest                 8d791d2ebc74   2 hours ago     665MB</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>que se va a unos 655 mb, de los cuales unos 300 MB se deben a <code>stan</code> y <code>rstan</code>. Pero vamos, no está mal, pasar de 3.4 Gb a 665MB.</p>
+<section id="actualización-usando-renv" class="level2">
+<h2 class="anchored" data-anchor-id="actualización-usando-renv">Actualización, usando renv</h2>
+<p>Por temas de buenas prácticas es recomendable usar <code>renv</code> para crear el archivo <code>renv.lock</code> dónde se guarda qué versión de las librerías estamos usando, y además porque usa por defecto un repo con las librerías compiladas.</p>
+<p>Lo primero que hago es crearme un nuevo proyecto dónde pongo el modelo entrenado que queremos usar <code>brms_model.rds</code> que entrené en el primer post y el fichero <code>plumber.R</code> y ningún fichero más.</p>
+<p>Fichero <strong>plumber.R</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a Plumber API. In RStudio 1.2 or newer you can run the API by</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># clicking the 'Run API' button above.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># In RStudio 1.1 or older, see the Plumber documentation for details</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># on running the API.</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Find out more about building APIs with Plumber here:</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#    https://www.rplumber.io/</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># save as bos_rf_score.R</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plumber)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>brms_model <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"brms_model.rds"</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#* @apiTitle brms predict Api</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#* @apiDescription Endpoints for working with brms model</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="do">## ---- filter-logger</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#* Log some information about the incoming request</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#* @filter logger</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="cf">function</span>(req){</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">as.character</span>(<span class="fu">Sys.time</span>()), <span class="st">"-"</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        req<span class="sc">$</span>REQUEST_METHOD, req<span class="sc">$</span>PATH_INFO, <span class="st">"-"</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        req<span class="sc">$</span>HTTP_USER_AGENT, <span class="st">"@"</span>, req<span class="sc">$</span>REMOTE_ADDR, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">forward</span>()</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="do">## ---- post-data</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#* Submit data and get a prediction in return</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#* @post /predict</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="cf">function</span>(req, res) {</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    data <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(jsonlite<span class="sc">::</span><span class="fu">parse_json</span>(req<span class="sc">$</span>postBody, <span class="at">simplifyVector =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>                     <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(data)) {</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>        res<span class="sc">$</span>status <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">error =</span> <span class="st">"No data submitted"</span>))</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict</span>(brms_model, data) <span class="sc">|&gt;</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.data.frame</span>()</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="co">#* @post /full_posterior</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="cf">function</span>(req, res) {</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    data <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(jsonlite<span class="sc">::</span><span class="fu">parse_json</span>(req<span class="sc">$</span>postBody, <span class="at">simplifyVector =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>                     <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(data)) {</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>        res<span class="sc">$</span>status <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">error =</span> <span class="st">"No data submitted"</span>))</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">add_epred_draws</span>(data, brms_model) </span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A continuación activo <code>renv</code> en el proyecto</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a> renv<span class="sc">::</span><span class="fu">activate</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="sc">*</span> Project <span class="st">'~/Rstudio_projects/r-api-minimal'</span> loaded. [renv <span class="dv">0</span>.<span class="fl">16.0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Una vez que está activado y el fichero plumber.R está creado en el directorio uso <code>hydrate</code> para que encuentre qué librerías se usan en el proyecto</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> renv<span class="sc">::</span><span class="fu">hydrate</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="sc">*</span> Discovering package dependencies ... Done<span class="sc">!</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="er">*</span> Copying packages into the cache ... Done<span class="sc">!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>y ya podemos crear el fichero <code>renv::snapshot()</code>, donde pone todas las librerías que se van a instalar y si vienen de CRAN , de GitHub o de RSPM(rstudio package manager)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">snapshot</span>()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>The following <span class="fu">package</span>(s) will be updated <span class="cf">in</span> the lockfile<span class="sc">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CRAN ===============================</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> Matrix           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.5</span><span class="dv">-1</span>]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> R6               [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">5.1</span>]</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> RColorBrewer     [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.1</span><span class="dv">-3</span>]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> Rcpp             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.9</span>]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> base64enc        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.1</span><span class="dv">-3</span>]</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> bslib            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.0</span>]</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> cachem           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.6</span>]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> codetools        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.2</span><span class="dv">-18</span>]</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> colorspace       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">2.0</span><span class="dv">-3</span>]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> ellipsis         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.2</span>]</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> fansi            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.3</span>]</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> farver           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">1.1</span>]</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> fastmap          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">1.0</span>]</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> generics         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">1.3</span>]</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> ggplot2          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">3.6</span>]</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> htmltools        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">5.3</span>]</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> jquerylib        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">1.4</span>]</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> labeling         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.2</span>]</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> lattice          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.20</span><span class="dv">-45</span>]</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> lifecycle        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.3</span>]</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> magrittr         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">0.3</span>]</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> memoise          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">0.1</span>]</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> mgcv             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.8</span><span class="dv">-40</span>]</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> mime             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.12</span>]</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> munsell          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">5.0</span>]</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> pkgconfig        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">0.3</span>]</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> prettyunits      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">1.1</span>]</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> processx         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">7.0</span>]</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> ps               [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">7.1</span>]</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> rappdirs         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.3</span>]</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> rprojroot        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">0.3</span>]</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> sass             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.2</span>]</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> stringi          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">7.8</span>]</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> tibble           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">1.8</span>]</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> utf8             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.2</span>]</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> withr            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">5.0</span>]</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co"># GitHub =============================</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> glue             [<span class="sc">*</span> <span class="ot">-&gt;</span> jimhester<span class="sc">/</span>fstrings<span class="sc">@</span>HEAD]</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="co"># RSPM ===============================</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> BH               [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">78.0</span><span class="dv">-0</span>]</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> Brobdingnag      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.2</span><span class="dv">-9</span>]</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> DT               [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.26</span>]</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> HDInterval       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">2.2</span>]</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> MASS             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">7.3-58.1</span>]</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> RcppEigen        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="dv">3</span>.<span class="dv">3</span>.<span class="fl">9.2</span>]</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> RcppParallel     [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">5</span>.<span class="fl">1.5</span>]</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> StanHeaders      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">21.0</span><span class="dv">-7</span>]</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> abind            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.4</span><span class="dv">-5</span>]</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> arrayhelpers     [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.1</span><span class="dv">-0</span>]</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> backports        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">4.1</span>]</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> bayesplot        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">9.0</span>]</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> bridgesampling   [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.1</span><span class="dv">-2</span>]</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> brms             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">18.0</span>]</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> callr            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">7.2</span>]</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> checkmate        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">1.0</span>]</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> cli              [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">4.1</span>]</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> coda             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.19</span><span class="dv">-4</span>]</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> colourpicker     [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">1.1</span>]</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> commonmark       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">8.1</span>]</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> cpp11            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.3</span>]</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> crayon           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">5.2</span>]</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> crosstalk        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.0</span>]</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> curl             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">4</span>.<span class="fl">3.3</span>]</span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> desc             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">4.2</span>]</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> digest           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">6.30</span>]</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> distributional   [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.1</span>]</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> dplyr            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.10</span>]</span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> dygraphs         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="dv">1</span>.<span class="fl">1.6</span>]</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> fontawesome      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.0</span>]</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> fs               [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">5.2</span>]</span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> future           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">28.0</span>]</span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> ggdist           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">2.0</span>]</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> ggridges         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">5.4</span>]</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> globals          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">16.1</span>]</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> gridExtra        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">2.3</span>]</span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> gtable           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.1</span>]</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> gtools           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">9.3</span>]</span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> htmlwidgets      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">5.4</span>]</span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> httpuv           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">6.6</span>]</span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> igraph           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">3.5</span>]</span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> inline           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.19</span>]</span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> isoband          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">2.6</span>]</span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> jsonlite         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">8.2</span>]</span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> later            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">3.0</span>]</span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> lazyeval         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">2.2</span>]</span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> listenv          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">8.0</span>]</span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> loo              [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">5.1</span>]</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> markdown         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.2</span>]</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> matrixStats      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">62.0</span>]</span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> miniUI           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="dv">1</span>.<span class="fl">1.1</span>]</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> mvtnorm          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.1</span><span class="dv">-3</span>]</span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> nleqslv          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">3.3</span>]</span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> nlme             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">3.1</span><span class="dv">-160</span>]</span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> numDeriv         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">2016.8-1.1</span>]</span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> parallelly       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">32.1</span>]</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> pillar           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">8.1</span>]</span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> pkgbuild         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">3.1</span>]</span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> plumber          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.1</span>]</span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> plyr             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">8.7</span>]</span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> posterior        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">3.1</span>]</span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> promises         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="dv">2</span>.<span class="fl">0.1</span>]</span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> purrr            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.5</span>]</span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> renv             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">16.0</span>]</span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> reshape2         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">4.4</span>]</span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> rlang            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.6</span>]</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> rstan            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">21.7</span>]</span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> rstantools       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">2.0</span>]</span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> scales           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.1</span>]</span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> shiny            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">7.2</span>]</span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> shinyjs          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">1.0</span>]</span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> shinystan        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">6.0</span>]</span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> shinythemes      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.0</span>]</span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> sodium           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.1</span>]</span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> sourcetools      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">1.7</span>]</span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> stringr          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">4.1</span>]</span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> svUnit           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">0.6</span>]</span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> swagger          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">33.1</span>]</span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> tensorA          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">36.2</span>]</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> threejs          [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">3.3</span>]</span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> tidybayes        [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">3</span>.<span class="fl">0.2</span>]</span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> tidyr            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.1</span>]</span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> tidyselect       [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">1</span>.<span class="fl">2.0</span>]</span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> vctrs            [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.2</span>]</span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> viridisLite      [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">4.1</span>]</span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> webutils         [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.1</span>]</span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> xfun             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">0.34</span>]</span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> xtable           [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.8</span><span class="dv">-4</span>]</span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> xts              [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">0</span>.<span class="fl">12.2</span>]</span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> yaml             [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="dv">2</span>.<span class="fl">3.6</span>]</span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> zoo              [<span class="sc">*</span> <span class="ot">-&gt;</span> <span class="fl">1.8</span><span class="dv">-11</span>]</span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>The version of R recorded <span class="cf">in</span> the lockfile will be updated<span class="sc">:</span></span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span> R                [<span class="sc">*</span>] <span class="ot">-&gt;</span> [<span class="dv">4</span>.<span class="fl">2.1</span>]</span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>Do you want to proceed? [y<span class="sc">/</span>N]<span class="sc">:</span> y</span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a><span class="sc">*</span> Lockfile written to <span class="st">'~/Rstudio_projects/r-api-minimal/renv.lock'</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y ya sólo queda crear el Dockerfile usando como base r-hub/minimal</p>
+<p><strong>Dockerfile</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Docker file para modelo brms</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">FROM</span> rhub/r-minimal:4.2.1</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># copio fichero de las librerías</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">COPY</span> renv.lock renv.lock</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># uso -c para que se queden instaladas los compiladores de c y fortran</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> installr <span class="at">-c</span> <span class="at">-a</span> <span class="st">"curl-dev linux-headers gfortran libcurl libxml2 libsodium-dev libsodium automake autoconf"</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#instalo renv</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> installr <span class="at">-c</span> renv</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># uso renv para instlar la versión de las librerías que hay en renv.lock</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="ex">RUN</span> Rscript <span class="at">-e</span> <span class="st">"renv::restore()"</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">## Copio el modelo y el fichero de la api</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="ex">COPY</span> brms_model.rds /opt/ml/brms_model.rds</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="ex">COPY</span> plumber.R /opt/ml/plumber.R</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># exponemos el puerto</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="ex">EXPOSE</span> 8081</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="ex">ENTRYPOINT</span> [<span class="st">"R"</span>, <span class="st">"-e"</span>, <span class="st">"pr &lt;- plumber::plumb('/opt/ml/plumber.R'); pr</span><span class="va">$run</span><span class="st">(host = '0.0.0.0', port = 8081)"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>y como antes construimos el docker image</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-t</span> mi_modelo_brms_rminimal_renv .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>El docker usando renv es sustancialmente más pesado, ocupa 1.29 Gb</p>
+<p>Seguramente se puede optimizar más si no usara <code>brms</code>, puesto que importa shinystan, bayesplot y otras librerías que no son estrictamente necesarias para nuestro propósito. Habrá que esperar a que <a href="https://twitter.com/precariobecario">Virgilio</a> haga la función predict de INLA para darle una vuelta a esto</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
