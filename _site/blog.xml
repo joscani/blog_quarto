@@ -2951,7 +2951,7 @@ Pero ¿cómo podemos predecir para nuevos datos?</p>
 <span id="cb9-3"><span class="fu" style="color: #4758AB;">savefig</span>(myplot,<span class="st" style="color: #20794D;">"plurarlista_turing.png"</span>)</span></code></pre></div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="plurarlista_turing.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="imagen"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/03/20/palabras-para-julia-parte-3-n/plurarlista_turing.png" class="img-fluid figure-img"></a></p>
+<p><a href="plurarlista_turing.png" class="lightbox" title="imagen" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/03/20/palabras-para-julia-parte-3-n/plurarlista_turing.png" class="img-fluid figure-img"></a></p>
 <p></p><figcaption class="figure-caption">imagen</figcaption><p></p>
 </figure>
 </div>
@@ -4578,6 +4578,426 @@ p       0.482931190 0.01117531  0.46538884 0.50083727 10342.731 0.9998451</code>
   <category>estadística</category>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/09/collider-bias/index.html</guid>
   <pubDate>Tue, 08 Feb 2022 23:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Pluralista</title>
+  <dc:creator>jlcr</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Ando viendo los vídeos de Richard McElreath , <a href="https://github.com/rmcelreath/stat_rethinking_2022">Statistical Rethinking 2022</a> y ciertamente me están gustando mucho. En la segunda edición de su libro hace hincapié en temas de inferencia causal. Cuenta bastante bien todo el tema de los “confounders”, “forks”, “colliders” y demás. Además lo hace simulando datos, por lo que entiende todo de forma muy sencilla. Un par de conceptos que me han llamado la atención son por ejemplo cuando dice que condicionar por una variable no significa lo mismo en un modelo de regresión al uso que en uno bayesiano, en el segundo caso significa incluir esa variable en la distribución conjunta. Esto permite por ejemplo que bajo el marco de un modelo bayesiano se pueda condicionar incluso por un “collider” cosa que los entendidos de la inferencia causal prohíben expresamente pues eso abre un camino no causal en el DAG definido.</p>
+<p>Según la <a href="https://dle.rae.es/pluralismo">RAE</a> , pluralismo significa</p>
+<blockquote class="blockquote">
+<p>pluralismo 1. m. Sistema por el cual se acepta o reconoce la pluralidad de doctrinas o posiciones.</p>
+</blockquote>
+<p>y en los videos se toma dicha postura, por ejemplo, se especifica el modelo teórico utilizando los diagramas causales y el Back door criterio para ver sobre qué variables hay que condicionar o no , para ver el efecto total de X sobre Y o para estimar el efecto directo.</p>
+<p>Hay un ejemplo muy bueno en este <a href="https://elevanth.org/blog/2021/06/29/regression-fire-and-dangerous-things-3-3/">post de Richard</a>.</p>
+<p><strong>Nota</strong>: Este post es simplemente para entender un poco el post de Richard, el mérito es totalmente de él.</p>
+<p>Básicamente es una situación dónde se quiere estimar el efecto que tiene sobre el número de hijos que tiene una mujer, el número de hijos que tuvo su madre. En el diagrama causal también se indica la influencia que tiene el orden de nacimiento de de la madre y de la hija.</p>
+<p>Diagrama causal:</p>
+<ul>
+<li>M: Número de hijos de la madre</li>
+<li>D: Número de hijos de la hija</li>
+<li>B1: Orden de nacimiento de la madre</li>
+<li>B2: Orden de nacimiento de la hija</li>
+<li>U: Variable no medida en los datos, que pudiera ser cosas como influencia del entorno social y económico dónde viven madre e hija, que influye en las decisión del número de hijos de ambas.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;">library</span>(tidyverse)</span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;">library</span>(dagitty)</span>
+<span id="cb1-3"><span class="fu" style="color: #4758AB;">library</span>(ggdag)</span>
+<span id="cb1-4"><span class="fu" style="color: #4758AB;">library</span>(patchwork)</span>
+<span id="cb1-5"></span>
+<span id="cb1-6">g <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">dagitty</span>(<span class="st" style="color: #20794D;">"dag{ </span></span>
+<span id="cb1-7"><span class="st" style="color: #20794D;">  M -&gt; D ;</span></span>
+<span id="cb1-8"><span class="st" style="color: #20794D;">  B2 -&gt; D;</span></span>
+<span id="cb1-9"><span class="st" style="color: #20794D;">  B1 -&gt; M;</span></span>
+<span id="cb1-10"><span class="st" style="color: #20794D;">  U -&gt; M;</span></span>
+<span id="cb1-11"><span class="st" style="color: #20794D;">  U -&gt; D</span></span>
+<span id="cb1-12"><span class="st" style="color: #20794D;"> }"</span>)</span>
+<span id="cb1-13"></span>
+<span id="cb1-14"></span>
+<span id="cb1-15">coords <span class="ot" style="color: #003B4F;">&lt;-</span>  </span>
+<span id="cb1-16">  <span class="fu" style="color: #4758AB;">list</span>(</span>
+<span id="cb1-17">  <span class="at" style="color: #657422;">x =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="at" style="color: #657422;">B1 =</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="at" style="color: #657422;">M =</span> <span class="dv" style="color: #AD0000;">2</span>,  <span class="at" style="color: #657422;">U =</span> <span class="fl" style="color: #AD0000;">3.5</span>, <span class="at" style="color: #657422;">D =</span> <span class="dv" style="color: #AD0000;">5</span>, <span class="at" style="color: #657422;">B2 =</span> <span class="dv" style="color: #AD0000;">6</span>),</span>
+<span id="cb1-18">  <span class="at" style="color: #657422;">y =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="at" style="color: #657422;">B1 =</span> <span class="dv" style="color: #AD0000;">0</span>, <span class="at" style="color: #657422;">M =</span> <span class="dv" style="color: #AD0000;">0</span>, <span class="at" style="color: #657422;">U =</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="at" style="color: #657422;">D =</span> <span class="dv" style="color: #AD0000;">0</span>, <span class="at" style="color: #657422;">B2 =</span> <span class="dv" style="color: #AD0000;">0</span>)</span>
+<span id="cb1-19">)</span>
+<span id="cb1-20"></span>
+<span id="cb1-21"><span class="fu" style="color: #4758AB;">coordinates</span>(g) <span class="ot" style="color: #003B4F;">&lt;-</span> coords</span>
+<span id="cb1-22"></span>
+<span id="cb1-23"><span class="fu" style="color: #4758AB;">ggdag</span>(g) <span class="sc" style="color: #5E5E5E;">+</span> </span>
+<span id="cb1-24">  <span class="fu" style="color: #4758AB;">theme_void</span>()</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Si queremos estimar el efecto global o el directo de M sobre D, habría que condicionar por U (siguiendo el backdoor criterio), y al ser no observable, no se puede estimar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><span class="fu" style="color: #4758AB;">adjustmentSets</span>(g, <span class="at" style="color: #657422;">exposure =</span> <span class="st" style="color: #20794D;">"M"</span>, <span class="at" style="color: #657422;">outcome =</span> <span class="st" style="color: #20794D;">"D"</span>, <span class="at" style="color: #657422;">effect =</span> <span class="st" style="color: #20794D;">"total"</span>  )</span>
+<span id="cb2-2"><span class="co" style="color: #5E5E5E;">#&gt; { U }</span></span>
+<span id="cb2-3"><span class="fu" style="color: #4758AB;">adjustmentSets</span>(g, <span class="at" style="color: #657422;">exposure =</span> <span class="st" style="color: #20794D;">"M"</span>, <span class="at" style="color: #657422;">outcome =</span> <span class="st" style="color: #20794D;">"D"</span>, <span class="at" style="color: #657422;">effect =</span> <span class="st" style="color: #20794D;">"direct"</span>  )</span>
+<span id="cb2-4"><span class="co" style="color: #5E5E5E;">#&gt; { U }</span></span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"></span>
+<span id="cb3-2"><span class="fu" style="color: #4758AB;">ggdag_adjustment_set</span>(g, <span class="at" style="color: #657422;">exposure =</span> <span class="st" style="color: #20794D;">"M"</span>, <span class="at" style="color: #657422;">outcome =</span> <span class="st" style="color: #20794D;">"D"</span>, <span class="at" style="color: #657422;">effect =</span> <span class="st" style="color: #20794D;">"direct"</span>)</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-3-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>¿Cómo podemos “estimar” el efecto de M sobre D dado que no podemos condicionar (en el sentido clásico) sobre U? .</p>
+<p>Richard propone lo que el llama “full luxury bayesian” que consiste en estimar a la vez todo el DAG y luego generar simulaciones usando la distribución conjunta obtenida para medir el efecto de la “intervención” y poder obtener el efecto causal.</p>
+<p>Nótese que cuando en el DAG las relaciones se pueden expresar como modelos lineales, se puede estimar todo el DAG usando técnicas como los modelos de ecuaciones estructurales o el path analysis.</p>
+<section id="simulación" class="level2">
+<h2 class="anchored" data-anchor-id="simulación">Simulación</h2>
+<p>Simulamos unos datos de forma qué vamos a conocer la “verdad” de la relaciones entre variables, que para eso simulamos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"></span>
+<span id="cb4-2"><span class="fu" style="color: #4758AB;">set.seed</span>(<span class="dv" style="color: #AD0000;">1908</span>)</span>
+<span id="cb4-3">N <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">1000</span> <span class="co" style="color: #5E5E5E;"># número de pares, 1000 madres y 1000 hijas</span></span>
+<span id="cb4-4"></span>
+<span id="cb4-5"></span>
+<span id="cb4-6">U <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(N,<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>) <span class="co" style="color: #5E5E5E;"># Simulamos el confounder</span></span>
+<span id="cb4-7"></span>
+<span id="cb4-8"><span class="co" style="color: #5E5E5E;"># orden de nacimiento y </span></span>
+<span id="cb4-9">B1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rbinom</span>(N,<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">1</span>,<span class="at" style="color: #657422;">prob=</span><span class="fl" style="color: #AD0000;">0.5</span>)  <span class="co" style="color: #5E5E5E;"># 50% de madres nacieeron en primer lugar</span></span>
+<span id="cb4-10">M <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>( N , <span class="dv" style="color: #AD0000;">2</span> <span class="sc" style="color: #5E5E5E;">*</span> B1 <span class="sc" style="color: #5E5E5E;">+</span> U )</span>
+<span id="cb4-11"></span>
+<span id="cb4-12">B2 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rbinom</span>(N,<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">1</span>,<span class="at" style="color: #657422;">prob=</span><span class="fl" style="color: #AD0000;">0.5</span>) <span class="co" style="color: #5E5E5E;"># 50% son las primogénitas</span></span>
+<span id="cb4-13">D <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>( N , <span class="dv" style="color: #AD0000;">2</span>  <span class="sc" style="color: #5E5E5E;">*</span>B2 <span class="sc" style="color: #5E5E5E;">+</span> U <span class="sc" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">*</span> M )</span></code></pre></div>
+</div>
+<p>En esta simulación se ha forzado que el efecto del número de hijos de la madre sobre el núemro de hijos de la hija sea nulo. Por tanto sabemos que el efecto de M sobre D es 0..</p>
+<p>Si hacemos un modelo sin condicionar, tenemos sesgo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><span class="fu" style="color: #4758AB;">lm</span>(D <span class="sc" style="color: #5E5E5E;">~</span> M)</span>
+<span id="cb5-2"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb5-3"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
+<span id="cb5-4"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = D ~ M)</span></span>
+<span id="cb5-5"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb5-6"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            M  </span></span>
+<span id="cb5-8"><span class="co" style="color: #5E5E5E;">#&gt;      0.7108       0.2930</span></span></code></pre></div>
+</div>
+<p>Condicionando por B1 también, de hecho tenemos la situación de amplificación del sesgo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><span class="fu" style="color: #4758AB;">lm</span>(D <span class="sc" style="color: #5E5E5E;">~</span> M <span class="sc" style="color: #5E5E5E;">+</span> B1)</span>
+<span id="cb6-2"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb6-3"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
+<span id="cb6-4"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = D ~ M + B1)</span></span>
+<span id="cb6-5"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb6-6"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
+<span id="cb6-7"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            M           B1  </span></span>
+<span id="cb6-8"><span class="co" style="color: #5E5E5E;">#&gt;      1.0356       0.4606      -1.0441</span></span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><span class="fu" style="color: #4758AB;">lm</span>(D <span class="sc" style="color: #5E5E5E;">~</span> M <span class="sc" style="color: #5E5E5E;">+</span> B1 <span class="sc" style="color: #5E5E5E;">+</span>B2 )</span>
+<span id="cb7-2"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb7-3"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = D ~ M + B1 + B2)</span></span>
+<span id="cb7-5"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb7-6"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
+<span id="cb7-7"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            M           B1           B2  </span></span>
+<span id="cb7-8"><span class="co" style="color: #5E5E5E;">#&gt;    -0.01621      0.46913     -0.91307      2.01487</span></span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><span class="fu" style="color: #4758AB;">lm</span>(D <span class="sc" style="color: #5E5E5E;">~</span> M <span class="sc" style="color: #5E5E5E;">+</span> B2)</span>
+<span id="cb8-2"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb8-3"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
+<span id="cb8-4"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = D ~ M + B2)</span></span>
+<span id="cb8-5"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb8-6"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
+<span id="cb8-7"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            M           B2  </span></span>
+<span id="cb8-8"><span class="co" style="color: #5E5E5E;">#&gt;     -0.3204       0.3231       2.0550</span></span></code></pre></div>
+</div>
+<p>En esta situación, no podemos estimar el efecto de M sobre D utilizando un solo modelo.</p>
+<p>Una forma de estimar el efecto de M sobre D es tirar de path analysis, que en este caso se puede al ser las relaciones lineales.</p>
+<p>Sea:</p>
+<ul>
+<li>b: Efecto de B1 sobre M</li>
+<li>m: Efecto de M sobre D</li>
+</ul>
+<p>Se tiene que</p>
+<p><img src="https://latex.codecogs.com/png.latex?Cov(B1,%20D%20)%20=%20b%5Ccdot%20m%20%5Ccdot%20Var(B1)"> Y como</p>
+<p><img src="https://latex.codecogs.com/png.latex?b%20=%20%5Cdfrac%7BCov(B1,M)%7D%7BVar(B1)%7D%20"></p>
+<p>Podemos estimar <img src="https://latex.codecogs.com/png.latex?m"> como</p>
+<p><img src="https://latex.codecogs.com/png.latex?m%20=%20%5Cdfrac%7BCov(B1,D)%7D%7Bb%20%5Ccdot%20Var(B1)%7D%20=%20%5Cdfrac%7BCov(B1,D)%7D%7BCov(B1,M)%7D%20"> Y</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1">(<span class="at" style="color: #657422;">m_hat =</span> <span class="fu" style="color: #4758AB;">cov</span>(B1,D) <span class="sc" style="color: #5E5E5E;">/</span> <span class="fu" style="color: #4758AB;">cov</span>(B1,M))</span>
+<span id="cb9-2"><span class="co" style="color: #5E5E5E;">#&gt; [1] -0.0563039</span></span></code></pre></div>
+</div>
+<p>y esta estimación está menos sesgada, antes era del orden de 0.1 o 0.2 y ahora la estimación es del orden 0.01. Pero con esta estimación no tenemos información de su distribución sino sólo de esta estimación puntual. Y si las relaciones no fueran lineales no podría usarse, en cambio la siguiente aproximación si funciona</p>
+</section>
+<section id="full-luxury-bayes" class="level2">
+<h2 class="anchored" data-anchor-id="full-luxury-bayes">Full luxury bayes</h2>
+<p>Utilizamos la librería de Richard <code>rethinking</code> y también <code>cmdstanr</code> para expresar el modelo causal completo y ajustarlo con Stan.</p>
+<p>Ahora estimamos el DAG completo, aquí es dónde es diferente de la aproximación causal de Pearl, de esta forma podemos “condicionar” incluso por los colliders, porque condicionar en este marco significa meter esa información dentro de la distribución conjunta.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><span class="fu" style="color: #4758AB;">library</span>(cmdstanr)</span>
+<span id="cb10-2"><span class="fu" style="color: #4758AB;">library</span>(rethinking)</span>
+<span id="cb10-3"><span class="fu" style="color: #4758AB;">set_cmdstan_path</span>(<span class="st" style="color: #20794D;">"~/Descargas/cmdstan/"</span>)</span>
+<span id="cb10-4"></span>
+<span id="cb10-5"><span class="co" style="color: #5E5E5E;"># No metemos U al ser no observable</span></span>
+<span id="cb10-6">dat <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(</span>
+<span id="cb10-7">  <span class="at" style="color: #657422;">N =</span> N,</span>
+<span id="cb10-8">  <span class="at" style="color: #657422;">M =</span> M,</span>
+<span id="cb10-9">  <span class="at" style="color: #657422;">D =</span> D,</span>
+<span id="cb10-10">  <span class="at" style="color: #657422;">B1 =</span> B1,</span>
+<span id="cb10-11">  <span class="at" style="color: #657422;">B2 =</span> B2</span>
+<span id="cb10-12">)</span>
+<span id="cb10-13"><span class="fu" style="color: #4758AB;">set.seed</span>(<span class="dv" style="color: #AD0000;">1908</span>)</span>
+<span id="cb10-14"></span>
+<span id="cb10-15">flbi <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ulam</span>(</span>
+<span id="cb10-16">  <span class="fu" style="color: #4758AB;">alist</span>(</span>
+<span id="cb10-17">    <span class="co" style="color: #5E5E5E;"># mom model</span></span>
+<span id="cb10-18">    M <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( mu , sigma ),</span>
+<span id="cb10-19">    mu <span class="ot" style="color: #003B4F;">&lt;-</span> a1 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span>B1 <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span>U[i],</span>
+<span id="cb10-20">    <span class="co" style="color: #5E5E5E;"># daughter model</span></span>
+<span id="cb10-21">    D <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( nu , tau ),</span>
+<span id="cb10-22">    nu <span class="ot" style="color: #003B4F;">&lt;-</span> a2 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span>B2 <span class="sc" style="color: #5E5E5E;">+</span> m<span class="sc" style="color: #5E5E5E;">*</span>M <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span>U[i],</span>
+<span id="cb10-23">    <span class="co" style="color: #5E5E5E;"># B1 and B2</span></span>
+<span id="cb10-24">    B1 <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">bernoulli</span>(p),</span>
+<span id="cb10-25">    B2 <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">bernoulli</span>(p),</span>
+<span id="cb10-26">    <span class="co" style="color: #5E5E5E;"># unmeasured confound</span></span>
+<span id="cb10-27">    vector[N]<span class="sc" style="color: #5E5E5E;">:</span>U <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>(<span class="dv" style="color: #AD0000;">0</span>,<span class="dv" style="color: #AD0000;">1</span>),</span>
+<span id="cb10-28">    <span class="co" style="color: #5E5E5E;"># priors</span></span>
+<span id="cb10-29">    <span class="fu" style="color: #4758AB;">c</span>(a1,a2,b,m) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( <span class="dv" style="color: #AD0000;">0</span> , <span class="fl" style="color: #AD0000;">0.5</span> ),</span>
+<span id="cb10-30">    <span class="fu" style="color: #4758AB;">c</span>(k,sigma,tau) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">exponential</span>( <span class="dv" style="color: #AD0000;">1</span> ),</span>
+<span id="cb10-31">    p <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">beta</span>(<span class="dv" style="color: #AD0000;">2</span>,<span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb10-32">  ), <span class="at" style="color: #657422;">data=</span>dat , <span class="at" style="color: #657422;">chains=</span><span class="dv" style="color: #AD0000;">4</span> , <span class="at" style="color: #657422;">cores=</span><span class="dv" style="color: #AD0000;">4</span> , <span class="at" style="color: #657422;">warmup =</span> <span class="dv" style="color: #AD0000;">500</span>, <span class="at" style="color: #657422;">iter=</span><span class="dv" style="color: #AD0000;">2500</span> , <span class="at" style="color: #657422;">cmdstan=</span><span class="cn" style="color: #8f5902;">TRUE</span> )</span>
+<span id="cb10-33"><span class="co" style="color: #5E5E5E;">#&gt; Running MCMC with 4 parallel chains, with 1 thread(s) per chain...</span></span>
+<span id="cb10-34"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb10-35"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:    1 / 2500 [  0%]  (Warmup) </span></span>
+<span id="cb10-36"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:    1 / 2500 [  0%]  (Warmup) </span></span>
+<span id="cb10-37"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:    1 / 2500 [  0%]  (Warmup) </span></span>
+<span id="cb10-38"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:    1 / 2500 [  0%]  (Warmup) </span></span>
+<span id="cb10-39"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  100 / 2500 [  4%]  (Warmup) </span></span>
+<span id="cb10-40"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  100 / 2500 [  4%]  (Warmup) </span></span>
+<span id="cb10-41"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  100 / 2500 [  4%]  (Warmup) </span></span>
+<span id="cb10-42"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  200 / 2500 [  8%]  (Warmup) </span></span>
+<span id="cb10-43"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  100 / 2500 [  4%]  (Warmup) </span></span>
+<span id="cb10-44"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  200 / 2500 [  8%]  (Warmup) </span></span>
+<span id="cb10-45"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  200 / 2500 [  8%]  (Warmup) </span></span>
+<span id="cb10-46"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  300 / 2500 [ 12%]  (Warmup) </span></span>
+<span id="cb10-47"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  200 / 2500 [  8%]  (Warmup) </span></span>
+<span id="cb10-48"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  400 / 2500 [ 16%]  (Warmup) </span></span>
+<span id="cb10-49"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  300 / 2500 [ 12%]  (Warmup) </span></span>
+<span id="cb10-50"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  300 / 2500 [ 12%]  (Warmup) </span></span>
+<span id="cb10-51"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  400 / 2500 [ 16%]  (Warmup) </span></span>
+<span id="cb10-52"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  300 / 2500 [ 12%]  (Warmup) </span></span>
+<span id="cb10-53"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  400 / 2500 [ 16%]  (Warmup) </span></span>
+<span id="cb10-54"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  500 / 2500 [ 20%]  (Warmup) </span></span>
+<span id="cb10-55"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  501 / 2500 [ 20%]  (Sampling) </span></span>
+<span id="cb10-56"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  400 / 2500 [ 16%]  (Warmup) </span></span>
+<span id="cb10-57"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  500 / 2500 [ 20%]  (Warmup) </span></span>
+<span id="cb10-58"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  501 / 2500 [ 20%]  (Sampling) </span></span>
+<span id="cb10-59"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  500 / 2500 [ 20%]  (Warmup) </span></span>
+<span id="cb10-60"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  501 / 2500 [ 20%]  (Sampling) </span></span>
+<span id="cb10-61"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  600 / 2500 [ 24%]  (Sampling) </span></span>
+<span id="cb10-62"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  500 / 2500 [ 20%]  (Warmup) </span></span>
+<span id="cb10-63"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  501 / 2500 [ 20%]  (Sampling) </span></span>
+<span id="cb10-64"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  600 / 2500 [ 24%]  (Sampling) </span></span>
+<span id="cb10-65"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  700 / 2500 [ 28%]  (Sampling) </span></span>
+<span id="cb10-66"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  600 / 2500 [ 24%]  (Sampling) </span></span>
+<span id="cb10-67"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  600 / 2500 [ 24%]  (Sampling) </span></span>
+<span id="cb10-68"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  800 / 2500 [ 32%]  (Sampling) </span></span>
+<span id="cb10-69"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  700 / 2500 [ 28%]  (Sampling) </span></span>
+<span id="cb10-70"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  700 / 2500 [ 28%]  (Sampling) </span></span>
+<span id="cb10-71"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  700 / 2500 [ 28%]  (Sampling) </span></span>
+<span id="cb10-72"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  900 / 2500 [ 36%]  (Sampling) </span></span>
+<span id="cb10-73"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  800 / 2500 [ 32%]  (Sampling) </span></span>
+<span id="cb10-74"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  800 / 2500 [ 32%]  (Sampling) </span></span>
+<span id="cb10-75"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  800 / 2500 [ 32%]  (Sampling) </span></span>
+<span id="cb10-76"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1000 / 2500 [ 40%]  (Sampling) </span></span>
+<span id="cb10-77"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  900 / 2500 [ 36%]  (Sampling) </span></span>
+<span id="cb10-78"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  900 / 2500 [ 36%]  (Sampling) </span></span>
+<span id="cb10-79"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  900 / 2500 [ 36%]  (Sampling) </span></span>
+<span id="cb10-80"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1100 / 2500 [ 44%]  (Sampling) </span></span>
+<span id="cb10-81"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1000 / 2500 [ 40%]  (Sampling) </span></span>
+<span id="cb10-82"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1000 / 2500 [ 40%]  (Sampling) </span></span>
+<span id="cb10-83"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1000 / 2500 [ 40%]  (Sampling) </span></span>
+<span id="cb10-84"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1200 / 2500 [ 48%]  (Sampling) </span></span>
+<span id="cb10-85"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1100 / 2500 [ 44%]  (Sampling) </span></span>
+<span id="cb10-86"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1100 / 2500 [ 44%]  (Sampling) </span></span>
+<span id="cb10-87"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1100 / 2500 [ 44%]  (Sampling) </span></span>
+<span id="cb10-88"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1300 / 2500 [ 52%]  (Sampling) </span></span>
+<span id="cb10-89"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1200 / 2500 [ 48%]  (Sampling) </span></span>
+<span id="cb10-90"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1200 / 2500 [ 48%]  (Sampling) </span></span>
+<span id="cb10-91"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1200 / 2500 [ 48%]  (Sampling) </span></span>
+<span id="cb10-92"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1400 / 2500 [ 56%]  (Sampling) </span></span>
+<span id="cb10-93"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1300 / 2500 [ 52%]  (Sampling) </span></span>
+<span id="cb10-94"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1300 / 2500 [ 52%]  (Sampling) </span></span>
+<span id="cb10-95"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1300 / 2500 [ 52%]  (Sampling) </span></span>
+<span id="cb10-96"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1500 / 2500 [ 60%]  (Sampling) </span></span>
+<span id="cb10-97"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1400 / 2500 [ 56%]  (Sampling) </span></span>
+<span id="cb10-98"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1400 / 2500 [ 56%]  (Sampling) </span></span>
+<span id="cb10-99"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1600 / 2500 [ 64%]  (Sampling) </span></span>
+<span id="cb10-100"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1500 / 2500 [ 60%]  (Sampling) </span></span>
+<span id="cb10-101"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1400 / 2500 [ 56%]  (Sampling) </span></span>
+<span id="cb10-102"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1500 / 2500 [ 60%]  (Sampling) </span></span>
+<span id="cb10-103"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1700 / 2500 [ 68%]  (Sampling) </span></span>
+<span id="cb10-104"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1500 / 2500 [ 60%]  (Sampling) </span></span>
+<span id="cb10-105"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1600 / 2500 [ 64%]  (Sampling) </span></span>
+<span id="cb10-106"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1600 / 2500 [ 64%]  (Sampling) </span></span>
+<span id="cb10-107"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1600 / 2500 [ 64%]  (Sampling) </span></span>
+<span id="cb10-108"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1800 / 2500 [ 72%]  (Sampling) </span></span>
+<span id="cb10-109"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1700 / 2500 [ 68%]  (Sampling) </span></span>
+<span id="cb10-110"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1700 / 2500 [ 68%]  (Sampling) </span></span>
+<span id="cb10-111"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1700 / 2500 [ 68%]  (Sampling) </span></span>
+<span id="cb10-112"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1900 / 2500 [ 76%]  (Sampling) </span></span>
+<span id="cb10-113"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1800 / 2500 [ 72%]  (Sampling) </span></span>
+<span id="cb10-114"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1800 / 2500 [ 72%]  (Sampling) </span></span>
+<span id="cb10-115"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2000 / 2500 [ 80%]  (Sampling) </span></span>
+<span id="cb10-116"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1800 / 2500 [ 72%]  (Sampling) </span></span>
+<span id="cb10-117"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1900 / 2500 [ 76%]  (Sampling) </span></span>
+<span id="cb10-118"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1900 / 2500 [ 76%]  (Sampling) </span></span>
+<span id="cb10-119"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2100 / 2500 [ 84%]  (Sampling) </span></span>
+<span id="cb10-120"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1900 / 2500 [ 76%]  (Sampling) </span></span>
+<span id="cb10-121"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2000 / 2500 [ 80%]  (Sampling) </span></span>
+<span id="cb10-122"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2000 / 2500 [ 80%]  (Sampling) </span></span>
+<span id="cb10-123"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2200 / 2500 [ 88%]  (Sampling) </span></span>
+<span id="cb10-124"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2000 / 2500 [ 80%]  (Sampling) </span></span>
+<span id="cb10-125"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2100 / 2500 [ 84%]  (Sampling) </span></span>
+<span id="cb10-126"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2100 / 2500 [ 84%]  (Sampling) </span></span>
+<span id="cb10-127"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2300 / 2500 [ 92%]  (Sampling) </span></span>
+<span id="cb10-128"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2100 / 2500 [ 84%]  (Sampling) </span></span>
+<span id="cb10-129"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2200 / 2500 [ 88%]  (Sampling) </span></span>
+<span id="cb10-130"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2200 / 2500 [ 88%]  (Sampling) </span></span>
+<span id="cb10-131"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2400 / 2500 [ 96%]  (Sampling) </span></span>
+<span id="cb10-132"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2200 / 2500 [ 88%]  (Sampling) </span></span>
+<span id="cb10-133"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2300 / 2500 [ 92%]  (Sampling) </span></span>
+<span id="cb10-134"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2300 / 2500 [ 92%]  (Sampling) </span></span>
+<span id="cb10-135"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2500 / 2500 [100%]  (Sampling) </span></span>
+<span id="cb10-136"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2300 / 2500 [ 92%]  (Sampling) </span></span>
+<span id="cb10-137"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 finished in 18.7 seconds.</span></span>
+<span id="cb10-138"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2400 / 2500 [ 96%]  (Sampling) </span></span>
+<span id="cb10-139"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2400 / 2500 [ 96%]  (Sampling) </span></span>
+<span id="cb10-140"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2400 / 2500 [ 96%]  (Sampling) </span></span>
+<span id="cb10-141"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2500 / 2500 [100%]  (Sampling) </span></span>
+<span id="cb10-142"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 finished in 19.3 seconds.</span></span>
+<span id="cb10-143"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2500 / 2500 [100%]  (Sampling) </span></span>
+<span id="cb10-144"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 finished in 19.4 seconds.</span></span>
+<span id="cb10-145"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2500 / 2500 [100%]  (Sampling) </span></span>
+<span id="cb10-146"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 finished in 19.8 seconds.</span></span>
+<span id="cb10-147"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
+<span id="cb10-148"><span class="co" style="color: #5E5E5E;">#&gt; All 4 chains finished successfully.</span></span>
+<span id="cb10-149"><span class="co" style="color: #5E5E5E;">#&gt; Mean chain execution time: 19.3 seconds.</span></span>
+<span id="cb10-150"><span class="co" style="color: #5E5E5E;">#&gt; Total execution time: 19.9 seconds.</span></span></code></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">post <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">extract.samples</span>(flbi)</span>
+<span id="cb11-2"><span class="fu" style="color: #4758AB;">precis</span>(flbi)</span>
+<span id="cb11-3"><span class="co" style="color: #5E5E5E;">#&gt;             mean         sd        5.5%      94.5%      n_eff     Rhat4</span></span>
+<span id="cb11-4"><span class="co" style="color: #5E5E5E;">#&gt; m     0.01029393 0.04047150 -0.05430275 0.07409054   890.4789 1.0018319</span></span>
+<span id="cb11-5"><span class="co" style="color: #5E5E5E;">#&gt; b     1.98864256 0.05811342  1.89487725 2.08168275  3042.1496 1.0007825</span></span>
+<span id="cb11-6"><span class="co" style="color: #5E5E5E;">#&gt; a2    0.02836364 0.07310509 -0.08729441 0.14659932  1335.7564 1.0027553</span></span>
+<span id="cb11-7"><span class="co" style="color: #5E5E5E;">#&gt; a1    0.06834714 0.05394291 -0.01785119 0.15621615  3747.6036 1.0007151</span></span>
+<span id="cb11-8"><span class="co" style="color: #5E5E5E;">#&gt; tau   0.98041340 0.03617180  0.92352906 1.03914055  2745.6394 1.0007016</span></span>
+<span id="cb11-9"><span class="co" style="color: #5E5E5E;">#&gt; sigma 1.07286195 0.05249312  0.98902178 1.15557275   909.1510 1.0015771</span></span>
+<span id="cb11-10"><span class="co" style="color: #5E5E5E;">#&gt; k     0.98545837 0.05638324  0.89516212 1.07461055   828.2759 1.0013545</span></span>
+<span id="cb11-11"><span class="co" style="color: #5E5E5E;">#&gt; p     0.48012384 0.01111044  0.46233213 0.49808700 16117.4910 0.9996995</span></span></code></pre></div>
+</div>
+<p>Vemos que no aparece la estimación de U, pero en la posterior se ha estimado un valor de U para cada uno de las observaciones. 1000 observaciones y</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"></span>
+<span id="cb12-2"><span class="fu" style="color: #4758AB;">dim</span>(post<span class="sc" style="color: #5E5E5E;">$</span>U)</span>
+<span id="cb12-3"><span class="co" style="color: #5E5E5E;">#&gt; [1] 8000 1000</span></span>
+<span id="cb12-4">post<span class="sc" style="color: #5E5E5E;">$</span>U[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">4</span>, <span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">5</span>]</span>
+<span id="cb12-5"><span class="co" style="color: #5E5E5E;">#&gt;          [,1]       [,2]       [,3]      [,4]        [,5]</span></span>
+<span id="cb12-6"><span class="co" style="color: #5E5E5E;">#&gt; [1,] 0.382053 -0.4087260 -1.5231200  0.486262  0.00381229</span></span>
+<span id="cb12-7"><span class="co" style="color: #5E5E5E;">#&gt; [2,] 0.733459  0.2971870  0.0441252 -1.424160 -0.98469300</span></span>
+<span id="cb12-8"><span class="co" style="color: #5E5E5E;">#&gt; [3,] 0.254011 -0.0201819 -0.7499000 -1.444340 -0.51772400</span></span>
+<span id="cb12-9"><span class="co" style="color: #5E5E5E;">#&gt; [4,] 0.468004  0.1923180 -1.8694400 -1.314570 -0.43902700</span></span></code></pre></div>
+</div>
+</section>
+<section id="efecto-de-m-sobre-d." class="level2">
+<h2 class="anchored" data-anchor-id="efecto-de-m-sobre-d.">Efecto de M sobre D.</h2>
+<p>Este era el efecto que queríamos obtener y el cuál no podíamos estimar al no poder condicionar sobre U. Aquí es tan sencillo como ver su distribución a posteriori.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"></span>
+<span id="cb13-2"><span class="fu" style="color: #4758AB;">quantile</span>(post<span class="sc" style="color: #5E5E5E;">$</span>m)</span>
+<span id="cb13-3"><span class="co" style="color: #5E5E5E;">#&gt;          0%         25%         50%         75%        100% </span></span>
+<span id="cb13-4"><span class="co" style="color: #5E5E5E;">#&gt; -0.14804300 -0.01706778  0.01080760  0.03813360  0.15027000</span></span>
+<span id="cb13-5"></span>
+<span id="cb13-6"><span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb13-7">  <span class="fu" style="color: #4758AB;">geom_density</span>(<span class="fu" style="color: #4758AB;">aes</span>(post<span class="sc" style="color: #5E5E5E;">$</span>m)) <span class="sc" style="color: #5E5E5E;">+</span> </span>
+<span id="cb13-8">  <span class="fu" style="color: #4758AB;">labs</span>(<span class="at" style="color: #657422;">title =</span> <span class="st" style="color: #20794D;">"Efecto directo de M sobre D"</span>, </span>
+<span id="cb13-9">       <span class="at" style="color: #657422;">x =</span> <span class="st" style="color: #20794D;">"m"</span>)</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="efecto-de-b1-sobre-d" class="level3">
+<h3 class="anchored" data-anchor-id="efecto-de-b1-sobre-d">Efecto de B1 sobre D</h3>
+<p>Como ya sabíamos, al haber simulado los datos de forma que las relaciones entre las variables sean lineales, el efecto de B1 sobre D no es más que el efecto de B1 sobre M multiplicado por el efecto de M sobre D.</p>
+<p>Utilizando la distribución a posteriori.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><span class="co" style="color: #5E5E5E;"># Efecto de B1 sobre D </span></span>
+<span id="cb14-2"><span class="fu" style="color: #4758AB;">quantile</span>( <span class="fu" style="color: #4758AB;">with</span>(post,b<span class="sc" style="color: #5E5E5E;">*</span>m) )</span>
+<span id="cb14-3"><span class="co" style="color: #5E5E5E;">#&gt;          0%         25%         50%         75%        100% </span></span>
+<span id="cb14-4"><span class="co" style="color: #5E5E5E;">#&gt; -0.27728158 -0.03379382  0.02148739  0.07658919  0.30614657</span></span>
+<span id="cb14-5"></span>
+<span id="cb14-6"><span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb14-7">  <span class="fu" style="color: #4758AB;">geom_density</span>(<span class="fu" style="color: #4758AB;">aes</span>(post<span class="sc" style="color: #5E5E5E;">$</span>b <span class="sc" style="color: #5E5E5E;">*</span> post<span class="sc" style="color: #5E5E5E;">$</span>m))<span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb14-8">  <span class="fu" style="color: #4758AB;">labs</span>(<span class="at" style="color: #657422;">title =</span> <span class="st" style="color: #20794D;">"Efecto de B1 sobre D"</span>, </span>
+<span id="cb14-9">       <span class="at" style="color: #657422;">x =</span> <span class="st" style="color: #20794D;">"b1 x m"</span>)</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-14-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="efecto-de-b1-sobre-d-simulando" class="level3">
+<h3 class="anchored" data-anchor-id="efecto-de-b1-sobre-d-simulando">Efecto de B1 sobre D, simulando</h3>
+<p>Tal y como dice en su curso, el efecto causal puede ser visto como hacer una intervención supuesto cierto el modelo causal.</p>
+<p>Simplemente utilizamos las posterioris obtenidas y vamos simulando , en primer lugar B1 = 0 y simulamos qué M se obtendría, y lo hacemos también para B1 = 1 y restamos para obtener el efecto causal, que coindice con <code>b * m</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><span class="co" style="color: #5E5E5E;"># </span></span>
+<span id="cb15-2"></span>
+<span id="cb15-3"><span class="co" style="color: #5E5E5E;"># B1 = 0</span></span>
+<span id="cb15-4"><span class="co" style="color: #5E5E5E;"># B1 -&gt; M</span></span>
+<span id="cb15-5">M_B1_0 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">with</span>( post , a1 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> )</span>
+<span id="cb15-6"><span class="co" style="color: #5E5E5E;"># M -&gt; D</span></span>
+<span id="cb15-7">D_B1_0 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">with</span>( post , a2 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">+</span> m<span class="sc" style="color: #5E5E5E;">*</span>M_B1_0 <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> )</span>
+<span id="cb15-8"></span>
+<span id="cb15-9"><span class="co" style="color: #5E5E5E;"># now same but with B1 = 1</span></span>
+<span id="cb15-10">M_B1_1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">with</span>( post , a1 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">1</span> <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> )</span>
+<span id="cb15-11">D_B1_1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">with</span>( post , a2 <span class="sc" style="color: #5E5E5E;">+</span> b<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">+</span> m<span class="sc" style="color: #5E5E5E;">*</span>M_B1_1 <span class="sc" style="color: #5E5E5E;">+</span> k<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">0</span> )</span>
+<span id="cb15-12"></span>
+<span id="cb15-13"><span class="co" style="color: #5E5E5E;"># difference to get causal effect</span></span>
+<span id="cb15-14">d_D_B1 <span class="ot" style="color: #003B4F;">&lt;-</span> D_B1_1 <span class="sc" style="color: #5E5E5E;">-</span> D_B1_0</span>
+<span id="cb15-15"><span class="fu" style="color: #4758AB;">quantile</span>(d_D_B1)</span>
+<span id="cb15-16"><span class="co" style="color: #5E5E5E;">#&gt;          0%         25%         50%         75%        100% </span></span>
+<span id="cb15-17"><span class="co" style="color: #5E5E5E;">#&gt; -0.27728158 -0.03379382  0.02148739  0.07658919  0.30614657</span></span></code></pre></div>
+</div>
+<p>Pues como dice el título , ser pluralista no está tan mal, puedes usar el DAG y el backdoor criterio para entender qué variables ha de tener en cuenta para estimar tu efecto causal, y a partir de ahí podrías usar el “full luxury bayesian” en situaciones más complicadas.</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>estadística</category>
+  <category>R</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/06/pluralista/index.html</guid>
+  <pubDate>Sat, 05 Feb 2022 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
