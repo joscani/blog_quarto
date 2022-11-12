@@ -207,40 +207,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-body">
-      <h1 class="title">Api y docker con R. parte 2</h1>
-                                <div class="quarto-categories">
-                <div class="quarto-category">api</div>
-                <div class="quarto-category">docker</div>
-                <div class="quarto-category">R</div>
-              </div>
-                  </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      <div>
-      <div class="quarto-title-meta-heading">Author</div>
-      <div class="quarto-title-meta-contents">
-               <p>jlcr </p>
-            </div>
-    </div>
-      
-      <div>
-      <div class="quarto-title-meta-heading">Published</div>
-      <div class="quarto-title-meta-contents">
-        <p class="date">October 30, 2022</p>
-      </div>
-    </div>
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
@@ -253,10 +220,41 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Api y docker con R. parte 2</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">api</div>
+    <div class="quarto-category">docker</div>
+    <div class="quarto-category">R</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>jlcr </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 30, 2022</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
 
 <p>En la entrada de <a href="https://muestrear-no-es-pecado.netlify.app/2022/10/12/api-y-docker-con-r-parte-1/">api y docker con R parte I</a> veíamos que es muy fácil construir una api y dockerizarla para tener un modelo bayesiano en producción. Pero hay un pequeño incoveniente, el docker que hemos creado se base en <a href="https://rocker-project.org/images/">rocker/verse</a> que se basan en ubuntu. Y ubuntu ocupa mucho. Pero gracias a gente como Gabor Csardi (autor entre otras librerías de <code>igraph</code>), tenemos <a href="https://github.com/r-hub/r-minimal">r-hub/minimal</a>, que permiten tener una imagen de docker con R basadas en alpine, de hecho una imagen de docker con R y dplyr son unos 50 mb.</p>
 <p>Lo primero de todo es ver cuánto ocupa el docker creado en el primer post.</p>
