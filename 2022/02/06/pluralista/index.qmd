@@ -1,0 +1,315 @@
+---
+title: Pluralista
+author: jlcr
+date: '2022-02-06'
+slug: pluralista
+categories:
+  - estadística
+  - R
+tags:
+  - análisis bayesiano
+  - causal inference
+  - R
+description: ''
+draft: no
+topics: []
+
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+
+
+---
+
+
+Ando viendo los vídeos de Richard McElreath , [Statistical Rethinking 2022](https://github.com/rmcelreath/stat_rethinking_2022) y ciertamente me están gustando mucho. En la segunda edición de su libro hace hincapié en temas de inferencia causal. Cuenta bastante bien todo el tema de los "confounders", "forks", "colliders" y demás. Además lo hace simulando datos, por lo que entiende todo de forma muy sencilla. Un par de conceptos que me han llamado la atención son por ejemplo cuando dice que condicionar por una variable no significa lo mismo en un modelo de regresión al uso que en uno bayesiano, en el segundo caso significa incluir esa variable en la distribución conjunta.  Esto permite por ejemplo que bajo el marco de un modelo bayesiano se pueda condicionar incluso por un "collider" cosa que los entendidos de la inferencia causal prohíben expresamente pues eso abre un camino no causal en el DAG definido.
+
+
+Según la [RAE](https://dle.rae.es/pluralismo) , pluralismo significa 
+
+> pluralismo
+1. m. Sistema por el cual se acepta o reconoce la pluralidad de doctrinas o posiciones.
+
+y en los videos se toma dicha postura, por ejemplo, se especifica el modelo teórico utilizando los diagramas causales y el Back door criterio para ver sobre qué variables hay que condicionar o no , para ver el efecto total de X sobre Y o para estimar el efecto directo. 
+
+
+Hay un ejemplo muy bueno en este [post de Richard](https://elevanth.org/blog/2021/06/29/regression-fire-and-dangerous-things-3-3/).
+
+**Nota**: Este post es simplemente para entender un poco el post de Richard, el mérito es totalmente de él. 
+
+Básicamente es una situación dónde se quiere estimar el efecto que tiene sobre el número de hijos que tiene una mujer, el número de hijos que tuvo su madre. En el diagrama causal también se indica la influencia que tiene el orden de nacimiento de de la madre y de la hija. 
+
+
+Diagrama causal:
+
+* M: Número de hijos de la madre
+* D: Número de hijos de la hija
+* B1: Orden de nacimiento de la madre
+* B2: Orden de nacimiento de la hija
+* U: Variable no medida en los datos, que pudiera ser cosas como influencia del entorno social y económico dónde viven madre e hija, que influye en las decisión del número de hijos de ambas. 
+
+
+
+```{r}
+library(tidyverse)
+library(dagitty)
+library(ggdag)
+library(patchwork)
+
+g <- dagitty("dag{ 
+  M -> D ;
+  B2 -> D;
+  B1 -> M;
+  U -> M;
+  U -> D
+ }")
+
+
+coords <-  
+  list(
+  x = c(B1 = 1, M = 2,  U = 3.5, D = 5, B2 = 6),
+  y = c(B1 = 0, M = 0, U = 1, D = 0, B2 = 0)
+)
+
+coordinates(g) <- coords
+
+ggdag(g) + 
+  theme_void()
+```
+
+Si queremos estimar el efecto global o el directo de M sobre D, habría que condicionar por U (siguiendo el backdoor criterio), y al ser no observable,  no se puede estimar. 
+
+```{r}
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "total"  )
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "direct"  )
+```
+
+
+
+```{r}
+
+ggdag_adjustment_set(g, exposure = "M", outcome = "D", effect = "direct")
+
+```
+
+
+¿Cómo podemos "estimar" el efecto de M sobre D dado que no podemos condicionar (en el sentido clásico) sobre U? .
+
+
+
+
+Richard propone lo que el llama "full luxury bayesian" que consiste en estimar a la vez todo el DAG y luego generar simulaciones usando la distribución conjunta obtenida para medir el efecto de la "intervención" y poder obtener el efecto causal. 
+
+Nótese que cuando en el DAG las relaciones se pueden expresar como modelos lineales, se puede estimar todo el DAG usando técnicas como los modelos de ecuaciones estructurales o el path analysis.
+
+## Simulación
+
+Simulamos unos datos de forma qué vamos a conocer la "verdad" de la relaciones entre variables, que para eso simulamos. 
+
+
+```{r}
+
+set.seed(1908)
+N <- 1000 # número de pares, 1000 madres y 1000 hijas
+
+
+U <- rnorm(N,0,1) # Simulamos el confounder
+
+# orden de nacimiento y 
+B1 <- rbinom(N,size=1,prob=0.5)  # 50% de madres nacieeron en primer lugar
+M <- rnorm( N , 2 * B1 + U )
+
+B2 <- rbinom(N,size=1,prob=0.5) # 50% son las primogénitas
+D <- rnorm( N , 2  *B2 + U + 0 * M )
+
+
+```
+
+
+En esta simulación se ha forzado que el efecto del número de hijos de la madre sobre el núemro de hijos de la hija sea nulo. Por tanto sabemos que el efecto de M sobre D es 0..
+
+Si hacemos un modelo sin condicionar, tenemos sesgo
+
+```{r}
+lm(D ~ M)
+```
+
+Condicionando por B1 también, de hecho tenemos la situación de amplificación del sesgo
+
+```{r}
+lm(D ~ M + B1)
+```
+
+```{r}
+lm(D ~ M + B1 +B2 )
+```
+
+```{r}
+lm(D ~ M + B2)
+```
+
+
+En esta situación, no podemos estimar el efecto de M sobre D utilizando un solo modelo.
+
+Una forma de estimar el efecto de M sobre D es tirar de path analysis, que en este caso se puede al ser las relaciones lineales. 
+
+
+Sea: 
+
+* b: Efecto de B1 sobre M
+* m: Efecto de M sobre D
+
+
+Se tiene que 
+
+$$Cov(B1, D ) = b\cdot m \cdot Var(B1)$$
+Y como 
+
+$$b = \dfrac{Cov(B1,M)}{Var(B1)} $$
+
+
+Podemos estimar $m$ como 
+
+$$m = \dfrac{Cov(B1,D)}{b \cdot Var(B1)} = \dfrac{Cov(B1,D)}{Cov(B1,M)} $$
+Y 
+
+
+```{r}
+(m_hat = cov(B1,D) / cov(B1,M))
+
+```
+
+y esta estimación está menos sesgada, antes era del orden de 0.1 o 0.2 y ahora la estimación es del orden 0.01. Pero con esta estimación no tenemos información de su distribución sino sólo de esta estimación puntual. Y si las relaciones no fueran lineales no podría usarse, en cambio la siguiente aproximación si funciona
+
+
+## Full luxury bayes
+
+Utilizamos la librería de Richard `rethinking` y también `cmdstanr` para expresar el modelo causal completo y ajustarlo con Stan.
+
+Ahora estimamos el DAG completo,  aquí es dónde es diferente de la aproximación causal de Pearl, de esta forma podemos "condicionar" incluso por los colliders, porque condicionar en este marco significa meter esa información dentro de la distribución conjunta. 
+
+```{r, warning=FALSE, message=FALSE}
+library(cmdstanr)
+library(rethinking)
+set_cmdstan_path("~/Descargas/cmdstan/")
+
+# No metemos U al ser no observable
+dat <- list(
+  N = N,
+  M = M,
+  D = D,
+  B1 = B1,
+  B2 = B2
+)
+set.seed(1908)
+
+flbi <- ulam(
+  alist(
+    # mom model
+    M ~ normal( mu , sigma ),
+    mu <- a1 + b*B1 + k*U[i],
+    # daughter model
+    D ~ normal( nu , tau ),
+    nu <- a2 + b*B2 + m*M + k*U[i],
+    # B1 and B2
+    B1 ~ bernoulli(p),
+    B2 ~ bernoulli(p),
+    # unmeasured confound
+    vector[N]:U ~ normal(0,1),
+    # priors
+    c(a1,a2,b,m) ~ normal( 0 , 0.5 ),
+    c(k,sigma,tau) ~ exponential( 1 ),
+    p ~ beta(2,2)
+  ), data=dat , chains=4 , cores=4 , warmup = 500, iter=2500 , cmdstan=TRUE )
+
+```
+
+
+```{r}
+post <- extract.samples(flbi)
+precis(flbi)
+```
+
+Vemos que no aparece la estimación de U, pero en la posterior se ha estimado un valor de U para cada uno de las observaciones. 1000 observaciones y 
+
+```{r}
+
+dim(post$U)
+post$U[1:4, 1:5]
+
+```
+
+
+## Efecto de M sobre D. 
+
+Este era el efecto que queríamos obtener y el cuál no podíamos estimar al no poder condicionar sobre U. Aquí es tan sencillo como ver su distribución a posteriori. 
+
+```{r}
+
+quantile(post$m)
+
+ggplot() +
+  geom_density(aes(post$m)) + 
+  labs(title = "Efecto directo de M sobre D", 
+       x = "m")
+```
+
+
+
+### Efecto de B1 sobre D
+
+
+Como ya sabíamos, al haber simulado los datos de forma que las relaciones entre las variables sean lineales, el efecto de B1 sobre D  no es más que el efecto de B1 sobre M multiplicado por el efecto de M sobre D. 
+
+Utilizando la distribución a posteriori. 
+
+```{r}
+# Efecto de B1 sobre D 
+quantile( with(post,b*m) )
+
+ggplot() +
+  geom_density(aes(post$b * post$m))+
+  labs(title = "Efecto de B1 sobre D", 
+       x = "b1 x m")
+
+```
+
+### Efecto de B1 sobre D, simulando
+
+Tal y como dice en su curso, el efecto causal puede ser visto como hacer una intervención supuesto cierto el modelo causal. 
+
+Simplemente utilizamos las posterioris obtenidas y vamos simulando , en primer lugar B1 = 0 y  simulamos qué M se obtendría, y lo hacemos también para B1 = 1 y restamos para obtener el efecto causal, que coindice con `b * m `
+
+```{r}
+# 
+
+# B1 = 0
+# B1 -> M
+M_B1_0 <- with( post , a1 + b*0 + k*0 )
+# M -> D
+D_B1_0 <- with( post , a2 + b*0 + m*M_B1_0 + k*0 )
+
+# now same but with B1 = 1
+M_B1_1 <- with( post , a1 + b*1 + k*0 )
+D_B1_1 <- with( post , a2 + b*0 + m*M_B1_1 + k*0 )
+
+# difference to get causal effect
+d_D_B1 <- D_B1_1 - D_B1_0
+quantile(d_D_B1)
+
+```
+
+Pues como dice el título , ser pluralista no está tan mal, puedes usar el DAG y el backdoor criterio para entender qué variables ha de tener en cuenta para estimar tu efecto causal, y a partir de ahí podrías usar el "full luxury bayesian" en situaciones más complicadas. 
