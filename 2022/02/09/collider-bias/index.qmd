@@ -1,0 +1,313 @@
+---
+title: 'Collider Bias?'
+author: jlcr
+date: '2022-02-09'
+slug: 'collider-bias'
+categories:
+  - bayesian
+  - R
+  - causal inference
+  - estadística
+tags:
+  - causal inference
+  - análisis bayesiano
+  - estadística
+description: ''
+topics: []
+---
+
+
+
+Continuando con temas del post anterior. Dice Pearl, con buen criterio, que si condicionas por un collider abres ese camino causal y creas una relación espuria entre las dos variables "Tratamiento" y "Respuesta" y por lo tanto si condicionas por el collider, aparece un sesgo. 
+
+Hablando estilo compadre. Si Tratamiento -> Collider y Respuesta -> Collider, si condiciono en el Collider, es decir, calculo la relación entre Tratamiento y Respuesta para cada valor de C, se introduce un sesgo. 
+
+Si $$C = 2\cdot Tratamiento + 3 \cdot respuesta$$
+
+Si sé que C = 3, y que Tratamiento = 4 ,  ya hay relación entre Tratamiento y respuesta aunque sean independientes, porque ambos son causa de C.  
+
+Simulemos, que es una buena forma de ver qué pasa si condiciono por el collider, siendo el tratamiento y la respuesta independientes.
+
+```{r}
+set.seed(155)
+
+N = 1000
+tratamiento <- rnorm(N, 2, 1)
+respuesta <- rnorm(N, 4, 1.5)
+
+cor(tratamiento, respuesta)
+
+collider <- rnorm(N, 2*tratamiento + 3 * respuesta, 1.5)
+
+```
+
+Si no ajusto por el collider, obtengo que no hay efecto del tratamiento , **correcto**
+
+```{r}
+summary(lm(respuesta ~ tratamiento))
+```
+
+Condicionando, **aparece el sesgo**
+
+```{r}
+summary(lm(respuesta ~ tratamiento + collider))
+```
+
+
+Retomando el ejemplo del último [post](https://muestrear-no-es-pecado.netlify.app/2022/02/06/pluralista/), pero en vez de tener una variable de confusión no observable, tenemos un collider. 
+
+```{r, warning=FALSE, message=FALSE}
+
+library(ggplot2)
+library(dagitty)
+library(ggdag)
+
+g <- dagitty("dag{ 
+  M -> D ;
+  B2 -> D;
+  B1 -> M;
+  M -> C;
+  D -> C
+ }")
+
+
+coords <-  
+  list(
+  x = c(B1 = 1, M = 2,  C = 3.5, D = 5, B2 = 6),
+  y = c(B1 = 0, M = 0, C = 1, D = 0, B2 = 0 ) 
+)
+
+coordinates(g) <- coords
+
+ggdag(g) + 
+  theme_void()
+
+
+```
+
+
+
+Usando la función `adjustmentSets` de `dagitty` nos dice sobre qué variables hay que condicionar si quiero el efecto causal total y directo de M sobre D, siguiendo las reglas de Pearl, ver por ejemplo (J. Pearl (2009), Causality: Models, Reasoning and Inference. Cambridge University Press.)
+
+
+```{r}
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "total"  )
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "direct"  )
+```
+
+Simulo unos datos dónde fuerzo a que no haya efecto causal de M a D. 
+
+
+```{r}
+
+set.seed(155)
+N <- 1000 # número de pares, 1000 madres y 1000 hijas
+
+
+ # Simulamos el collider
+
+# orden de nacimiento y 
+B1 <- rbinom(N,size=1,prob=0.5)  # 50% de madres nacieeron en primer lugar
+M <- rnorm( N , 2 * B1  )
+
+B2 <- rbinom(N,size=1,prob=0.5) # 50% son las primogénitas
+D <- rnorm( N , 2  * B2  + 0 * M )
+
+# Simulamos el collider
+C <- rnorm(N, 3 * M + 4*D, 2)
+
+
+```
+
+
+En grafo sería 
+
+```{r}
+g_sin_efecto_M_D <- dagitty("dag{ 
+  B2 -> D;
+  B1 -> M;
+  M -> C;
+  D -> C
+ }")
+
+
+coords <-  
+  list(
+  x = c(B1 = 1, M = 2,  C = 3.5, D = 5, B2 = 6),
+  y = c(B1 = 0, M = 0, C = 1, D = 0, B2 = 0 ) 
+)
+
+coordinates(g_sin_efecto_M_D) <- coords
+
+ggdag(g_sin_efecto_M_D) + 
+  theme_void()
+```
+
+
+Y vemos lo de antes, 
+
+Vemos si hay efecto causal de M sobre D (uso modelos lineales por simplicidad). 
+
+El modelo correcto sería sin condicionar por el collider.  Y bien, hace lo que debe, no hay efecto de M sobre D, tal y como sabemos que pasa en la realidad
+
+```{r}
+
+summary(lm(D ~ M))
+
+```
+
+
+Condicionando ahora por el collider, tenemos sesgo. 
+
+```{r}
+# condicionor por collider
+summary(lm(D ~ M + C))
+```
+
+```{r}
+# condiciono por collider y orden de nacimiento de la hija
+summary(lm(D ~ M + C + B2))
+```
+
+```{r}
+# condiciono por collider y orden de nacimiento de la hija y de la madre
+summary(lm(D ~ M + C + B2 + B1)) 
+```
+
+Queda como curiosidad que si condicionas por B1 en vez de por el collider también hay sesgo, pero si condicionas solo por B2, no hay. 
+
+
+## Full luxury bayes
+
+No todos los DAg's son tan sencillos como el que he puesto, hay veces en los que una misma variable puede ser a la vez un collider y una variable de confusión, porque puede haber varios path causales y tenga diferente rol.  En esos casos, condicionar por el collider te abre un path,  y si no condicionas te abre otro. Ante esas situaciones, y suponiendo que el dag es correcto, no se podría estimar el efecto causal. 
+
+Sin embargo, condicionar en la red bayesiana no significa lo mismo que condicionar en un sólo modelo, sino que significa que introduzco la información que me proporciona el collider en la distribución conjunta y que me obtenga la posteriori. 
+
+Al estimar el DAG completo, usando [Stan](https://mc-stan.org/) por ejemplo, se estima tanto el modelo para M, como para D de forma conjunta. 
+
+
+
+### Modelo bayesiano sin condicionar por el collider
+
+
+Formulamos el modelo usando la librería `rethinking` y lo ajustamos usando la función `ulam` que por debajo llama a Stan
+
+```{r, warning=FALSE, message=FALSE}
+library(cmdstanr)
+library(rethinking)
+set_cmdstan_path("~/Descargas/cmdstan/")
+```
+
+
+```{r}
+
+dat <- list(
+  N = N,
+  M = M,
+  D = D,
+  B1 = B1,
+  B2 = B2, 
+  C = C
+)
+
+set.seed(155)
+
+flbi <- ulam(
+  alist(
+    # mom model
+    M ~ normal( mu , sigma ),
+    mu <- a1 + b*B1 ,
+    # daughter model
+    D ~ normal( nu , tau ),
+    nu <- a2 + b*B2 + m*M ,
+    # B1 and B2
+    B1 ~ bernoulli(p),
+    B2 ~ bernoulli(p),
+
+    # priors
+    c(a1,a2,b,m) ~ normal( 0 , 0.5 ),
+    c(k,sigma,tau) ~ exponential( 1 ),
+    p ~ beta(2,2)
+  ), data=dat , chains=4 , cores=4 , warmup = 500, iter=2500 , cmdstan=TRUE )
+
+```
+
+
+
+Vemos los parámetros estimados y sus intervalos de credibilidad y extraemos la posteriori
+
+```{r}
+precis(flbi)
+post <- extract.samples(flbi)
+
+
+```
+
+
+Pintamos la distribución a posteriori del efecto y cómo ya sabíamos, al no condicionar por el collider, se estima sin sesgo que no hay efecto causal de M a D. 
+
+```{r}
+
+plot(bayestestR::hdi(post$m, ci = c( 0.80, 0.95))) +
+  labs(title = "Estimación sin collider")
+
+```
+
+
+
+### Modelo condicionando por el collider
+
+Ya sabemos que no es necesario de hecho condicionar por el collider, más aún, que hacerlo induce un sesgo en la estimación del efecto, ¿pero qué pasa si estimamos el dag al completo? 
+
+
+
+```{r}
+
+set.seed(155)
+
+flbi_collider <- ulam(
+  alist(
+    # mom model
+    M ~ normal( mu , sigma ),
+    mu <- a1 + b*B1 ,
+    # daughter model
+    D ~ normal( nu , tau ),
+    nu <- a2 + b*B2 + m*M ,
+    # B1 and B2
+    B1 ~ bernoulli(p),
+    B2 ~ bernoulli(p),
+    
+    # Collider
+    
+     C ~ normal( cmu , csigma ),
+     cmu <- a3 + cm * M  + cd * D,
+
+    # priors
+    c(a1,a2,a3,b,m, cm, cd) ~ normal( 0 , 0.5 ),
+    c(sigma,tau, csigma) ~ exponential( 1 ),
+    p ~ beta(2,2)
+  ), data=dat , chains=4 , cores=4 , warmup = 500, iter=2500 , cmdstan=TRUE )
+
+```
+
+
+Viendo la distribución posterior de los parámetros resulta que hemos podido estimar el verdadero  efecto causal de M sobre D  (que sabemos que es 0), incluso aunque hayamos "condicionado" por el collider.  
+
+
+
+```{r}
+
+precis(flbi_collider)
+post_with_collider <- extract.samples(flbi_collider)
+
+```
+
+```{r}
+quantile(post_with_collider$m)
+plot(bayestestR::hdi(post_with_collider$m, ci = c( 0.80, 0.95))) +
+  labs(title = "Estimación con collider")
+```
+
+Así, que siendo "pluralista", estimar el dag completo nos puede ayudar en situaciones dónde el backdoor criterio nos diga que no se puede estimar el efecto causal. 
+
+
