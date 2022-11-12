@@ -1,0 +1,228 @@
+---
+title: Cachitos. Tercera parte
+author: jlcr
+date: '2022-01-16'
+slug: cachitos-tercera-parte
+categories:
+  - estadística
+  - polémica
+  - textmining
+  - ocr
+  - 2022
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| echo: false
+#| results: 'hide'
+renv::use(lockfile = "renv.lock")
+```
+
+
+
+
+Cómo aún ando medio "covitoso", reciclo el código y comentarios de la entrada de [2021](https://muestrear-no-es-pecado.netlify.app/2021/01/26/cachitos-tercera-parte/) y con solo cambiar la ruta del fichero de subtítulos ya nos vale todo el código.
+
+El csv con el texto de los subtítulos para 2021 lo tenéis en este [enlace](https://drive.google.com/file/d/1er4ksszV0f3BrnDAz4mrl801EXUnZAHf/view?usp=sharing). 
+
+
+Vamos al lío 
+
+```{r}
+
+library(tidyverse)
+
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2021"
+```
+
+Leemos el csv. Uso DT y así podéis ver todos los datos o buscar cosas, por ejemplo `Ayuso` o `pandemia` , `monarquía` o `podemos`
+
+```{r}
+subtitulos_proces <-  read_csv(str_glue("{root_directory}{anno}_txt_unido.csv"))
+
+subtitulos_proces %>% 
+  select(texto, n_fichero, n_caracteres) %>% 
+  DT::datatable()
+
+```
+Oye, pues sólo con esto ya nos valdría ¿no? 
+
+
+Quitamos stopwords
+
+```{r}
+to_remove <- c(tm::stopwords("es"),
+               "110", "4","1","2","7","10","0","ñ","of",
+               "5","á","i","the","3", "n", "p",
+               "ee","uu","mm","ema", "zz",
+               "wr","wop","wy","x","xi","xl","xt",
+               "xte","yí", "your", "si")
+
+head(to_remove, 40)
+```
+
+Pero en nuestros datos, las palabras no están separadas, tendríamos que separarlas y  luego quitar las que no queremos. Para eso voy a utilizar la librería [tidytext](https://www.tidytextmining.com/) 
+
+
+```{r}
+library(tidytext)
+
+# Con unnest token pasamos a un dataframe qeu tiene tantas filas como palabras
+
+print(str_glue("Filas datos originales: {tally(subtitulos_proces)}"))
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% # quito palabras de la lista 
+    filter(nchar(word)>1) # Nos quedamos con palabras que tengan más de un cáracter
+
+
+print(str_glue("Filas datos tokenizado: {tally(subtitulos_proces_one_word)}"))
+
+subtitulos_proces_one_word %>% 
+  select(name,n_fichero,word, n_caracteres)
+
+```
+
+Una cosa simple que podemos hacer es contar palabras, y vemos que lo que más se repite es `canción`, obvio
+
+```{r}
+palabras_ordenadas <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+O pintarlas en plan nube de palabras.
+
+```{r}
+library(wordcloud)
+pal <- brewer.pal(8,"Dark2")
+subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    count() %>% 
+    with(wordcloud(word, n, random.order = FALSE, max.words = 80, colors=pal))    
+
+```
+
+Pues una vez que tenemos las palabras de cada subtítulo separadas podemos buscar palabras polémicas, aunque antes al usar la librería `DT` ya podíamos buscar, veamos como sería con el código.
+
+Creamos lista de palabras a buscar.
+
+```{r}
+palabras_1 <- c("monarca","pp","vox","rey","coron","zarzuela",
+                "prisión", "democracia", "abascal","casado",
+                "ultra","ciudada", "oposición","derech",
+                "podem","sanchez","iglesias","errejon","izquier",
+                "gobierno","illa","redondo","ivan","celaa",
+                "guardia","príncipe","principe","ayuso",
+                "tezanos","cis","republic", "simon", "pandem","lazo","arrim",
+                "toled","alber","fach", "zarzu", "democr","vicepre", "minist",
+                "irene","montero","almeida", "monarq")
+
+
+```
+
+Construimos una regex  para que encuentre las palabras que empiecen así. 
+
+```{r}
+(exp_regx <- paste0("^",paste(palabras_1, collapse = "|^")))
+```
+
+Y nos creamos una variable que valga TRUE cuando suceda esto
+
+```{r}
+
+subtitulos_proces_one_word <- subtitulos_proces_one_word %>% 
+    mutate(polemica= str_detect(word, exp_regx))
+
+subtitulos_proces_one_word %>% 
+  filter(polemica) %>% 
+  select(name, word, n_fichero) 
+```
+
+Podríamos ver el texto de los subtítulos, para eso, nos quedamos con un identificador, como el nombre del fichero txt, que nos servirá luego para leer la imagen. 
+
+Pues en realidad tenemos sólo 27 subtítulos polémicos de los de alrededor de 680 que hay 
+
+```{r}
+subtitulos_polemicos <- subtitulos_proces_one_word %>% 
+    filter(polemica) %>% 
+    pull(n_fichero) %>% 
+    unique()
+subtitulos_polemicos
+
+```
+
+
+
+```{r}
+(texto_polemicos <- subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    pull(texto))
+```
+Podemos ver las imágenes
+
+```{r}
+(polemica_fotogramas <- unique(substr(subtitulos_polemicos, 1,12)))
+
+polemica_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_fotogramas)
+
+subtitulos_polemicos_full <- paste0(polemica_fotogramas_full,".subtitulo.tif")
+
+```
+Y ahora utilizando la librería `magick` en R y un poco de programación funcional (un simple map), tenemos la imagen leída
+
+```{r}
+library(magick)
+
+fotogramas_polemicos_img <- map(polemica_fotogramas_full, image_read)
+subtitulos_polemicos_img <- map(subtitulos_polemicos_full, image_read)
+```
+
+```{r}
+subtitulos_polemicos_img[[18]]
+```
+
+```{r}
+fotogramas_polemicos_img[[18]]
+```
+
+Podemos ponerlos todos juntos.
+
+```{r}
+lista_fotogram_polemicos <- map(fotogramas_polemicos_img, grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_fotogram_polemicos)
+```
+
+
+
