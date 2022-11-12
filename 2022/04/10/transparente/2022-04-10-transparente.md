@@ -6,8 +6,7 @@ slug: transparente
 categories:
   - agile
   - empresas
-tags:
-  - agile
+  - 2022
 description: ''
 topics: []
 ---
