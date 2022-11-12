@@ -70,9 +70,9 @@ ul.task-list li input[type="checkbox"] {
     }
 
     const options = {
-      valueNames: ['listing-date','listing-title',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-date','listing-title',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
       
-      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
+      searchColumns: ["listing-date","listing-title","listing-author"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -202,217 +202,149 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<div class="quarto-listing quarto-listing-container-grid" id="listing-listing">
-<div class="list grid quarto-listing-cols-3">
-<div class="g-col-1" data-index="0" data-categories="api,docker,R" data-listing-date-sort="1667080800000" data-listing-file-modified-sort="1667300652308" data-listing-reading-time-sort="13.94">
-<a href="./2022/10/30/api-y-docker-con-r-parte-2.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Api y docker con R. parte 2
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
+<div class="listing-actions-group">
+   <div class="input-group input-group-sm quarto-listing-sort">
+     <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
+     <select id="listing-listing-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-listing'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
+       <option value="" disabled="" selected="" hidden="">Order By</option>
+       <option value="index" data-direction="asc">Default</option>
+         <option value="listing-date-sort" data-direction="asc">
+          Date - Oldest
+        </option>
+         <option value="listing-date-sort" data-direction="desc">
+          Date - Newest
+        </option>
+         <option value="listing-title-sort" data-direction="asc">
+          Title
+        </option>
+     </select>
+  </div>
+    <div class="input-group input-group-sm quarto-listing-filter">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="text" class="search form-control" placeholder="Filter">
+    </div>
+</div>
+
+<table class="quarto-listing-table table">
+<thead>
+<tr>
+<th>
+<a class="sort" data-sort="listing-date-sort" onclick="if (this.classList.contains('sort-asc')) { this.classList.add('sort-desc'); this.classList.remove('sort-asc') } else { this.classList.add('sort-asc'); this.classList.remove('sort-desc')} return false;">Date</a>
+</th>
+<th>
+<a class="sort" data-sort="listing-title-sort" onclick="if (this.classList.contains('sort-asc')) { this.classList.add('sort-desc'); this.classList.remove('sort-asc') } else { this.classList.add('sort-asc'); this.classList.remove('sort-desc')} return false;">Title</a>
+</th>
+</tr>
+</thead>
+<tbody class="list">
+<tr data-index="0" data-categories="api,docker,R" data-listing-date-sort="1667080800000" data-listing-file-modified-sort="1667300652308" data-listing-reading-time-sort="13.94" data-listing-title-sort="Api y docker con R. parte 2" data-listing-filename-sort="api-y-docker-con-r-parte-2.qmd">
+<td class="listing-date">
 Oct 30, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="1" data-categories="julia,produccion" data-listing-date-sort="1666735200000" data-listing-file-modified-sort="1666806460525" data-listing-reading-time-sort="3.79">
-<a href="./2022/10/26/sigo-trasteando-con-julia/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Sigo trasteando con julia
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/10/30/api-y-docker-con-r-parte-2.html" class="title">Api y docker con R. parte 2</a>
+</td>
+</tr>
+<tr data-index="1" data-categories="julia,produccion" data-listing-date-sort="1666735200000" data-listing-file-modified-sort="1666806460525" data-listing-reading-time-sort="3.79" data-listing-title-sort="Sigo trasteando con julia" data-listing-filename-sort="index.markdown">
+<td class="listing-date">
 Oct 26, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="2" data-categories="docker,R" data-listing-date-sort="1665525600000" data-listing-file-modified-sort="1667410256283" data-listing-reading-time-sort="36.97">
-<a href="./2022/10/12/api-y-docker-con-r-parte-1/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Api y docker con R. parte 1
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/10/26/sigo-trasteando-con-julia/index.html" class="title">Sigo trasteando con julia</a>
+</td>
+</tr>
+<tr data-index="2" data-categories="docker,R" data-listing-date-sort="1665525600000" data-listing-file-modified-sort="1667410256283" data-listing-reading-time-sort="36.97" data-listing-title-sort="Api y docker con R. parte 1" data-listing-filename-sort="index.markdown">
+<td class="listing-date">
 Oct 12, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="3" data-categories="R,python,C++,Rust" data-listing-date-sort="1663452000000" data-listing-file-modified-sort="1663496506367" data-listing-reading-time-sort="4.775">
-<a href="./2022/09/18/veloooosidad/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Veeelooosidad
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/10/12/api-y-docker-con-r-parte-1/index.html" class="title">Api y docker con R. parte 1</a>
+</td>
+</tr>
+<tr data-index="3" data-categories="R,python,C++,Rust" data-listing-date-sort="1663452000000" data-listing-file-modified-sort="1663496506367" data-listing-reading-time-sort="4.775" data-listing-title-sort="Veeelooosidad" data-listing-filename-sort="index.markdown">
+<td class="listing-date">
 Sep 18, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="4" data-categories="estadística" data-listing-date-sort="1659304800000" data-listing-file-modified-sort="1667422230323" data-listing-reading-time-sort="47.015">
-<a href="./2022/08/01/indios-y-jefes-io-al-servicio-del-mal/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Indios y jefes, IO al servicio del mal.
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/09/18/veloooosidad/index.html" class="title">Veeelooosidad</a>
+</td>
+</tr>
+<tr data-index="4" data-categories="estadística" data-listing-date-sort="1659304800000" data-listing-file-modified-sort="1667422230323" data-listing-reading-time-sort="47.015" data-listing-title-sort="Indios y jefes, IO al servicio del mal." data-listing-filename-sort="index.markdown">
+<td class="listing-date">
 Aug 1, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="5" data-categories="bayesian,Julia" data-listing-date-sort="1656626400000" data-listing-file-modified-sort="1659383083459" data-listing-reading-time-sort="16.11">
-<a href="./2022/07/01/palabras-para-julia-parte-4-n/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Palabras para Julia (Parte 4 /n). Predicción con Turing
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/08/01/indios-y-jefes-io-al-servicio-del-mal/index.html" class="title">Indios y jefes, IO al servicio del mal.</a>
+</td>
+</tr>
+<tr data-index="5" data-categories="bayesian,Julia" data-listing-date-sort="1656626400000" data-listing-file-modified-sort="1659383083459" data-listing-reading-time-sort="16.11" data-listing-title-sort="Palabras para Julia (Parte 4 /n). Predicción con Turing" data-listing-filename-sort="index.markdown">
+<td class="listing-date">
 Jul 1, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="6" data-categories="estadística,R python,R" data-listing-date-sort="1655762400000" data-listing-file-modified-sort="1667498832907" data-listing-reading-time-sort="7.71">
-<a href="./2022/06/21/io-parte-1/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-IO Parte 1
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/07/01/palabras-para-julia-parte-4-n/index.html" class="title">Palabras para Julia (Parte 4 /n). Predicción con Turing</a>
+</td>
+</tr>
+<tr data-index="6" data-categories="estadística,R python,R" data-listing-date-sort="1655762400000" data-listing-file-modified-sort="1667498832907" data-listing-reading-time-sort="7.71" data-listing-title-sort="IO Parte 1" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 Jun 21, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="7" data-categories="estadística,machine learning,python" data-listing-date-sort="1653775200000" data-listing-file-modified-sort="1667726625511" data-listing-reading-time-sort="4.92">
-<a href="./2022/05/29/no-mentir-s/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-No mentirás
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/06/21/io-parte-1/index.html" class="title">IO Parte 1</a>
+</td>
+</tr>
+<tr data-index="7" data-categories="estadística,machine learning,python" data-listing-date-sort="1653775200000" data-listing-file-modified-sort="1667726625511" data-listing-reading-time-sort="4.92" data-listing-title-sort="No mentirás" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 May 29, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="8" data-categories="agile,empresas" data-listing-date-sort="1649541600000" data-listing-file-modified-sort="1649587700130" data-listing-reading-time-sort="1.74">
-<a href="./2022/04/10/transparente/2022-04-10-transparente.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Transparente
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/05/29/no-mentir-s/index.html" class="title">No mentirás</a>
+</td>
+</tr>
+<tr data-index="8" data-categories="agile,empresas" data-listing-date-sort="1649541600000" data-listing-file-modified-sort="1649587700130" data-listing-reading-time-sort="1.74" data-listing-title-sort="Transparente" data-listing-filename-sort="2022-04-10-transparente.md">
+<td class="listing-date">
 Apr 10, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="9" data-categories="Julia,R,Stan" data-listing-date-sort="1647730800000" data-listing-file-modified-sort="1667731803226" data-listing-reading-time-sort="9.86">
-<a href="./2022/03/20/palabras-para-julia-parte-3-n/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Palabras para Julia ( Parte 3/n)
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/04/10/transparente/2022-04-10-transparente.html" class="title">Transparente</a>
+</td>
+</tr>
+<tr data-index="9" data-categories="Julia,R,Stan" data-listing-date-sort="1647730800000" data-listing-file-modified-sort="1667731803226" data-listing-reading-time-sort="9.86" data-listing-title-sort="Palabras para Julia ( Parte 3/n)" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 Mar 20, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="10" data-categories="bayesian,estadística,causal inference,R" data-listing-date-sort="1644620400000" data-listing-file-modified-sort="1668238595832" data-listing-reading-time-sort="6.12">
-<a href="./2022/02/12/mediator-full-luxury-bayes/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Mediator. Full luxury bayes
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/03/20/palabras-para-julia-parte-3-n/index.html" class="title">Palabras para Julia ( Parte 3/n)</a>
+</td>
+</tr>
+<tr data-index="10" data-categories="bayesian,estadística,causal inference,R" data-listing-date-sort="1644620400000" data-listing-file-modified-sort="1668238595832" data-listing-reading-time-sort="6.12" data-listing-title-sort="Mediator. Full luxury bayes" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 Feb 12, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="11" data-categories="bayesian,R,causal inference,estadística" data-listing-date-sort="1644361200000" data-listing-file-modified-sort="1668238933109" data-listing-reading-time-sort="6.39">
-<a href="./2022/02/09/collider-bias/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Collider Bias?
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/02/12/mediator-full-luxury-bayes/index.html" class="title">Mediator. Full luxury bayes</a>
+</td>
+</tr>
+<tr data-index="11" data-categories="bayesian,R,causal inference,estadística" data-listing-date-sort="1644361200000" data-listing-file-modified-sort="1668238933109" data-listing-reading-time-sort="6.39" data-listing-title-sort="Collider Bias?" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 Feb 9, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="12" data-categories="estadística,R" data-listing-date-sort="1644102000000" data-listing-file-modified-sort="1668245179041" data-listing-reading-time-sort="7.38">
-<a href="./2022/02/06/pluralista/index.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Pluralista
-</h5>
-<div class="card-attribution card-text-small end">
-<div class="listing-date">
+</td>
+<td class="listing-title">
+<a href="./2022/02/09/collider-bias/index.html" class="title">Collider Bias?</a>
+</td>
+</tr>
+<tr data-index="12" data-categories="estadística,R" data-listing-date-sort="1644102000000" data-listing-file-modified-sort="1668245179041" data-listing-reading-time-sort="7.38" data-listing-title-sort="Pluralista" data-listing-filename-sort="index.qmd">
+<td class="listing-date">
 Feb 6, 2022
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-</div>
+</td>
+<td class="listing-title">
+<a href="./2022/02/06/pluralista/index.html" class="title">Pluralista</a>
+</td>
+</tr>
+</tbody>
+
+</table>
 <div class="listing-no-matching d-none">
 No matching items
 </div>
