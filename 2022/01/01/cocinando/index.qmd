@@ -1,0 +1,531 @@
+---
+title: Cocinando
+date: '2022-01-01'
+image: cocinando.png
+categories:
+  - muestreo
+  - 2022
+  - encuestas electorales
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Lo primero, feliz año a todos (no me da la gana de poner todas y todes), y espero que este año sea mejor que el pasado. 
+
+Hoy voy a hablar un poco de la "cocina" electoral en los barómetros de opinión, pero de forma muy simplificada. 
+
+Una de las primeras cosas que se hacía era comparar el recuerdo de voto declarado en la encuesta con el resultado real de las elecciones a las que hacía referencia. 
+
+Cuándo no coinciden una de las cosas que se hacían era imputar el recuerdo de voto para aquellos que no contestaron a la pregunta. Esto se hacía utilizando variables de la encuesta, típicamente variables de autoposición idelógica y similares.   
+
+Una vez imputado el recuerdo de voto se comparaba de nuevo con el resultado real de las elecciones y si variaba se recurría a la ponderación por el recuerdo de voto real. Esto es, se estimaban unos pesos de forma que la distribución del recuerdo de voto en la encuesta fuera lo más similar posible a los resultados reales.
+
+Esta "reponderación" corre el riesgo de descalibrar la encuesta en otras variables, tales como sexo y edad, por poner un ejemplo. La solución podría ser postestratificar la muestra, pero para eso deberíamos saber los valores poblaciones en cada combinación de sexo, edad (posiblemente agrupada) y recuerdo de voto.  Es decir, tener la distribución conjunta, lo cual implica tener por ejemplo todas las combinaciones de edad y partido al que votó en la muestra y también saber la distribución poblacional (en las elecciones consideradas). Evidentemente no siempre es posible tener tanta información, por lo que se opta por al menos ajustar las distribuciones marginales. 
+
+Para obtener esos pasos se utiliza un procedimiento iterativo llamado [`raking`](https://www.tandfonline.com/doi/abs/10.1080/01621459.1992.10475217)
+
+Para ver como se haría esa parte de la "cocina" (lo de imputar los nulos en recuerdo de voto usando un modelo no lo voy a hacer), utilizando la librería [`survey`](http://r-survey.r-forge.r-project.org/svybook/) de Thomas Lumley. 
+
+
+## Fuentes de datos. 
+
+* [Barómetro del CIS, noviembre de 2021.](http://www.cis.es/cis/opencm/ES/1_encuestas/estudios/ver.jsp?estudio=14595)
+
+* [Resultados electorales oficiales](http://www.infoelectoral.mir.es/) utilizando la fantástica librería [`infoelectoral`](https://github.com/rOpenSpain/infoelectoral)
+
+* Padrón oficial de habitantes a 1 de Enero de 2020. 
+
+
+
+## Obtención datos
+
+### Encuesta CIS.
+
+
+```{r}
+library(tidyverse)
+library(infoelectoral)
+library(magrittr) # 
+library(patchwork) #
+ 
+df <- haven::read_sav("/home/jose/Rstudio_projects/raking_ejemplo/MD3340/3340.sav")
+df %<>%  ## change in place
+  rename_all(tolower)
+
+
+# Convierto a factor algunas variables para que pillen el label que 
+# viene del fichero de spss. 
+
+df <- df %>% 
+  mutate(across(.cols = c(ccaa, sexo, recuerdo, recuvotogr, 
+                          intenciongalter, intenciong, intenciongr, 
+                          intenciongalterr), .fns = as_factor))
+
+# categorizmaos la edad
+df <- df %>%
+  mutate(
+    gedad =
+      case_when(
+        edad >= 100 ~ "100 años y más",
+        edad >= 18 & edad <= 24 ~ "18-24 años",
+        edad >= 25 & edad <= 29 ~ "25-29 años",
+        edad >= 30 & edad <= 34 ~ "30-34 años",
+        edad >= 35 & edad <= 39 ~ "35-39 años",
+        edad >= 40 & edad <= 44 ~ "40-44 años",
+        edad >= 45 & edad <= 49 ~ "45-49 años",
+        edad >= 50 & edad <= 54 ~ "50-54 años",
+        edad >= 55 & edad <= 59 ~ "55-59 años",
+        edad >= 60 & edad <= 64 ~ "60-64 años",
+        edad >= 65 & edad <= 69 ~ "65-69 años",
+        edad >= 70 & edad <= 74 ~ "70-74 años",
+        edad >= 75 & edad <= 79 ~ "75-79 años",
+        edad >= 80 & edad <= 84 ~ "80-84 años",
+        edad >= 85 & edad <= 89 ~ "85-89 años",
+        edad >= 90 & edad <= 94 ~ "90-94 años",
+        edad >= 95 & edad <= 99 ~ "95-99 años",
+       
+      )
+  )
+
+
+df$gedad <- as.factor(df$gedad)
+head(df)
+```
+
+
+
+Podemos ver cuántos encuestados hay por cada sexo,edad, y recuerdo de voto, contando los datos brutos o los datos utilizando la ponderación que ha calculado el CIS. 
+
+```{r}
+df %>% 
+  group_by(sexo, gedad, recuerdo) %>% 
+  summarise(total = n(),
+            peso_tot = sum(peso))
+```
+
+
+Para normalizar las siglas usamos otra tabla de `lookup` 
+
+
+```{r}
+siglas_cis <-  read_csv("/home/jose/Rstudio_projects/raking_ejemplo/siglas_cis.csv")
+
+siglas_cis
+```
+
+```{r}
+
+# le pegamos las siglas normalizadas
+df <- df %>% 
+  left_join(siglas_cis) 
+
+
+
+# Vemos los totales por recuerdo de voto , usando la ponderacińo del cis
+df %>% 
+  group_by(key) %>% 
+  summarise(frq = sum(peso))
+
+# Vemos total de datos en la encuesta y comprobamos que la suma de las 
+# ponderaciones coincide con el total de encuestados. 
+
+df %>% 
+  summarise(n(), 
+            sum(peso))
+
+# Convertimos a factor la variable con el recuerdo de voto normalizado
+df$key <- as.factor(df$key)
+
+
+```
+
+
+
+Ahora lo que nos hace falta es saber los totales de recuerdo de voto, sexo y edad que debería haber tenido la encuesta. 
+
+### Resultados electorales 
+
+```{r}
+
+
+congress_2019 <- municipios(tipo_eleccion = "congreso", anno = 2019, mes = "11")
+
+(votos_summary <-  congress_2019 %>%
+  group_by(codigo_ccaa, codigo_provincia,
+           codigo_municipio, municipio) %>%
+  summarise(
+    abstencion = first(censo_ine) -
+      first(votos_blancos) -
+      first(votos_nulos) -
+      first(votos_candidaturas),
+    censo_ine = first(censo_ine), 
+    votos_blancos = first(votos_blancos),
+    votos_nulos = first(votos_nulos),
+    votos_candidaturas = first(votos_candidaturas)  ) %>%
+    ungroup() %>% 
+  summarise(
+    abstencion = sum(abstencion, na.rm = TRUE) +
+      sum(votos_blancos, na.rm = TRUE) + 
+      sum(votos_nulos, na.rm = TRUE),
+    censo_ine = sum(censo_ine, na.rm = TRUE), 
+    votos_blancos = sum(votos_blancos, na.rm = TRUE),
+    votos_nulos = sum(votos_nulos, na.rm = TRUE),
+    votos_candidaturas = sum(votos_candidaturas, na.rm = TRUE)
+  ))
+
+# ponemos abstencion como partido
+abstencion <-  votos_summary %>%
+  select( abstencion) %>%
+  mutate(siglas = "abstencion", 
+         denominacion = "abstencion", 
+         codigo_partido = "abstencion") %>%  
+  rename(votos = abstencion)
+
+
+
+
+votos_partidos <-  congress_2019 %>% 
+  group_by(codigo_partido, siglas, denominacion) %>% 
+  summarise(votos = sum(votos))
+
+
+votos_final <- votos_partidos %>% 
+  bind_rows(abstencion) %>% 
+  bind_cols(votos_summary %>% 
+               select( censo_ine)) %>% # debe ser pob > = 18 
+  ungroup() %>%
+    mutate(prop_voto = votos/censo_ine) %>% 
+  arrange(-prop_voto) 
+  
+
+DT::datatable(votos_final)
+
+
+
+```
+
+Como las siglas de los partidos  en la info oficial y las que vienen en la encuesta no están normalizadas, me construí una tabla de "lookup" para eso.
+
+```{r}
+siglas_infoelectoral <- read_csv("/home/jose/Rstudio_projects/raking_ejemplo/siglas_infoelectoral.csv")
+
+DT::datatable(siglas_infoelectoral)
+```
+
+```{r}
+(votos_final_summary <- votos_final %>% 
+  left_join(siglas_infoelectoral) %>% 
+  group_by(key) %>% 
+  summarise(prop_voto = sum(prop_voto, na.rm=TRUE)))
+
+
+votos_final_summary$key <- as.factor(votos_final_summary$key)
+
+(pop_revoto <-  votos_final_summary %>% 
+  mutate(Freq = prop_voto * sum(df$peso)) %>% 
+  select(key, Freq ) )
+
+```
+
+Y vemos que no coincide mucho con la que hay en la encuesta
+
+```{r}
+df %>% 
+  group_by(key) %>% 
+  summarise(Freq = sum(peso))
+```
+
+En la encuesta hay más personas que recuerdan haber votado al psoe que las que debería haber, así como también hay menos que recuerdan haber votado a Mas País o a Vox. Había una hipótesis por ahi que decía que el votante de derechas está infrarrepresentado en las encuestas. 
+
+
+
+
+### Padrón
+
+Esto es solo un csv con la info de población por  sexo y edad exacta (quité los menores de 18 años)
+
+Leemos el csv, que lamentablemente viene en encoding de windows y con separador decimal y tal.
+
+
+
+```{r}
+padron <- read_delim(
+  "/home/jose/Rstudio_projects/raking_ejemplo/pad_2021.csv",
+  delim = ";",
+  escape_double = FALSE,
+  locale = locale(
+    date_names = "es",
+    decimal_mark = ",",
+    grouping_mark = ".",
+    encoding = "WINDOWS-1252"
+  ),
+  trim_ws = TRUE
+)
+```
+
+Categorizamos la edad y vemos cuales habrían sido las frecuencias de edad en la encuestas si fueran representativas de la estructura de población del padrón de 2020
+
+```{r}
+pop_edad <- padron %>% 
+  mutate(
+    gedad =
+      case_when(
+        edad >= 100 ~ "100 años y más",
+        edad >= 18 & edad <= 24 ~ "18-24 años",
+        edad >= 25 & edad <= 29 ~ "25-29 años",
+        edad >= 30 & edad <= 34 ~ "30-34 años",
+        edad >= 35 & edad <= 39 ~ "35-39 años",
+        edad >= 40 & edad <= 44 ~ "40-44 años",
+        edad >= 45 & edad <= 49 ~ "45-49 años",
+        edad >= 50 & edad <= 54 ~ "50-54 años",
+        edad >= 55 & edad <= 59 ~ "55-59 años",
+        edad >= 60 & edad <= 64 ~ "60-64 años",
+        edad >= 65 & edad <= 69 ~ "65-69 años",
+        edad >= 70 & edad <= 74 ~ "70-74 años",
+        edad >= 75 & edad <= 79 ~ "75-79 años",
+        edad >= 80 & edad <= 84 ~ "80-84 años",
+        edad >= 85 & edad <= 89 ~ "85-89 años",
+        edad >= 90 & edad <= 94 ~ "90-94 años",
+        edad >= 95 & edad <= 99 ~ "95-99 años",
+        
+      )
+  ) %>% 
+  group_by(gedad) %>% 
+  summarise(pob = sum(total)) %>% 
+  ungroup() %>%
+  mutate(pct = pob/sum(pob)) %>% 
+  mutate(Freq = pct* sum(df$peso)) %>% 
+  select(gedad, Freq) %>% 
+  filter(gedad!="100 años y más")
+
+pop_sexo <-   padron %>% 
+  mutate(sexo = ifelse(sexo == "Hombres", "Hombre", "Mujer")) %>% 
+  group_by(sexo) %>% 
+  summarise(pob = sum(total)) %>% 
+  ungroup() %>%
+  mutate(pct = pob/sum(pob)) %>% 
+  mutate(Freq = pct* sum(df$peso)) %>% 
+  select(sexo, Freq)
+
+pop_sexo$sexo <- as.factor(pop_sexo$sexo)
+
+pop_edad$gedad <- as.factor(pop_edad$gedad)
+
+
+pop_edad
+
+```
+
+
+Y veamos si se parece a lo que hay en la encuesta
+
+```{r}
+df %>% 
+  group_by(gedad) %>% 
+  summarise(Freq = sum(peso))
+```
+
+Pues en la encuesta ha caído más gente joven de la que debería, cosas que pasan. 
+
+
+## Raking
+
+Pues ya tenemos todo para  hacer el ejercicio simple de raking. 
+
+Importamos la librería survery, comprobamos que los niveles de las variables que vamos a considerar en el raking son los mismos en los datos de las encuestas y en los dataframes auxiliares 
+
+```{r}
+
+# Comprobamos niveles
+all.equal(levels(pop_revoto$key) , levels(df$key))
+all.equal(levels(pop_edad$gedad) , levels(df$gedad))
+all.equal(levels(pop_sexo$sexo),  levels(df$sexo))
+
+```
+
+Construimos un diseño muestral inicial utilizando los pesos que facilita el CIS. 
+
+```{r}
+library(survey)
+
+disenno <- svydesign(id=~1, weight=~peso,data=df)
+
+
+```
+
+Vemos los totales por recuerdo de voto por ejemplo, con la estimación de su error estándar
+
+```{r}
+svytotal(~key, disenno)
+```
+
+Para hacer el raking utilizamos la funcion `rake` que toma argumentos el diseño muestral original, una lista con el nombre de las variables (en formula) en la encuesta , y una lista con los dataframes auxiliares cada uno con dos columnas, la variable que se corresponde con la de la encuesta y una columna numérica con el valor de cuántos individuos habría de haber en la muestra para que la distribución fuera igual a la de la población. Otros parámetros, serían el número de iteraciones máximas y el criterio de parada (epsilon) del procedimiento iterativo. 
+
+
+```{r}
+
+ponderacion_1 <- 
+  rake (
+  design             = disenno,
+  sample.margins     = list(~gedad, ~key, ~sexo), 
+  population.margins = list(pop_edad, pop_revoto, pop_sexo)
+  ) 
+
+
+```
+
+Y ahora podemos comprobar qué tal lo ha hecho
+
+Edad
+
+
+```{r}
+pop_edad # dist poblacional
+```
+
+
+```{r}
+svytotal(~gedad, disenno) # usando ponderaciones cis
+```
+
+```{r}
+svytotal(~gedad, ponderacion_1)
+```
+
+sexo 
+
+```{r}
+pop_sexo
+```
+
+En la encuesta original hay sobrepresentacion de mujeres
+```{r}
+svytotal(~sexo, disenno)
+```
+
+
+```{r}
+svytotal(~sexo, ponderacion_1)
+```
+
+
+Recuerdo de voto
+
+```{r}
+pop_revoto
+```
+
+```{r}
+svytotal(~key, disenno)
+```
+
+```{r}
+svytotal(~key, ponderacion_1)
+```
+
+Pues podríamos dar por buena la calibración alcanzada
+
+Los pesos los podemos extraer usando la función `weights`
+
+```{r}
+weights(ponderacion_1)[1:10]
+```
+
+## Estimación simple de la intención de voto. 
+
+Para realizar una "buena" estimación de voto  tendria que haber hecho algo más aparte del "raking", tal vez un modelo para tener voto probable de los indecisos etcétera. 
+
+No obstante vamos a ver qué estimación saldría simplemente utilizando los pesos originales y los pesos calibrados. 
+
+
+```{r}
+(estim_cis <- svytotal(~intenciongr, disenno))
+```
+
+
+```{r}
+(estim_calibrada <- svytotal(~intenciongr, ponderacion_1))
+```
+
+Vamos a pintarlas. El objeto devuelto por `svytotal` no es muy manejable, pero podemos utilizar lo que devuelve el print.
+
+
+```{r}
+
+
+
+estim_simple1 <- print(svytotal(~intenciongr, disenno))
+estim_simple2 <- print(svytotal(~intenciongr, ponderacion_1))
+
+cis_estim <- estim_simple1 %>% 
+  as.data.frame() %>%  # as.data.frame para no perder los nombre de filas
+  rownames_to_column(var = "partido") %>% 
+  mutate(partido       = str_sub(partido, 12, -1),
+         tot_low       = total - 1.96 * SE , # intervalos simples
+         tot_high      = total + 1.96 * SE, 
+         pct_voto      = total    / 3779.429, 
+         pct_voto_low  = tot_low  / 3779.429, 
+         pct_voto_high = tot_high / 3779.429
+           ) 
+
+
+cañi_estim <- estim_simple2 %>% 
+  as.data.frame() %>%  # as.data.frame para no perder los nombre de filas
+  rownames_to_column(var = "partido") %>% 
+  mutate(partido       = str_sub(partido, 12, -1),
+         tot_low       = total - 1.96 * SE , 
+         tot_high      = total + 1.96 * SE, 
+         pct_voto      = total    / 3779.429, 
+         pct_voto_low  = tot_low  / 3779.429, 
+         pct_voto_high = tot_high / 3779.429
+  ) 
+
+
+p_cis <- cis_estim %>% 
+  top_n(22, pct_voto) %>% 
+  ggplot(aes(y = reorder(partido, pct_voto ), x = pct_voto))  +
+  geom_point(color = "darkred", size = rel(3)) +
+  geom_errorbarh(aes(xmin = pct_voto_low, xmax = pct_voto_high)) +
+  scale_x_continuous(labels = scales::percent, 
+                     limits = c(0, 0.22)) +
+  labs(title = "Estimación intención voto (CIS)", 
+       subtitle = "Usando ponderación cis",
+       x = "Proporción voto",
+       y = "Partido")
+      
+p_cañi <- cañi_estim %>% 
+  top_n(22, pct_voto) %>% 
+  ggplot(aes(y = reorder(partido, pct_voto ), x = pct_voto))  +
+  geom_point(color = "darkblue", size = rel(3)) +
+  geom_errorbarh(aes(xmin = pct_voto_low, xmax = pct_voto_high)) +
+  scale_x_continuous(labels = scales::percent, 
+                     limits = c(0, 0.22)) +
+  labs(title = "Estimación intención voto (con raking) ", 
+       subtitle = "Ajustando ponderación por edad,\nsexo y recuerdo voto",
+       x = "Proporción voto",
+       y = "Partido")
+
+p_cis + p_cañi
+
+
+```
+
+
+## Nota. 
+
+En vez de `raking` es usual utilizar modelos como MRP (multilevel regression and estratification), pero este último tiene el incoveniente (aunque muchas otras ventajas) de que necesita saber la distribución conjunta de las variables por las que se postestratifica. 
+Aquí os dejo un [artículo interesante](https://medium.com/pew-research-center-decoded/comparing-mrp-to-raking-for-online-opt-in-polls-b05444d9931d)

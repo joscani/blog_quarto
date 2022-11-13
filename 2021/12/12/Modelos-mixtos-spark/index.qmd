@@ -1,0 +1,250 @@
+---
+title: Modelos mixtos en spark. Intento 1
+author: jlcr
+date: '2021-12-12'
+slug: modelos-mixtos-en-spark-intento-1
+categories:
+  - estadística
+  - spark
+  - modelos mixtos
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+A los que nos dedicamos a esto siempre echamos de menos un `lme4` en `python` o en `Spark`.  En `Julia` afortunadamente tenemos [`MixedModels.jl`](https://juliastats.org/MixedModels.jl/stable/). 
+
+Total que buscando alguna posible solución para poder usar esto en spark me encuentro con dos posibles soluciones. 
+
+* [`photon-ml`](https://github.com/linkedin/photon-ml)
+* [`MomentMixedModels`](https://github.com/stitchfix/MomentMixedModels)
+
+Ambos repos llevan un tiempo sin actualizarse así que no sé yo.
+
+`photon-ml` es de linkedin y tiene buena pinta, al menos el tutorial, que tienes que bajarte un docker y tal, funciona. Aunque la sintaxis es rara. Aún tengo que probarlo más y probar a crear el jar del proyecto ya que no está en maven central y tal (y no me funcionó)
+
+> Ejemplo de sintaxis de photon-ml 
+
+```scala 
+// Define another feature shard for our random effect coordinate, and create a new mapping
+// with both our 'global' and 'perUser' shards.
+val perUserFeatureShardId = "perUser"
+val perUserFeatureShard = Set("genreFeatures", "movieLatentFactorFeatures")
+val mixedFeatureShardBags = Map(
+    globalFeatureShardId -> globalFeatureShard,
+    perUserFeatureShardId -> perUserFeatureShard)
+
+// Since we have a new shard, re-read the training and validation data into a new DataFrame
+// (and a new index map for the new feature shard).
+val (mixedInputData, mixedFeatureShardInputIndexMaps) = dataReader.readMerged(
+    Seq("/data/movielens/trainData.avro"),
+    mixedFeatureShardBags,
+    numPartitions)
+val mixedValidateData = dataReader.readMerged(
+    Seq("/data/movielens/validateData.avro"),
+    mixedFeatureShardInputIndexMaps,
+    mixedFeatureShardBags,
+    numPartitions)
+
+``` 
+
+Donde mixedInputData es un dataframe de spark con esta pinta.
+
+```scala
+mixedInputData.show()
+
++----+--------+------+-------+------+------+--------------------+--------------------+
+| uid|response|userId|movieId|weight|offset|              global|             perUser|
++----+--------+------+-------+------+------+--------------------+--------------------+
+|null|     4.0|     1|   1215|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.5|     1|   1350|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.0|     1|   2193|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.5|     1|   3476|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     5.0|     1|   4993|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.0|     3|   1544|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.0|     7|    440|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.0|     7|    914|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.0|     7|   1894|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.0|     7|   2112|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.0|     7|   3524|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.0|     7|   3911|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     5.0|    11|    256|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     5.0|    11|   1200|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     4.5|    11|  48394|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     1.0|    11|  56003|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     0.5|    11|  64508|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     5.0|    14|    471|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.0|    14|   2018|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+|null|     3.5|    14|   6936|  null|  null|(51,[0,1,2,3,4,5,...|(51,[0,1,2,3,4,5,...|
+
+
+```
+
+Donde las columna global y perUser son iguales, pero una se usa para estimar la parte de los efectos fijos y la otra para los aleatorios. 
+
+Y luego sigue con 
+
+```scala
+// A 'RandomEffectDataConfiguration' requires an identifier field to use for grouping data from the
+// same entity, in addition to the fields that a 'FixedEffectDataConfiguration' requires. It also has
+// some additional optional parameters not covered in this tutorial.
+val perUserRandomEffectId = "userId"
+val perUserDataConfig = RandomEffectDataConfiguration(
+    perUserRandomEffectId,
+    perUserFeatureShardId,
+    numPartitions,
+    projectorType = IndexMapProjection)
+
+// A 'RandomEffectOptimizationConfiguration' is defined much like a
+// 'FixedEffectOptimizationConfiguration'. The options below are varied from those above primarily
+// for variety and demonstration.
+val perUserOptimizerConfig = OptimizerConfig(
+    optimizerType = TRON,
+    tolerance = 1e-3,
+    maximumIterations = 4)
+val perUserRegularizationContext = L2RegularizationContext
+val perUserRegularizationWeight = 1
+val perUserOptimizationConfig = RandomEffectOptimizationConfiguration(
+    perUserOptimizerConfig,
+    perUserRegularizationContext,
+    perUserRegularizationWeight)
+
+// Assign a coordinate ID to the random effect configurations we defined above. This time, we have
+// multiple coordinates and need to determine the update sequence. In general, it's recommended to
+// order coordinates from least to most granular, i.e. those that correlate most with the response to
+// those that correlate least.
+val perUserCoordinateId = "perUser"
+val mixedCoordinateDataConfigs = Map(
+    globalCoordinateId -> globalDataConfig,
+    perUserCoordinateId -> perUserDataConfig)
+val mixedCoordinateOptConfigs = Map(
+    globalCoordinateId -> globalOptimizationConfig,
+    perUserCoordinateId -> perUserOptimizationConfig)
+val mixedUpdateSequence = Seq(globalCoordinateId, perUserCoordinateId)
+
+// Reset our estimator. The training task hasn't changed, but the data configurations and update
+// sequence have. Furthermore, since there are now multiple coordinates, we should try multiple
+// passes of coordinate descent.
+estimator.setCoordinateDataConfigurations(mixedCoordinateDataConfigs)
+estimator.setCoordinateUpdateSequence(mixedUpdateSequence)
+estimator.setCoordinateDescentIterations(2)
+
+// Train a new model.
+val (mixedModel, _, mixedModelConfig) = estimator.fit(
+    mixedInputData,
+    Some(mixedValidateData),
+    Seq(mixedCoordinateOptConfigs)).head
+
+// Save the trained model.
+ModelProcessingUtils.saveGameModelToHDFS(
+    sc,
+    new Path("output/mixed"),
+    mixedModel,
+    trainingTask,
+    mixedModelConfig,
+    None,
+    mixedFeatureShardInputIndexMaps)
+    
+``` 
+
+Y guarda los coeficientes en `avro`
+
+```bash
+"avro cat -n 1 ./output/mixed/random-effect/perUser/coefficients/part-00000.avro" #| "jq ." !
+{
+  "variances": null,
+  "means": [
+    {
+      "term": "Drama",
+      "name": "Genre",
+      "value": -0.35129547272878503
+    },
+    {
+      "term": "Musical",
+      "name": "Genre",
+      "value": -0.2967514108349342
+    },
+    {
+      "term": "",
+      "name": "7",
+      "value": -0.13789947075029355
+    },
+    {
+      "term": "",
+      "name": "14",
+      "value": -0.13577029316450503
+    },
+    {
+      "term": "",
+      "name": "8",
+      "value": -0.12850130065314527
+    },
+    {
+      "term": "",
+      "name": "26",
+      "value": -0.11646520581859549
+    },
+    {
+      "term": "",
+      "name": "15",
+      "value": -0.09620039918539182
+    },
+    {
+      "term": "",
+      "name": "6",
+      "value": 0.08934738779979344
+    },
+    {
+      "term": "Comedy",
+      "name": "Genre",
+      "value": 0.08833383209245319
+    },
+    {
+      "term": "",
+      "name": "2",
+      "value": -0.08756438537931642
+    },
+
+more coefficients
+    "modelClass": "com.linkedin.photon.ml.supervised.regression.LinearRegressionModel",
+  "lossFunction": "",
+  "modelId": "7"
+}
+```
+
+Lo dicho, no tiene mala pinta y ajusta rápido, me falta probar a crear el jar del proyecto
+
+
+Por otro lado [`MomentMixedModels`](https://github.com/stitchfix/MomentMixedModels/) también parecía prometedora pero al intentar crear el jar con sbt (tampoco está en maven central) peta con `(*:update) sbt.ResolveException: unresolved dependency: com.stitchfix.algorithms.spark#sfs3_2.11;0.7.0-spark2.2.0: not found` y viendo el `build.sbt`  hace referencia a `http://artifactory.vertigo.stitchfix.com/artifactory/releases` que parece que ya no existe, así que mi gozo en un pozo.  La sintaxis parecía sencilla. 
+
+```scala
+val linearModelFitter = {
+    new MixedEffectsRegression()
+      .setResponseCol("Reaction")
+      .setFixedEffectCols(Seq("Days"))
+      .setRandomEffectCols(Seq("Days"))
+      .setFamilyParam("gaussian")
+      .setGroupCol("Subject")
+  }
+
+  val linearModel = linearModelFitter.fit(sleepstudyData)
+  println(linearModel.β)
+
+``` 
+
+Pues nada, a ver si algún ingenazi con alma de analista se digna a hacer una implementación de `lme4` en `Spark` , porque, reconozcámoslo `Spark-ml` es una ñapa. Lo único que medio funciona bien es usar los algoritmos de h2o sobre spark con [`sparkling-water`](https://github.com/h2oai/sparkling-water)  y me falta probar un poco más su implementación de [modelos jerárquicos](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/glm.html#hierarchical-glm)
+
+Hasta otra. 
