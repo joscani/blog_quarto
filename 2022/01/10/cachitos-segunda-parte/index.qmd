@@ -1,0 +1,214 @@
+---
+title: Cachitos. Segunda parte
+date: '2022-01-10'
+slug: cachitos-segunda-parte
+categories:
+  - estadística
+  - polémica
+  - 2022
+  - textmining
+  - ocr
+  - cachitos
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| echo: false
+#| results: 'hide'
+renv::use(lockfile = "renv_cachitos_segunda_parte.lock")
+```
+
+
+
+
+Nada, esto es sólo para leernos con R los subtítulos del post anterior. 
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2021"
+
+# Construims un data frame con los nombrs de los ficheros 
+
+nombre_ficheros <- list.files(path = str_glue("{root_directory}{anno}_txt/")) %>% 
+    enframe() %>% 
+    rename(n_fichero = value)
+
+nombre_ficheros
+```
+
+Ahora los podemos leer en orden
+
+```{r}
+subtitulos <-  list.files(path = str_glue("{root_directory}{anno}_txt/"), 
+                        pattern = "*.txt", full.names = TRUE) %>% 
+    map(~read_file(.)) %>% 
+    enframe() %>%  
+  # hacemos el join con el dataframe anterior para tener el nombre del fichero original
+    left_join(nombre_ficheros)
+
+glimpse(subtitulos)
+subtitulos
+```
+en n_fichero tenemos el nombre y en value el texto
+
+```{r}
+
+subtitulos %>% 
+  pull(value) %>%
+  ## usamos `[[` que es el operador para acceder a la lista el que normalemente se usa [[nombre_elemento]]
+  `[[`(16)
+
+# equivalentemente
+
+# subtitulos %>% 
+#     pull(value) %>% 
+#     pluck(16)
+
+
+```
+
+Como sabemos que hay muchos ficheros sin texto podemos contar letras. 
+
+
+```{r}
+subtitulos <- subtitulos %>% 
+    mutate(n_caracteres = nchar(value)) 
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count()
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count() %>% 
+  ggplot(aes(x = n_caracteres, y = n)) +
+  geom_col()
+```
+
+Y vemos que hay muchos subtitulos con pocos caracteres. Si vemos por ejemplo los que tienen menos de 12 caracteres
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres <12) %>% 
+    pull(value) %>% 
+    head(10)
+```
+
+Que se corresponden con haber pillado parte no del subtítulo sino del nombre de la actuación
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres ==15)
+```
+
+Usando la librería `magick` en R que permite usar `imagemagick` en R, ver **[post](https://analisisydecision.es/tratamiento-y-procesado-de-imagenes-con-r-y-magick/)** de Raúl Vaquerizo y su homenaje a Sean Connery, podemos ver el fotgrama correspondiente
+
+```{r}
+library(magick)
+(directorio_imagenes <- str_glue("{root_directory}video/{anno}_jpg/"))
+
+image_read(str_glue("{directorio_imagenes}00000018.jpg"))
+
+```
+
+También podemos ver hasta cuando pasa eso, por ejemplo si vemos subtítulos con 18 caracteres
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres ==18) %>% 
+    pull(value)
+
+```
+
+
+
+```{r}
+subtitulos <- subtitulos %>% 
+    filter(n_caracteres > 17) 
+
+glimpse(subtitulos)
+```
+
+
+
+Con el fin de detectar cuáles están duplicados y aprovechando que están en orden de aparición, podemos hacer utilizar distancias de texto para calcular la distancia de cada subtítulo con el anterior, y si la distancia es pequeña es que es el mismo rótulo. 
+
+Primero hacemos una mini-limpieza. 
+
+```{r}
+string_mini_clean <-  function(string){
+    string <- gsub("?\n|\n", " ", string)
+    string <- gsub("\r|?\f|=", " ", string)
+    string <- gsub('“|”|—|>'," ", string)
+    
+    string <- gsub("[[:punct:][:blank:]]+", " ", string)
+    string <- tolower(string)
+    string <- gsub("  ", " ", string)
+    
+    return(string)
+}
+
+# Haciendo uso de programacion funciona con purrr es muy fácil pasar esta función a cada elemento. y decirle que # el reultado es string con map_chr
+
+subtitulos_proces <- subtitulos %>% 
+    mutate(texto = map_chr(value, string_mini_clean)) %>% 
+    select(-value)
+
+subtitulos_proces %>% 
+  select(texto)
+```
+
+Y ya vemos a simple vista que hay algun duplicado. Calculemos ahora la distancia de strings, utilizando la función `stringdist` de la librería del mismo nombre.
+
+```{r}
+
+subtitulos_proces %>% 
+    mutate(texto_anterior = lag(texto)) %>% 
+    # calculamos distancias con método lcs (que no me he leído que hace exactamente)
+    mutate(distancia = stringdist::stringdist(texto, texto_anterior, method = "lcs")) %>% 
+  # veamos algunos elementos
+    filter(distancia < 19) %>% 
+    arrange(desc(distancia) ) %>% 
+    select(texto, texto_anterior, distancia) 
+```
+
+Y parece que funciona. 
+Así que decido quitar las filas dónde la distancia  sea menos que 19  y así eliminar muchos de los duplicados. 
+
+
+```{r}
+subtitulos_proces <- subtitulos_proces %>% 
+    mutate(texto_anterior = lag(texto)) %>% 
+    mutate(distancia = stringdist::stringdist(texto, texto_anterior, method = "lcs")) %>% 
+    filter(distancia > 19) %>% 
+    select(-texto_anterior)
+
+subtitulos_proces %>% 
+  head()
+```
+
+
+```{r}
+write_csv(subtitulos_proces,
+          file = str_glue("{root_directory}{anno}_txt_unido.csv"))
+```
+
+
+
