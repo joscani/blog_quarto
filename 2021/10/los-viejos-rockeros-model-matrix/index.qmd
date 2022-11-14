@@ -1,0 +1,303 @@
+---
+title: Los viejos [R]ockeros. model.matrix
+author: jlcr
+date: '2021-09-10'
+slug: los-viejos-r-ockeros-model-matrix
+categories:
+  - R
+  - python
+  - causal inference
+  - 2021
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+
+Nota: He cambiado la parte final para que hiciera lo mismo que el código de python, gracias a mi tocayo José Luis Hidalgo 
+
+El otro día por linkedin, mi jefe compartió el siguiente [artículo](https://www.kausa.ai/blog/how-causal-inference-lifts-augmented-analytics-beyond-flatland#5b4e41206487) recomendable por otro lado. El repo con el código y datos está [aquí](https://github.com/kausa-ai/blog/tree/master/how_causal_inference_lifts_augmented_analytics_beyond_flatland). 
+
+En el artículo hacen referencia a que una forma de ver el CATE (Conditional Average Treatmen Effect) cuando hay variables categóricas puede ser construirse los términos de interacción de alto orden entre las variables categóricas y calcular la diferencia entre la media de la variable de interés antes del tratamiento y después del tratamiento, en cada una de las variables de interacción consideradas. 
+
+Para eso el autor del artículo hace lo siguiente
+
+
+```{python}
+import pandas as pd
+import datetime as dt
+import numpy as np
+import itertools
+import time
+from copy import copy
+```
+
+
+```{python}
+df = pd.read_csv("https://raw.githubusercontent.com/kausa-ai/blog/master/how_causal_inference_lifts_augmented_analytics_beyond_flatland/dataset/ecommerce_sample.csv")
+
+kpi_axis = 'order_value'
+time_axis = 'time'
+
+df[time_axis] = pd.to_datetime(df[time_axis],format = '%d/%m/%Y')
+df.head()
+
+```
+
+
+
+```{python}
+df.columns
+```
+
+
+
+Y crea una función para crear las interacciones de orden n. 
+
+
+
+
+```{python}
+def binarize(df,cols,kpi_axis,time_axis,order):
+    cols = cols.drop([kpi_axis,time_axis]) 
+    features = []
+    for k in range(0,order):
+        features.append(cols)
+    fs = []
+    for f in itertools.product(*features):
+      #  list(set(f)).sort()
+        f = np.unique(f)
+        fs.append(tuple(f))
+    fs = tuple(set(i for i in fs))
+    for f in fs:
+        states =[]
+        for d in f:
+            states.append(tuple(set(df[d].astype('category'))))
+        for state in itertools.product(*states):
+            z = 1
+            name = str()
+            for d in range(0,len(f)):
+                z = z*df[f[d]]==state[d]
+                name +=  f[d] + " == " +str(state[d])
+                if d<len(f)-1:
+                   name += " AND "
+            df[name] = z
+    for d in cols:
+        df = df.drop([d],axis = 1)
+    return df
+```
+
+Y crea las variables, al medir cuánta tarda vemos que es en torno al minuto.
+
+```{python}
+start_time = time.time()
+df = binarize(df,df.columns,kpi_axis,time_axis,3)
+elapsed_time = time.time() - start_time
+
+```
+```{python}
+print(elapsed_time/60)
+df.head(20)
+```
+
+
+Y aquí es dónde vienen los viejos [R]ockeros. Cada vez que oigo hablar de interacciones pienso en R y en nuestras queridas fórmulas. 
+En R podemos hacer lo mismo tirando de nuestro viejo amigo `model.matrix` 
+
+
+```{r}
+# puedo pasar de python a R con 
+# df <-  py$df 
+# o leer el csv igual 
+
+library(tidyverse)
+library(lubridate)
+df <- readr::read_csv("https://raw.githubusercontent.com/kausa-ai/blog/master/how_causal_inference_lifts_augmented_analytics_beyond_flatland/dataset/ecommerce_sample.csv")
+
+
+```
+
+Convertimos las variables que nos interesan a tipo factor
+```{r}
+df <- df %>% 
+  mutate(time = time %>% as.character %>% dmy) %>%  
+  mutate(corte_fecha = if_else(time <= '2019-09-11', "antes", "despues" )) %>% 
+  mutate_if(is.character,as.factor) 
+
+
+features <- setdiff(colnames(df),c("time","order_value", "corte_fecha"))
+glimpse(df)
+
+```
+
+Y al utilizar model matrix R hace por defecto codificación parcial de las variables (One Hot quitando la que sobra para los modernos), así que para tener lo mismo hay que tocar un argumento de model matrix. el truco es definir para cada variable el contrasts = FALSE. Por ejemplo
+
+Por defecto el contrasts para una variable categórica elimina la categoría redundante.
+
+```{r}
+contrasts(df$product_category) 
+```
+
+Pero podemos decir que no, y así nos construirá tantas variables dicotómicas como categorías tenga nuestra variable. 
+
+```{r}
+contrasts(df$product_category, contrasts = FALSE)
+```
+Ya podemos crear nuestra función `binarize` 
+
+Para crear interacciones de orden n en R basta con definir la fórmula  `~ 0 + ( var1 + var2 + var3)^n `  
+
+
+```{r}
+binarize <- function(df, columns, order = 3) {
+  
+  # creo formula  uniendo por + las variables y luego la interación del orden deseado
+  features_unidas <- paste(features, collapse = " + ")
+
+  formula_orden <- as.formula(paste0("~ 0 + (  ", features_unidas, ")^ ", order))
+  
+  # con model.matrix me creo el dataframe con los términos de interacción 
+  df_variables <- as_tibble(model.matrix(
+    formula_orden,
+    df,
+    # aqui está la clave 
+    contrasts.arg = lapply(df[, features], contrasts, contrasts = FALSE)
+  ))
+
+  df_final <- bind_cols(
+    df %>%
+      select(time, order_value, corte_fecha),
+    df_variables
+  )
+
+
+  df_final <- df_final %>%
+    select(-time) %>%
+    select(corte_fecha, order_value, everything())
+}
+
+```
+
+Y podemos medir cuanto tarda nuestra función sobre el mismo conjunto de datos. Y vemos, que en crear las variables tarda unos pocos segundos. 
+
+
+```{r}
+tictoc::tic()
+df_final <- binarize(df, features, 3)
+tictoc::toc()
+```
+```{r}
+head(df_final, 10)
+```
+
+Y ya estaría . 
+
+## CATE
+
+La parte interesante del artículo es la de calcular el CATE como la diferencia de medias  de la variable `order_value` en cada uno de los segmentos antes de una determinada fecha y después. 
+
+En el artículo lo hacen así
+
+```{python}
+
+start_time = time.time()
+
+df_before = df[df[time_axis] <= '2019-09-11']
+df_after  = df[df[time_axis] > '2019-09-11']
+features = copy(df.drop([time_axis,kpi_axis], axis=1).columns)
+
+K = 10 
+subgroups=[]
+score=[]
+for k in range(0,K):
+    CATE = []
+    y_before = df_before[kpi_axis]
+    y_after= df_after[kpi_axis]
+    
+    #compute CATEs for all subgroups
+    for d in features:
+        g = df_before[d] == True
+        m_before = np.mean(y_before[g])
+        g = df_after[d] == True
+        m_after = np.mean(y_after[g])
+        CATE.append(m_after-m_before)
+    
+    #find subgroup with biggest CATE
+    index = np.argsort(-abs(np.array(CATE)))
+    subgroups.append(features[index[0]])
+    score.append(abs( CATE [index[0]]))
+    
+    #remove found subgroups from dataset
+    df_before = df_before[df_before[features[index[0]]] == False]
+    df_after = df_after[df_after[features[index[0]]] == False] 
+    features = features.drop(features[index[0]])
+    
+
+df_nuevo = pd.DataFrame(np.array([score,subgroups]).T, columns=['CATE','features'])
+
+elapsed_time = time.time() - start_time
+
+print(elapsed_time)
+
+```
+```{python}
+df_nuevo
+```
+
+Y tarda su ratillo, pero no está mal
+
+En R lo podemos hacer utilizando nuestro viejo amigo el R base para poner las condiciones
+
+```{r}
+
+CalcularCate <-  function(f, df){
+  
+  filtro_antes   = df[[f]] == 1 & df$corte_fecha == "antes"
+  filtro_despues = df[[f]] == 1 & df$corte_fecha != "antes"
+  
+  media_antes   = mean(df$order_value[filtro_antes])
+  media_despues = mean(df$order_value[filtro_despues])
+  
+  cate = media_despues - media_antes
+  
+  return(cate)
+  
+  
+}
+
+```
+
+
+```{r}
+tictoc::tic()
+K = 10
+cate = c()
+tmp <-  df_final
+
+for ( k in 1:K) {
+  
+  features <- colnames(tmp)[3:ncol(tmp)]
+  res <-  unlist(lapply(features, function(x) CalcularCate(x, df = tmp)))
+  names(res) <- features
+  ordenado <-  sort(abs(res), decreasing = TRUE)[1]
+  f <-  names(ordenado)
+  cate <- c(cate, ordenado)
+  tmp <-  tmp[tmp[[f]]== 0, c("corte_fecha", "order_value", setdiff(features, f))]
+}
+
+ 
+ 
+tictoc::toc()
+
+cate
+
+```
+
+
+
+Y bueno, parece que en este caso, los viejos [R]ockeros no lo hacen mal del todo, sobre todo la parte de model.matrix es muy rápida
+
+
