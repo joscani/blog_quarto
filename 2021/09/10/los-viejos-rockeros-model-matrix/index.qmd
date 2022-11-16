@@ -115,6 +115,7 @@ En R podemos hacer lo mismo tirando de nuestro viejo amigo `model.matrix`
 
 library(tidyverse)
 library(lubridate)
+library(collapse) # for fast calculation
 df <- readr::read_csv("https://raw.githubusercontent.com/kausa-ai/blog/master/how_causal_inference_lifts_augmented_analytics_beyond_flatland/dataset/ecommerce_sample.csv")
 
 
@@ -253,13 +254,30 @@ En R lo podemos hacer utilizando nuestro viejo amigo el R base para poner las co
 
 ```{r}
 
-CalcularCate <-  function(f, df){
+CalcularCate_old <-  function(f, df){
   
   filtro_antes   = df[[f]] == 1 & df$corte_fecha == "antes"
   filtro_despues = df[[f]] == 1 & df$corte_fecha != "antes"
   
   media_antes   = mean(df$order_value[filtro_antes])
   media_despues = mean(df$order_value[filtro_despues])
+  
+  cate = media_despues - media_antes
+  
+  return(cate)
+  
+  
+}
+
+# usando fmean de collapse
+
+CalcularCate <-  function(f, df){
+  
+  filtro_antes   = df[[f]] == 1 & df$corte_fecha == "antes"
+  filtro_despues = df[[f]] == 1 & df$corte_fecha != "antes"
+  
+  media_antes   = fmean(df$order_value[filtro_antes])
+  media_despues = fmean(df$order_value[filtro_despues])
   
   cate = media_despues - media_antes
   
@@ -298,6 +316,8 @@ cate
 
 
 
-Y bueno, parece que en este caso, los viejos [R]ockeros no lo hacen mal del todo, sobre todo la parte de model.matrix es muy rápida
+Y bueno, parece que en este caso, los viejos [R]ockeros no lo hacen mal del todo, sobre todo la parte de model.matrix es muy rápida, y usando `collapse` para calcular la media es aún más rápido
+
+En resumen, model.matrix de rbase es muy rápido, y usar fmean de collapse en vez del mean de R-base mejor, con lo que con esta implementación en R es mucho más rápida que la vista en python (que seguramente se puede mejorar hasta igualar)
 
 

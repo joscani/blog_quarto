@@ -1,0 +1,244 @@
+---
+title: Análisis de correspondencias "old_style"
+author: jlcr
+date: '2021-10-21'
+slug: análisis-de-correspondencias-old-style
+categories:
+  - ciencia de datos
+  - estadística
+  - R
+  - correspondencias
+  - factorización
+  - factorial
+  - 2021
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+```{r}
+#| echo: false
+#| results: 'hide'
+renv::use(lockfile = "renv_correspondencias.lock")
+```
+
+
+Quién me conoce sabe que siento debilidad por el análisis de datos categóricos, en particular por técnicas como el análisis de correspondencias simple o múltiple o por las cosas más modernas que hay. 
+No en vano se me dió especialmente bien en la universidad, en parte debido a que por fin me centré después de unos años locos,  y en parte debido a algún buen profesor. El caso es que en el curro utilizamos este tipo de técnicas para encontrar relaciones entre variables categóricas que quizá hayan pasado desapercibidas en un primer análisis. 
+
+Antes de nada voy a dar un par de referencias en castellano, bastante útiles. 
+
+* [La práctica del análisis de correspondencias. Michael Greenacre](https://www.fbbva.es/wp-content/uploads/2017/05/dat/DE_2008_practica_analisis_correspondencias.pdf)
+* [Análisis de datos multivariantes. Daniel Peña](https://www.researchgate.net/publication/40944325_Analisis_de_Datos_Multivariantes)
+
+
+De hecho el ejemplo que voy a contar y la notación que voy a usar viene en el libro de Daniel. Es un ejemplo de Fisher (si, ese al que todo el mundo odia hoy en día) de 1940, sobre la relación entre el color de los ojos (en filas) y el color del pelo (en columnas). Se trata de una simple tabla de contingencia. 
+
+
+```{r}
+df <- read.csv("hair_eyes_color.csv")
+
+rownames(df) <- df$color_ojos
+
+df_tabla <- as.matrix(df[,-1])
+
+df_tabla
+
+
+```
+
+Cuyos totales por filas y columnas son 
+
+```{r}
+addmargins(df_tabla)
+```
+
+## Proyección de las filas.
+
+Podríamos plantearnos la relación entre las filas (color de ojos) , ¿cómo de similares son los que tienen los ojos claros con los que tienen los ojos azules, respecto a su color del pelo?
+
+Parece claro que deberíamos centrarnos en los porcentajes por filas (perfiles fila)
+
+```{r}
+prop.table(df_tabla, 1)
+```
+
+A partir de ahora vamos a usar la tabla de frecuencias relativas, cuyos elementos llamaremos $f_{ij}$
+
+```{r}
+(tabla_frecuencias <-  prop.table(df_tabla))
+```
+
+Que tiene los mismos porcentajes por filas. 
+```{r}
+(perfiles_fila <- prop.table(tabla_frecuencias, 1))
+```
+
+Se podría considerar utilizar la distancia euclídea para ver como de parecidas son las filas ojos claros y ojos azules, pero eso presenta un problema, que es la distribución del color del pelo en la tabla, dónde por ejemplo el porcentaje de rubios es mayor que el de pelirrojos. Así que usar esa distancia no sería justo. Podríamos definir una distancia ponderada que fuera $d(i, i') = \sum_j ((f_{ij} - f_{i'j})^2/f_{.j})$ dónde $f_{.j}$ es la distribución de las columnas en la población, vamos, qué % de rubios, pelirrojos, etc hay en mis datos. 
+
+En forma matricial, en notación de Daniel sería ![](eq2.png) 
+
+Esta distancia es equivalente a la euclídea en la matriz Y definida como dividir cada elemento de los perfiles fila por la raíz cuadrada del peso de la columna. 
+
+```{r}
+# peso de loas columnas
+(f.j <- colSums(tabla_frecuencias))
+
+# peso de las filas
+(fi. <- rowSums(tabla_frecuencias))
+```
+
+Para hacerlo lo hacemos usando matrices
+
+```{r}
+# matriz diagonal con la raíz de los porcentjes totales de las columnas( col masses)
+(DC_12 <- diag(1/sqrt(f.j)))
+
+# Matriz diagonal con 1/fi. 
+(DF_1 <- diag(1/fi.))
+
+```
+
+Matriz Y 
+
+```{r}
+# se puede hacer usando los perfiles fila o directamente utilizando DF_1 y DC_12
+# Y <- perfiles_fila %*% DC_12
+
+Y <- DF_1 %*% as.matrix(tabla_frecuencias) %*% DC_12
+rownames(Y) <- rownames(tabla_frecuencias)
+colnames(Y) <- colnames(tabla_frecuencias)
+Y
+```
+
+En esta tabla Y, la distancia euclídea entre filas coincide con la distancia ponderada que habíamos definido dónde la distancia entre dos filas venía ponderada por el peso de cada columna. 
+
+Podríamos ahora plantearnos utilizar una descomposición en valores y vectores propios sobre esta tabla, pero tendríamos el problema de que el peso de cada fila sería el mismo, por eso se hace necesario tener en cuenta el peso de cada fila. 
+
+Podemos construir ahora una matriz __Z__ dónde se pondere por el peso de las filas y el de las columnas. 
+
+```{r}
+# cremaos matriz diagonal con 1/sqrt(fi.)
+(DF_12 <- diag(1 / sqrt(fi.)))
+
+```
+
+Creamos matriz Z como 
+
+```{r}
+Z <- DF_12 %*% as.matrix(tabla_frecuencias) %*% DC_12
+
+rownames(Z) <- rownames(tabla_frecuencias)
+colnames(Z) <- colnames(tabla_frecuencias)
+Z
+
+```
+
+Sobre esta matriz Z que no es más que la tabla de frecuencias relativas estandarizada por el peso de las filas y el de las columnas podemos diagonalizar la matriz __Z'Z__.
+Esta matriz tiene un valor propio igual a 1, pero los importantes son los siguientes. 
+
+```{r}
+res_diag <- eigen(t(Z) %*% Z)
+res_diag$values
+res_diag$vectors
+```
+
+Teniendo la matriz Y, que son los perfiles (porcentajes) fila ponderados  por el peso de las columnas, podemos proyectar esas filas sobre las dimensiones obtenidas por los vectores propios obtenidos asociados a los autovalores menores que 1. Esa será la mejor representación de las filas en un subespacio de las columnas. 
+
+
+```{r}
+
+# proyeccion 1. con valor menor que 1 
+vector_propio1 <- res_diag$vectors[,2]
+vector_propio2 <- res_diag$vectors[,3]
+
+(coord1 <- Y %*% vector_propio1 )
+(coord2 <- Y %*% vector_propio2 )
+
+
+```
+
+Y ya lo puedo pintar 
+
+```{r}
+library(tidyverse)
+
+(to_plot <-  data.frame(Dim1 = coord1[,1], Dim2 = coord2[,1], color_ojos= rownames(Y)))
+```
+
+
+```{r}
+to_plot %>% 
+  ggplot(aes(x=Dim1, y=Dim2)) +
+  geom_label(aes(label= color_ojos)) +
+  scale_x_continuous(limits = c(-0.8,0.8))
+```
+
+## Proyección de las columnas
+
+La proyección de las columnas en un subespacio de las filas se hace de manera análoga , solo que en vez de diagonalizar __Z'Z__ se hace con __Z Z'__, que tiene los mismos valores propios que los obtenidos. 
+
+De aquí viene la relación baricéntrica entre las filas y las columnas. 
+
+## Relación con la distancia Chi-cuadrado
+
+Si se desarrolla la expresión de la distancia Chi-cuadrado , tal como se hace en el libro de Daniel Peña se llega a que se corresponde con la distancia euclídea en la matriz __Y__ que son los perfiles filas  ponderados por el peso de cada columna. 
+
+Esta implicación es importante, puesto que al descomponer el estadístico Chi-cuadrado que nos mide la asociación entre variables categóricas (filas y columnas), estamos descubriendo qué filas están asociados con determinadas columnas. 
+
+## Uso con FactoMineR 
+
+Sólo trataba de dar una pequeña explicación de la relación entre el análisis de correspondencias y la diagonalización de matrices. Hay mucha más explicación en los libros que he enlazado al principio. En el día a día, podemos usar librerías específicas para calcular este análisis, como `FactoMineR` en R o `prince` en python. 
+
+Veamos como se usa con `FactoMiner`
+
+```{r}
+library(FactoMineR)
+library(factoextra) # pa los dibujitos
+```
+
+```{r}
+res_ca <- CA(df_tabla, graph = FALSE)
+```
+
+Y podemos pintar las filas en el espacio de las columnas 
+
+```{r}
+fviz_ca_row(res_ca) +
+   scale_x_continuous(limits = c(-0.8,0.8))
+```
+
+
+Y vemos que las coordenadas son las mismas que hemos obtenido nosotros antes
+
+```{r}
+res_ca$row$coord
+```
+```{r}
+to_plot
+```
+
+
+La representación conjunta. 
+
+```{r}
+fviz_ca(res_ca) 
+
+```
+
+La librería `FactoMineR` junto con `factoextra` devuelven también múltiples ayudas a la interpretación como la contribución de cada fila o columna a la estructura factorial etc. 
+Por otro lado, la librería `FactoInvestigate`  que toma como input un análisis factorial (pca, ca o mca), devuelve un informe en inglés (en Rmd) describiendo lo que significa cada dimensión obtenida. 

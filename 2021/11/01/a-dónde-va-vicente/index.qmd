@@ -1,0 +1,219 @@
+---
+title: ¿A dónde va Vicente?
+author: jlcr
+date: '2021-11-01'
+slug: a-dónde-va-vicente
+categories:
+  - árboles
+  - ciencia de datos
+  - h2o
+  - estadísticca
+  - 2021
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+    
+---
+
+
+```{r}
+#| echo: false
+#| results: 'hide'
+renv::use(lockfile = "renv_vicente.lock")
+```
+
+
+Cuando estamos haciendo un modelo y tratamos con variables categóricas como predictoras,  hay que ser muy cuidadoso. Por ejemplo hay que tener en cuenta qué pasa cuándo tenemos un nuevo nivel en el conjunto de datos a predecir que no estaba en el de entrenamiento. Por ejemplo, si estoy utilizando un algoritmo moderno tipo xgboost, y tengo como variable predictora la provincia. ¿Qué pasa si en el conjunto de entrenamiento no tengo datos de "Granada", pero en el de predicción si?  
+
+En el xgboost por defecto las categóricas se codifican con  One-Hot encoder, por lo que al no tener datos de Granada en entrenamiento a la hora de predecir la fila de Granada siempre va a tirar hacia el 0, por ejemplo, un corte en uno de los árboles podría ser Almeria = 0  para la izquierda y Almeria = 1 para la derecha. Esto es lo que suelen hacer la mayoría de las implementaciones. Pero cabe preguntarse si es la mejor solución. Otra alternativa podría ser, dado que tengo que predecir para un nivel no visto en entrenamiento, podría asignarle el valor del target que había en el nodo superior. Esta decisión plantea el problema de como sigues el proceso de partición de datos del árbol. Otra posible decisión podría ser recorrer todos los caminos posibles y promediar. En el caso anterior sería ver qué predicción acaba teniendo cuando Almería = 0 y cuando Almería = 1 y promediar. Sería una solución más justa, aunque plantea el problema de tener que recorrer más ramas. 
+
+Otra solución es en cada corte que implique a la variable categórica en cuestión, tirar hacia dónde van la mayoría de los caso "¿a dónde va Vicente? A dónde va la gente". Esta es la solución que tiene la gente de [h2o](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/gbm-faq/missing_values.html) en su implementación de los Random Forest o de los Gradient Boosting.  Dicen textualmente. 
+
+> __What happens when you try to predict on a categorical level not seen during training?__
+Unseen categorical levels are turned into NAs, and thus follow the same behavior as an NA. If there are no NAs in the training data, then unseen categorical levels in the test data follow the majority direction (the direction with the most observations). If there are NAs in the training data, then unseen categorical levels in the test data follow the direction that is optimal for the NAs of the training data.
+
+## Ejemplo
+
+### Iniciamos h2o y cargamos datos 
+
+```{r, warning=FALSE, message=FALSE}
+## Not run: 
+library(h2o)
+h2o.init( max_mem_size = "25G")
+```
+
+Importamos los datos del titanic. Ponemos como variables predictoras de la supervivencia,  solo la clase y el sexo. 
+
+```{r, warning=FALSE, message=FALSE}
+
+f <- "https://s3.amazonaws.com/h2o-public-test-data/smalldata/gbm_test/titanic.csv"
+titanic <- h2o.importFile(f)
+
+titanic['survived'] <- as.factor(titanic['survived'])
+predictors <- c("pclass","sex")
+response <- "survived"
+
+# convertimos la clase a factor 
+titanic$pclass <- as.factor(titanic$pclass)
+h2o.getTypes(titanic$pclass)
+```
+
+Partimos en train y test 
+
+```{r, warning=FALSE, message=FALSE}
+splits <- h2o.splitFrame(data =  titanic, ratios = .8, seed = 1234)
+train <- splits[[1]]
+valid <- splits[[2]]
+
+h2o.table(train$pclass)
+h2o.table(train$sex)
+
+h2o.table(valid$pclass)
+
+
+```
+
+Y ahora cambio en test para que aparezcan valores en pclass y en sex que no están en train. 
+
+```{r}
+
+valid$pclass = h2o.ifelse(valid$pclass == "3", "unknown", valid$pclass)
+valid$sex    = h2o.ifelse(valid$sex == "male", "unknown", valid$sex )
+
+
+h2o.table(valid$pclass)
+h2o.table(valid$sex)
+```
+
+Para ver bien qué sucede con los casos en que tenemos nivel nuevo en clase y sexo nos quedamos con el siguiente conjunto de datos a predecir 
+
+```{r}
+test <-  valid[valid$pclass== "unknown" & valid$sex == "unknown",]
+test
+```
+
+
+### Modelo xgboost 
+
+
+Hacemos un sólo árbol
+
+```{r}
+modeloxg<-  h2o.xgboost(
+  seed = 155,
+  x = predictors, 
+  y = response,
+  max_depth = 3,
+  training_frame = train,
+  ntrees =1
+)
+
+```
+
+Y al predecir, nos da un warning que nos dice ¡¡ojo, tengo nuevos niveles que no estaban en train!! . Aún así , no casca y devuelve una predicción 
+
+```{r}
+h2o.predict(modeloxg, test)
+h2o.predict_leaf_node_assignment(modeloxg, test)
+```
+
+Podemos extraer información del árbol  con 
+
+```{r}
+arbol_ind_xg <- h2o.getModelTree(model = modeloxg, tree_number = 1)
+
+NodesInfo <-  function(arbol_ind){
+  for (i in 1:length(arbol_ind)) {
+    info <-
+      sprintf(
+        "Node ID %s has left child node with index %s and right child node with index %s The split feature is %s. The NA direction is %s",
+        arbol_ind@node_ids[i],
+        arbol_ind@left_children[i],
+        arbol_ind@right_children[i],
+        arbol_ind@features[i], 
+        arbol_ind@nas[i]
+      )
+    print(info)
+  }}
+
+NodesInfo(arbol_ind_xg)
+```
+
+Y vemos que nos da información de hacia dónde van los NA (los niveles nuevos no vistos en train) y siempre van hacia la izquierda. 
+
+Podemos pintar el árbol. [Script](https://github.com/joscani/mi_blog/blob/master/plot_h2o_tree.R)
+Y vemos que los NA, siempre van hacia los 0's.
+
+```{r}
+## importo funciones , encontradas por internet, como no, para pintar el árbol
+source("plot_h2o_tree.R")
+
+titanicDataTree_XG = createDataTree(arbol_ind_xg)
+```
+
+
+```{r, eval=FALSE}
+plotDataTree(titanicDataTree_XG, rankdir = "TB")
+```
+
+
+![](xgboost_data_tree.png)
+
+### Modelo h2o.gbm
+
+Veamos qué hace la implementación de h2o.
+
+
+```{r}
+
+gbm_h2o <-  h2o.gbm(
+  seed = 155,
+  x = predictors, 
+  y = response,
+  max_depth = 3,
+  distribution = "bernoulli",
+  training_frame = train,
+  ntrees = 1
+)
+
+
+h2o.predict(gbm_h2o, test)
+h2o.predict_leaf_node_assignment(gbm_h2o, test)
+
+```
+
+Y pintando lo mismo 
+
+```{r}
+arbol_ind <- h2o.getModelTree(model = gbm_h2o, tree_number = 1)
+NodesInfo(arbol_ind )
+```
+
+
+Al pintar vemos un par de cosas curiosas, en primer lugar, h2o.gbm no ha codificado con one-hot las variables categóricas, esto permite por ejemplo que se pueden obtener reglas de corte como Izquierda:(Madrid, Barcelona, Valencia), Derecha: (resto de provincias), mientras que One Hot ese tipo de partición requiere más profundidad en el árbol.  Y en segundo lugar vemos que por ejemplo los NA's (y los nuevos niveles en test) de la variable _pclass_ en un nodo van junto con p_class (2,3), en otro junto con p_class=1 y en otro junto p_class=3.  El criterio elegido es en cada corte, los Nas y por ende los nuevos niveles no vistos en train van hacia dónde va la gente. 
+
+
+
+
+```{r, eval=FALSE}
+titanicDataTree = createDataTree(arbol_ind)
+plotDataTree(titanicDataTree, rankdir = "TB")
+```
+
+![](h2o_gbm_datatree.png)
+Y nada más. hasta otra.
+
+Nota: Los valores de prediction que saca plotDataTree no son las predicciones del modelo, sino las raw que saca ese árbol en particular. Como en los modelos de gradient boosting se va construyendo cada árbol sobre los errores del anterior, ni siquiera es la probabilidad en escala logit. He buscado en la docu de h2o pero no está claro qué  es este valor. Eso sí, las ramas en el árbol están bien. 
