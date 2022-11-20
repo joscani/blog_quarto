@@ -1,0 +1,229 @@
+---
+title: 'Palabras para Julia ( Parte 1/n) '
+author: jlcr
+date: '2021-08-07'
+slug: palabras-para-julia-parte-1-n
+categories:
+  - Julia
+  - ciencia de datos
+  - software
+tags: 
+  - Julia
+  - Lenguajes de programación
+---
+
+```{r setup, include=FALSE}
+Sys.setenv(JULIA_HOME = "home/jose/Descargas/julia-1.6.2/bin")
+knitr::opts_chunk$set(echo = TRUE)
+library(JuliaCall)
+knitr::knit_engines$set(julia = JuliaCall::eng_juliacall)
+julia_setup("/home/jose/Descargas/julia-1.6.2/bin")
+```
+
+A pesar del título, no voy a hablar sobre la excelente canción de [los Suaves](https://youtu.be/WowU0UKaPyE), sino del lenguaje de programación [Julia](https://julialang.org/). Ya en otra entrada del [blog](https://muestrear-no-es-pecado.netlify.app/2019/03/06/glmer-vs-julia-vs-inla/) de hace un par de años comparé `glmer` con `INLA` y la librería `MixedModels`. Por aquel entonces la versión de Julia era la 1.0.3, ya va por la 1.6.2. Debido a reciente entrada de [Carlos](https://www.datanalytics.com/2021/07/14/mi-apuesta-para-el-larguisimo-plazo-julia/) dónde apostaba por Julia para el larguísimo plazo, he decidido echarle un vistazo un poco más en profundidad. 
+
+Lo cierto es que me está gustando bastante el lenguaje y voy a escribir un par de entradas dónde contar alguna cosilla. Ya Carlos mencionaba que Julia corre sobre [LLVM](https://en.wikipedia.org/wiki/LLVM), pero también cabe mencionar que Julia tiene características más que interesantes, como multiple dispatch o tipos abstractos que permiten al desarrollador escribir código sin preocuparse demasiado por el tipado y que sea el compilador el que cree los métodos específicos. Si, has oído bien, Julia compila las funciones, por lo que tiene la doble ventaja de ser un lenguaje rápido a la vez que sencillo, bueno, su lema dice "Tan fácil como Python, tan rápido como C". 
+
+En esta primera entrada voy a poner un ejemplo sencillo de cómo sería hacer un modelo de "Machín Lenin" utilizando la librería [`MLJ`](https://github.com/alan-turing-institute/MLJ.jl), y en el post siguiente os contaré como tener un binario para predecir usando ese modelo de forma que funcione en cualquier Linux sin importar si está basado en `Debian`, `Centos` o lo que sea, y sin necesidad de tener instalado Julia, ni docker, ni nada. 
+
+
+## Modelo con MLJ 
+
+MLJ es una librería que pretende servir de interfaz común a otras muchas librerías. Veamos un ejemplo de como ajustar un `RandomForest` implementado en la librería `DecisionTree`. 
+
+Lo primero, para instalar paquetes podéis mirar [esto](http://pkgdocs.julialang.org/latest/getting-started/), básicamente haces 
+
+```julia
+using Pkg
+Pkg.import("nombre_paquete")
+
+```
+
+O en el REPL de Julia entras en el modo Package pulsando `]`  y pones `add nombre_paquete` . Esto bajará la librería correspondiente precompilado y la añade a `~/.julia/packages/` 
+
+Vamos al ejemplo. Aunque voy a usar chunks de julia (gracias a la librería JuliaCall) en el rmarkdown dónde escribo los posts, en realidad como editor par Julia me gusta VSCode. 
+
+Los datos de ejemplo son de la librería `boot`de R . puedes ver la ayuda haciendo en R
+
+```{r, eval=FALSE}
+library(boot)
+help(channing)
+
+```
+
+```
+Channing House Data
+Description
+The channing data frame has 462 rows and 5 columns.
+
+Channing House is a retirement centre in Palo Alto, California. These data were collected between the opening of the house in 1964 until July 1, 1975. In that time 97 men and 365 women passed through the centre. For each of these, their age on entry and also on leaving or death was recorded. A large number of the observations were censored mainly due to the resident being alive on July 1, 1975 when the data was collected. Over the time of the study 130 women and 46 men died at Channing House. Differences between the survival of the sexes, taking age into account, was one of the primary concerns of this study.
+
+Usage
+channing
+Format
+This data frame contains the following columns:
+
+sex
+A factor for the sex of each resident ("Male" or "Female").
+
+entry
+The residents age (in months) on entry to the centre
+
+exit
+The age (in months) of the resident on death, leaving the centre or July 1, 1975 whichever event occurred first.
+
+time
+The length of time (in months) that the resident spent at Channing House. (time=exit-entry)
+
+cens
+The indicator of right censoring. 1 indicates that the resident died at Channing House, 0 indicates that they left the house prior to July 1, 1975 or that they were still alive and living in the centre at that date.
+
+```
+
+En Julia podemos instalar la librería `RDatasets` y usar esos datos
+
+```{julia}
+using RDatasets, MLJ
+channing = dataset("boot", "channing")
+
+
+```
+
+
+MLJ necesita que las columnas tenga los tipos correctos en [`scitypes`](https://github.com/JuliaAI/ScientificTypes.jl). Podemos verlos con 
+
+
+```{julia}
+schema(channing)
+
+```
+
+Queremos modelar la variable `exit`. `MLJ` quiere la `y` por un lado y las X's por otro, para eso vamos a usar la función `unpack` que además de permitir eso permite cambiar el tipo de las variables, y convertir la variable Cens a categórica por ejemplo
+
+```{julia}
+y, X =  unpack(channing,
+                      ==(:Exit),            # con el doble igual seleccionamos la y
+                      !=(:Time);            # Quitamos variable Time
+                      :Exit=>Continuous,    # Convertimos al tipo correcto en scitypes
+                      :Entry=>Continuous,
+                      :Cens=>Multiclass)
+
+```
+
+Ahora ya podemos ver como se hace el modelo. 
+
+```{julia}
+Tree = @load RandomForestRegressor pkg=DecisionTree
+tree = Tree(n_trees = 20) # tambien se puede instanciar sin paraámetros 
+# y usar tree.n_trees = 20
+
+
+```
+Como tenemos la variable `Cens`que es categórica necesitamos codificarla, aquí entra como hacer un pipeline en MLJ, que es una de las cosas más potentes que tiene junto con los [ComposingModels](https://alan-turing-institute.github.io/MLJ.jl/stable/composing_models/) models que permite mezclar varios modelos. 
+
+```{julia}
+# Definimos un ContinuosEncoder, ver la ayuda con ?ContinousEncoder en el repl de julia
+
+  
+
+  # Unsupervised model for arranging all features (columns) of a table to have Continuous element scitype, by applying the following protocol to each feature ftr:
+  # 
+  #   •  If ftr is already Continuous retain it.
+  # 
+  #   •  If ftr is Multiclass, one-hot encode it.
+  # 
+  #   •  If ftr is OrderedFactor, replace it with coerce(ftr, Continuous) (vector of floating point integers), unless ordered_factors=false is specified, in which case
+  #      one-hot encode it.
+  # 
+  #   •  If ftr is Count, replace it with coerce(ftr, Continuous).
+  # 
+  #   •  If ftr is of some other element scitype, or was not observed in fitting the encoder, drop it from the table.
+  # 
+  # If drop_last=true is specified, then one-hot encoding always drops the last class indicator colum
+
+hot = ContinuousEncoder(one_hot_ordered_factors=true, drop_last=true)
+
+
+
+```
+
+Utilizamos la macro `@pipeline` para encadenar el onehot y el modelo
+
+```{julia}
+pipe = @pipeline hot tree
+
+```
+
+Y ya podemos ajustar el modelo por ejemplo utilizando `evaluate` y validación cruzada
+
+
+```{julia}
+evaluate(pipe, X, y, resampling=CV(nfolds=5), measure = [rmse, mae])
+
+```
+
+Hay más medidas que se pueden listar con `measures()`
+
+También podemos partir en train, test y similar
+
+```{julia}
+train, test = partition(eachindex(y), 0.7, shuffle=true, rng=155);
+
+```
+
+Ahora instanciamos el modelo con `machine` especificando la X, y la y 
+
+```{julia}
+modelo = machine(pipe, X,y)
+```
+Y podemos usar `fit!` para ajustar "in place" (en julia si la función acaba en ! es una función que actua modificando el objeto que se le pasa) sin tener que crear otra variable 
+
+```{julia}
+
+fit!(modelo, rows = train)
+
+```
+
+Y ya podríamos predecir sobre test, dónde se le aplicaría el onehot encoder que hemos definido en el pipeline
+
+```{julia}
+# En julia podemos usar sintaxis latex por ejemplo \beta\hat  y tabulador despues de beta y hat en vscode 
+# escribe β̂ (uso juliaMono https://juliamono.netlify.app/) como tipo de letra 
+ŷ = predict(modelo,X[test, :])
+```
+
+En este caso hemos hecho un modelo para predecir una variable continua, cuando sea categórica  existen funciones que devuelven la clase predicha o la probabilidad de cada clase. 
+
+También podemos ver como varía el error según el número de árboles
+
+
+```{julia}
+modelo
+
+```
+
+```{julia}
+r_tree = range(pipe, :(random_forest_regressor.n_trees), lower=2, upper=20)
+
+
+```
+```{julia}
+
+curve = MLJ.learning_curve(modelo;
+                           range=r_tree,
+                           resampling=CV(nfolds=5),
+                           measure=rmse)
+
+```
+
+```{julia}
+using Plots
+gr() # especificamos un 
+plot(curve.parameter_values,
+     curve.measurements,
+     xlab=curve.parameter_name,
+     xscale=curve.parameter_scale,
+     ylab = "CV estimate of RMSE error")
+```
+Y esto es todo, en el próximo post contaré como crear el binario que nos va a permitir tener un motor de predicción para los modelos de un árbol de decisión y que funcione en cualquier linux. Casi listo para producción (o al menos una parte importante) sin tener que tener julia en dónde se vaya a utilizar. 
+

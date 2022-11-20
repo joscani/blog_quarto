@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.258">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="jlcr">
+<meta name="dcterms.date" content="2021-08-07">
+
+<title>Muestrear no es pecado - Palabras para Julia ( Parte 1/n)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#modelo-con-mlj" id="toc-modelo-con-mlj" class="nav-link active" data-scroll-target="#modelo-con-mlj">Modelo con MLJ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Palabras para Julia ( Parte 1/n)</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Julia</div>
+    <div class="quarto-category">ciencia de datos</div>
+    <div class="quarto-category">software</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>jlcr </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 7, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>A pesar del título, no voy a hablar sobre la excelente canción de <a href="https://youtu.be/WowU0UKaPyE">los Suaves</a>, sino del lenguaje de programación <a href="https://julialang.org/">Julia</a>. Ya en otra entrada del <a href="https://muestrear-no-es-pecado.netlify.app/2019/03/06/glmer-vs-julia-vs-inla/">blog</a> de hace un par de años comparé <code>glmer</code> con <code>INLA</code> y la librería <code>MixedModels</code>. Por aquel entonces la versión de Julia era la 1.0.3, ya va por la 1.6.2. Debido a reciente entrada de <a href="https://www.datanalytics.com/2021/07/14/mi-apuesta-para-el-larguisimo-plazo-julia/">Carlos</a> dónde apostaba por Julia para el larguísimo plazo, he decidido echarle un vistazo un poco más en profundidad.</p>
+<p>Lo cierto es que me está gustando bastante el lenguaje y voy a escribir un par de entradas dónde contar alguna cosilla. Ya Carlos mencionaba que Julia corre sobre <a href="https://en.wikipedia.org/wiki/LLVM">LLVM</a>, pero también cabe mencionar que Julia tiene características más que interesantes, como multiple dispatch o tipos abstractos que permiten al desarrollador escribir código sin preocuparse demasiado por el tipado y que sea el compilador el que cree los métodos específicos. Si, has oído bien, Julia compila las funciones, por lo que tiene la doble ventaja de ser un lenguaje rápido a la vez que sencillo, bueno, su lema dice “Tan fácil como Python, tan rápido como C”.</p>
+<p>En esta primera entrada voy a poner un ejemplo sencillo de cómo sería hacer un modelo de “Machín Lenin” utilizando la librería <a href="https://github.com/alan-turing-institute/MLJ.jl"><code>MLJ</code></a>, y en el post siguiente os contaré como tener un binario para predecir usando ese modelo de forma que funcione en cualquier Linux sin importar si está basado en <code>Debian</code>, <code>Centos</code> o lo que sea, y sin necesidad de tener instalado Julia, ni docker, ni nada.</p>
+<section id="modelo-con-mlj" class="level2">
+<h2 class="anchored" data-anchor-id="modelo-con-mlj">Modelo con MLJ</h2>
+<p>MLJ es una librería que pretende servir de interfaz común a otras muchas librerías. Veamos un ejemplo de como ajustar un <code>RandomForest</code> implementado en la librería <code>DecisionTree</code>.</p>
+<p>Lo primero, para instalar paquetes podéis mirar <a href="http://pkgdocs.julialang.org/latest/getting-started/">esto</a>, básicamente haces</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Pkg</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">Pkg</span>.<span class="fu">import</span>(<span class="st">"nombre_paquete"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>O en el REPL de Julia entras en el modo Package pulsando <code>]</code> y pones <code>add nombre_paquete</code> . Esto bajará la librería correspondiente precompilado y la añade a <code>~/.julia/packages/</code></p>
+<p>Vamos al ejemplo. Aunque voy a usar chunks de julia (gracias a la librería JuliaCall) en el rmarkdown dónde escribo los posts, en realidad como editor par Julia me gusta VSCode.</p>
+<p>Los datos de ejemplo son de la librería <code>boot</code>de R . puedes ver la ayuda haciendo en R</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(boot)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(channing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<pre><code>Channing House Data
+Description
+The channing data frame has 462 rows and 5 columns.
+
+Channing House is a retirement centre in Palo Alto, California. These data were collected between the opening of the house in 1964 until July 1, 1975. In that time 97 men and 365 women passed through the centre. For each of these, their age on entry and also on leaving or death was recorded. A large number of the observations were censored mainly due to the resident being alive on July 1, 1975 when the data was collected. Over the time of the study 130 women and 46 men died at Channing House. Differences between the survival of the sexes, taking age into account, was one of the primary concerns of this study.
+
+Usage
+channing
+Format
+This data frame contains the following columns:
+
+sex
+A factor for the sex of each resident ("Male" or "Female").
+
+entry
+The residents age (in months) on entry to the centre
+
+exit
+The age (in months) of the resident on death, leaving the centre or July 1, 1975 whichever event occurred first.
+
+time
+The length of time (in months) that the resident spent at Channing House. (time=exit-entry)
+
+cens
+The indicator of right censoring. 1 indicates that the resident died at Channing House, 0 indicates that they left the house prior to July 1, 1975 or that they were still alive and living in the centre at that date.
+</code></pre>
+<p>En Julia podemos instalar la librería <code>RDatasets</code> y usar esos datos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">RDatasets</span>, <span class="bu">MLJ</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>channing <span class="op">=</span> <span class="fu">dataset</span>(<span class="st">"boot"</span>, <span class="st">"channing"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>462×5 DataFrame
+ Row │ Sex     Entry  Exit   Time   Cens
+     │ Cat…    Int32  Int32  Int32  Int32
+─────┼────────────────────────────────────
+   1 │ Male      782    909    127      1
+   2 │ Male     1020   1128    108      1
+   3 │ Male      856    969    113      1
+   4 │ Male      915    957     42      1
+   5 │ Male      863    983    120      1
+   6 │ Male      906   1012    106      1
+   7 │ Male      955   1055    100      1
+   8 │ Male      943   1025     82      1
+  ⋮  │   ⋮       ⋮      ⋮      ⋮      ⋮
+ 456 │ Female    986   1030     44      1
+ 457 │ Female   1039   1132     93      1
+ 458 │ Female    968    990     22      1
+ 459 │ Female    955    990     35      1
+ 460 │ Female    837    911     74      1
+ 461 │ Female    861    915     54      1
+ 462 │ Female    967    983     16      1
+                          447 rows omitted</code></pre>
+</div>
+</div>
+<p>MLJ necesita que las columnas tenga los tipos correctos en <a href="https://github.com/JuliaAI/ScientificTypes.jl"><code>scitypes</code></a>. Podemos verlos con</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">schema</span>(channing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>┌─────────┬─────────────────────────────────┬───────────────┐
+│ _.names │ _.types                         │ _.scitypes    │
+├─────────┼─────────────────────────────────┼───────────────┤
+│ Sex     │ CategoricalValue{String, UInt8} │ Multiclass{2} │
+│ Entry   │ Int32                           │ Count         │
+│ Exit    │ Int32                           │ Count         │
+│ Time    │ Int32                           │ Count         │
+│ Cens    │ Int32                           │ Count         │
+└─────────┴─────────────────────────────────┴───────────────┘
+_.nrows = 462</code></pre>
+</div>
+</div>
+<p>Queremos modelar la variable <code>exit</code>. <code>MLJ</code> quiere la <code>y</code> por un lado y las X’s por otro, para eso vamos a usar la función <code>unpack</code> que además de permitir eso permite cambiar el tipo de las variables, y convertir la variable Cens a categórica por ejemplo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>y, X <span class="op">=</span>  <span class="fu">unpack</span>(channing,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                      <span class="op">==</span>(<span class="op">:</span>Exit),            <span class="co"># con el doble igual seleccionamos la y</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                      <span class="op">!=</span>(<span class="op">:</span><span class="dt">Time</span>);            <span class="co"># Quitamos variable Time</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Exit<span class="op">=&gt;</span>Continuous,    <span class="co"># Convertimos al tipo correcto en scitypes</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Entry<span class="op">=&gt;</span>Continuous,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Cens<span class="op">=&gt;</span>Multiclass)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>([909.0, 1128.0, 969.0, 957.0, 983.0, 1012.0, 1055.0, 1025.0, 1043.0, 945.0  …  905.0, 1040.0, 926.0, 1030.0, 1132.0, 990.0, 990.0, 911.0, 915.0, 983.0], 462×3 DataFrame
+ Row │ Sex     Entry    Cens
+     │ Cat…    Float64  Cat…
+─────┼───────────────────────
+   1 │ Male      782.0  1
+   2 │ Male     1020.0  1
+   3 │ Male      856.0  1
+   4 │ Male      915.0  1
+   5 │ Male      863.0  1
+   6 │ Male      906.0  1
+   7 │ Male      955.0  1
+   8 │ Male      943.0  1
+  ⋮  │   ⋮        ⋮      ⋮
+ 456 │ Female    986.0  1
+ 457 │ Female   1039.0  1
+ 458 │ Female    968.0  1
+ 459 │ Female    955.0  1
+ 460 │ Female    837.0  1
+ 461 │ Female    861.0  1
+ 462 │ Female    967.0  1
+             447 rows omitted)</code></pre>
+</div>
+</div>
+<p>Ahora ya podemos ver como se hace el modelo.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Tree <span class="op">=</span> <span class="pp">@load</span> RandomForestRegressor pkg<span class="op">=</span>DecisionTree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>import MLJDecisionTreeInterface ✔</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MLJDecisionTreeInterface.RandomForestRegressor</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> <span class="fu">Tree</span>(n_trees <span class="op">=</span> <span class="fl">20</span>) <span class="co"># tambien se puede instanciar sin paraámetros </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>RandomForestRegressor(
+    max_depth = -1,
+    min_samples_leaf = 1,
+    min_samples_split = 2,
+    min_purity_increase = 0.0,
+    n_subfeatures = -1,
+    n_trees = 20,
+    sampling_fraction = 0.7,
+    pdf_smoothing = 0.0,
+    rng = Random._GLOBAL_RNG())[34m @364[39m</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># y usar tree.n_trees = 20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Como tenemos la variable <code>Cens</code>que es categórica necesitamos codificarla, aquí entra como hacer un pipeline en MLJ, que es una de las cosas más potentes que tiene junto con los <a href="https://alan-turing-institute.github.io/MLJ.jl/stable/composing_models/">ComposingModels</a> models que permite mezclar varios modelos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definimos un ContinuosEncoder, ver la ayuda con ?ContinousEncoder en el repl de julia</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Unsupervised model for arranging all features (columns) of a table to have Continuous element scitype, by applying the following protocol to each feature ftr:</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is already Continuous retain it.</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Multiclass, one-hot encode it.</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is OrderedFactor, replace it with coerce(ftr, Continuous) (vector of floating point integers), unless ordered_factors=false is specified, in which case</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#      one-hot encode it.</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Count, replace it with coerce(ftr, Continuous).</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is of some other element scitype, or was not observed in fitting the encoder, drop it from the table.</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If drop_last=true is specified, then one-hot encoding always drops the last class indicator colum</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>hot <span class="op">=</span> <span class="fu">ContinuousEncoder</span>(one_hot_ordered_factors<span class="op">=</span><span class="cn">true</span>, drop_last<span class="op">=</span><span class="cn">true</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ContinuousEncoder(
+    drop_last = true,
+    one_hot_ordered_factors = true)[34m @409[39m</code></pre>
+</div>
+</div>
+<p>Utilizamos la macro <code>@pipeline</code> para encadenar el onehot y el modelo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pipe <span class="op">=</span> <span class="pp">@pipeline</span> hot tree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Pipeline259(
+    continuous_encoder = ContinuousEncoder(
+            drop_last = true,
+            one_hot_ordered_factors = true),
+    random_forest_regressor = RandomForestRegressor(
+            max_depth = -1,
+            min_samples_leaf = 1,
+            min_samples_split = 2,
+            min_purity_increase = 0.0,
+            n_subfeatures = -1,
+            n_trees = 20,
+            sampling_fraction = 0.7,
+            pdf_smoothing = 0.0,
+            rng = Random._GLOBAL_RNG()))[34m @525[39m</code></pre>
+</div>
+</div>
+<p>Y ya podemos ajustar el modelo por ejemplo utilizando <code>evaluate</code> y validación cruzada</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">evaluate</span>(pipe, X, y, resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>), measure <span class="op">=</span> [rmse, mae])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PerformanceEvaluation object with these fields:
+  measure, measurement, operation, per_fold,
+  per_observation, fitted_params_per_fold,
+  report_per_fold, train_test_pairs
+extract:
+┌─────────────────────────────────────────┬─────────────┬───────────┬───────────
+│ measure                                 │ measurement │ operation │ per_fold ⋯
+├─────────────────────────────────────────┼─────────────┼───────────┼───────────
+│ RootMeanSquaredError()\e[34m @216\e[39m │ 58.7        │ predict   │ [52.3, 6 ⋯
+│ MeanAbsoluteError()\e[34m @160\e[39m    │ 49.4        │ predict   │ [44.6, 5 ⋯
+└─────────────────────────────────────────┴─────────────┴───────────┴───────────
+                                                                1 column omitted</code></pre>
+</div>
+</div>
+<p>Hay más medidas que se pueden listar con <code>measures()</code></p>
+<p>También podemos partir en train, test y similar</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>train, test <span class="op">=</span> <span class="fu">partition</span>(<span class="fu">eachindex</span>(y), <span class="fl">0.7</span>, shuffle<span class="op">=</span><span class="cn">true</span>, rng<span class="op">=</span><span class="fl">155</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Ahora instanciamos el modelo con <code>machine</code> especificando la X, y la y</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>modelo <span class="op">=</span> <span class="fu">machine</span>(pipe, X,y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 0 times; caches data
+  args: 
+    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
+    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
+</div>
+</div>
+<p>Y podemos usar <code>fit!</code> para ajustar “in place” (en julia si la función acaba en ! es una función que actua modificando el objeto que se le pasa) sin tener que crear otra variable</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(modelo, rows <span class="op">=</span> train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 1 time; caches data
+  args: 
+    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
+    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
+</div>
+</div>
+<p>Y ya podríamos predecir sobre test, dónde se le aplicaría el onehot encoder que hemos definido en el pipeline</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En julia podemos usar sintaxis latex por ejemplo \beta\hat  y tabulador despues de beta y hat en vscode </span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># escribe β̂ (uso juliaMono https://juliamono.netlify.app/) como tipo de letra </span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>ŷ <span class="op">=</span> <span class="fu">predict</span>(modelo,X[test, <span class="op">:</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>139-element Vector{Float64}:
+ 1087.8833333333332
+ 1081.45
+ 1028.3333333333333
+ 1030.8
+  949.5666666666668
+  972.25
+ 1142.05
+  940.6
+  966.35
+  860.6
+    ⋮
+  882.9599999999998
+  865.4
+ 1022.32
+  931.5
+  922.95
+  930.3666666666668
+ 1064.5
+  953.625
+  941.7666666666668</code></pre>
+</div>
+</div>
+<p>En este caso hemos hecho un modelo para predecir una variable continua, cuando sea categórica existen funciones que devuelven la clase predicha o la probabilidad de cada clase.</p>
+<p>También podemos ver como varía el error según el número de árboles</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>modelo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 1 time; caches data
+  args: 
+    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
+    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>r_tree <span class="op">=</span> <span class="fu">range</span>(pipe, <span class="op">:</span>(random_forest_regressor.n_trees), lower<span class="op">=</span><span class="fl">2</span>, upper<span class="op">=</span><span class="fl">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>typename(MLJBase.NumericRange)(Int64, :(random_forest_regressor.n_trees), ... )</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>curve <span class="op">=</span> MLJ.<span class="fu">learning_curve</span>(modelo;</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                           range<span class="op">=</span>r_tree,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                           resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>),</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                           measure<span class="op">=</span>rmse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(parameter_name = "random_forest_regressor.n_trees",
+ parameter_scale = :linear,
+ parameter_values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+ measurements = [63.35482459725572, 61.03552680046299, 60.24292896603508, 60.08916085779008, 59.69393001433038, 59.447125040723066, 58.86877968632394, 58.16237867467842, 58.416479729576544, 58.48856899579231, 59.080742791298974, 58.524648546408145, 58.55468564478951, 58.71039303157832, 58.862784037321894, 58.78919657683484, 58.738659245669986, 58.562389017352345, 58.71936497846932],)</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gr</span>() <span class="co"># especificamos un </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Plots.GRBackend()</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curve.parameter_values,</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>     curve.measurements,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>     xlab<span class="op">=</span>curve.parameter_name,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>     xscale<span class="op">=</span>curve.parameter_scale,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>     ylab <span class="op">=</span> <span class="st">"CV estimate of RMSE error"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-16-J1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="index_files/figure-html/unnamed-chunk-16-J1.png" class="img-fluid figure-img" width="300"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y esto es todo, en el próximo post contaré como crear el binario que nos va a permitir tener un motor de predicción para los modelos de un árbol de decisión y que funcione en cualquier linux. Casi listo para producción (o al menos una parte importante) sin tener que tener julia en dónde se vaya a utilizar.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","selector":".lightbox","descPosition":"bottom","openEffect":"zoom","loop":true});</script>
+
+
+
+</body></html>

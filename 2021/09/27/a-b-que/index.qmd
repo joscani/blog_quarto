@@ -1,0 +1,142 @@
+---
+title: ¿A/B qué?
+author: jlcr
+date: '2021-09-27'
+categories:
+  - análisis bayesiano
+  - R
+  - 2021
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| echo: false
+#| results: 'hide'
+renv::use(lockfile = "renv_abque.lock")
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+Recuerdo siendo yo más bisoño cuando escuché a los marketinianos hablar del A/B testing para acá , A/B testing para allá. En mi ingenuidad pensaba que era alguna clase de rito que sólo ellos conocían, y encima lo veía como requisito en las ofertas de empleo que miraba. 
+
+Mi decepción fue mayúscula cuando me enteré que esto del A/B testing no es más que un nombre marketiniano para hacer un contraste de proporciones o contrastes de medias, vamos, un prop.test o un t.test, ya que ni siquera trataban el caso de tener varios grupos o la existencia de covariables. Ains, esas dos asignaturas en la carrera de diseño de experimentos y de ver fórmulas y sumas de cuadrados a diestro y siniestro, esos anovas, y ancovas. 
+
+Total que hoy vengo a contar alguna forma diferente a la de la fórmula para hacer este tipo de contrastes. 
+
+Supongamos que tenemos los siguientes datos, inventados
+
+
+```{r}
+df <-  data.frame( 
+  exitos         = c(2, 200,  10, 20,  4,  200, 300,  20,  90,  90),
+  fracasos       = c(8, 1000, 35, 80, 20,  400, 900, 400, 230, 150) ,
+  gcontrol       = factor(c(1,0,1,1,1,0,0,0,0,0)))
+
+df$n = df$exitos + df$fracasos
+df
+
+```
+
+
+
+Tenemos 10 experimentos binomiales y hemos obtenido esos resultados, (podría ser por ejemplo la proporción de clientes que han contratado un producto A en 10 meses)
+
+Podriamos ver la proporción en cada fila 
+
+```{r}
+library(tidyverse)
+
+df$prop <- df$exitos/df$n
+df
+
+ggplot(df, aes(prop, fill = gcontrol)) +
+  geom_density(alpha = 0.3) +
+  labs(fill = "Gcontrol")
+
+```
+
+Pues como ahora me estoy volviendo bayesiano, ¿por qué no ajustar un modelo bayesiano a estos datos y obtener la posteriori de cada uno de las proporciones y de su diferencia. Vamos a ajustar lo que a veces se denomina una regresión binomial, dónde tenemos éxitos y ensayos. Normalmente la gente está acostumbrada a ajustar regresiones logísticas dónde la variable dependiente es 1 o 0, en este caso, la información está agregada, pero es equivalente. 
+
+Al tener el número de "ensayos" de cada experimento, se va a tener en cuenta, de forma que no va a ser lo mismo un experimento con 20 ensayos que uno con 200, aun cuando tengan la misma proporción.
+
+Usando la librería brms y stan sería así de sencillo
+
+
+
+```{r}
+library(brms)
+library(cmdstanr)
+set_cmdstan_path("~/cmdstan/")
+
+prior <-  get_prior(exitos | trials(n) ~  0 + gcontrol , 
+                    data = df, 
+                    family = binomial)
+
+mod_brm <-
+    brm(data = df, family = binomial,
+        exitos | trials(n) ~ 0 + gcontrol,
+        prior = prior,
+        iter = 2500, warmup = 500, cores = 6, chains = 6, 
+        seed = 10, 
+        backend = "cmdstanr")
+
+
+```
+```{r}
+fixef(mod_brm) %>% 
+    round(digits = 2)
+```
+
+Y ya tengo la estimación de cada proporción sin más que hacer el invlogit
+
+```{r}
+fixef(mod_brm) %>% 
+    round(digits = 2) %>% 
+  inv_logit_scaled()
+```
+Una cosa buena de la estimación bayesiana es que tengo la posteriori completa de ambas proporciones
+
+```{r}
+post <- as_tibble(mod_brm)
+post
+```
+
+Y tenemos 2000 muestras por 6 cadenas, 12000 muestras aleatorias de cada proporción. 
+
+
+Ahora puedo hacer cosas como ver la distribución a posteriori de la diferencia
+
+```{r}
+post$diferencia = inv_logit_scaled(post$b_gcontrol1) - inv_logit_scaled(post$b_gcontrol0)
+
+ggplot(post, aes(diferencia)) +
+  geom_density()
+```
+
+Intervalo de credibilidad al 80%
+```{r}
+quantile(post$diferencia, probs = c(0.1,0.9))
+```
+
+Y si sospechamos que hay más estructura en nuestros datos podemos modelarla igulmente, por ejemplo las proporciones podrían tener relación con el mes del año o con cualquier otra cosa. 
+
+En fin, un método alternativo para hacer A/B testing o como se llame ahora. 
