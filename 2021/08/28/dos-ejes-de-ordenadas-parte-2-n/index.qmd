@@ -1,0 +1,171 @@
+---
+title: '¿Dos ejes de ordenadas? (Parte 2/n) '
+author: jlcr
+date: '2021-08-28'
+slug: dos-ejes-de-ordenadas-parte-2-n
+categories:
+  - gráficos
+  - 2021
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+Siguiendo con el tema de los dos ejes de ordenadas, a mi no me gustan especialmente este tipo de gráficos,  pero puedo entender que se use y,  cómo dice mi amigo [Raúl Vaquerizo](https://analisisydecision.es/), lo importante es que se entienda. 
+
+
+Veamos un ejemplo que nos comentó [Jesús Lagos](https://twitter.com/Vdot_Spain) dónde se suele aplicar este tipo de gráficos, se trata de los climogramas, dónde se presentan en el eje X los meses del año y en los dos ejes de ordenadas la precipitación y la temperatura.
+
+
+Veamos unos datos de Madrid en 2018, extraídos de [aquí](https://www.tutiempo.net/clima/climograma-2018/ws-82210.html). Y veamos como queda en R.
+
+
+
+```{r}
+library(tidyverse)
+library(patchwork)
+
+```
+
+Leemos los datos , que son estos.
+
+```
+Mes,T,PP
+Enero,5.9,30.48
+Febrero,5.4,44.19
+Marzo,8.9,143.49
+Abril,13,57.67
+Mayo,16.6,57.93
+Junio,22.2,32.75
+Julio,26.1,2.03
+Agosto,27.5,1.02
+Septiembre,23.9,4.07
+Octubre,15.1,72.64
+Noviembre,9.9,54.07
+Diciembre,6,9.14
+```
+
+```{r}
+mad <- read.csv("climograma_mad")
+mad$Mes <- as_factor(mad$Mes)
+
+```
+
+Y pintamos un gráfico de dos ejes de ordenadas. Es importante elegir la transformación que le hacemos a la segunda variable "y" para que se pueda representar bien, al fin y al cabo se pinta en un sistema de coordenadas y tenemos que poner ambas variables en escala parecida.
+
+
+
+```{r}
+
+multi <- 2
+
+ggplot(mad, aes(x = Mes)) +
+  geom_col(aes(y = PP), fill = "yellow", alpha = 0.7) +
+  geom_line(aes(y = T * multi), group = 1, color = "red") +
+  geom_text(
+    aes(y = T * multi, label = paste(round(T, 1))),
+    vjust = 1.4,
+    color = "darkred"
+  ) +
+  scale_y_continuous(sec.axis = sec_axis(~ . / multi,
+    name = "Temperatura"
+  )) +
+  theme(
+    axis.title.y.right = element_text(
+      color = "darkred",
+      hjust = 0.01
+    ),
+    axis.text.y.right = element_text(
+      face = "bold",color = "darkred" )
+  )
+
+
+```
+
+Y la verdad es que eligiendo un factor de 2 podemos distorsionar el gráfico. Por convención lo que se suele hacer es considerar un factor que haga que al pintar en el sistema de referencia los máximos de ambas variables coincidan. Ya que este tipo de gráficos "mapea" dos variables al mismo "aesthetics", se necesita hacer esa transformación para equiparar las variables. 
+
+
+```{r}
+multi <- max(mad$PP) / max(mad$T)
+
+ggplot(mad, aes(x = Mes)) +
+  geom_col(aes(y = PP), fill = "yellow", alpha = 0.7) +
+  geom_line(aes(y = T * multi), group = 1, color = "red") +
+  geom_text(
+    aes(y = T * multi, label = paste(round(T, 1))),
+    vjust = 1.4,
+    color = "darkred"
+  ) +
+  scale_y_continuous(
+    name = "Precipitaciones",
+    # segundo eje
+    sec.axis = sec_axis(~ . / multi,
+      name = "Temperatura"
+    )
+  ) +
+  theme(
+    axis.title.y.right = element_text(
+      color = "darkred",
+      hjust = 0.01
+    ),
+    axis.text.y.right = element_text(
+      face = "bold", color = "darkred"
+    )
+  )
+```
+Y bueno, no queda mal del todo, aunque Tufte me mataría por esto. 
+
+Yo en realidad habría hecho algo como esto. 
+
+
+```{r}
+p1 <- mad %>% 
+  ggplot(aes(x = Mes, y = T)) +
+  geom_point() + 
+  geom_path(group=1) +
+  labs(title = "Temperatura")
+
+p2 <- mad %>% 
+  ggplot(aes(x = Mes, y = PP)) +
+  geom_col() +
+  labs(title = "Precipitaciones")
+
+p1 / p2
+
+```
+
+Y si acaso, para ver la relación entre Precipitaciones y Temperatura, pues algo así.
+
+
+```{r}
+ggplot(mad,aes(x = T, y = PP)) + 
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = Mes), size = 3) +
+  geom_smooth() +
+  labs(title = "Precipitaciones ~ Temperatura")
+```
+
+Y bueno, poco más que decir, siguen sin gustarme los gráficos de dos ejes de ordenadas, puede que por cuestiones filosóficas de no asignar dos variables distintas a mismo "aesthetic". 
+
+Hasta otro día. 
+
+
