@@ -1,0 +1,184 @@
+---
+title: Imputando datos. La estructura importa
+date: '2021-06-13'
+slug: imputando-datos-la-estructura-importa
+categories:
+  - estadística
+  - imputación
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+Voy a empezar este post con un par de citas. 
+
+> _El análisis de datos es básicamente encontrar la matriz correcta a diagonalizar._
+
+> _Quien renuncia a la estructura, deja dinero encima de la mesa._
+
+La primera no recuerdo dónde la leí, pero es de la escuela francesa de estadística, la segunda es del blog hermano [datanalytics](https://www.datanalytics.com/2018/10/04/embeddings-y-analisis-del-carrito-de-la-compra/). 
+
+Y bueno, ambas tienen parte de razón. En esta entrada voy a comentar brevemente una forma de imputación de datos que quizá a alguien le sea útil.
+
+La idea básica es: 
+
+1. Imputar los valores perdidos por la media de cada variable.
+2. Calcular la estructura factorial con el dataset anterior. 
+3. Imputar los valores perdidos por los valores predichos por la estructura factorial. Usando la matriz X reconstruida. 
+3. Repetir hasta convergencia.
+
+Este procedimiento iterativo suele usar Expectation Maximization y se conoce como EM-PCA. (también hay versión usando regularización)
+
+Más información en este [artículo](http://www.numdam.org/item/JSFS_2012__153_2_79_0.pdf) de  François Husson
+
+## Ejemplo 
+
+Y ahora vamos a ver un ejemplito, para eso vamos a usar la librería `missMDA` de François Husson y Julie Josse, que incorpora estos métodos. 
+
+
+```{r}
+library(missMDA)
+
+```
+
+Usamos el conjunto de datos `orange` en cuya ayuda leeemos
+
+*Description*
+Sensory description of 12 orange juices by 8 attributes. Some values are missing.
+
+*Usage*
+data(orange)
+*Format*
+A data frame with 12 rows and 8 columns. Rows represent the different orange juices, columns represent the attributes.
+
+
+```{r}
+data(orange)
+```
+
+Por ejemplo, tenemos un valor perdido para la variable `Attack.intensity` en la primera fila
+```{r}
+DT::datatable(orange,
+               options = list(scrollX = TRUE))
+```
+
+Bien, pues ahora podemos usar el EM-PCA para imputar los valores perdidos teniendo en cuenta la estructura factorial. Usamos el ejemplo que viene en la función. 
+
+Estimamos el número de componentes a extraer y usamos la función `imputePCA` que
+
+```{r}
+estim_ncpPCA(orange)
+```
+```{r}
+res_impute <-  imputePCA(orange, ncp=2)
+```
+
+La función devuelve el conjunto de datos ya imputado
+
+```{r}
+res_impute$completeObs
+```
+
+## Extensiones
+
+Se puede hacer imputación múltiple.
+
+```{r}
+# creamos 100 datasets imputados, 
+# por defecto usa método bootstrap pero también puede usar una versión bayesiana
+res_mi_impute <- MIPCA(orange, ncp = 2, nboot = 100)
+```
+
+En el Slot `res.MI` tenemos los datasets imputados
+```{r}
+# vemos por ejemplo la imputación 3
+res_mi_impute$res.MI[[3]]
+```
+Cuando el conjunto de datos es pequeño, como en este caso (12 filas), podemos ver gráficamente la incertidumbre asociada a la imputación. En la ayuda de la función `plot.MIPCA` se puede consultar lo que significa cada gráfico
+
+```{r}
+plot(res_mi_impute)
+```
+
+## Mas extensiones
+
+La librería que subyace bajo `missMDA` es la conocida `FactoMineR` que permite hacer métodos factoriales (otros nombres para lo mismo serían métodos de componentes principales, reducción de dimensiones, projection pursuit) teniendo en cuenta que las variables sean categóricas (Análisis de correspondencias simple y múltiple) o que haya una mezcla de continuas y categóricas (Análisis factorial para datos mixtos). 
+
+Una de las extensiones más útiles a mi modo de ver es la que permite imputar teniendo en cuenta la estructura factorial y también que las observaciones estén asociadas, por ejemplo que tenga una clasificación previa, vía segmentación o un cluster previo. 
+
+Por ejemplo podría tener datos de clientes de diferentes provincias de España, unirlo todo en un conjunto de datos dónde tenga la variable que indica de qué provincia es cada cliente y poder obtener una estructura factorial global general y una estructura factorial específica para cada provincia y poder utilizar ambas estructuras para imputar los valores perdidos. Sería una parte general y una parte específica. ¿No os recuerda a los modelos mixtos bayesianos o a la estrategia de de modelo global y particular de [Carlos](https://www.youtube.com/watch?v=oGjcWWITxMI&t=23s) ? 
+
+
+Bueno, pues todo eso se puede hacer con la librería `missMDA`.  Como ejemplo podemos ver el dataset `ozone`
+
+
+*Description*
+This dataset contains 112 daily measurements of meteorological variables (wind speed, temperature, rainfall, etc.) and ozone concentration recorded in Rennes (France) during the summer 2001. There are 11 continuous variables and 2 categorical variables with 2 or 4 levels. Some values are missing.
+
+
+
+```{r}
+data(ozone)
+head(ozone,6)
+```
+
+Y vamos a usar como variable de grupo `vent` y vemos que tenemos por ejemplo paara la segunda fila valores perdidos en la variable numérica `maxO3` o para la tercer fila tenemos un valor perdido para la variable categórica `pluie`
+
+```{r}
+ozone[c('20010602','20010603'), ]
+```
+
+Para aplicar el método de imputación tenemos que decidir qué número de componentes queremos para la estructura general y cuántos para la particular. 
+
+
+```{r, warning=FALSE}
+# en ifac tenemos que poner el índice de la variable de grupo (de tipo factor), vent es la 12
+ncp_estim <- estim_ncpMultilevel(ozone, ifac = 12)
+
+```
+
+Y  nos devuelve el número de componentes estimados entre los grupos `ncpB` y el número de componentes estimados dentro de los grupos. 
+
+```{r}
+ncp_estim$ncpB
+ncp_estim$ncpW
+```
+
+Y con esto se lo pasamos a la función `imputeMultilevel` y hacemos la imputación
+
+```{r}
+ozone_multilevel_imp <-  imputeMultilevel(ozone, ifac = 12, ncpB = 1, ncpW= 3)
+```
+
+Y podemos ver la imputación que ha realizado
+
+```{r}
+head(ozone_multilevel_imp$completeObs)
+```
+
+Y vemos que ha realizado tanto imputación de la variable numérica `maxO3` para el dato de 20010602, como imputación de la variable categórica `pluie` para el datos de 20010603
+```{r}
+ozone_multilevel_imp$completeObs[c('20010602','20010603'), c("maxO3", "pluie") ]
+```
+
+Lo dicho, me parece una técnica interesante cuándo se tiene por ejemplo una variable que te clasifica los clientes (ya sea una clasificación previa o dada por negocio) y tenemos datos faltantes tanto para variables numéricas como categóricas. Me parece una mejor solución que imputar por la media, mediana o simplemente asignar un valor pseudo aleatorio tipo -9999. Además de que el enfoque geométrico-algebraico de las técnicas de componentes principales siempre me ha gustado. 
+
+Y como decía al principio _Quien renuncia a la estructura, deja dinero encima de la mesa._ 
+
+Feliz semana. 
