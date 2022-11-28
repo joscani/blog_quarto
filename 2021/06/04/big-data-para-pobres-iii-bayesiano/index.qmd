@@ -1,0 +1,452 @@
+---
+title: 'Big data para pobres III. ¿Bayesiano? '
+author: jlcr
+date: '2021-06-04'
+slug: big-data-para-pobres-iii-bayesiano
+categories:
+  - estadística
+  - big data
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Y seguimos dando vueltas a los datos de [post anteriores](https://muestrear-no-es-pecado.netlify.app/2021/05/21/big-data-pobres-ii-auc/).
+Siempre hay quien dice que el bayesiano no sirve para big data y qué se acaba el universo antes de que termine de ajustar tu modelo (esto último creo que se lo he dicho yo alguna vez a [Carlos](https://www.datanalytics.com/)).
+
+Pero ya hemos visto en los dos post anteriores que podemos condensar los datos en menos filas sin perder información, así que , ¿por qué no utilizar un modelo bayesiano?
+
+Del post anterior
+
+```{r}
+
+library(tidyverse)
+library(sparklyr)
+
+sc <- spark_connect(master = "local", spark_home = "~/spark/spark-3.0.0-bin-hadoop2.7")
+
+tmp <- sc  %>%  # vuelvo al pipe de magrittr
+  spark_read_parquet(path = here::here("data/bd_pobres.parquet" ))
+
+df_spark <-  tmp %>% 
+  mutate(
+         edad_cat = case_when(
+           edad <= 20 ~ "<21",
+           edad <= 40 ~ "21- 40",
+           edad <= 50 ~ "41-50", 
+           edad <= 60 ~ "40-60",
+           edad > 60 ~ ">60"
+         )
+         )
+particiones <-  df_spark %>%  sdf_random_split(training = 0.6, test = 0.4)
+
+train <- particiones$training
+test <- particiones$test 
+
+train_local <- train %>% 
+  group_by(segmento,
+           tipo,
+           valor_cliente,
+           edad_cat) %>% 
+  count()  %>% 
+  collect() %>%  
+  # ponemos las variables categóricas a tipo factor
+  mutate(across(where(is.character), as_factor))
+
+
+test_local <- test %>% 
+  group_by(segmento,
+           tipo,
+           valor_cliente,
+           edad_cat) %>% 
+  count()  %>% 
+  collect() %>% 
+  # ponemos las variables categóricas a tipo factor
+  mutate(across(where(is.character), as_factor))
+
+spark_disconnect(sc)
+```
+
+Y tenemos nuestros conjuntos de train y de test en local
+
+```{r}
+DT::datatable(train_local)
+```
+
+## Modelo bayesiano.
+
+Pues ahora vamos a probar a hacer un modelo bayesiano jerárquico, podríamos hacer el equivalente a `glmer` usando la librería `rstanarm` y ajustar varias regresiones logísticas independientes, pero en vez de eso vamos a ver como ajustar directamente la distribución multinomial usando `brms`.
+
+Los modelos serían algo así como
+
+$$
+\begin{equation} ans \sim Multinomial(\boldsymbol{\theta}) \end{equation}
+$$
+
+Dónde 
+
+$$ 
+\begin{equation} 
+\boldsymbol{\theta} = \{\theta_{Rec}, \theta_{Best}, \theta_{Neut}, \theta_{\text{No_way}}\}
+\end{equation}
+$$
+
+Lo bueno de stan y de brms es que se puede modelar directamente la Multinomial, es decir, el número de "éxitos" en cada categoría dado un número de intentos.
+En `brms` podemos usar `trials` para especificarlo.
+Sería el equivalente al `weights` en `glmer`.
+De esta forma podemos trabajar con los datos agregados en vez de tenerlos individuales.
+Si tengo, 1000 clientes con edad \< 21 y valor_cliente = 8, en vez de poner 1000 filas, pongo una columna de frecuencias, que es lo que hemos hecho.
+
+### Librerías
+
+Yo uso cmdstan como backend para `brms` en vez de `rstan`, está más actualizado y tarda menos en muestrear.
+
+```{r}
+# Core libraries
+library(tidyverse)
+library(tidybayes)
+library(brms)
+library(cmdstanr)
+
+# For beauty plots
+library(ggridges)
+
+## Using all cores. 12 in my machine
+options(mc.cores = parallel::detectCores())
+set_cmdstan_path("~/cmdstan/")
+```
+
+### Adecuando los datos
+
+Para poder ajustar el modelo de regresión multinomial se necesita tener los datos de una determinada forma, básicamente tener una columna de tipo matriz.
+Para eso vamos a pivotar los datos y usar `cbind`
+
+Pivotamos
+
+```{r}
+train_wider <-   train_local %>% 
+  pivot_wider(
+    id_cols = c(tipo, valor_cliente, edad_cat),
+    names_from = segmento, 
+    values_from = n) %>% 
+  mutate(
+    across(where(is.numeric), ~replace_na(.x, 0)), 
+    total = Rec + Neut + Best + No_way
+  ) 
+
+test_wider <- test_local %>% 
+  pivot_wider(
+    id_cols = c(tipo, valor_cliente, edad_cat),
+    names_from = segmento, 
+    values_from = n) %>% 
+  mutate(
+    across(where(is.numeric), ~replace_na(.x, 0)),
+    total = Rec + Neut + Best + No_way
+  )
+
+```
+
+```{r}
+DT::datatable(train_wider)
+```
+
+Y ahora unimos las columnas que indican el conteo en cada perfil de Rec, Best, Neut y NoWay en un columna que es una matriz
+
+```{r}
+# lo hacemos solo para el train, para el test no hace falta
+
+train_wider$cell_counts <- with(train_wider, cbind(Rec, Best, Neut, No_way))
+class(train_wider$cell_counts)
+```
+
+```{r}
+DT::datatable( train_wider %>% 
+                 select(tipo, valor_cliente,
+                        cell_counts, everything()
+))
+```
+
+Pues ya podemos ajustar el modelo.
+Brms tiene una función `get_prior` para poner las priors por defecto.
+
+Voy a usar un modelo con efectos aleatorios que tarda unos pocos minutos, pero si usamos `cell_counts | trials(total) ~ edad_cat + valor_cliente` el modelo se ajusta en menos de 60 segundos.
+Bueno, vamos a verlo
+
+### Ajuste de los modelos
+
+**Modelo efectos fijos**
+
+```{r, message=FALSE, warning=FALSE}
+formula_efectos_fijos <- brmsformula(
+  cell_counts | trials(total) ~ edad_cat + valor_cliente
+)
+
+# get priors
+priors <- get_prior(formula_efectos_fijos, train_wider, family = multinomial())
+
+tictoc::tic("Modelo efectos fijos")
+model_multinomial1 <- brm(formula_efectos_fijos, train_wider, multinomial(), priors,
+  iter = 4000, warmup = 1000, cores = 4, chains = 4,
+  seed = 10,
+  backend = "cmdstanr",
+  refresh = 0
+)
+tictoc::toc()
+```
+
+**Modelo con efectos aleatorios**
+
+Y tarda unos 9 minutos o así
+
+```{r, message=FALSE, warning=FALSE}
+formula <- brmsformula(
+  cell_counts | trials(total) ~ (1|edad_cat) + (1|valor_cliente
+))
+
+# get priors
+priors <- get_prior(formula, train_wider, family = multinomial())
+```
+
+Podemos ver las priors que ha considerado por defecto.
+Y vemos las priors que ha tomado para modelar la distribución de las $\sigma$ asociadas a `edad_cat` y `valor_cliente`
+
+```{r}
+priors
+```
+
+```{r, message=FALSE, warning=FALSE}
+tictoc::tic("modelo mixto")
+model_multinomial2 <- brm(formula, train_wider, multinomial(), priors,
+  iter = 4000, warmup = 1000, cores = 4, chains = 4,
+  seed = 10,
+  backend = "cmdstanr", 
+  refresh = 0
+)
+tictoc::toc()
+
+```
+
+Podemos ver el modelo con
+
+```{r}
+summary(model_multinomial2)
+```
+
+Pintarlo
+
+```{r}
+plot(model_multinomial2, ask = FALSE)
+```
+
+E incluso ver el modelo en stan
+
+```{r }
+model_multinomial2$model
+```
+
+Viendo el código en stan que genera `brms` utiliza parametrización con `multinomial_lpmf` que toma el log de la probabilidad de la multinomial y usa softmax sobre el predictor lineal.
+[multivariate_discrete_stan](https://mc-stan.org/docs/2_26/functions-reference/multivariate-discrete-distributions.html)
+
+En la parte de functions tiene
+
+
+    real multinomial_logit2_lpmf(int[] y, vector mu) {
+          return multinomial_lpmf(y | softmax(mu));
+      }
+
+Y en la de model
+
+       for (n in 1:N) {
+          target += multinomial_logit2_lpmf(Y[n] | mu[n]);
+         }
+
+Y en la parte del predictor lineal `mu[n]` es dónde ha ido añadiendo los group levels effects.
+
+Por ejemplo la parte de la edad_cat para la categoría Best está en la parte de `transformed parameters` dónde z_1\[1\] se modela como normal y sd_1 como una t de student
+
+    r_1_muBest_1 = (sd_1[1] * (z_1[1]));
+
+Y en la parte de `model` va añadiendo términos al muBest que es al final el que entra en la parte de la verosimilitud.
+
+    muBest[n] += r_1_muBest_1[J_1[n]] * Z_1_muBest_1[n] + r_2_muBest_1[J_2[n]] * Z_2_muBest_1[n];
+
+Aquí añade el efecto de la edad r_1\_muBest_1\[J_1\[n\]\] lo multiplica por Z_1\_mubest_1\[n\] que es el indicador en los datos de la matriz Z para los efectos aleatorios (todo igual a 1) y luego añade el efecto de la variable valor_cliente.
+
+La verdad es que eel bloque `model` que genera `brms` es un poco complicado.
+Imagino que genera código optimizado.
+Para los que quieran verlo todo con stan directamente este [libro](https://vasishth.github.io/bayescogsci/book/modeling-multiple-categorical-responses.html#sec:mult) tiene un ejemplo básico
+
+En `brms` tenemos la función `make_standata` que nos genera los datos tal y como se los pasa a Stan.
+
+```{r}
+datos_stan <- make_standata(formula, data = train_wider, 
+              family = multinomial(),
+              prior =  priors)
+```
+
+```{r}
+names(datos_stan)
+```
+
+```{r}
+# datos
+datos_stan$N
+
+# numero de niveles edad
+datos_stan$N_1
+
+# numero niveles valor_cliente
+datos_stan$N_2
+```
+
+En los J_1, J_2, está codificado a que nivel de edad y valor_cliente perteneces esa fila.
+J_3 y J_4 es igual a J_1 y J_2.
+Lo repite para cada categoría de respuesta.
+
+```{r}
+datos_stan$J_1
+```
+
+```{r}
+datos_stan$J_2
+```
+
+Pero yo estoy interesado en ver 2 cosas, como de bien predice sobre test y cuál es la probabilidad de cada clase condicionada a cada perfil
+
+**Predicción**
+
+Podemos obtener o bien todas las estimaciones o resumirlas
+
+```{r}
+predicciones_test <-  posterior_predict(model_multinomial2, newdata = test_wider)
+```
+
+Aquí lo que tenemos es un array de dimensiones 12000, 180, 4 .
+Que se corresponde a tener las 12000 estimaciones ( 4 cadenas x 3000 muestras efectivas) , para las 180 filas del conjunto de test
+
+```{r}
+dim(predicciones_test)
+```
+
+Por ejemplo para la fila 35 de test que sería
+
+```{r}
+test_wider[1,]
+```
+
+Y las predicciones (de la 1 a la 20) de las 1200
+
+```{r}
+predicciones_test[1:20, 1, ]
+```
+
+Como ahora todo es `tidy` voy a usar `tidybayes`para tener esa predicción.
+
+```{r}
+predicciones_tidy <- test_wider %>% 
+  add_epred_draws(model_multinomial2) 
+```
+
+Y se nos ha quedado un dataset muy muy grande
+
+```{r}
+dim(predicciones_tidy)
+```
+
+```{r}
+DT::datatable(predicciones_tidy %>% 
+                ungroup() %>% 
+                sample_n(30) %>% 
+                select(edad_cat, valor_cliente,.category, .epred))
+```
+
+Pero si quisiéramos pintar las probabilidades estimadas tendríamos que dividir el valor predicho de cada categoría por el total de clientes en cada fila del conjunto de datos de test.
+Hay una forma más sencilla construyendo un conjunto de datos que tenga todas las combinaciones de `edad_cat` y `valor_cliente` y añadiendo columna `total`con valor 1.
+
+```{r}
+
+fake_data <- test_wider %>% 
+  tidyr::expand(edad_cat, valor_cliente) %>% 
+  mutate(total = 1)
+```
+
+```{r}
+df_pintar <-  fake_data %>% 
+  add_epred_draws(model_multinomial2) %>% 
+  mutate(valor_cliente = as_factor(valor_cliente))
+```
+
+De esta forma, al tener total = 1, el modelo devuelve la probabilidad de cada clase, si total = 13, hubiera devuelto "el reparto" de esos 13 individuos en los 4 grupos
+
+```{r}
+DT::datatable(df_pintar %>% 
+  sample_n(30) %>% 
+  select(edad_cat, valor_cliente, .category, .epred))
+```
+
+Añadir las 12000 predicciones por fila ya "sólo" nos deja unos 2 millones de filas
+
+```{r}
+dim(df_pintar)
+```
+
+**Pintemos**
+
+Por ejemplo si queremos ver las estimaciones que le da según la edad podemos ver la distribución posteriori de la probabilidad de cada segmento condicionada a cada grupo de edad.
+Salen distribuciones con varias modas debido a la variable `valor_cliente` que no estamos representando
+
+```{r}
+df_pintar %>% 
+  ggplot(aes(x=.epred, y = edad_cat, fill = .category) 
+             ) +
+  geom_density_ridges(scale = 0.8, rel_min_height = 0.01, alpha=.4) +
+  scale_fill_viridis_d(option = "B") +
+  theme_ridges() 
+```
+
+Si vemos la posteriori para los clientes de mayor valor.
+Se ve claramente que a menor edad mayor probabilidad de pertenecer al segmento "Best" , mientras que a mayor edad es mucho más probabilidad del segmento "No_way".
+
+```{r}
+df_pintar %>%  
+  filter(valor_cliente == 0) %>% 
+  ggplot(aes(x=.epred, y = edad_cat, fill = .category) 
+) +
+  geom_density_ridges(scale = 1.5, rel_min_height = 0.01, alpha=.4) +
+  scale_fill_viridis_d(option = "B") +
+  theme_ridges() + 
+  labs(title = "Cliente valor: 0")
+```
+
+Teniendo toda la distribución podemos ver los resultados desde otro punto de vista.
+Por ejemplo, ver las probabilidades para los menores de 21.
+
+```{r}
+df_pintar %>%  
+  filter(edad_cat %in% c("<21")) %>% 
+  ggplot(aes(x=.epred, y = valor_cliente, fill = .category) 
+  ) +
+  geom_density_ridges(scale = 3, rel_min_height = 0.01, alpha=.4) +
+  scale_fill_viridis_d(option = "B") +
+  theme_ridges() + 
+  labs(title = "Clientes menores de 21\n Probabilidades estimadas")
+```
+
+En fin, que se puede hacer estadística bayesiana aún con grandes volúmenes de datos, si te conviertes en lo que mi amigo [Antonio](https://fronkonstin.com/) llama un "artesano del dato".
+
+Feliz semana
