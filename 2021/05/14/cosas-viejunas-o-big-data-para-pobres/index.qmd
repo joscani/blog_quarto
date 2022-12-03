@@ -1,0 +1,206 @@
+---
+title: Cosas viejunas.  O big data para pobres
+author: ''
+date: '2021-05-14'
+slug: cosas-viejunas-o-big-data-para-pobres
+categories:
+  - estadística
+  - 2021
+  - big data
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE
+)
+```
+
+Antes, cuándo no había tanta capacidad de cálculo ni esa obsesión por cuántas más variables mejor, se trabajaban los datos, se seleccionaban las variables, se muestreaba o se trabajaba con los datos agregados. 
+De esto último sabe bastante el gran [Emilio Torres](https://torres.epv.uniovi.es/centon/el-centon-de-un-enano.html), autor entre otros del paquete [`xkcd`](https://cran.r-project.org/web/packages/xkcd/vignettes/xkcd-intro.pdf)
+
+Trabajar con datos agregados y con sus frecuencias es lo que hemos hecho toda la vida. Veamos un ejemplo tonto. 
+
+
+```{r}
+ejemplo <- data.frame(x1 = rep(1:3, 5),
+                      x2 = rep(1:3, length.out=5))
+ejemplo
+```
+Tenemos 15 filas, pero en realidad podemos condensar la información en 9,  que serían las combinaciones únicas 
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+condensado <- ejemplo %>% 
+  group_by(x1, x2 ) %>% 
+  count()
+
+condensado
+```
+
+Y es exactamente la misma info, pero en menos filas. Obvio. 
+
+Veamos un ejemplo más claro con datos simulados que tengo en parquet. 
+
+
+
+```{r}
+library(sparklyr)
+sc <- spark_connect(master = "local", spark_home = "~/spark/spark-3.0.0-bin-hadoop2.7")
+
+tmp <- sc %>% 
+  spark_read_parquet(path = here::here("data/bd_pobres.parquet" ))
+```
+Es un conjnto de datos con 4 variables indicando valor del cliente (1 es más valor), edad, segmento y tipo de equipamiento
+
+```{r}
+tmp
+```
+
+Tenemos más de 2 millones de filas. Es sólo un ejemplo, esto en un pc moderno no es un problema, pero podrían ser 200 millones 
+
+```{r}
+tmp %>% 
+  count()
+```
+Si quisiéramos por ejemplo modelar el segmento en función del resto de variables, podríamos hacer un árbol de decisión en spark o con h2o o con otra cosa moderna. Sin embargo también podríamos pensar en ver cuántos clientes de cada tipo hay y trabajar con la tabla que tenga las distintas combinaciones y una columna que indica las veces que se repite. También podríamos trabajar con una muestra de los datos. 
+
+Y vemos que tenemos combinaciones desde 13379 casos hasta combinaciones con 1 solo caso, 
+La combinación segmento = "No_way", tipo = "B", valor cliente= 8 y edad = 70 solo tiene un caso. 
+
+```{r}
+df_info_completa <-
+  tmp %>%
+  group_by(segmento,
+           tipo,
+           valor_cliente,
+           edad) %>%
+  count()  %>%
+  ungroup
+df_info_completa %>% arrange(desc(n))
+df_info_completa %>% arrange(n)
+```
+
+Y tendríamos un total de 9598 filas. Oye, no está mal pasar de una tabla de 2 millones a una de 9598 representando exactamente la misma información. 
+
+```{r}
+df_info_completa %>% count()
+```
+Pues ya podríamos traernos la información a local y trabajar con ella
+
+```{r}
+df1 <-  collect(df_info_completa)
+DT::datatable(df1)
+```
+
+Y podríamos hacer nuestra segmentación utilizando la variable `n` como variable de frecuencia de los casos
+
+Hagamos un segmentación sencilla
+
+```{r}
+library(party)
+# convertimos a factor las variables de tipo character
+
+# The old school
+# df1[sapply(df1, is.character)] <- lapply(df1[sapply(df1, is.character)], 
+#                                                            as.factor)
+
+# Tidyverse
+
+df1 <- df1 %>% 
+  mutate(across(where(is.character),
+                as.factor))  
+
+df1 
+
+arbol <- ctree(segmento ~ edad + valor_cliente + tipo,
+               data = df1,
+               weights = df1$n ,  #
+               controls = ctree_control(maxdepth = 3))
+arbol
+```
+Para pintar el árbol 
+
+```{r, fig.width=14}
+# una función que tengo en otro lado para modificar un
+# poco como lo pinta ctree
+
+source("utils_plot_ctree.R")
+plot(arbol,terminal_panel=altbp(arbol,ylines=1, gap=0,rot= -60))
+```
+Y voilá. ya hemos hecho un modelo sobre los más de 2 millones de clientes, utilizando toda la info pero en menos de 10 mil filas.  Y vemos como el tipo de equipamiento es la variable más importante, seguida de la edad. La interpretación de los segmentos la dejamos para otro día. 
+
+También podríamos considerar la variable valor cliente como categórica o discretizar la edad. 
+
+```{r, fig.width=14}
+df2 <-  df1 %>% 
+  mutate(
+         valor_cliente = as_factor(valor_cliente),
+         edad_cat = as_factor(case_when(
+           edad <= 20 ~ "<21",
+           edad <= 40 ~ "21- 40",
+           edad <= 50 ~ "41-50", 
+           edad <= 60 ~ "40-60",
+           edad > 60 ~ ">60"
+         ))
+         )
+
+arbol2 <- ctree(segmento ~ edad_cat + valor_cliente + tipo,
+               data = df2,
+               weights = df2$n ,  #
+               controls = ctree_control(maxdepth = 3))
+
+plot(arbol2,terminal_panel=altbp(arbol,ylines=1, gap=0,rot= -60))
+
+```
+
+
+
+
+Ya que tenemos estos datos así, quizá estemos interesados en modelar la probabilidad de un segmento, quizá incluso usando `Stan` o `lme4`. 
+
+Con `lme4` sería algo así. 
+
+```{r}
+library(lme4)
+
+modA <- glmer(segmento == "Best" ~ (1 | edad_cat) + (1|valor_cliente) + (1 | tipo),
+              data = df2, family= binomial, weights= df2$n)  
+
+modB <-  glmer(segmento == "No_way" ~(1 | edad_cat) + (1|valor_cliente) + (1 | tipo),
+               data = df2, family= binomial, weights= df2$n)  
+
+```
+
+
+Y ver el modelo y efectos aleatorios
+
+```{r}
+summary(modA) 
+```
+
+```{r}
+ranef(modA)
+```
+```{r}
+sjPlot::plot_model(modA, type = "re")
+```
+
+
+Y hasta aquí, el próximo post en vez de trabajar con toda la información partiremos los datos en train y test antes de agregar y traer a local. Veremos el ajuste con un modelo mixto con `glmer` y calcularemos los AUC's, pero teniendo en cuenta que tenemos los datos con variable de frecuencia. 
+
