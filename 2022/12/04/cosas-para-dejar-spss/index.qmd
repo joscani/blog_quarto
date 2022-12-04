@@ -1,0 +1,239 @@
+---
+title: Consejos para dejar spss
+date: '2022-12-04'
+
+categories:
+  - estadística
+  - sociología
+  - 2022
+  - spss
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE
+)
+```
+
+
+## Intro
+
+Estuve del 23 al 25 de Noviembre en las [Jornadas de R ](http://r-es.org/12jr/) en Córdoba, y como siempre, me lo pasé estupendamente. 
+Resulta que a la misma vez se celebraba el congreso andaluz de sociología, y dado mi pasado trabajando con sociólogos pues me pasé el viernes a última hora a ver a los colegas. 
+
+Me sigue sorprendiendo el uso que se sigue haciendo de spss en este ámbito, un software privativo y no barato precisamente. Tengo que decir que para aquellos que son amigos de los GUIs, en R tenemos radiant, BlueSky, jamovi, etc, [aquí](https://r4stats.com/articles/software-reviews/r-gui-comparison/) os dejo una comparación con algunos de ellos. 
+
+
+Por otro lado, siempre me comentan que spss se usa mucho para hacer tabulaciones básicas, cosas como tablas de frecuencias  de variables , tanto univariantes como bivariantes.  En R tenemos muchas formas de poner tablas bonitas usando librerías como  `DT`, `reactable`, `formattable`, `gt`,`flextable`  o otras más, veáse [esto](https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/) por ejemplo. 
+
+
+Yo voy a poner un ejemplo del uso de librerías de [Daniel strengejacke](https://github.com/strengejacke) que son unas de mis favoritas a la hora de extraer por ejemplo los efectos marginales de modelos lineales (incluyendo los mixtos) y que tiene algunas utilidades para hacer tablas de frecuencias y que queden bastante bien.
+
+## Datos. 
+
+Para ejemplificar, voy a bajarme el fichero del barómetro del[CIS de mayo de 2022](https://www.cis.es/cis/opencm/ES/1_encuestas/estudios/listaMuestras.jsp?estudio=14630) en formato `sav` de spss y de paso vemos como se lee con R
+
+
+## Librerías y lectura de datos
+
+```{r}
+# tidyverse por si acaso y haven para leer ficheros spss
+library(tidyverse)
+library(haven) 
+
+# librerias de Daniel
+# library(sjlabelled)
+library(sjPlot)
+library(sjmisc)
+
+bar_mayo_2022 <-  read_sav(here::here("data/3363.sav"))
+
+bar_mayo_2022
+```
+
+
+Interesante que al leer con haven tengo los datos con el valor y con la etiqueta. 
+
+```{r}
+head(bar_mayo_2022$CCAA)
+```
+
+
+## Usando las librerías de Daniel
+
+Podemos ver las frecuencias de gente que ha contestado por Comunidad autónoma y teniendo en cuenta la ponderación 
+
+```{r, fig.width=12}
+
+plot_frq(bar_mayo_2022$CCAA, weight.by = bar_mayo_2022$PESO)
+
+```
+
+
+
+### Tablas de frecuencias
+
+Podemos ver las tablas de frecuencias en formato texto y sin ponderación
+
+```{r}
+frq(bar_mayo_2022$CCAA, out = "txt")
+```
+
+
+O usar la ponderación y verlas en formato de html
+
+```{r}
+
+frq(bar_mayo_2022$CCAA, weights = bar_mayo_2022$PESO, out = "viewer")
+```
+
+
+También podemos decirle que si hay una variable continua nos la intente agrupar 
+
+```{r}
+frq(bar_mayo_2022, EDAD, auto.grp = 5, weights = PESO, out = "viewer")
+```
+
+
+
+o que ordene en orden descendente
+
+```{r}
+frq(bar_mayo_2022, EDAD, auto.grp = 7, sort.frq = "desc", 
+    title = str_glue("{attributes(bar_mayo_2022$EDAD)$label} AGRUPADA" ), 
+    weights = PESO, out = "viewer")
+
+```
+
+
+¿No está mal verdad?  
+
+He estado buscando si también tenía como hacer tablas de medias y demás, pero aún no lo he encontrado, no obstante podemos hacer esto.
+
+```{r}
+
+(edad_media <- bar_mayo_2022 %>% 
+    group_by(CCAA = forcats::as_factor(CCAA) ) %>%  # con el as_factor  (de forcats o de haven) nos traemos las etiquetas 
+    summarise(
+        edad_media = weighted.mean(EDAD, PESO) %>% round(2)
+        )
+ ) 
+
+```
+
+
+### Tablas de contingencia 
+
+
+Es usual en las tabulaciones de spss, hacer tablas dónde en filas (o columnas) siempre dejamos la misma variable y vemos el cruce con otras variables de interés. Por ejemplo queremos ver las respuestas a la pregunta `P1` por cada comunidad autónoma, y teniendo en cuenta la ponderación.
+
+Para eso usamos la función `tab_xtab`, que por defecto además nos devuelve la V de Cramer o el estadístico Chi-cuadrado 
+
+```{r}
+
+tab_xtab(bar_mayo_2022$CCAA, bar_mayo_2022$P1, weight.by = bar_mayo_2022$PESO)
+
+```
+
+
+Pero no queremos ir una a una , sino que queremos tener rápidamente el cruce de varias preguntas con la comunidad autónoma. 
+
+
+
+Tabla cruzada por Comunidad autónoma y p1 a p6
+
+```{r}
+
+(var_to_cruce <-  paste0("P", 1:6))
+
+
+```
+
+Nos creamos una función para llamar a `tab_xtab` con algunas opciones por defecto y que devuelva el código html necesario para pintar. Nota. Uso lo de `res$knitr` al final porque quiero juntar en uno solo todas las tablas, si no lo hago así hay problemas para sacar todas las tablas en mismo html de forma programática.
+
+
+
+```{r}
+
+
+contingency_table_print <-
+    function(df, var_fila, var_columna, var_peso,
+             show.cell.prc = FALSE,
+             show.row.prc  = FALSE,
+             show.col.prc  = FALSE
+             ) {
+             res <- tab_xtab(
+                 var.row = df[[var_fila]],
+                 var.col = df[[var_columna]],
+                 weight.by = df[[var_peso]], 
+                 emph.total = TRUE,
+                 show.cell.prc = show.cell.prc,
+                 show.row.prc = show.row.prc, 
+                 show.col.prc = show.col.prc,
+                 title = str_glue(
+                     "Pregunta: {var_columna}  ",
+                     " Por {var_fila}")
+             )
+             return(res$knitr)
+    }
+
+```
+
+
+Hacemos un `map` para obtener de cada una de las preguntas (P1 a P6) su cruce con CCAA , utilizando PESO como variable de ponderación y que nos muestre los porcentajes de filas y de columnas
+
+
+```{r}
+
+cruces <- map(var_to_cruce,
+     function(x)
+  
+             contingency_table_print(bar_mayo_2022, "CCAA", x, "PESO",
+                                     show.row.prc = TRUE,
+                                     show.col.prc = TRUE)
+     )
+
+```
+
+
+Para juntar todas las tablas, concateno los resultados y con la función `raw_html` los puedo pintar. En el chunk de R  he puesto que el resultado sea `asis`  
+
+
+```
+`{r, results= 'asis', error=FALSE, warning=FALSE, message=FALSE}
+
+```
+
+```{r, results= 'asis', error=FALSE, warning=FALSE, message=FALSE}
+
+knitr::raw_html(map_chr(cruces, paste))
+
+
+```
+
+Y bueno, esto era para mostrar que R además de ser un excelente sustituto de todo lo que se puede hacer con spss a nivel analítico (de hecho tiene muchas más cosas) también nos puede servir para sacar tabulaciones de estudios que vengan en formato de spss.  
+
+Os recomiendo encarecidamente que echéis un vistazo a las librerías `sjPlot` `sjmisc` de Daniel. 
+
+
+Hasta más ver. 
+
+
+
