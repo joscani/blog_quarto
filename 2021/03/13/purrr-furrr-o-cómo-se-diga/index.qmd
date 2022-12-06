@@ -1,0 +1,205 @@
+---
+title: Purrr, furrr, maps y future_maps
+date: '2021-03-13'
+categories:
+  - ciencia de datos
+  - R
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Show me the code"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Hace un par de días un amigo mío me preguntaba por temas de que quería paralelizar un proceso con R, y no acababa de ver claro cómo. A falta de que mande un ejemplo creí entender que tiene un dataframe dónde tiene un proceso que encuentra para cada fila un conjunto de n filas parecidas y sobre ese conjunto de n filas hace cosas, como estimar algo y tal. Y lo que quiere al final es tener tanto lo estimado como un dataframe con las n filas similares a cada fila original
+
+Bueno, hasta que me mande el ejemplo y me entere bien, me acordé que en R y más concretamente en el mundo tidyverse tenemos los nested data, que nos permite tener columnas cuyos elementos pueden ser cualquier cosa, desde un json, un dataframe, un modelo , etcc.. 
+
+Veamos un ejemplo
+
+## `purrr`
+
+```{r}
+library(tidyverse)
+
+
+
+df_nest <-  tibble(
+  grupo = c(letters[1:5]),
+  dfs = list(
+    dfa = data.frame(x = rnorm(2000), y = rexp(2000)),
+    dfb = data.frame(x = rnorm(1000), y = rexp(1000)),
+    dfc = data.frame(x = rnorm(30), y = rexp(30)),
+    dfd = data.frame(x = rnorm(200), y = rexp(200)),
+    dfe = data.frame(x = rnorm(1e5), y = rexp(1e5))
+  )
+)
+
+df_nest
+
+```
+
+Y vemos que el primer elemento de la columna dfs es un dataframe de 2000 filas y 2 colmnas y que el quinto tiene 100 mil filas de filas y dos columnas. Esta forma de tener la información puede ser útil, o al menos a mi me lo parece. 
+
+¿Podríamos ahora hacer, por ejemplo un modelo sobre cada elemento de dfs? Si, y de manera muy sencilla utilizando funciones de `purrr` ya incluida con tidyverse
+
+```{r}
+df_con_modelo <- df_nest %>%
+  mutate(modelo = map(dfs, function(df)
+    lm(y ~ x, df))) %>% 
+  mutate(resumen_modelo = map(modelo, broom::tidy)) # añodo tambin tabla resumen
+
+df_con_modelo
+```
+
+Y podemos ver los modelos o los resúmenes
+
+```{r}
+df_con_modelo$modelo[[2]]
+# o equivalentemente
+df_con_modelo %>% 
+  pull(modelo) %>% 
+  .[[5]]
+```
+
+```{r}
+df_con_modelo$resumen_modelo[[2]]
+```
+
+Hagamos un ejemplo más elaborado, usando datos de la librería `gapminder` más info en la ayuda de la misma
+
+```{r}
+library(gapminder)
+
+DT::datatable(gapminder)
+
+```
+
+Podemos construirnos un dataset con datos agregados por país o por continente usando la función `nest`
+
+```{r}
+df <- gapminder %>%
+  group_by(continent) %>%
+  nest()
+
+df
+```
+
+Y ahora en data tenemos los datos de cada continente
+
+
+Ahora el objetivo es hacer un modelo para cada continente un modelo que relacione la esperanza de vida y el año. 
+
+Para eso nos creamos un par de funciones, que usaremos en el map. Una para hacer el modelo y otra un gráfico.
+
+```{r}
+
+make_modelo_simple <-  function(df){
+  
+  modelo_simple <- function(df) {
+    lm(lifeExp ~ year , df)
+  }
+  # el uso de possibly mola. 
+  modelo_safe <- possibly(modelo_simple, otherwise = NA) 
+  return(modelo_safe(df))
+}
+
+plot_lifeexp <-  function(df){
+ df %>% 
+    ggplot(aes(x= year, y=lifeExp, color = country, group= country)) + 
+    geom_point() +
+    geom_line() +
+    labs(title = "LifeExp evolution")
+
+}
+
+```
+
+Y ahora  hacemos un gráfico para cada continente, un modelo por continente y obtenemos las predicciones.
+
+
+```{r}
+df2 <-  df %>%
+  mutate(
+    # modelo
+    modelo_x_continente = map(data, make_modelo_simple),
+    # grafico
+    plots = map(data, plot_lifeexp),
+    
+    # uso de map2 para funcion con dos argumentos
+    predicciones = map2(modelo_x_continente,
+                        data,
+                        function(modelo, datos)
+                          predict(modelo, newdata = datos)
+                        )
+  )
+
+df2
+```
+
+
+Y por ejemplo, el plot para Oceanía
+
+```{r}
+df2$plots[[5]]
+```
+
+
+Y su modelo y predicciones
+
+```{r}
+df2$modelo_x_continente[[5]]
+df2$predicciones[[5]]
+```
+## `furrr` 
+
+¿Y podemos hacer todo esto en paralelo? Pues si, y muy fácil con la librería [`furrr`](https://github.com/DavisVaughan/furrr) que usa la fantástica [`future`](https://github.com/HenrikBengtsson). Con `future` podemos usar múltiples procesadores, múltiples sesiones, o incluso montar un cluster sobre varias máquinas usando MPI (eso si era computación distribuida y no `spark` , que me lo ha contado mi amigo Rubén, que fue sysadmin en uno de esos sistemas).
+
+Para usar `furrr` aparte de instalarlo lo que tenemos que especificar es el tipo de plan, yo recomiendo usar `plan(multisession)` que no da problemas con Rstudio como si da `plan(multiprocess)`
+
+```{r}
+library(furrr
+        )
+plan(multisession, workers = 5) # utilizo 5 workers  porque tengo 5 contintentes
+
+```
+
+Y para hacer lo mismo que con `purrr` solo necesitamos añadir el prefijo `future` a los `map` del ejemplo anterior y ya se hace en paralelo.
+
+```{r}
+df3 <-  df %>% 
+  mutate(
+    modelo_x_continente = future_map(data,make_modelo_simple),
+    plots = future_map(data, plot_lifeexp), 
+    predicciones = future_map2( modelo_x_continente,data,
+                         function(modelo,datos)
+                           predict(modelo, newdata = datos))
+  )
+
+df3
+```
+
+
+```{r}
+df3$plots[[2]]
+```
+
+
+Bueno, espero que le sirva a mi colega. 
+
+
