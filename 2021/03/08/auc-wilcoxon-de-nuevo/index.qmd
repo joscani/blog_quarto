@@ -1,0 +1,104 @@
+---
+title: AUC = Wilcoxon , de nuevo
+author: jlcr
+date: '2021-03-08'
+slug: auc-wilcoxon-de-nuevo
+categories:
+  - estadística
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Anda la gente que si viendo a ver cómo calcular el AUC (roc), que si cómo se hace en spark o que si hay que tener en cuenta muchos puntos de corte y ver las tablas de clasificación asociadas. Eso está bien para contarlo, pero no para calcularlo.
+
+El AUC se puede considerar como la probabilidad de que el score de un "sí" elegido al azar es mayor que el score de un "no" elegido al azar. No lo digo yo, lo  cuenta mucho mejor que yo , Carlos en su entrada [AUC = WILCOXON](https://www.datanalytics.com/2019/02/11/auc-wilcoxon/). 
+De hecho, voy a coger sus mismos datos, salvo por la semilla, que no la indica. 
+
+```{r}
+set.seed(45)
+n <- 30
+
+si <- data.frame(res = "si", score = rnorm(n, 1, 1))
+no <- data.frame(res = "no", score = rnorm(n, 0, 1))
+
+dat <- rbind(si, no)
+
+```
+
+Y como bien comenta Carlos, tanto Wilcoxon como el cálculo usual del AUC dan esa probabilidad.  Para esto da igual que los scores sean incluso negativo, se trata de algo que da un orden.
+
+
+```{r}
+car::some(dat)
+```
+Y copiando de su blog
+```{r}
+test <- wilcox.test(score ~ res, data = dat)$statistic
+# pongo el 1- pq salia menor que 0.5
+1- test / n^2
+```
+
+```{r}
+library(pROC)
+my_roc <- roc(dat$res, dat$score)
+auc(my_roc)
+```
+
+Pero también podemos hacerlo muestreando.
+
+Nos creamos función 
+
+```{r}
+etiquetas <- dat$res=="si"
+table(etiquetas)
+
+
+```
+Ahora muestreamos con reemplazamiento los scores correspondientes a etiqueta = TRUE, es decir a los sis
+
+```{r}
+pos <- sample(dat$score[etiquetas], size = 1e7, replace = TRUE)
+neg <- sample(dat$score[!etiquetas], size = 1e7, replace = TRUE)
+```
+
+Y simplemente calculamos la probabilidad que buscamos haciendo la proporción de  la veces qeu el score de un positivo gana al de un negativo.
+
+```{r}
+mean(pos>neg)
+```
+Y es una buena aproximación, creemos función y pongamos que en caso de empate de score, ni pa ti ni pa mi. 
+
+
+```{r}
+auc_probability <- function(labels, scores, N=1e7){
+  pos <- sample(scores[labels], N, replace=TRUE)
+  neg <- sample(scores[!labels], N, replace=TRUE)
+  (sum(pos > neg) + sum(pos == neg)/2) / N
+}
+```
+
+Pues ya tenemos una forma "sencilla" de calcular auc's, que se puede usar por ejemplo en sql. 
+
+```{r}
+auc_probability(etiquetas, dat$score, N= 1e6)
+```
+Salud y buena tarde
+
