@@ -1,0 +1,116 @@
+---
+title: ¿Y si ... ? Parte I
+date: '2020-11-15'
+publishdate: '2020-11-15'
+categories:
+  - estadística
+  - causal inference
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Lo de la inferencia causal está de moda, y motivos hay, es una herramienta que intenta dar respuesta a preguntas cómo las siguientes. 
+
+* ¿Qué habría pasado si en vez de poner este precio a este producto hubiera puesto otro? 
+
+* ¿Se habría vendido más? 
+
+* ¿He mandado a mi campaña a aquellos para los que justo  al mandar a campaña su probabilidad de compra se incrementa?
+
+Tradicionalmente a esta pregunta, los estadísticos respondían con una de sus herramientas más potentes, el diseño de experimentos. Pero muchas veces lo único que tenemos son datos observacionales y se trata de estimar el tamaño del efecto. 
+
+Leyendo sobre cosas de este tipo llegué a los "metalearners" y en particular al "T-learner". 
+
+Se trata de estimar el efecto de una variable, típicamente un tratamiento con 2 categorías sobre una variable respuesta, y con presencia de otras variables, de forma que el efecto del tratamiento puede ser diferente según el valor de las covariables, vamos, que haya interacción.
+
+Supongamos que tenemos una variable respuesta Y, un tratamiento W (con dos niveles, 0 y 1) y una o varias covariables X. El T-learner (La T es de two models) lo que propone básicamente es estimar dos modelos. Uno que estime $E[Y | X]$  en el grupo de control (W=0) y otro que estime lo mismo pero en el grupo del tratamiento (W=1) y luego restar esas dos esperanzas. A esto lo llaman una estimación del CATE (Conditional Average Treatment Effects) ¿Fácil, verdad? 
+
+Si estamos en el marco de los modelos lineales esta forma de proceder es idéntica a estimar un sólo modelo dónde W es otra variable más y además pondríamos todas las posibles interacciones entre W y X, casi podríamos decir que es el modelo saturado.  De hecho en un modelo lineal, podríamos sacar el CATE simplemente utilizando los coeficientes estimados. 
+
+
+Ejemplo tonto
+
+```{r}
+set.seed(155)
+
+X <- rnorm(100, 10,1)
+W <- rbinom(100, 1, 0.6)
+
+# Me construyo la Y de forma que haya efectos principales e interacción
+Y <- 4 + 2 * X + 2 * W + 2 * W * X + rnorm(100, 0, sd = 2)
+
+df <- as.data.frame(cbind(Y,W,X))
+```
+
+Si hacemos un modelo sólo sobre los que son W = 0 y otro para los que son W = 1
+(He obviado la parte de hacer train, test, validación, etc).
+
+
+```{r}
+mod0 <- lm(Y ~ X, data = df[W==0, ])
+mod1 <- lm(Y ~ X, data = df[W==1, ])
+```
+
+Y si suponemos una nueva observación dónde X = 14 entonces laa estimación del CATE mediante un T -learner.
+
+```{r}
+df_nuevo <- data.frame(X = 14)
+(cate1 <- predict(mod1, newdata = df_nuevo) - predict(mod0, newdata = df_nuevo))
+```
+
+
+Haciendo el modelo con interacción
+
+```{r}
+
+mod_saturado <-  lm(Y ~ W *X , data = df)
+summary(mod_saturado)
+
+
+```
+
+
+Para ver el efecto de W sobre una hipotética población sería tener la misma observación con X=14, pero en un caso con W= 0 y en otro con W=1
+
+Utilizando los coeficientes, el CATE sería simplemente tener en cuenta cuando interviene W (los otros términos se cancelan).
+
+
+
+```{r}
+# 
+(cate_2 <- coef(mod_saturado)[2] + coef(mod_saturado)[4] * 14 )
+```
+Que coincide con la estimación usando el "T - Learner". Es decir, en este ejemplo sencillo, utilizando como modelo base del T-learner un modelo lineal, la estimación es la misma que considerar un solo modelo dónde tenemos las interacciones del tratamiento con las covariables.
+
+La aproximación de T - Learner (y de otros metalearners ) cobra sentido cuando tenemos muchas covariables y un modelo lineal con interacciones se puede volver muy complicado. En el caso del T-learner se podría utilizar como modelo base cualquier modelo que estime la $E[Y|W=w_i,X=x]$. 
+
+Sin meterme mucho en la parte de los "potential outcomes" , básicamente se trata de inferir con la población con W=0 lo que pasaría si todas las observaciones tuvieran $Y^{(0)}$ y lo mismo con la población con W=1. Este tipo de estrategias funcionan bien mientras el grado de solape de tratamiento y control en los diferentes valores de X sea alto (en el diseño de experimentos se busca justo eso, jeje).
+
+En fin, que creo que me he enrollado demasiado para algo que es muy simple. En próximos post a ver si explico mejor los S-learners, los X- learners, los causal tree y causal forest,  modelos de uplift, y más cositas, y con algún ejemplo más claro. 
+
+
+
+
+
+
+
+
+
