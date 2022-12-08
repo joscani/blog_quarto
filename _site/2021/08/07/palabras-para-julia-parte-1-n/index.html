@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="jlcr">
+<meta name="author" content="José Luis Cañadas Reche">
 <meta name="dcterms.date" content="2021-08-07">
 
 <title>Muestrear no es pecado - Palabras para Julia ( Parte 1/n)</title>
@@ -221,6 +221,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div class="quarto-category">Julia</div>
     <div class="quarto-category">ciencia de datos</div>
     <div class="quarto-category">software</div>
+    <div class="quarto-category">2021</div>
   </div>
   </div>
 
@@ -231,7 +232,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>jlcr </p>
+             <p>José Luis Cañadas Reche </p>
           </div>
   </div>
     
@@ -261,8 +262,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Vamos al ejemplo. Aunque voy a usar chunks de julia (gracias a la librería JuliaCall) en el rmarkdown dónde escribo los posts, en realidad como editor par Julia me gusta VSCode.</p>
 <p>Los datos de ejemplo son de la librería <code>boot</code>de R . puedes ver la ayuda haciendo en R</p>
 <div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(boot)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(channing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <pre><code>Channing House Data
 Description
@@ -292,273 +296,284 @@ The indicator of right censoring. 1 indicates that the resident died at Channing
 </code></pre>
 <p>En Julia podemos instalar la librería <code>RDatasets</code> y usar esos datos</p>
 <div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">RDatasets</span>, <span class="bu">MLJ</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>channing <span class="op">=</span> <span class="fu">dataset</span>(<span class="st">"boot"</span>, <span class="st">"channing"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>462×5 DataFrame
- Row │ Sex     Entry  Exit   Time   Cens
-     │ Cat…    Int32  Int32  Int32  Int32
-─────┼────────────────────────────────────
-   1 │ Male      782    909    127      1
-   2 │ Male     1020   1128    108      1
-   3 │ Male      856    969    113      1
-   4 │ Male      915    957     42      1
-   5 │ Male      863    983    120      1
-   6 │ Male      906   1012    106      1
-   7 │ Male      955   1055    100      1
-   8 │ Male      943   1025     82      1
-  ⋮  │   ⋮       ⋮      ⋮      ⋮      ⋮
- 456 │ Female    986   1030     44      1
- 457 │ Female   1039   1132     93      1
- 458 │ Female    968    990     22      1
- 459 │ Female    955    990     35      1
- 460 │ Female    837    911     74      1
- 461 │ Female    861    915     54      1
- 462 │ Female    967    983     16      1
-                          447 rows omitted</code></pre>
-</div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>channing <span class="op">=</span> <span class="fu">dataset</span>(<span class="st">"boot"</span>, <span class="st">"channing"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 462×5 DataFrame</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Row │ Sex     Entry  Exit   Time   Cens</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      │ Cat…    Int32  Int32  Int32  Int32</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ─────┼────────────────────────────────────</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    1 │ Male      782    909    127      1</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    2 │ Male     1020   1128    108      1</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    3 │ Male      856    969    113      1</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    4 │ Male      915    957     42      1</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    5 │ Male      863    983    120      1</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    6 │ Male      906   1012    106      1</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    7 │ Male      955   1055    100      1</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    8 │ Male      943   1025     82      1</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ⋮  │   ⋮       ⋮      ⋮      ⋮      ⋮</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  456 │ Female    986   1030     44      1</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  457 │ Female   1039   1132     93      1</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  458 │ Female    968    990     22      1</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  459 │ Female    955    990     35      1</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  460 │ Female    837    911     74      1</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  461 │ Female    861    915     54      1</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  462 │ Female    967    983     16      1</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                           447 rows omitted</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>MLJ necesita que las columnas tenga los tipos correctos en <a href="https://github.com/JuliaAI/ScientificTypes.jl"><code>scitypes</code></a>. Podemos verlos con</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">schema</span>(channing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>┌─────────┬─────────────────────────────────┬───────────────┐
-│ _.names │ _.types                         │ _.scitypes    │
-├─────────┼─────────────────────────────────┼───────────────┤
-│ Sex     │ CategoricalValue{String, UInt8} │ Multiclass{2} │
-│ Entry   │ Int32                           │ Count         │
-│ Exit    │ Int32                           │ Count         │
-│ Time    │ Int32                           │ Count         │
-│ Cens    │ Int32                           │ Count         │
-└─────────┴─────────────────────────────────┴───────────────┘
-_.nrows = 462</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">schema</span>(channing)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ┌─────────┬─────────────────────────────────┬───────────────┐</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ _.names │ _.types                         │ _.scitypes    │</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ├─────────┼─────────────────────────────────┼───────────────┤</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ Sex     │ CategoricalValue{String, UInt8} │ Multiclass{2} │</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ Entry   │ Int32                           │ Count         │</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ Exit    │ Int32                           │ Count         │</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ Time    │ Int32                           │ Count         │</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ Cens    │ Int32                           │ Count         │</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; └─────────┴─────────────────────────────────┴───────────────┘</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; _.nrows = 462</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Queremos modelar la variable <code>exit</code>. <code>MLJ</code> quiere la <code>y</code> por un lado y las X’s por otro, para eso vamos a usar la función <code>unpack</code> que además de permitir eso permite cambiar el tipo de las variables, y convertir la variable Cens a categórica por ejemplo</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>y, X <span class="op">=</span>  <span class="fu">unpack</span>(channing,</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                      <span class="op">==</span>(<span class="op">:</span>Exit),            <span class="co"># con el doble igual seleccionamos la y</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                      <span class="op">!=</span>(<span class="op">:</span><span class="dt">Time</span>);            <span class="co"># Quitamos variable Time</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Exit<span class="op">=&gt;</span>Continuous,    <span class="co"># Convertimos al tipo correcto en scitypes</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Entry<span class="op">=&gt;</span>Continuous,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Cens<span class="op">=&gt;</span>Multiclass)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>([909.0, 1128.0, 969.0, 957.0, 983.0, 1012.0, 1055.0, 1025.0, 1043.0, 945.0  …  905.0, 1040.0, 926.0, 1030.0, 1132.0, 990.0, 990.0, 911.0, 915.0, 983.0], 462×3 DataFrame
- Row │ Sex     Entry    Cens
-     │ Cat…    Float64  Cat…
-─────┼───────────────────────
-   1 │ Male      782.0  1
-   2 │ Male     1020.0  1
-   3 │ Male      856.0  1
-   4 │ Male      915.0  1
-   5 │ Male      863.0  1
-   6 │ Male      906.0  1
-   7 │ Male      955.0  1
-   8 │ Male      943.0  1
-  ⋮  │   ⋮        ⋮      ⋮
- 456 │ Female    986.0  1
- 457 │ Female   1039.0  1
- 458 │ Female    968.0  1
- 459 │ Female    955.0  1
- 460 │ Female    837.0  1
- 461 │ Female    861.0  1
- 462 │ Female    967.0  1
-             447 rows omitted)</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>y, X <span class="op">=</span>  <span class="fu">unpack</span>(channing,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                      <span class="op">==</span>(<span class="op">:</span>Exit),            <span class="co"># con el doble igual seleccionamos la y</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                      <span class="op">!=</span>(<span class="op">:</span><span class="dt">Time</span>);            <span class="co"># Quitamos variable Time</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Exit<span class="op">=&gt;</span>Continuous,    <span class="co"># Convertimos al tipo correcto en scitypes</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Entry<span class="op">=&gt;</span>Continuous,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                      <span class="op">:</span>Cens<span class="op">=&gt;</span>Multiclass)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ([909.0, 1128.0, 969.0, 957.0, 983.0, 1012.0, 1055.0, 1025.0, 1043.0, 945.0  …  905.0, 1040.0, 926.0, 1030.0, 1132.0, 990.0, 990.0, 911.0, 915.0, 983.0], 462×3 DataFrame</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Row │ Sex     Entry    Cens</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      │ Cat…    Float64  Cat…</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ─────┼───────────────────────</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    1 │ Male      782.0  1</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    2 │ Male     1020.0  1</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    3 │ Male      856.0  1</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    4 │ Male      915.0  1</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    5 │ Male      863.0  1</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    6 │ Male      906.0  1</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    7 │ Male      955.0  1</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    8 │ Male      943.0  1</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ⋮  │   ⋮        ⋮      ⋮</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  456 │ Female    986.0  1</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  457 │ Female   1039.0  1</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  458 │ Female    968.0  1</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  459 │ Female    955.0  1</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  460 │ Female    837.0  1</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  461 │ Female    861.0  1</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  462 │ Female    967.0  1</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;              447 rows omitted)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Ahora ya podemos ver como se hace el modelo.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Tree <span class="op">=</span> <span class="pp">@load</span> RandomForestRegressor pkg<span class="op">=</span>DecisionTree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>import MLJDecisionTreeInterface ✔</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>MLJDecisionTreeInterface.RandomForestRegressor</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> <span class="fu">Tree</span>(n_trees <span class="op">=</span> <span class="fl">20</span>) <span class="co"># tambien se puede instanciar sin paraámetros </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>RandomForestRegressor(
-    max_depth = -1,
-    min_samples_leaf = 1,
-    min_samples_split = 2,
-    min_purity_increase = 0.0,
-    n_subfeatures = -1,
-    n_trees = 20,
-    sampling_fraction = 0.7,
-    pdf_smoothing = 0.0,
-    rng = Random._GLOBAL_RNG())[34m @364[39m</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># y usar tree.n_trees = 20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Tree <span class="op">=</span> <span class="pp">@load</span> RandomForestRegressor pkg<span class="op">=</span>DecisionTree</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; import MLJDecisionTreeInterface ✔</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; MLJDecisionTreeInterface.RandomForestRegressor</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> <span class="fu">Tree</span>(n_trees <span class="op">=</span> <span class="fl">20</span>) <span class="co"># tambien se puede instanciar sin paraámetros </span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; RandomForestRegressor(</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     max_depth = -1,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     min_samples_leaf = 1,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     min_samples_split = 2,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     min_purity_increase = 0.0,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     n_subfeatures = -1,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     n_trees = 20,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     sampling_fraction = 0.7,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     pdf_smoothing = 0.0,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     rng = Random._GLOBAL_RNG())[34m @366[39m</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># y usar tree.n_trees = 20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Como tenemos la variable <code>Cens</code>que es categórica necesitamos codificarla, aquí entra como hacer un pipeline en MLJ, que es una de las cosas más potentes que tiene junto con los <a href="https://alan-turing-institute.github.io/MLJ.jl/stable/composing_models/">ComposingModels</a> models que permite mezclar varios modelos.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definimos un ContinuosEncoder, ver la ayuda con ?ContinousEncoder en el repl de julia</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Unsupervised model for arranging all features (columns) of a table to have Continuous element scitype, by applying the following protocol to each feature ftr:</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is already Continuous retain it.</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Multiclass, one-hot encode it.</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is OrderedFactor, replace it with coerce(ftr, Continuous) (vector of floating point integers), unless ordered_factors=false is specified, in which case</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#      one-hot encode it.</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Count, replace it with coerce(ftr, Continuous).</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is of some other element scitype, or was not observed in fitting the encoder, drop it from the table.</span></span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If drop_last=true is specified, then one-hot encoding always drops the last class indicator colum</span></span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>hot <span class="op">=</span> <span class="fu">ContinuousEncoder</span>(one_hot_ordered_factors<span class="op">=</span><span class="cn">true</span>, drop_last<span class="op">=</span><span class="cn">true</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>ContinuousEncoder(
-    drop_last = true,
-    one_hot_ordered_factors = true)[34m @409[39m</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definimos un ContinuosEncoder, ver la ayuda con ?ContinousEncoder en el repl de julia</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Unsupervised model for arranging all features (columns) of a table to have Continuous element scitype, by applying the following protocol to each feature ftr:</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is already Continuous retain it.</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Multiclass, one-hot encode it.</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is OrderedFactor, replace it with coerce(ftr, Continuous) (vector of floating point integers), unless ordered_factors=false is specified, in which case</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#      one-hot encode it.</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is Count, replace it with coerce(ftr, Continuous).</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   •  If ftr is of some other element scitype, or was not observed in fitting the encoder, drop it from the table.</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># </span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If drop_last=true is specified, then one-hot encoding always drops the last class indicator colum</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>hot <span class="op">=</span> <span class="fu">ContinuousEncoder</span>(one_hot_ordered_factors<span class="op">=</span><span class="cn">true</span>, drop_last<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ContinuousEncoder(</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     drop_last = true,</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     one_hot_ordered_factors = true)[34m @117[39m</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Utilizamos la macro <code>@pipeline</code> para encadenar el onehot y el modelo</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pipe <span class="op">=</span> <span class="pp">@pipeline</span> hot tree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Pipeline259(
-    continuous_encoder = ContinuousEncoder(
-            drop_last = true,
-            one_hot_ordered_factors = true),
-    random_forest_regressor = RandomForestRegressor(
-            max_depth = -1,
-            min_samples_leaf = 1,
-            min_samples_split = 2,
-            min_purity_increase = 0.0,
-            n_subfeatures = -1,
-            n_trees = 20,
-            sampling_fraction = 0.7,
-            pdf_smoothing = 0.0,
-            rng = Random._GLOBAL_RNG()))[34m @525[39m</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pipe <span class="op">=</span> <span class="pp">@pipeline</span> hot tree</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Pipeline259(</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     continuous_encoder = ContinuousEncoder(</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             drop_last = true,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             one_hot_ordered_factors = true),</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     random_forest_regressor = RandomForestRegressor(</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             max_depth = -1,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             min_samples_leaf = 1,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             min_samples_split = 2,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             min_purity_increase = 0.0,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             n_subfeatures = -1,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             n_trees = 20,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             sampling_fraction = 0.7,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             pdf_smoothing = 0.0,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             rng = Random._GLOBAL_RNG()))[34m @447[39m</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y ya podemos ajustar el modelo por ejemplo utilizando <code>evaluate</code> y validación cruzada</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">evaluate</span>(pipe, X, y, resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>), measure <span class="op">=</span> [rmse, mae])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>PerformanceEvaluation object with these fields:
-  measure, measurement, operation, per_fold,
-  per_observation, fitted_params_per_fold,
-  report_per_fold, train_test_pairs
-extract:
-┌─────────────────────────────────────────┬─────────────┬───────────┬───────────
-│ measure                                 │ measurement │ operation │ per_fold ⋯
-├─────────────────────────────────────────┼─────────────┼───────────┼───────────
-│ RootMeanSquaredError()\e[34m @216\e[39m │ 58.7        │ predict   │ [52.3, 6 ⋯
-│ MeanAbsoluteError()\e[34m @160\e[39m    │ 49.4        │ predict   │ [44.6, 5 ⋯
-└─────────────────────────────────────────┴─────────────┴───────────┴───────────
-                                                                1 column omitted</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">evaluate</span>(pipe, X, y, resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>), measure <span class="op">=</span> [rmse, mae])</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; PerformanceEvaluation object with these fields:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   measure, measurement, operation, per_fold,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   per_observation, fitted_params_per_fold,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   report_per_fold, train_test_pairs</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; extract:</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ┌─────────────────────────────────────────┬─────────────┬───────────┬───────────</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ measure                                 │ measurement │ operation │ per_fold ⋯</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ├─────────────────────────────────────────┼─────────────┼───────────┼───────────</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ RootMeanSquaredError()\e[34m @216\e[39m │ 54.6        │ predict   │ [47.2, 5 ⋯</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; │ MeanAbsoluteError()\e[34m @160\e[39m    │ 45.9        │ predict   │ [40.1, 5 ⋯</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; └─────────────────────────────────────────┴─────────────┴───────────┴───────────</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                                 1 column omitted</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Hay más medidas que se pueden listar con <code>measures()</code></p>
 <p>También podemos partir en train, test y similar</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>train, test <span class="op">=</span> <span class="fu">partition</span>(<span class="fu">eachindex</span>(y), <span class="fl">0.7</span>, shuffle<span class="op">=</span><span class="cn">true</span>, rng<span class="op">=</span><span class="fl">155</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>train, test <span class="op">=</span> <span class="fu">partition</span>(<span class="fu">eachindex</span>(y), <span class="fl">0.7</span>, shuffle<span class="op">=</span><span class="cn">true</span>, rng<span class="op">=</span><span class="fl">155</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Ahora instanciamos el modelo con <code>machine</code> especificando la X, y la y</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>modelo <span class="op">=</span> <span class="fu">machine</span>(pipe, X,y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 0 times; caches data
-  args: 
-    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
-    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>modelo <span class="op">=</span> <span class="fu">machine</span>(pipe, X,y)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [34mMachine{Pipeline259,…} @838[39m trained 0 times; caches data</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   args: </span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     1:   [34mSource @987[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     2:   [34mSource @871[39m ⏎ `AbstractVector{Continuous}`</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y podemos usar <code>fit!</code> para ajustar “in place” (en julia si la función acaba en ! es una función que actua modificando el objeto que se le pasa) sin tener que crear otra variable</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(modelo, rows <span class="op">=</span> train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 1 time; caches data
-  args: 
-    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
-    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(modelo, rows <span class="op">=</span> train)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [34mMachine{Pipeline259,…} @838[39m trained 1 time; caches data</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   args: </span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     1:   [34mSource @987[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     2:   [34mSource @871[39m ⏎ `AbstractVector{Continuous}`</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y ya podríamos predecir sobre test, dónde se le aplicaría el onehot encoder que hemos definido en el pipeline</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En julia podemos usar sintaxis latex por ejemplo \beta\hat  y tabulador despues de beta y hat en vscode </span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># escribe β̂ (uso juliaMono https://juliamono.netlify.app/) como tipo de letra </span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>ŷ <span class="op">=</span> <span class="fu">predict</span>(modelo,X[test, <span class="op">:</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>139-element Vector{Float64}:
- 1087.8833333333332
- 1081.45
- 1028.3333333333333
- 1030.8
-  949.5666666666668
-  972.25
- 1142.05
-  940.6
-  966.35
-  860.6
-    ⋮
-  882.9599999999998
-  865.4
- 1022.32
-  931.5
-  922.95
-  930.3666666666668
- 1064.5
-  953.625
-  941.7666666666668</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En julia podemos usar sintaxis latex por ejemplo \beta\hat  y tabulador despues de beta y hat en vscode </span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># escribe β̂ (uso juliaMono https://juliamono.netlify.app/) como tipo de letra </span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>ŷ <span class="op">=</span> <span class="fu">predict</span>(modelo,X[test, <span class="op">:</span>])</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 139-element Vector{Float64}:</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1060.8833333333334</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1090.125</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1024.5666666666666</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1039.45</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   931.9666666666668</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   975.8</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1114.1</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   966.925</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   955.65</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   883.3666666666668</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     ⋮</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   881.6266666666667</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   854.2</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1025.0</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   919.6333333333332</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   932.5</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   935.5</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1061.0166666666667</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   929.9</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   958.9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>En este caso hemos hecho un modelo para predecir una variable continua, cuando sea categórica existen funciones que devuelven la clase predicha o la probabilidad de cada clase.</p>
 <p>También podemos ver como varía el error según el número de árboles</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>modelo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[34mMachine{Pipeline259,…} @037[39m trained 1 time; caches data
-  args: 
-    1:  [34mSource @999[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`
-    2:  [34mSource @545[39m ⏎ `AbstractVector{Continuous}`</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>r_tree <span class="op">=</span> <span class="fu">range</span>(pipe, <span class="op">:</span>(random_forest_regressor.n_trees), lower<span class="op">=</span><span class="fl">2</span>, upper<span class="op">=</span><span class="fl">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>typename(MLJBase.NumericRange)(Int64, :(random_forest_regressor.n_trees), ... )</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>modelo</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [34mMachine{Pipeline259,…} @838[39m trained 1 time; caches data</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   args: </span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     1:   [34mSource @987[39m ⏎ `Table{Union{AbstractVector{Continuous}, AbstractVector{Multiclass{2}}}}`</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     2:   [34mSource @871[39m ⏎ `AbstractVector{Continuous}`</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>curve <span class="op">=</span> MLJ.<span class="fu">learning_curve</span>(modelo;</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                           range<span class="op">=</span>r_tree,</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                           resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>),</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                           measure<span class="op">=</span>rmse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(parameter_name = "random_forest_regressor.n_trees",
- parameter_scale = :linear,
- parameter_values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
- measurements = [63.35482459725572, 61.03552680046299, 60.24292896603508, 60.08916085779008, 59.69393001433038, 59.447125040723066, 58.86877968632394, 58.16237867467842, 58.416479729576544, 58.48856899579231, 59.080742791298974, 58.524648546408145, 58.55468564478951, 58.71039303157832, 58.862784037321894, 58.78919657683484, 58.738659245669986, 58.562389017352345, 58.71936497846932],)</code></pre>
-</div>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>r_tree <span class="op">=</span> <span class="fu">range</span>(pipe, <span class="op">:</span>(random_forest_regressor.n_trees), lower<span class="op">=</span><span class="fl">2</span>, upper<span class="op">=</span><span class="fl">20</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; typename(MLJBase.NumericRange)(Int64, :(random_forest_regressor.n_trees), ... )</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gr</span>() <span class="co"># especificamos un </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Plots.GRBackend()</code></pre>
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>curve <span class="op">=</span> MLJ.<span class="fu">learning_curve</span>(modelo;</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                           range<span class="op">=</span>r_tree,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                           resampling<span class="op">=</span><span class="fu">CV</span>(nfolds<span class="op">=</span><span class="fl">5</span>),</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                           measure<span class="op">=</span>rmse)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (parameter_name = "random_forest_regressor.n_trees",</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  parameter_scale = :linear,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  parameter_values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  measurements = [57.62183128809188, 56.51529950303111, 55.56904469933379, 54.8531983408167, 54.847208941367946, 54.444800632308684, 54.81102183981715, 55.012542834615445, 55.06356266514865, 54.88135766866701, 54.44612444179021, 54.773279907824005, 54.59173426290152, 54.23406251166757, 54.3549570009795, 54.14458345130954, 54.34244340416005, 54.43188079909501, 54.62850574226529],)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curve.parameter_values,</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>     curve.measurements,</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>     xlab<span class="op">=</span>curve.parameter_name,</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>     xscale<span class="op">=</span>curve.parameter_scale,</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>     ylab <span class="op">=</span> <span class="st">"CV estimate of RMSE error"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gr</span>() <span class="co"># especificamos un </span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curve.parameter_values,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>     curve.measurements,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>     xlab<span class="op">=</span>curve.parameter_name,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>     xscale<span class="op">=</span>curve.parameter_scale,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>     ylab <span class="op">=</span> <span class="st">"CV estimate of RMSE error"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="index_files/figure-html/unnamed-chunk-16-J1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="index_files/figure-html/unnamed-chunk-16-J1.png" class="img-fluid figure-img" width="300"></a></p>
+<p><a href="plot1.png" class="lightbox" title="plot" data-gallery="quarto-lightbox-gallery-1"><img src="plot1.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">plot</figcaption><p></p>
 </figure>
-</div>
-</div>
 </div>
 <p>Y esto es todo, en el próximo post contaré como crear el binario que nos va a permitir tener un motor de predicción para los modelos de un árbol de decisión y que funcione en cualquier linux. Casi listo para producción (o al menos una parte importante) sin tener que tener julia en dónde se vaya a utilizar.</p>
 
@@ -702,7 +717,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","selector":".lightbox","closeEffect":"zoom","openEffect":"zoom","loop":true});</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom","loop":true,"selector":".lightbox"});</script>
 
 
 
