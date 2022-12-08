@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2021-02-14">
+
+<title>Muestrear no es pecado - Una colina</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#niños-futuro-pinchad-aquí-amantes-de-los-simpsons" id="toc-niños-futuro-pinchad-aquí-amantes-de-los-simpsons" class="nav-link active" data-scroll-target="#niños-futuro-pinchad-aquí-amantes-de-los-simpsons">Niños, futuro (pinchad aquí amantes de los simpsons)</a></li>
+  <li><a href="#no-maltratemos-al-modelo-base" id="toc-no-maltratemos-al-modelo-base" class="nav-link" data-scroll-target="#no-maltratemos-al-modelo-base">No maltratemos al modelo base</a></li>
+  <li><a href="#detallitos" id="toc-detallitos" class="nav-link" data-scroll-target="#detallitos">Detallitos</a></li>
+  <li><a href="#pd" id="toc-pd" class="nav-link" data-scroll-target="#pd">PD</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Una colina</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">ciencia de datos</div>
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">2021</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 14, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Esta entrada es una fe de erratas de <a href="https://muestrear-no-es-pecado.netlify.app/2019/03/19/codificacion-de-variables-categoricas-iii/">esta</a> de hace casi dos años.</p>
+<p>Lo de la colina viene porque <a href="https://www.datanalytics.com/">Carlos</a> me comentaba el otro día, que en mi entrada había algo raro, ya que era muy extraño que al resumir información el modelo fuera peor. Y efectivamente, había algo raro, cuándo se lo comenté y que me tocaba hacer una fe de erratas, me dijo que si no lo hacía ya tenía una <strong>“colina dónde morir”</strong>, lo cual no está mal del todo. Le conminé a que se explicara, en torno burlón evidentemente.</p>
+<p>El tema es que hay gente que se aferra a una idea aunque luego se demuestre que estaban equivocados o que cometieron un error y muere en su pequeña colina defendiendo esa idea. No es mi costumbre aferrarme a mis ideas una vez se demuestran equivocadas (no, no pienso hablar de mis ideas políticas, porque para eso debería abrirme otro blog). Y bueno, hace poco alguien a quien aprecio me dijo que era muy borde, pero que no era cabezón, así que voy a comentar un poco los errores de la entrada de la codificación de variables categóricas.</p>
+<section id="niños-futuro-pinchad-aquí-amantes-de-los-simpsons" class="level2">
+<h2 class="anchored" data-anchor-id="niños-futuro-pinchad-aquí-amantes-de-los-simpsons"><a href="https://www.youtube.com/watch?v=5PUyk-NScRU">Niños, futuro (pinchad aquí amantes de los simpsons)</a></h2>
+<p>El primer gran error en el <a href="(https://muestrear-no-es-pecado.netlify.app/2019/03/19/codificacion-de-variables-categoricas-iii/)">post</a> es, cómo no podía ser de otra, <strong>usar info del futuro</strong> para evaluar como de buenas eran las codificaciones mediante MCA o con embedding respecto a la codificación parcial (one-hot para los de la logse).</p>
+<p>El tema es que construyo los modelos de MCA y de embedding usando el conjunto de datos completos, pero luego evalúo como de bien funcionan en un modelo en el que parto en entrenamiento y test. Así que en el <strong>entrenamiento estoy usando info del futuro, ya que parte de la estructura factorial (o los embeddings) se ha obtenido utilizando la información del test</strong>. Así que toca cambiar la función <code>testRun</code> para que tanto el MCA como el embedding se calculen sólo con los datos de entrenamiento.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>testRun <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    sample <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">createDataPartition</span>(df<span class="sc">$</span>weekDayF, <span class="at">list =</span> <span class="cn">FALSE</span>, <span class="at">p =</span> <span class="fl">0.8</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    train <span class="ot">&lt;-</span> df[sample,]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    test <span class="ot">&lt;-</span> df[<span class="sc">-</span>sample,]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#TODO El MCA y el embedding deben calcularse en train</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># y obtener las proeyecciones en test</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge  <span class="sc">~</span> weekDayF, <span class="at">data =</span> train) </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge <span class="sc">~</span> X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3, <span class="at">data =</span> train)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    fit3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge <span class="sc">~</span> MCA_1  <span class="sc">+</span> MCA_2 <span class="sc">+</span> MCA_3, <span class="at">data =</span> train)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">run =</span> x,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Categ      =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit1, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>)),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">Embedding  =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit2, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>)),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">Corresp    =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit3, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="no-maltratemos-al-modelo-base" class="level2">
+<h2 class="anchored" data-anchor-id="no-maltratemos-al-modelo-base">No maltratemos al modelo base</h2>
+<p>El segundo gran error tiene que ver con una trampa que le hacemos al modelo base. Para el modelo base la única info que usamos para modelar la variable de usuarios de bici que cruzan el puente de Manhattan es el día de la semana. En cambio para el MCA y para el embedding usamos la relación que hay entre los usuarios que pasan por el puente de Brooklyn y el día de la semana.<br>
+Para ser justos, debería haber utilizado la relación de los usuarios con el puente de Manhattan o bien haber añadido la variable de los usuarios del puente de Brooklyn al modelo base.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>testRun <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    sample <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">createDataPartition</span>(df<span class="sc">$</span>weekDayF, <span class="at">list =</span> <span class="cn">FALSE</span>, <span class="at">p =</span> <span class="fl">0.8</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    train <span class="ot">&lt;-</span> df[sample,]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    test <span class="ot">&lt;-</span> df[<span class="sc">-</span>sample,]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#TODO El MCA y el embedding deben calcularse en train</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># y obtener las proeyecciones en test</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Seamos justos con el modelo base, añadiendo la variable del puente de Brooklyn a </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># los 3 modelos</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge  <span class="sc">~</span> weekDayF <span class="sc">+</span> Brooklyn.Bridge, <span class="at">data =</span> train) </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge <span class="sc">~</span> X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3 <span class="sc">+</span> Brooklyn.Bridge, <span class="at">data =</span> train)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    fit3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Manhattan.Bridge <span class="sc">~</span> MCA_1  <span class="sc">+</span> MCA_2 <span class="sc">+</span> MCA_3 <span class="sc">+</span> Brooklyn.Bridge, <span class="at">data =</span> train)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">run =</span> x,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">Categ      =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit1, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>)),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">Embedding  =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit2, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>)),</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">Corresp    =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((<span class="fu">predict</span>(fit3, test) <span class="sc">-</span> test<span class="sc">$</span>Manhattan.Bridge) <span class="sc">^</span> <span class="dv">2</span>))</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="detallitos" class="level2">
+<h2 class="anchored" data-anchor-id="detallitos">Detallitos</h2>
+<p>Y como tercer error, un pequeño detalle. Las variables obtenidas en el MCA no son las coordenadas obtenidas de la variable <code>weekday</code> en la estructura factorial, sino la predicción de nuevas filas, que tienen tanto <code>weekday</code> como los usuarios del puente de Manhattan (categorizado). Esto en principio no es ningún problema, pero estaría bien probar asignando sólo el valor del día de la semana proyectado en las componentes, sobre todo porque puede que en el test no tenga todas las combinaciones de día de la semana y los usuarios del puente de Manhattan categorizado que tenga en el train. Esta apreciación se la debo a <strong>Diego Serrano</strong>, ex compañero de curro y sin embargo amigo, que me la hizo en su día y tenía pendiente ponerlo.</p>
+<p>Total, que en un próximo post pondré el código para corregir esto, que es domingo y lo que me toca es corregir ejercicios de alumnos. <strong>Ya no tengo colina dónde morir</strong> y toca abordar otros cerros.</p>
+</section>
+<section id="pd" class="level2">
+<h2 class="anchored" data-anchor-id="pd">PD</h2>
+<p>Por el momento dejo la comparación con parte de los errores corregidos. El MCA si que se obtiene sólo en train, pero el embedding aún está entrenado con todo, y se ha añadido la variable Manhattan.Bridge en la comparación de los 3 modelos.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="correccion_mca.png" class="lightbox" title="comparacion" data-gallery="quarto-lightbox-gallery-1"><img src="correccion_mca.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">comparacion</figcaption><p></p>
+</figure>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","selector":".lightbox","openEffect":"zoom","closeEffect":"zoom","loop":true});</script>
+
+
+
+</body></html>

@@ -1,15 +1,31 @@
 ---
 title: 'Palabras para Julia ( Parte 1/n) '
-author: jlcr
 date: '2021-08-07'
 slug: palabras-para-julia-parte-1-n
 categories:
   - Julia
   - ciencia de datos
   - software
-tags: 
-  - Julia
-  - Lenguajes de programación
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
 ---
 
 ```{r setup, include=FALSE}
@@ -216,7 +232,7 @@ curve = MLJ.learning_curve(modelo;
 
 ```
 
-```{julia}
+```{julia, eval = FALSE}
 using Plots
 gr() # especificamos un 
 plot(curve.parameter_values,
@@ -225,5 +241,9 @@ plot(curve.parameter_values,
      xscale=curve.parameter_scale,
      ylab = "CV estimate of RMSE error")
 ```
+
+
+![plot](plot1.png)
+
 Y esto es todo, en el próximo post contaré como crear el binario que nos va a permitir tener un motor de predicción para los modelos de un árbol de decisión y que funcione en cualquier linux. Casi listo para producción (o al menos una parte importante) sin tener que tener julia en dónde se vaya a utilizar. 
 

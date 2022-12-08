@@ -1,0 +1,292 @@
+---
+title: Cachitos. Tercera parte
+date: '2021-01-26'
+categories:
+  - estadística
+  - polémica
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Después del último [post](https://muestrear-no-es-pecado.netlify.app/2021/01/13/cachitos-segunda-parte/) llega el momento de ver si se puede sacar algo interesante del texto. Ya aviso ( y avisé) de que no tengo mucha idea de análisis de texto, por lo que esto es sólo un pequeño ejercicio que he hecho. El csv con el texto de los subtítulos para 2020 lo tenéis en este [enlace](https://drive.google.com/file/d/1lWbl1M39NfgGsLfEjZeg8XsyfuqsTrFS/view?usp=sharing). 
+
+
+Vamos al lío 
+
+```{r, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2020"
+```
+
+Leemos el csv. Uso DT y así podéis ver todos los datos o buscar cosas, por ejemplo `Ayuso` o `pandemia` en el cuadro de búsqueda.
+
+```{r}
+subtitulos_proces <-  read_csv(str_glue("{root_directory}{anno}_txt_unido.csv"))
+
+subtitulos_proces %>% 
+  select(texto, n_fichero, n_caracteres) %>% 
+  DT::datatable()
+
+```
+Oye, pues sólo con esto ya nos valdría ¿no? 
+
+
+Pero veamos un poco algunas cosas que podrían hacerse, por ejemplo quitar stopwords. Esto es tan sencillo como tener una lista de palabras que queremos quitar del texto, puede ser nuestra particular, que nos hayamos bajado de algún sitio o que estén disponibles en algún lado
+
+```{r}
+to_remove <- c(tm::stopwords("es"),
+               "110", "4","1","2","7","10","0","ñ","of",
+               "5","á","i","the","3", "n", "p",
+               "ee","uu","mm","ema", "zz",
+               "wr","wop","wy","x","xi","xl","xt",
+               "xte","yí", "your", "si")
+
+head(to_remove, 40)
+```
+
+Pero en nuestros datos, las palabras no están separadas, tendríamos que separarlas y  luego quitar las que no queremos. Para eso voy a utilizar la librería [tidytext](https://www.tidytextmining.com/) de Julia Silge y David Robinson, que nos permite hacer varias cosas relacionadas con análisis de texto.
+
+
+
+```{r}
+library(tidytext)
+
+# Con unnest token pasamos a un dataframe qeu tiene tantas filas como palabras
+
+print(str_glue("Filas datos originales: {tally(subtitulos_proces)}"))
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% # quito palabras de la lista 
+    filter(nchar(word)>1) # Nos quedamos con palabras que tengan más de un cáracter
+
+
+print(str_glue("Filas datos tokenizado: {tally(subtitulos_proces_one_word)}"))
+
+subtitulos_proces_one_word %>% 
+  select(name,n_fichero,word, n_caracteres)
+
+```
+
+Una cosa simple que podemos hacer es contar palabras, y vemos que lo que más se repite es `canción`, obvio
+
+```{r}
+palabras_ordenadas <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+O pintarlas en plan nube de palabras.
+
+```{r}
+library(wordcloud)
+pal <- brewer.pal(8,"Dark2")
+subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    count() %>% 
+    with(wordcloud(word, n, random.order = FALSE, max.words = 80, colors=pal))    
+
+```
+
+Pues una vez que tenemos las palabras de cada subtítulo separadas podemos buscar palabras polémicas, aunque antes al usar la librería `DT` ya podíamos buscar, veamos como sería con el código.
+
+Creamos lista de palabras a buscar.
+
+```{r}
+palabras_1 <- c("monarca","pp","vox","rey","coron","zarzuela",
+                "prisión", "democracia", "abascal","casado",
+                "ultra","ciudada", "oposición","derech",
+                "podem","sanchez","iglesias","errejon","izquier",
+                "gobierno","illa","redondo","ivan","celaa",
+                "guardia","príncipe","principe","ayuso",
+                "tezanos","cis","republic", "simon", "pandem","lazo",
+                "toled","alber","fach", "zarzu", "democr","vicepre", "minist",
+                "irene","montero","almeida")
+
+
+```
+
+Construimos una regex  para que encuentre las palabras que empiecen así. 
+
+```{r}
+(exp_regx <- paste0("^",paste(palabras_1, collapse = "|^")))
+```
+
+Y nos creamos una variable que valga TRUE cuando suceda esto
+
+```{r}
+
+subtitulos_proces_one_word <- subtitulos_proces_one_word %>% 
+    mutate(polemica= str_detect(word, exp_regx))
+
+subtitulos_proces_one_word %>% 
+  filter(polemica) %>% 
+  select(name, word, n_fichero) 
+```
+
+Podríamos ver el texto de los subtítulos, para eso, nos quedamos con un identificador, como el nombre del fichero txt, que nos servirá luego para leer la imagen. 
+
+Pues en realidad tenemos sólo 32 subtítulos polémicos de los de alrededor de 540 que hay, no parecen muchos. 
+
+```{r}
+subtitulos_polemicos <- subtitulos_proces_one_word %>% 
+    filter(polemica) %>% 
+    pull(n_fichero) %>% 
+    unique()
+subtitulos_polemicos
+
+```
+
+Vemos el texto mirando en el dataframe antes de separar las palabras. La verdad es que hay que reconocer que son bastante ingeniosos, jejje. Aunque hay algún falso positivo como el de "la carta a los reyes magos de la post pandemia 4 pan alegría y ertes"  y alguno más.  La verdad es que un pelín de sesgo se les nota, de meterse más con la oposición que con el gobierno comparado con lo del año pasado (probad)
+
+```{r}
+(texto_polemicos <- subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    pull(texto))
+```
+Podemos ver las imágenes
+
+```{r}
+(polemica_fotogramas <- unique(substr(subtitulos_polemicos, 1,12)))
+
+polemica_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_fotogramas)
+
+subtitulos_polemicos_full <- paste0(polemica_fotogramas_full,".subtitulo.tif")
+
+```
+Y ahora utilizando la librería `magick` en R y un poco de programación funcional (un simple map), tenemos la imagen leída
+
+```{r}
+library(magick)
+
+fotogramas_polemicos_img <- map(polemica_fotogramas_full, image_read)
+subtitulos_polemicos_img <- map(subtitulos_polemicos_full, image_read)
+```
+
+```{r}
+subtitulos_polemicos_img[[31]]
+```
+
+```{r}
+fotogramas_polemicos_img[[31]]
+```
+
+Uhmm, la verdad es que podría montar un `shiny` que dada una palabra mostrara el fotograma, sería sencillo. 
+
+O podriamos ponerlos todos juntos, la verdad es que `magick` mola
+
+```{r}
+lista_fotogram_polemicos <- map(fotogramas_polemicos_img, grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_fotogram_polemicos)
+```
+
+Realmente creo que falta mucha limpieza del texto, por lo que me cuentan los que saben el trabajo de verdad en texto es ese. 
+
+Más cositas que se me ocurrieron hacer, por ejemplo ver ngramas. Para eso puedo recomponer los comentarios a partir de `subtitulos_proces_one_word` que ya tienen palabras quitadas.
+
+Fijaros en este código
+
+```{r, eval = FALSE}
+
+n = 4
+subtitulos_proces_one_word %>% 
+    group_by(name, n_fichero) %>% 
+    nest(data = word) %>% 
+    mutate(texto = map(data, unlist), 
+           texto = map_chr(texto, paste, collapse = " ")) %>% 
+    unnest_tokens(input = texto,
+                  output = ngramas,token = "ngrams", n = n) %>% 
+    ungroup() %>% 
+    select(n_fichero,ngramas) %>%
+    filter(nchar(ngramas)>2) %>% 
+    group_by(ngramas) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces)) %>% 
+    top_n(20, veces)
+
+```
+
+Vamos por cachos, valga la redundancia. 
+
+A partir de las palabras puedo recomponer el subtítulo original porque tengo el identificador, para eso la función `nest` es muy útil. Yo a veces utilizo esta función para almacenar en un elemento de una columna un dataframe enteror. 
+
+```{r}
+subtitulos_proces_one_word %>% 
+    group_by(name, n_fichero) %>% 
+    nest(data = word) %>% 
+  select(name, data)
+
+```
+
+En este caso para cada name y n_fichero ha generado un tibble, de una sola columna y de tantas filas como palabras. 
+
+```{r}
+subtitulos_proces_one_word %>% 
+    group_by(name, n_fichero) %>% 
+    nest(data = word) %>% 
+  ungroup() %>% 
+  slice(1:2) %>% 
+  pull(data)
+  
+
+```
+
+El resto de funciones es convertir esa lista en vector de caracteres, juntar las palabras y separar por espacios, extraer los n_gramas de tamaño 4 palabras, contar cuántas veces aparece cada n_grama y ver los 20 más frecuentes. Con esto lo que se puede detectar son subtítulos que aparezcan duplicados y se nos hayan escapado por la distancia de strings que usamos en el post anterior
+
+
+
+```{r}
+
+n = 4
+subtitulos_proces_one_word %>% 
+    group_by(name, n_fichero) %>% 
+    nest(data = word) %>% 
+    mutate(texto = map(data, unlist), 
+           texto = map_chr(texto, paste, collapse = " ")) %>% 
+    unnest_tokens(input = texto,
+                  output = ngramas,token = "ngrams", n = n) %>% 
+    ungroup() %>% 
+    select(n_fichero,ngramas) %>%
+    filter(nchar(ngramas)>2) %>% 
+    group_by(ngramas) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces)) %>% 
+    top_n(20, veces)
+
+```
+
+En el próximo post veremos algo más, que estoy "cansao de to el día".

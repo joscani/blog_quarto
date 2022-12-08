@@ -1,0 +1,276 @@
+---
+title: Cachitos. Segunda parte
+date: '2021-01-13'
+categories:
+  - estadística
+  - polémica
+  - 2021
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+En el [post anterior](https://muestrear-no-es-pecado.netlify.app/2021/01/11/cachitos-primera-parte/) vimos como extraer  1 de cada n fotogramas de un video, recortar una zona en concreto y pasarle un software de reconocimiento óptico de caracteres para tener el texto.  En esta parte vamos a ver como leer esos ficheros de texto y también una de las formas de quitar subtítulos duplicados. Para eso vamos a utilizar R. 
+Vamos al lío. 
+
+Ejecuto el script `extract_subtitles.sh` del post anterior de la siguiente forma.
+
+```bash
+./extract_subtitles.sh 2020
+./extract_subtitles.sh 2019
+```
+
+Se baja el video desde alacarta, recorta los subtítulos y obtiene el texto. La estructura de directorios que me crea en dónde le haya dicho que es el `root_directory` es
+
+```bash
+
+╰─ $ ▶ tree -d
+.
+├── 2019_txt
+├── 2020_txt
+└── video
+    ├── 2019_jpg
+    └── 2020_jpg
+
+```
+
+Dónde en video tenemos los dos videos en mp4, y los directorios con los fotogramas originales junto con los subtítulos, y en los directorios anno_txt cada uno de los ficheros de texto correspondientes a los fotogramas. 
+
+```bash
+╰─ $ ▶ ll 2020_txt | head -n 20
+total 5456
+drwxrwxr-x 2 jose jose 77824 ene 11 20:51 ./
+drwxrwxr-x 8 jose jose  4096 ene 13 19:41 ../
+-rw-rw-r-- 1 jose jose     1 ene  4 13:07 00000001.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:06 00000002.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:07 00000003.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:08 00000004.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     3 ene  4 13:07 00000005.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     3 ene  4 13:07 00000006.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     3 ene  4 13:07 00000007.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     3 ene  4 13:06 00000008.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:07 00000009.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     3 ene  4 13:08 00000010.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:08 00000011.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     6 ene  4 13:07 00000012.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose    24 ene  4 13:06 00000013.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose    94 ene  4 13:07 00000014.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose    65 ene  4 13:07 00000015.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose    93 ene  4 13:06 00000016.jpg.subtitulo.tif.txt
+-rw-rw-r-- 1 jose jose     1 ene  4 13:06 00000017.jpg.subtitulo.tif.txt
+
+
+╰─ $ ▶ ll 2020_txt | wc -l
+1347
+
+
+```
+Y vemos que hay 1347 ficheros txt, y algunos muy pequeños (los que no tienen texto)
+
+Veamos el `00000016.jpg.subtitulo.tif.txt`
+
+```bash
+╰─ $ ▶ cat 2020_txt/00000016.jpg.subtitulo.tif.txt
+Viendo la actitud del público, más que una actuación
+esto es una sesión de coaching.
+```
+
+Pues vamos a leerlos todos usando R. 
+
+```{r}
+library(tidyverse)
+
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2020"
+
+# Construims un data frame con los nombrs de los ficheros 
+
+nombre_ficheros <- list.files(path = str_glue("{root_directory}{anno}_txt/")) %>% 
+    enframe() %>% 
+    rename(n_fichero = value)
+
+nombre_ficheros
+```
+
+Ahora los podemos leer en orden
+
+```{r}
+subtitulos <-  list.files(path = str_glue("{root_directory}{anno}_txt/"), 
+                        pattern = "*.txt", full.names = TRUE) %>% 
+    map(~read_file(.)) %>% 
+    enframe() %>%  
+  # hacemos el join con el dataframe anterior para tener el nombre del fichero original
+    left_join(nombre_ficheros)
+
+glimpse(subtitulos)
+subtitulos
+```
+en n_fichero tenemos el nombre y en value el texto
+
+```{r}
+
+subtitulos %>% 
+  pull(value) %>%
+  ## usamos `[[` que es el operador para acceder a la lista el que normalemente se usa [[nombre_elemento]]
+  `[[`(16)
+
+# equivalentemente
+
+# subtitulos %>% 
+#     pull(value) %>% 
+#     pluck(16)
+
+
+```
+
+Como sabemos que hay muchos ficheros sin texto podemos contar letras. 
+
+
+```{r}
+subtitulos <- subtitulos %>% 
+    mutate(n_caracteres = nchar(value)) 
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count()
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count() %>% 
+  ggplot(aes(x = n_caracteres, y = n)) +
+  geom_col()
+```
+
+Y vemos que hay muchos subtitulos con pocos caracteres. Si vemos por ejemplo los que tienen 8 caracteres
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres ==8) %>% 
+    pull(value)
+```
+
+Que se corresponden con haber pillado parte no del subtítulo sino del nombre de la actuación
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres ==8)
+```
+
+Usando la librería `magick` en R que permite usar `imagemagick` en R, ver **[post](https://analisisydecision.es/tratamiento-y-procesado-de-imagenes-con-r-y-magick/)** de Raúl Vaquerizo y su homenaje a Sean Connery, podemos ver el fotgrama correspondiente
+
+```{r}
+library(magick)
+(directorio_imagenes <- str_glue("{root_directory}video/{anno}_jpg/"))
+
+image_read(str_glue("{directorio_imagenes}00000207.jpg"))
+
+```
+
+También podemos ver hasta cuando pasa eso, por ejemplo si vemos subtítulos con 18 caracteres
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres ==18) %>% 
+    pull(value)
+
+```
+
+Vemos que también pasa, pero ya vamos pillando rótulos de verdad como el "Descanse en Pau" que pusieron ante una actuación de Pau Donés. 
+
+Como vemos hay que hacer limpieza, pero por el momento vamos a quedarnos con  los subtítulos con número de caracteres mayor de 17. Esta decisión hace que perdamos algunos subtítulos de verdad, como por ejemplo el conocido "Loco Vox". 
+
+```{r}
+subtitulos <- subtitulos %>% 
+    filter(n_caracteres > 17) 
+
+glimpse(subtitulos)
+```
+
+Pues ya hemos pasado de más de 1000 rótulos a 664. Pero sabemos, por el post anterior que hay algunos duplicados. 
+
+Con el fin de detectar cuáles están duplicados y aprovechando que están en orden de aparición, podemos hacer utilizar distancias de texto para calcular la distancia de cada subtítulo con el anterior, y si la distancia es pequeña es que es el mismo rótulo. 
+
+Primero hacemos una minilimpieza. 
+
+```{r}
+string_mini_clean <-  function(string){
+    string <- gsub("?\n|\n", " ", string)
+    string <- gsub("\r|?\f|=", " ", string)
+    string <- gsub('“|”|—|>'," ", string)
+    
+    string <- gsub("[[:punct:][:blank:]]+", " ", string)
+    string <- tolower(string)
+    string <- gsub("  ", " ", string)
+    string <-  
+    
+    return(string)
+}
+
+# Haciendo uso de programacion funciona con purrr es muy fácil pasar esta función a cada elemento. y decirle que # el reultado es string con map_chr
+
+subtitulos_proces <- subtitulos %>% 
+    mutate(texto = map_chr(value, string_mini_clean)) %>% 
+    select(-value)
+
+subtitulos_proces %>% 
+  select(texto)
+```
+
+Y ya vemos a simple vista que hay algun duplicado. Calculemos ahora la distancia de strings, utilizando la función `stringdist` de la librería del mismo nombre.
+
+```{r}
+
+subtitulos_proces %>% 
+    mutate(texto_anterior = lag(texto)) %>% 
+    # calculamos distancias con método lcs (que no me he leído que hace exactamente)
+    mutate(distancia = stringdist::stringdist(texto, texto_anterior, method = "lcs")) %>% 
+  # veamos algunos elementos
+    filter(distancia < 10) %>% 
+    arrange(desc(distancia) ) %>% 
+    select(texto, texto_anterior, distancia) %>% 
+    head()
+ 
+```
+
+Y parece que funciona. 
+Así que decido quitar las filas dónde la distancia  sea menos que 19  y así eliminar muchos de los duplicados. 
+
+
+```{r}
+subtitulos_proces <- subtitulos_proces %>% 
+    mutate(texto_anterior = lag(texto)) %>% 
+    mutate(distancia = stringdist::stringdist(texto, texto_anterior, method = "lcs")) %>% 
+    filter(distancia > 19) %>% 
+    select(-texto_anterior)
+
+subtitulos_proces %>% 
+  head()
+```
+
+Y ahora escribimos este dataframe en un csv y será la materia prima para ver qué podemos hacer con esto (para eso requeriré ayuda de algún amigo más ducho en tales artes)
+
+
+```{r}
+write_csv(subtitulos_proces,
+          file = str_glue("{root_directory}{anno}_txt_unido.csv"))
+```
+
+
+Y os dejo este csv en este [enlace](https://drive.google.com/file/d/1lWbl1M39NfgGsLfEjZeg8XsyfuqsTrFS/view?usp=sharing) 
+
