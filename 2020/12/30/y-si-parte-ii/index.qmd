@@ -1,0 +1,230 @@
+---
+title: ¿Y si ... ? Parte II
+date: '2020-12-30'
+categories:
+  - estadística
+  - causal inference
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+
+
+Volvamos a nuestro [ejemplo tonto](https://muestrear-no-es-pecado.netlify.app/2020/11/15/y-si-parte-i/), dónde habíamos visto que el T-learner cuando el modelo base es un modelo lineal equivale a tener un modelo saturado (con interacciones). 
+
+En estos de los "metalearners" tenemos entre otros, los T-learners vistos en el post anterior , los S-learner y los X-learners.
+
+Los S-learners no es más que usar un solo modelo "Single" para estimar el Conditional Average Treatment Effect , CATE. 
+
+Usando el mismo ejemplo sencillo, se tiene que. 
+
+```{r}
+set.seed(155)
+
+X <- rnorm(100, 10,1)
+W <- rbinom(100, 1, 0.6)
+
+# Me construyo la Y de forma que haya efectos principales e interacción
+Y <- 4 + 2 * X + 2 * W + 2 * W * X + rnorm(100, 0, sd = 2)
+
+df <- as.data.frame(cbind(Y,W,X))
+
+df
+
+```
+
+### S-learner
+
+El S-learner sería estimar un sólo modelo y ver la diferencia (en esperanzas) en lo que estima el modelo para cuando W=1 versus lo que estima cuando W=0. 
+
+$E[Y=y | W=1, X=x] - E[Y=y | W=0, X=x]$
+
+Si hacemos un modelo lineal en este ejemplo, cabe plantearse dos, uno con la interacción
+
+```{r}
+mod_saturado <-  lm(Y ~ W *X , data = df)
+summary(mod_saturado)
+```
+
+Dónde la estimación CATE para un caso con X=14. 
+
+```{r}
+df_w0 <- data.frame(X = 14, W=0)
+df_w1 <- data.frame(X = 14, W=1)
+
+predict(mod_saturado, df_w1) - predict(mod_saturado, df_w0)
+
+```
+
+Que es lo mismo que haber considerado solo los coeficientes cuando W = 1
+
+```{r}
+
+(cate1 <- coef(mod_saturado)[2] + coef(mod_saturado)[4] * 14 )
+```
+
+Esto ya lo habíamos visto en el post anterior. El tema es que hemos elegido como modelo base el modelo saturado pero podríamos haber elegido otro. 
+
+```{r}
+mod_efectos_ppal <- lm(Y ~ W  + X , data = df)
+predict(mod_efectos_ppal, df_w1) - predict(mod_efectos_ppal, df_w0)
+```
+Y el CATE en este caso está subestimado ya que no hemos tenido en cuenta la interacción (que existe por construcción del efecto).
+
+Podríamos haber elegido otro modelo, y obtener otra estimación del CATE. Usando un árbol por ejemplo, o en caso de tener más variables, cualquier modelo que se os ocurra. 
+
+```{r}
+library(rpart)
+
+mod_arbol <-  rpart(Y ~ W  + X , data = df)
+predict(mod_arbol, df_w1) - predict(mod_arbol, df_w0)
+
+```
+
+Total, que el S-learner es eso, usar un sólo modelo y obtener la diferencia entre lo que estima para cuando W = 1 y cuando W = 0. 
+
+### X-learner
+
+Los X-learner es una forma un poco más inteligente de usar los T-learners.  Básicamente se trata de.
+
+* Estimamos dos modelos, uno con los datos cuando W=0 y otro cuando W=1.  Los notamos por 
+
+$$\hat{\mu}_{0} = M_{1}(Y^0 \sim X^0)$$
+y por 
+$$\hat{\mu}_{1} = M_{2}(Y^1 \sim X^1)$$
+
+
+* Ahora usamos esos modelos de la siguiente forma, para las observaciones que tengan W=0 utilizamos el modelo  $\hat{\mu}_{1}$,  y para las observaciones con W=1 usamos  el modelo que se ha estimado usando la otra parte de los datos  $\hat{\mu}_{0}$. 
+
+* Calculamos para cada observación con W=0 la diferencia entre lo observado y lo estimado por el modelo $\hat{\mu}_{1}$ y lo mismo para las observaciones con W=1. Así tenemos.
+
+$$D_{i}^{0} = \hat{\mu}_{1}(X_{i}^{0})- Y_{i}^{0} $$
+y 
+$$D_{i}^{1} = Y_{i}^{1} - \hat{\mu}_{0}(X_{i}^{0})$$
+
+* Volvemos a usar lo del T-learner pero esta vez sobre las diferencias obtenidas en el paso anterior
+
+$$\hat{\tau}_1 = M_{3}(D^1 \sim X^1) $$
+$$\hat{\tau}_0 = M_{4}(D^0 \sim X^0) $$
+
+* Hacemos una combinación convexa para obtener 
+
+$$\hat{\tau}(x) = ps(x)\hat{\tau}_0(x) + (1- ps(x))\hat{\tau}_1(x) $$
+Dónde $ps(x) \in [0,1]$ es una función de pesos con ciertas propiedades, normalmente se suele usar el propensity score,  que básicamente es la estimación de la probabilidad de que cada observación pertenezca al tratamiento vs al control. 
+
+Y en nuestro ejemplo como sería. 
+
+**Modelos 1 y 2** usando como modelos base un árbol por ejemplo. 
+
+```{r}
+m1 <- rpart(Y ~  X , data = df, subset = (W==0))
+m2 <- rpart(Y ~ X , data = df, subset = (W==1))
+
+```
+
+**Diferencias**
+
+Usamos modelo 1 para estimar cuando W=1 y el modelo 2 para estimar cuando W = 0
+
+```{r}
+# Con el viejo R-base sería 
+df$Difer[df$W==1] <- df$Y[df$W==1] - predict(m1, df[df$W==1, ])
+head(df)
+```
+
+Y ahora para W=0
+
+```{r}
+df$Difer[df$W==0] <-  predict(m2, df[df$W==0, ]) - df$Y[df$W==0] 
+head(df)
+```
+
+**Modelamos las diferencias**
+
+
+```{r}
+m3 <- rpart(Difer ~  X , data = df, subset = (W==1))
+m4 <- rpart(Difer ~ X , data = df, subset = (W==0))
+```
+
+**Combinamos**
+
+Modelo para propensity score
+
+```{r}
+glm1 <- glm(W ~ X, data = df, family=binomial)
+df$pesos <- predict(glm1, df, type = "response")
+```
+
+
+```{r}
+df$combinado <- df$pesos * predict(m4, df) + (1-df$pesos) * predict(m3, df) 
+
+head(df[, c("Y", "W", "pesos", "combinado")])
+```
+
+La estimación del CATE para nuestra nueva x sería
+
+```{r}
+df_nueva_x <- data.frame(X = 14)
+
+predict(glm1, df_nueva_x, type="response") * predict(m4, df_nueva_x) + (1-predict(glm1, df_nueva_x, type="response"))* predict(m3, df_nueva_x) 
+
+```
+
+Este ejemplo es muy sencillo, y supongo que habría que verlo con muchas más variables y utilizando modelos base más complejos. 
+
+No obstante, todo esto de los metalearners no tiene mucho sentido si el grado de solape entre la distribución de las X en el tratamiento y el control no es suficiente, cosa que se intenta arreglar un poco utilizando los propensity scores en el X-learner.
+
+## Extra, uso de causalml
+
+En la librería causalml de Uber vienen implmentandos los metalearner entre otras cosas. 
+Usando el mismo ejemplo veamos como se calcularía el CATE. 
+
+Nota: He sido incapaz de ver como predecir para mi nueva x, no hay o no he encontrado que funcione un método `predict` para aplicar el X learner a unos nuevos datos. 
+
+```{python}
+from causalml.inference.meta import BaseXRegressor
+from sklearn.linear_model import LinearRegression
+# llamamos al df que está en R
+df_python = r.df[['Y','W','X','pesos']]
+df_python
+
+```
+
+```{python}
+learner_x = BaseXRegressor(learner=LinearRegression())
+
+X = df_python.X.values.reshape(-1,1)
+y = df_python.Y.values
+treatment = df_python.W.values
+e = df_python.pesos.values
+nueva_X = r.df_nueva_x['X'].values.reshape(-1,1)
+
+# estimamos
+cate_x = learner_x.fit_predict(X=X, treatment=treatment, y=y, p=e)
+
+print(cate_x)
+
+
+```
+
