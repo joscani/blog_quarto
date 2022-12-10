@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2020-10-18">
+
+<title>Muestrear no es pecado - PCA I. El álgebra es tu amiga</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#reconstrucción-de-los-datos-originales" id="toc-reconstrucción-de-los-datos-originales" class="nav-link active" data-scroll-target="#reconstrucción-de-los-datos-originales">Reconstrucción de los datos originales</a></li>
+  <li><a href="#reducción-de-dimensionalidad" id="toc-reducción-de-dimensionalidad" class="nav-link" data-scroll-target="#reducción-de-dimensionalidad">Reducción de dimensionalidad</a></li>
+  <li><a href="#pca-en-r" id="toc-pca-en-r" class="nav-link" data-scroll-target="#pca-en-r">PCA en R</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PCA I. El álgebra es tu amiga</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">factorial</div>
+    <div class="quarto-category">2020</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 18, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Me pide mi amigo <a href="https://twitter.com/Vdot_Spain">Jesús Lagos</a> que hagamos un vídeo hablando del análisis de componentes principales para un <a href="https://www.youtube.com/channel/UCpIqAVOpOWt-8Sk4KvosxFg/c%C3%B3digo%20?sub_confirmation=1">canal</a> que tiene junto a <a href="https://twitter.com/miguelangaro">Miguel Angel</a>.</p>
+<p>El caso es que llevo muchos años usándolo y lo estudié en la carrera, haciendo varios a mano, como no podía ser de otra manera, pero desde que empecé a usar software estadístico se me habían olvidado los detalles de la matemática subyacente.</p>
+<p>Bien, dejando un poco todo eso, el análisis de componentes principales es una técnica de interdependencia que busca describir la relación entre las variables de un conjunto de datos e incluso obtener una reducción de su dimensión (si nos quedamos con k componentes principales siendo k menor que el número de variables del conjunto de datos).</p>
+<p>Las componentes son una combinación lineal de las variables tales que, la primera recoge la dirección de la máxima varianza de los datos, la segunda es aquella que siendo ortogonal a la primera recoge la máxima varianza que no ha recogido la primera y así hasta llegar a tantas componentes como variables originales tienes. Visto de esta forma, no se trata más que de un cambio de base elegida de cierta forma y ahí es dónde interviene la diagonalización de matrices.</p>
+<p>En el blog de <a href="https://www.cienciadedatos.net/">Joaquín Amat</a>, el cual recomiendo encarecidamente, se cuenta todo esto de manera mucho más clara, <a href="https://www.cienciadedatos.net/documentos/35_principal_component_analysis">aquí os lo dejo</a></p>
+<p>Una explicación más algebraica la podemos encontrar en el blog de <a href="https://www.datanalytics.com/2014/04/01/componentes-principales-para-quienes-cursaron-algebra-de-primero-con-aprovechamiento/">Carlos</a></p>
+<p>Las 2 primeras componentes serían algo así como</p>
+<p><span class="math display">\[ \begin{aligned}
+PC1 = \phi_{11}X_1 + \phi_{21}X_2 + \ldots + \phi_{p1}X_p \\
+PC2 = \phi_{12}X_1 + \phi_{22}X_2 + \ldots + \phi_{p2}X_p \\
+\end{aligned}
+\]</span></p>
+<p>Y para encontrar los <span class="math inline">\(\phi_{ij}\)</span> es cuando se recurre a la diagonalización de la matriz de covarianzas.</p>
+<p>Veamos un ejemplo simple con datos de fbref que me ha pasado Jesús</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/FBREF_team_kpi_90.rds"</span>))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># nos quedamos con temporada 2018/2019 de España</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>df_2018_2019 <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(temporada <span class="sc">==</span> <span class="st">"2018/2019"</span> <span class="sc">&amp;</span> Country <span class="sc">==</span> <span class="st">"Spain"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(df_2018_2019)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Rows: 20</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Columns: 73</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Squad                            &lt;chr&gt; "Alavés", "Athletic Club", "Atlético …</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ CODE                             &lt;chr&gt; "ESP_ALA", "ESP_ATH", "ESP_ATM", "ESP…</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Country                          &lt;chr&gt; "Spain", "Spain", "Spain", "Spain", "…</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ temporada                        &lt;chr&gt; "2018/2019", "2018/2019", "2018/2019"…</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Toques                  &lt;dbl&gt; 489.0789, 572.1316, 613.1053, 811.236…</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Toques_AP               &lt;dbl&gt; 61.34211, 55.07895, 53.78947, 62.5789…</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Toques_Z1               &lt;dbl&gt; 168.6842, 170.2105, 172.2368, 208.342…</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Toques_Z2               &lt;dbl&gt; 232.7895, 286.2632, 301.1842, 415.973…</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Toques_Z3           &lt;dbl&gt; 113.5526, 148.9474, 176.7632, 240.815…</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Toques_AR           &lt;dbl&gt; 17.68421, 20.42105, 23.71053, 31.5000…</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Conducciones            &lt;dbl&gt; 270.6316, 357.8947, 416.1842, 617.026…</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Conducciones_Dist       &lt;dbl&gt; 1563.132, 1974.105, 2238.579, 3127.50…</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Conduccioones_Dist_Prog &lt;dbl&gt; 866.8684, 1070.6579, 1173.0263, 1759.…</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Entradas                 &lt;dbl&gt; 16.73684, 16.94737, 20.63158, 15.0526…</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Ent_Z1                   &lt;dbl&gt; 8.657895, 8.263158, 10.947368, 6.2894…</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Ent_Z2                   &lt;dbl&gt; 6.157895, 6.289474, 7.815789, 6.52631…</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Ent_Z3                   &lt;dbl&gt; 1.921053, 2.394737, 1.868421, 2.23684…</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Presiones                &lt;dbl&gt; 154.3947, 154.2368, 184.0789, 163.815…</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Presiones_Z1             &lt;dbl&gt; 51.65789, 45.26316, 58.31579, 43.3421…</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Presiones_Z2             &lt;dbl&gt; 72.50000, 73.18421, 86.71053, 77.9210…</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Presiones_Z3             &lt;dbl&gt; 30.23684, 35.78947, 39.05263, 42.5526…</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Pases_Clave         &lt;dbl&gt; 7.157895, 7.184211, 8.921053, 10.7894…</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Pases_Z3            &lt;dbl&gt; 21.86842, 28.94737, 32.76316, 46.8157…</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Pases_Area          &lt;dbl&gt; 5.947368, 7.947368, 9.000000, 12.6052…</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Centros_Area        &lt;dbl&gt; 2.736842, 2.500000, 1.605263, 1.57894…</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Toques_Juego            &lt;dbl&gt; 438.6579, 523.5000, 568.7105, 768.368…</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Regates                 &lt;dbl&gt; 15.10526, 15.81579, 18.23684, 24.0000…</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Regates_en_contra        &lt;dbl&gt; 17.34211, 19.21053, 19.55263, 14.8157…</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Bloqueos                 &lt;dbl&gt; 15.94737, 15.15789, 15.31579, 15.4210…</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Bloqueos_Disp            &lt;dbl&gt; 3.052632, 2.526316, 2.736842, 2.89473…</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Bloqueos_Pases           &lt;dbl&gt; 12.89474, 12.63158, 12.57895, 12.5263…</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Intercepciones           &lt;dbl&gt; 10.263158, 11.868421, 12.184211, 10.2…</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Despejes                 &lt;dbl&gt; 30.21053, 25.94737, 21.84211, 15.3684…</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_vivo              &lt;dbl&gt; 314.9211, 407.7105, 455.0789, 658.315…</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_ABP               &lt;dbl&gt; 51.36842, 50.00000, 45.81579, 45.2105…</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Falta             &lt;dbl&gt; 15.39474, 14.92105, 11.92105, 14.9473…</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Largos_Z1         &lt;dbl&gt; 0.3421053, 0.7631579, 1.5263158, 3.07…</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Presion           &lt;dbl&gt; 55.68421, 72.84211, 88.23684, 109.157…</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Amplitud          &lt;dbl&gt; 11.39474, 14.57895, 11.65789, 15.3421…</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Pases_Centros       &lt;dbl&gt; 19.18421, 19.13158, 15.52632, 10.3684…</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Pases_Corner        &lt;dbl&gt; 3.815789, 4.052632, 5.657895, 5.31578…</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Rasos             &lt;dbl&gt; 190.3421, 267.6053, 330.6053, 559.342…</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Media_Altura      &lt;dbl&gt; 56.68421, 72.31579, 69.07895, 70.0789…</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Altos             &lt;dbl&gt; 119.26316, 117.78947, 101.21053, 74.1…</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Completados       &lt;dbl&gt; 258.2632, 349.1316, 398.5000, 617.473…</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_FdJ               &lt;dbl&gt; 1.263158, 1.789474, 1.815789, 2.44736…</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Interceptados     &lt;dbl&gt; 6.657895, 7.552632, 9.736842, 12.2368…</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Bloqueados        &lt;dbl&gt; 10.97368, 11.89474, 12.18421, 12.5526…</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Distancia         &lt;dbl&gt; 5355.526, 7134.263, 7263.395, 11080.8…</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Dist_Prog         &lt;dbl&gt; 2307.974, 2639.342, 2592.842, 3306.65…</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Cortos            &lt;dbl&gt; 13.97368, 14.15789, 16.55263, 19.7105…</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Cercanos          &lt;dbl&gt; 225.4737, 301.6053, 356.4737, 534.105…</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Largos            &lt;dbl&gt; 126.8421, 141.9474, 127.8684, 149.710…</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Asistencias         &lt;dbl&gt; 0.7105263, 0.6842105, 0.9473684, 1.60…</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_xA                  &lt;dbl&gt; 0.6289474, 0.6631579, 0.8236842, 1.40…</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Pases_Progresivos       &lt;dbl&gt; 36.28947, 41.52632, 43.71053, 50.6052…</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Creacion_Posesion                &lt;dbl&gt; 1.123684, 1.318421, 1.300000, 1.68947…</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Goles               &lt;dbl&gt; 1.0263158, 1.0000000, 1.3684211, 2.31…</span></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_xG                  &lt;dbl&gt; 0.9815789, 1.0578947, 1.2078947, 1.93…</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Disparos            &lt;dbl&gt; 11.03, 9.68, 11.55, 14.53, 11.58, 11.…</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Disparos_Puerta     &lt;dbl&gt; 3.11, 3.50, 4.21, 6.39, 4.05, 4.13, 4…</span></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Acciones_Disparo    &lt;dbl&gt; 15.13, 14.97, 18.53, 24.71, 18.76, 19…</span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Finalizacion_Acciones_Gol        &lt;dbl&gt; 1.53, 1.74, 2.29, 4.13, 2.08, 2.34, 1…</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Goles_Contra             &lt;dbl&gt; 1.32, 1.18, 0.76, 0.95, 1.37, 1.63, 1…</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Disparos_Contra          &lt;dbl&gt; 4.184211, 3.052632, 3.421053, 3.39473…</span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Goles_Contra_Corner      &lt;dbl&gt; 0.05263158, 0.15789474, 0.07894737, 0…</span></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Porteria_Saque_Largo             &lt;dbl&gt; 22.289474, 23.026316, 16.131579, 7.89…</span></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Porteria_Pases                   &lt;dbl&gt; 21.65789, 23.92105, 15.31579, 25.0789…</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Porterioa_Saques_Puerta          &lt;dbl&gt; 8.421053, 6.947368, 7.684211, 5.84210…</span></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Porteria_Centros                 &lt;dbl&gt; 10.710526, 9.447368, 9.605263, 8.3947…</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Porteria_Salidas_Area            &lt;dbl&gt; 0.82, 0.74, 0.32, 0.87, 1.11, 0.76, 1…</span></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_Duelos_Aereos            &lt;dbl&gt; 37.44737, 34.28947, 26.05263, 16.5526…</span></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ Defensa_xGA                      &lt;dbl&gt; 1.336842, 1.152632, 1.018421, 1.06842…</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Nos quedamos sólo con 4 variables para el ejemplo, escalamos los datos y obtenemos la matriz de correlaciones</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_numerico <span class="ot">&lt;-</span>  df_2018_2019 <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Squad,Creacion_Toques<span class="sc">:</span>Creacion_Toques_Z2)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>df_centrado <span class="ot">&lt;-</span>  <span class="fu">scale</span>(df_numerico[, <span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>], <span class="at">center=</span> <span class="cn">TRUE</span>, <span class="at">scale=</span><span class="cn">TRUE</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>matriz_cov <span class="ot">&lt;-</span> <span class="fu">cov</span>(df_centrado)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>matriz_cov</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Creacion_Toques Creacion_Toques_AP Creacion_Toques_Z1</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques          1.0000000          0.1919393          0.6053904</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_AP       0.1919393          1.0000000          0.8552548</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z1       0.6053904          0.8552548          1.0000000</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z2       0.9941664          0.1501945          0.5673953</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Creacion_Toques_Z2</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques             0.9941664</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_AP          0.1501945</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z1          0.5673953</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z2          1.0000000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Esta matriz simétrica es justo la <strong>materia prima</strong> del PCA, diagonalizándola es como encontramos las direcciones de mayor variabilidad y se hace el cambio de base</p>
+<p>Con la función eigen obtenemos tanto los valores propios como los vectores propios</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>v_propios <span class="ot">&lt;-</span>  <span class="fu">eigen</span>(matriz_cov)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>v_propios<span class="sc">$</span>values</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2.722832215 1.232848636 0.039628182 0.004690967</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(v_propios<span class="sc">$</span>vectors)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]       [,2]       [,3]        [,4]</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] -0.5353245  0.4191853 -0.1263221  0.72232542</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.3766687 -0.6970094 -0.6098767  0.01868295</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -0.5469743 -0.3635967  0.7514344 -0.06295168</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,] -0.5218883  0.4541575 -0.2178062 -0.68842867</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Ahora vamos a calcular para cada club su valor en las 4 componentes principales para eso necesitamos multiplicar los vectores propios por los datos.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transponemos los vectores propios y los datos para obtener las componentes</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>t_vec_propios <span class="ot">&lt;-</span>  <span class="fu">t</span>(v_propios<span class="sc">$</span>vectors)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>t_df_centrado <span class="ot">&lt;-</span>  <span class="fu">t</span>(df_centrado)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Producto matricial</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>pc_scores <span class="ot">&lt;-</span> t_vec_propios <span class="sc">%*%</span> t_df_centrado</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(pc_scores) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PC1"</span>, <span class="st">"PC2"</span>,<span class="st">"PC3"</span>,<span class="st">"PC4"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(pc_scores) <span class="ot">&lt;-</span> df_numerico<span class="sc">$</span>Squad</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">t</span>(pc_scores), <span class="dv">10</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                        PC1        PC2         PC3          PC4</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Alavés           1.4358255 -0.8720034 -0.21233168 -0.019668901</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Athletic Club    0.6999736  0.6767305  0.08296797 -0.081576648</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Atlético Madrid  0.3199010  1.1202263  0.14681784  0.046972256</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Barcelona       -3.4646008  1.5976916 -0.32442720  0.056962318</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Betis           -2.6909040 -0.1125068 -0.21107497  0.013592645</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Celta Vigo      -0.7776694 -0.1446199 -0.02618855 -0.152061073</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Eibar            1.8179428  2.5941963 -0.20134263 -0.006140546</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Espanyol        -0.9644433 -1.5216226 -0.17289972  0.086669116</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Getafe           3.2694678  0.5147319 -0.15659309  0.033695280</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Girona          -0.6842965 -1.2661054  0.28673745 -0.032474417</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Estas son las coordenadas de los clubes en esta nueva base, pero podemos recuperar la info original.</p>
+<section id="reconstrucción-de-los-datos-originales" class="level3">
+<h3 class="anchored" data-anchor-id="reconstrucción-de-los-datos-originales">Reconstrucción de los datos originales</h3>
+<p>Como bien dice Joaquín en su post se pueden recuperar los datos originales cuando nos quedamos con todos los vectores propios</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>datos_recuperados <span class="ot">&lt;-</span> <span class="fu">t</span>(v_propios<span class="sc">$</span>vectors <span class="sc">%*%</span> pc_scores)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(datos_recuperados,<span class="dv">10</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                        [,1]       [,2]       [,3]        [,4]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Alavés          -1.12154884  0.1960926 -0.6266173 -1.08557962</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Athletic Club   -0.16044314 -0.7874700 -0.5614442 -0.01987703</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Atlético Madrid  0.31371452 -0.9899681 -0.4749212  0.27749175</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Barcelona        2.60654241  0.3903256  1.0667608  2.56518599</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Betis            1.42982745  1.2209814  1.3532979  1.38987128</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Celta Vigo       0.24915356  0.4068560  0.4678421  0.45056353</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Eibar            0.13525827 -2.3702619 -2.0885184  0.27749175</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Espanyol        -0.03710733  1.5309276  0.9454039 -0.20973153</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Getafe          -1.49033813 -1.4941473 -2.0952605 -1.46161740</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Girona          -0.22409050  0.9647592  1.0521530 -0.25798184</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df_centrado,<span class="dv">10</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Creacion_Toques Creacion_Toques_AP Creacion_Toques_Z1 Creacion_Toques_Z2</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]     -1.12154884          0.1960926         -0.6266173        -1.08557962</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]     -0.16044314         -0.7874700         -0.5614442        -0.01987703</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]      0.31371452         -0.9899681         -0.4749212         0.27749175</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]      2.60654241          0.3903256          1.0667608         2.56518599</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]      1.42982745          1.2209814          1.3532979         1.38987128</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]      0.24915356          0.4068560          0.4678421         0.45056353</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]      0.13525827         -2.3702619         -2.0885184         0.27749175</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]     -0.03710733          1.5309276          0.9454039        -0.20973153</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]     -1.49033813         -1.4941473         -2.0952605        -1.46161740</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]     -0.22409050          0.9647592          1.0521530        -0.25798184</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df_centrado <span class="sc">-</span> datos_recuperados, <span class="dv">10</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Creacion_Toques Creacion_Toques_AP Creacion_Toques_Z1 Creacion_Toques_Z2</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]   -2.220446e-16       0.000000e+00       2.220446e-16       2.220446e-16</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]   -5.551115e-17       1.110223e-16       4.440892e-16       1.353084e-16</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]   -1.110223e-16       2.220446e-16       3.330669e-16       0.000000e+00</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]   -4.440892e-16      -2.220446e-16      -2.220446e-16      -8.881784e-16</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    2.220446e-16      -4.440892e-16      -8.881784e-16      -6.661338e-16</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]   -2.775558e-17      -1.665335e-16      -2.775558e-16      -1.665335e-16</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]   -1.110223e-16       4.440892e-16       1.332268e-15       2.220446e-16</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    4.163336e-17      -2.220446e-16      -6.661338e-16      -2.220446e-16</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    0.000000e+00       6.661338e-16       8.881784e-16       6.661338e-16</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    1.110223e-16      -4.440892e-16      -8.881784e-16       0.000000e+00</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Afortunadamente hay funciones y librerías que hacen estas cosas y dan ayudas a la interpretación.</p>
+</section>
+<section id="reducción-de-dimensionalidad" class="level2">
+<h2 class="anchored" data-anchor-id="reducción-de-dimensionalidad">Reducción de dimensionalidad</h2>
+<p>Ahora si simplemente queremos quedarnos con el mejor resumen de las 4 variables originales nos quedamos solo con primer PC</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span>(<span class="fu">t</span>(pc_scores)[,<span class="dv">1</span>])</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Barcelona           Betis     Real Madrid   Real Sociedad        Espanyol </span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -3.46460082     -2.69090398     -2.19175378     -1.63031251     -0.96444334 </span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Celta Vigo          Girona         Sevilla  Rayo Vallecano      Villarreal </span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     -0.77766939     -0.68429649     -0.20760011      0.01532123      0.13996320 </span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        Valencia Atlético Madrid      Valladolid   Athletic Club         Levante </span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      0.25217154      0.31990099      0.42063611      0.69997361      1.20774846 </span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          Huesca          Alavés         Leganés           Eibar          Getafe </span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      1.42757573      1.43582553      1.60505341      1.81794277      3.26946783</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Dónde vemos que en un extremo está el Barcelona y en el otro el Getafe, ¿pero como pondera cada variable en esa componente principal? Pues simplemente viendo el primer vector propio (primera columna) se puede ver lo que pesa cada variable.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pesos_variables <span class="ot">&lt;-</span>  v_propios<span class="sc">$</span>vectors</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(pesos_variables) <span class="ot">&lt;-</span>  <span class="fu">colnames</span>(df_centrado)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(pesos_variables) <span class="ot">&lt;-</span>  <span class="fu">paste0</span>(<span class="st">"PC"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>pesos_variables</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                           PC1        PC2        PC3         PC4</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques    -0.5353245  0.4191853 -0.1263221  0.72232542</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_AP -0.3766687 -0.6970094 -0.6098767  0.01868295</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z1 -0.5469743 -0.3635967  0.7514344 -0.06295168</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z2 -0.5218883  0.4541575 -0.2178062 -0.68842867</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Asi vemos, que en la primera componente todas las variables tienen coordenada del mismo signo, es decir, se trata de una variable que pondrá en un extremo todos los equipos con alto valor en todas esas variables y en el otro los que tienen bajo valor en ese conjunto de variables.</p>
+<p>La segunda PC ya si diferencia entre Creacion_toques y Creacion_toques_z2 con peso positivo vs Creacion_toques en AP y Z1.<br>
+Este comportamiento de un PCA es usual y se suele decir que la primera componente recoge el tamaño (equipos con alto valor en la mayoría de variables vs los que tienen bajo valor) y la segunda y siguientes componentes añaden matices.</p>
+<p>Para facilitar la interpretación a veces se utiliza otro cambio de base haciendo rotaciones, la más usual es la rotación varimax, para facilitar la interpretación</p>
+</section>
+<section id="pca-en-r" class="level2">
+<h2 class="anchored" data-anchor-id="pca-en-r">PCA en R</h2>
+<p>En R ya hay multitud de funciones y librerías que hacen el pca directamente, por ejemplo <code>princomp</code> y obtenemos lo mismo que antes salvo el signo en alguna componente, lo cual no varía su interpretación</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">princomp</span>(df_numerico[,<span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>], <span class="at">cor=</span><span class="cn">TRUE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res<span class="sc">$</span>loadings</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loadings:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Comp.1 Comp.2 Comp.3 Comp.4</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques     0.535  0.419  0.126  0.722</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_AP  0.377 -0.697  0.610       </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z1  0.547 -0.364 -0.751       </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Creacion_Toques_Z2  0.522  0.454  0.218 -0.688</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                Comp.1 Comp.2 Comp.3 Comp.4</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; SS loadings      1.00   1.00   1.00   1.00</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Proportion Var   0.25   0.25   0.25   0.25</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Cumulative Var   0.25   0.50   0.75   1.00</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Y aquí los scores</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>res<span class="sc">$</span>scores</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            Comp.1       Comp.2      Comp.3       Comp.4</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] -1.47312591 -0.894656624  0.21784771 -0.020179866</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] -0.71815778  0.694310797 -0.08512334 -0.083695875</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] -0.32821149  1.149327966 -0.15063193  0.048192518</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]  3.55460544  1.639197045  0.33285528  0.058442105</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]  2.76080923 -0.115429590  0.21655835  0.013945759</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]  0.79787196 -0.148376931  0.02686889 -0.156011369</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] -1.86516992  2.661589241  0.20657318 -0.006300067</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]  0.98949799 -1.561151804  0.17739137  0.088920636</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] -3.35440322  0.528103818  0.16066112  0.034570627</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]  0.70207339 -1.298996700 -0.29418642 -0.033318049</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11,] -1.46466180 -0.249386278  0.02551176 -0.022539838</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [12,] -1.64675005 -0.024226568 -0.06234356 -0.061721168</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13,] -1.23912377 -0.918827637  0.18189450  0.072835609</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [14,] -0.01571925 -0.996347013 -0.16727041  0.026577141</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [15,]  2.24869193  1.744009038 -0.32301661 -0.035840606</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16,]  1.67266534 -1.476954610  0.14195906 -0.081997377</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17,]  0.21299322  0.031819187 -0.29816043  0.146668682</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [18,] -0.25872255  0.082636708 -0.30022953  0.046260068</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19,] -0.43156355 -0.844484815  0.01989843  0.023146309</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [20,] -0.14359922 -0.002155231 -0.02705741 -0.057955239</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Esta entrada era solo para recordar que podemos obtener un PCA simplemente obteniendo los vectores propios de la matriz de correlaciones, y que aquello que vimos en los primeros cursos de la universidad sirve para algo.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

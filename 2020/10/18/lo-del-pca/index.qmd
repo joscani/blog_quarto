@@ -1,0 +1,180 @@
+---
+title: PCA I. El álgebra es tu amiga
+date: '2020-10-18'
+categories:
+  - estadística
+  - factorial
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"  
+---
+
+
+Me pide mi amigo [Jesús Lagos](https://twitter.com/Vdot_Spain) que hagamos un vídeo hablando del análisis de componentes principales para un [canal](https://www.youtube.com/channel/UCpIqAVOpOWt-8Sk4KvosxFg/c%C3%B3digo%20?sub_confirmation=1) que tiene junto a [Miguel Angel](https://twitter.com/miguelangaro).
+
+El caso es que llevo muchos años usándolo y lo estudié en la carrera, haciendo varios a mano, como no podía ser de otra manera, pero desde que empecé a usar software estadístico se me habían olvidado los detalles de la matemática subyacente.
+
+  
+Bien, dejando un poco todo eso, el análisis de componentes principales es una técnica de interdependencia que busca describir la relación entre las variables de un conjunto de datos e incluso obtener una reducción de su dimensión (si nos quedamos con k componentes principales siendo k menor que el número de variables  del conjunto de datos).
+
+Las componentes son una combinación lineal de las variables tales que, la primera recoge la dirección de la máxima varianza de los datos, la segunda es aquella que siendo ortogonal a la primera recoge la máxima varianza que no ha recogido la primera y así hasta llegar a tantas componentes como variables originales tienes. Visto de esta forma, no se trata más que de un cambio de base elegida de cierta forma y ahí es dónde interviene la diagonalización de matrices.
+
+En el blog de [Joaquín Amat](https://www.cienciadedatos.net/), el cual recomiendo encarecidamente, se cuenta todo esto de manera mucho más clara, [aquí os lo dejo](https://www.cienciadedatos.net/documentos/35_principal_component_analysis)
+
+Una explicación más algebraica la podemos encontrar en el blog de [Carlos](https://www.datanalytics.com/2014/04/01/componentes-principales-para-quienes-cursaron-algebra-de-primero-con-aprovechamiento/)
+
+Las 2 primeras componentes serían algo así como
+
+$$ \begin{aligned}
+PC1 = \phi_{11}X_1 + \phi_{21}X_2 + \ldots + \phi_{p1}X_p \\
+PC2 = \phi_{12}X_1 + \phi_{22}X_2 + \ldots + \phi_{p2}X_p \\
+\end{aligned}
+$$
+
+Y para encontrar los $\phi_{ij}$ es cuando se recurre a la diagonalización de la matriz de covarianzas. 
+
+
+Veamos un ejemplo simple con datos de fbref que me ha pasado Jesús
+
+```{r}
+library(tidyverse)
+
+df <- readRDS(here::here("data/FBREF_team_kpi_90.rds"))
+
+# nos quedamos con temporada 2018/2019 de España
+
+df_2018_2019 <- df %>% 
+  filter(temporada == "2018/2019" & Country == "Spain")
+
+glimpse(df_2018_2019)
+```
+
+Nos quedamos sólo con 4 variables para el ejemplo, escalamos los datos y obtenemos la matriz de correlaciones
+
+```{r}
+
+df_numerico <-  df_2018_2019 %>% 
+  select(Squad,Creacion_Toques:Creacion_Toques_Z2)
+
+df_centrado <-  scale(df_numerico[, 2:5], center= TRUE, scale=TRUE)
+
+matriz_cov <- cov(df_centrado)
+matriz_cov
+
+
+```
+Esta matriz simétrica es justo la **materia prima** del PCA, diagonalizándola es como encontramos las direcciones de mayor variabilidad y se hace el cambio de base
+
+
+Con la función eigen obtenemos tanto los valores propios como los vectores propios 
+
+```{r}
+
+v_propios <-  eigen(matriz_cov)
+
+v_propios$values
+head(v_propios$vectors)
+
+
+```
+
+
+Ahora vamos a calcular para cada club su valor en las 4 componentes principales
+para eso necesitamos multiplicar los vectores propios por los datos.
+
+```{r}
+# transponemos los vectores propios y los datos para obtener las componentes
+
+t_vec_propios <-  t(v_propios$vectors)
+t_df_centrado <-  t(df_centrado)
+
+# Producto matricial
+pc_scores <- t_vec_propios %*% t_df_centrado
+rownames(pc_scores) <- c("PC1", "PC2","PC3","PC4")
+colnames(pc_scores) <- df_numerico$Squad
+head(t(pc_scores), 10)
+```
+Estas son las coordenadas de los clubes en esta nueva base, pero podemos recuperar la info original.
+
+### Reconstrucción de los datos originales
+
+Como bien dice Joaquín en su post se pueden recuperar los datos originales cuando nos quedamos con todos los vectores propios
+
+```{r}
+datos_recuperados <- t(v_propios$vectors %*% pc_scores)
+head(datos_recuperados,10)
+```
+
+```{r}
+head(df_centrado,10)
+```
+
+
+
+```{r}
+head(df_centrado - datos_recuperados, 10)
+
+```
+
+Afortunadamente hay funciones y librerías que hacen estas cosas y dan ayudas a la interpretación. 
+
+## Reducción de dimensionalidad
+
+Ahora si simplemente queremos quedarnos con el mejor resumen de las 4 variables originales nos quedamos solo con primer PC
+
+```{r}
+sort(t(pc_scores)[,1])
+```
+
+Dónde vemos que en un extremo está el Barcelona y en el otro el Getafe, ¿pero como pondera cada variable en  esa componente principal? 
+Pues simplemente viendo el primer vector propio (primera columna) se puede ver lo que pesa cada variable. 
+
+```{r}
+pesos_variables <-  v_propios$vectors
+rownames(pesos_variables) <-  colnames(df_centrado)
+colnames(pesos_variables) <-  paste0("PC",1:4)
+pesos_variables
+```
+
+Asi vemos, que en la primera componente todas las variables tienen coordenada del mismo signo, es decir, se trata de una variable que pondrá en un extremo todos los equipos con alto valor en todas esas variables y en el otro los que tienen bajo valor en ese conjunto de variables. 
+
+La segunda PC  ya si diferencia entre Creacion_toques y Creacion_toques_z2 con peso positivo vs Creacion_toques en AP y Z1.  
+Este comportamiento de un PCA es usual y se suele decir que la primera componente recoge el tamaño (equipos con alto valor en la mayoría de variables vs los que tienen bajo valor) y la segunda y siguientes componentes añaden matices. 
+
+Para facilitar la interpretación a veces se utiliza otro cambio de base haciendo rotaciones, la más usual es la rotación varimax, para facilitar la interpretación
+
+
+## PCA en R
+
+En R ya hay multitud de funciones y librerías que hacen el pca directamente, por ejemplo `princomp` y obtenemos lo mismo que antes salvo el signo en alguna componente, lo cual no varía su interpretación
+
+```{r}
+res <- princomp(df_numerico[,2:5], cor=TRUE)
+res$loadings
+```
+
+Y aquí los scores
+
+```{r}
+res$scores
+```
+
+Esta entrada era solo para recordar que podemos obtener un PCA simplemente obteniendo los vectores propios de la matriz de correlaciones, y que aquello que vimos en los primeros cursos de la universidad sirve para algo. 
+
