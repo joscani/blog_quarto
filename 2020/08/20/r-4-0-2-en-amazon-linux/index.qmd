@@ -1,0 +1,147 @@
+---
+title: R 4.0.2  en amazon linux
+date: '2020-08-20'
+slug: r-4-0-2-en-amazon-linux
+categories:
+  - R
+  - linux
+  - aws
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>" 
+---
+
+Entrada corta sobre como instalar R 4.0.2 en amazon linux, ya que por defecto trae una versión de R de hace 3 años. 
+
+La idea es instalar R vía rpm, sacada de [aquí](https://docs.rstudio.com/resources/install-r/), pero el problema es que en amazon linux faltan algunas librerías que están en centos 7 y hay que buscar los rpm.
+
+La solución que me ha funcionado, estando como root en amazon linux
+
+```bash
+cd /tmp
+curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-utf32-10.23-2.el7.x86_64.rpm
+curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-utf16-10.23-2.el7.x86_64.rpm
+curl -O https://rpmfind.net/linux/centos/7.8.2003/os/x86_64/Packages/pcre2-10.23-2.el7.x86_64.rpm
+curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-devel-10.23-2.el7.x86_64.rpm
+curl -O https://rpmfind.net/linux/centos/6.10/os/x86_64/Packages/tk-8.5.7-5.el6.x86_64.rpm
+
+
+## instalar
+
+yum install -y tcl
+yum install -y tk-8.5.7-5.el6.x86_64.rpm
+yum install -y pcre2-utf32-10.23-2.el7.x86_64.rpm 
+yum install -y pcre2-utf16-10.23-2.el7.x86_64.rpm
+yum install -y pcre2-10.23-2.el7.x86_64.rpm
+yum install -y pcre2-devel-10.23-2.el7.x86_64.rpm
+
+## install R
+
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm 
+yum-config-manager --enable "rhel-*-optional-rpms"
+
+export R_VERSION=4.0.2
+
+curl -O https://cdn.rstudio.com/r/centos-7/pkgs/R-${R_VERSION}-1-1.x86_64.rpm
+yum install -y R-${R_VERSION}-1-1.x86_64.rpm
+
+# y ya estarian en /opt/R/4.0.2/
+```
+
+Y si lo queremos en el dockerfile
+
+```bash
+FROM amazonlinux:2018.03-with-sources
+MAINTAINER canadasreche@gmail.com 
+
+# Update yum
+RUN yum -y update 
+
+# set locales
+RUN echo "LANG=en_US.utf8" >> /etc/locale.conf
+#RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
+RUN export LC_ALL=en_US.UTF-8
+RUN yum -y install gcc64 wget gcc gcc-c++ make
+
+# Install system libraries
+RUN export MAKE='make -j 8'
+RUN yum install -y xorg-x11-xauth.x86_64 xorg-x11-server-utils.x86_64 xterm libXt libX11-devel \
+libXt-devel libcurl-devel git compat-gmp4 compat-libffi5 libxml2-devel libjpeg-devel openssl-devel \
+boost boost-devel autoconf flex bison libssh2-devel java-1.8.0-openjdk java-1.8.0-openjdk-devel \
+fontconfig-devel cairo-devel mesa-libGLU-devel libGL-devel libpng-devel
+
+# Problems with some compilation with R libraries
+#RUN yum remove gcc72-c++.x86_64 libgcc72.x86_64 -y \
+RUN yum groupinstall 'Development Tools' -y
+
+# Install and update R
+RUN yum install -y R-core R-base R-core-devel R-devel
+RUN yum update -y R-core R-base R-core-devel R-devel
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum-config-manager --enable epel
+RUN yum-config-manager --enable "rhel-*-optional-rpms"
+RUN yum -y install v8-devel
+# ENV JAVA_HOME /usr/java/latest
+
+# Fix problem with c compiler
+RUN mkdir ~/.R
+RUN echo "CC=gcc64" >> ~/.R/Makevars
+
+# Fix problem with some libraries
+RUN ln -s /usr/lib/gcc/x86_64-amazon-linux/4.8.5/libgfortran.so /usr/lib/libgfortran.so
+RUN ln -s /usr/lib/gcc/x86_64-amazon-linux/4.8.5/libquadmath.so /usr/lib/libquadmath.so
+
+# Install R 4.0.2
+
+RUN curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-utf32-10.23-2.el7.x86_64.rpm \
+  && curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-utf16-10.23-2.el7.x86_64.rpm \
+  && curl -O https://rpmfind.net/linux/centos/7.8.2003/os/x86_64/Packages/pcre2-10.23-2.el7.x86_64.rpm \
+  && curl -O http://mirror.ancl.hawaii.edu/linux/centos/7/os/x86_64/Packages/pcre2-devel-10.23-2.el7.x86_64.rpm \
+  && curl -O https://rpmfind.net/linux/centos/6.10/os/x86_64/Packages/tk-8.5.7-5.el6.x86_64.rpm
+
+RUN yum install -y tcl \
+  &&  yum install -y tk-8.5.7-5.el6.x86_64.rpm \
+  &&  yum install -y pcre2-utf32-10.23-2.el7.x86_64.rpm \
+  &&  yum install -y pcre2-utf16-10.23-2.el7.x86_64.rpm \
+  &&  yum install -y pcre2-10.23-2.el7.x86_64.rpm \
+  &&  yum install -y pcre2-devel-10.23-2.el7.x86_64.rpm
+
+
+## install R
+
+RUN cd /tmp
+RUN curl -O https://cdn.rstudio.com/r/centos-7/pkgs/R-4.0.2-1-1.x86_64.rpm
+RUN yum install -y R-4.0.2-1-1.x86_64.rpm
+
+CMD ["bash"] 
+
+```
+
+Y listo ya tendríamos R 4.0.2 en `/opt/R/`
+
+Para vincularlo con Rstudio server que estaría instalado en esta máquina (que formaría parte de un EMR) solo sería modificar el archivo `/etc/rstudio/rserver.conf` y añadir la línea
+
+```bash
+rsession-which-r=/opt/R/4.0.2/bin/R
+```
+Y así tendríamos las dos versiones de R, la que viene por defecto en amazon linux y la 4.0.2
+
+
+

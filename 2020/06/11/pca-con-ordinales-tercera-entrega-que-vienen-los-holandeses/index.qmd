@@ -1,0 +1,148 @@
+---
+title: ¿PCA con ordinales y nominales? Tercera entrega. ¡ Que vienen los holandeses
+  !
+date: '2020-06-11'
+categories:
+  - ciencia de datos
+  - estadística
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>" 
+---
+
+Hoy vamos a darle una (pequeña) vuelta de tuerca al tema de la reducción de dimensiones ( y por ende la codificación ) con variables categóricas y ordinales.
+
+Aunque puede que muchos no lo sepan, existen dos escuelas derivadas de lo que Tukey llamaba el análisis exploratorio de datos, a saber, la francesa y la holandesa.
+
+La francesa con exponentes como [Jean-Paul Benzécri](https://en.wikipedia.org/wiki/Jean-Paul_Benz%C3%A9cri), Saporta o Lebart, resuelven el problema de proyectar las relaciones entre variables categóricas en un hiperplano de menor dimensión de forma analítica. 
+
+Por otro lado tenemos la escuela holandesa, que se diferencia de la escuela francesa en la forma de solucionar el problema, ya que la escuela holandesa llega a la solución mediante métodos de optimización numérica. Representantes de esta escuela son [Jan de Leeuw](https://en.wikipedia.org/wiki/Jan_de_Leeuw) o [Patrick Mair](https://psychology.fas.harvard.edu/people/patrick-mair), que entre otros forman parte del grupo de teoría de datos más conocidos por su pseudónimo "Albert Gifi" en honor al criado de Galton. 
+
+
+En el estupendo [artículo](https://www.jstatsoft.org/article/view/v073i06) de Francois Husson sobre la influencia de Jan de Leeuw en la escuela francesa de análisis de datos, cuenta la relación entre el análisis de correspondencias múltiple (MCA) desarrollado por la escuela francesa y el análisis de homogeneidad por als (homals), de la escuela holandesa. 
+
+Para el que quiera profundizar más, recomiendo el libro de Patrick Mair, [Modern Psycometrics with R](https://www.springer.com/gp/book/9783319931753),  dónde viene de todo, desde teoría clásica del test, análisis factorial exploratorio y confirmatorio, modelos de ecuaciones estructurales, modelos de preferencia, independent component analysis, mca, homals,  multidimensional scaling , análisis de datos funcionales, en fin, de todo. 
+
+En el capítulo 8 del libro de Mair se describe muy bien como es su aproximación al problema que consiste básicamente en encontrar una cuantificación de las filas y en una cuantificación de las categorías de las variables (optimal scaling). 
+
+![](measurement_level.png)
+
+Bien, los métodos Gifi, se basan en minimizar una expresión similar a esta
+
+$$ \sigma(X, Y_1, \ldots, Y_m) = \sum_{j=1}^{m}\text{tr}(\boldsymbol{X} - \boldsymbol{G_j\,Y_j} )^\mathsf{T}(\boldsymbol{X} - \boldsymbol{G_j\,Y_j} ) $$
+dónde $G_j$ es la matriz indicadora para cada variable $j$, de dimensión $n\times k_j$ , dónde $n$ es el número de observaciones y $k_j$ el número de categorías de la variable categórica j-ésima. Cada variables categórica $j$ está asociada con una matriz $Y_j$ de dimensión $k_j\times p$ que representa la cuantificación de cada categoría en las p dimensiones que se quieren obtener. Y por último la matriz $X$ de dimensión $n\times p$ representa los *object scores*  que no es más que las puntuaciones en la estructura factorial de dimensión $p$ de las $n$ filas del conjunto de datos.
+
+Como vemos es un problema de optimización, se quiere minimizar el lado derecho de la ecuación, que  básicamente es una suma de cuadrados, es una doble optimización porque por un lado se quiere encontrar la representación de las filas en el espacio p (asimilable a un PCA) y por otro encontrar la mejor cuantificación de las variables categóricas. Esa última parte es a la que los integrantes del grupo *Gifi*  llaman optimal scaling.  Para minimizar la expresión anterior, utilizan ALS (alternative least squares). 
+
+Veamos ahora la aplicación de esta técnica al mismo conjunto de datos que venimos utilizando
+
+```{r}
+library(Gifi)
+
+datos <- readRDS(here::here("data/science.rds"))
+```
+
+```{r}
+non_linear_pca <-  princals(datos, ndim = 3, ordinal = TRUE) # principal components analisys, with als
+```
+```{r}
+summary(non_linear_pca)
+```
+
+En el objeto tenemos diferentes resultados. Por un lado tenemos los `transform` que se corresponden con el *optimal scaling* es decir, la forma en que ha codificado cada categoría de cada variable
+
+```{r}
+head(non_linear_pca$transform)
+```
+
+Y vemos que la categoría `agree` en la variable `Comfort` la ha codificado con el valor 0.0029, y la `strongly agree` con el valor 0.0036
+
+```{r}
+head(datos)
+```
+
+También tenemos la matriz de correlación inducida 
+
+```{r}
+non_linear_pca$rhat
+```
+
+
+Con esta matriz podríamos usarla de input para un pca o un fa estándar, si lo hacemos vemos que es bastante parecido al que salía utilizando las [correlaciones policóricas](https://muestrear-no-es-pecado.netlify.app/2020/06/02/pca-con-ordinales/) 
+
+```{r}
+library(psych)
+
+diagram(fa(non_linear_pca$rhat, nfactors = 3))
+```
+
+Por otra parte tenemos los autovalores 
+
+```{r}
+non_linear_pca$evals
+```
+
+Tenemos también las puntuaciones de las filas en la estructura factorial.
+
+```{r}
+head(non_linear_pca$objectscores)
+```
+
+Las cuantificaciones de cada categoría en cada dimensión, que es diferente de la transformación de la categoría, esto es la proyección de esas transformaciones en la estructura factorial
+
+```{r}
+non_linear_pca$quantifications
+```
+
+Y entre otras cosas también tenemos los `loadings` que sería la contribución de cada variable a cada dimensión
+
+```{r}
+non_linear_pca$loadings
+```
+
+Así, por ejemplo vemos que las variables Environment, Technology e Industry son los que tienen una mayor puntuación (en valor absoluto) a la primera dimensión. y vemos que la categoría 4 de Industria ("strongly agree") tiene un valor positvo en esa dimensión así como Technology y Environment. Básicamente, los individuos que están muy de acuerdo con las afirmaciones siguientes, tendrán una puntuación muy alta en la primera dimensión.
+
+Afirmaciones
+
+* Environment: _Scientific and technological research cannot play an important role in protecting the environment and repairing it._
+
+* Technology: _New technology does not depend on basic scientific research._
+
+* Industry: _Scientific and technological research do not play an important role in industrial development._
+
+Lo interesante de esta técnica es que por un lado nos devuelve una codificación de las variables categóricas (ordinales en este caso) en dimensión 1 y por otro hace la reducción de dimensiones. Nosotros podríamos utilizar la codificación por "optimal scaling" como nuestra "codificación de categóricas" o usar las dimensiones obtenidas, en este caso 3. 
+
+
+La libreria Gifi tiene también para sacar algunos gráficos interesantes
+
+```{r,  fig.width=7, fig.height=6}
+plot(non_linear_pca)
+```
+
+
+```{r, fig.width=7, fig.height=6}
+plot(non_linear_pca, plot.type = "transplot")
+```
+
+Dejo para el lector (si hay alguno) la utilización de la función `homals` del mismo paquete, que es una función más general y permite hacer análisis de correspondencias múltiples utilizando este marco de análisis. 
+
+Nota: En este marco "Gifi Methods" entrarían como casos particulares el PCA, MCA, Conjoint Analysis, análisis de correlaciones canónicas, análisis discriminante o la regresión múltiple. 
+
+
