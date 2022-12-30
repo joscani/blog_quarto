@@ -1,0 +1,85 @@
+---
+title: Factoriales....
+date: '2020-05-24'
+categories:
+  - estadística
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>" 
+---
+
+
+Supongo que los muchos o pocos que me leen habrán escuchado hablar del análisis factorial, o al menos de del PCA, ¿verdad? ¿Pero cuántos conocen la diferencia entre un PCA y un análisis factorial? ¿Y la relación entre un análisis de correspondencias y un PCA? ¿Y los Confirmatory Factorial Analysis (CFA)?  
+
+
+Hoy sólo voy a hablar un poco del diferente enfoque entre PCA y Análisis Factorial, ambos forman parte de lo que toda la vida se había llamado técnicas de interdependencia (aprendizaje no supervisado lo llaman los modernos). 
+
+El famoso PCA intenta analizar la varianza total de los datos y obtener las combinaciones lineales mejores en el sentido de máxima varianza. La primera combinación recoge el máximo de varianza, la segunda combinación se construye ortogonalmente (independiente) a la primera e intenta recoger la máxima varianza no recogida por la primera y así hasta llegar a tantas componentes como variables, de forma que al final se tiene toda la varianza.
+Es criterio del investigador quedarse con $k<n$ componentes. En esencia, la primera combinación es el mejor resumen de los datos (en el sentido de recoger la máxima varianza) y la segunda el segundo mejor resumen
+
+$$ \begin{eqnarray} F1 = a_{11}*X1 +\ldots  + a_{1n}X_n \\
+F2 =  a_{21}*X1 +\ldots  + a_{2n}X_n
+\end{eqnarray}$$
+
+
+En cambion en el Análisis Factorial se asume que cada variable de mis datos tiene una parte común con el resto y una parte propia y se trata de obtener los factores comunes
+
+
+$$ \begin{eqnarray} X1 = b_{11}*F1 +\ldots  + a_{1n}F_n  + U_1\\
+X2 =  b_{21}*F1 +\ldots  + b_{2n}F_n + U_2
+\end{eqnarray}$$
+
+
+Visto esto, la principal diferencia es que el primero es un modelo descriptivo, mientras que el segundo se parece más a un modelo estructural o de medida. 
+
+En el segundo caso se habla de comunalidad, KMO o de rotaciones no ortogonales, se permite la correlación entre diferentes factores etcétera. Una introducción muy buena a todo este tipo de técnicas (provenientes muchas veces de la psicología) es ver la ayuda del paquete `psych` de R. [Aquí](https://personality-project.org/r/psych/) y ver las viñetas del paquete, unas auteńticas joyas. 
+
+
+Os dejo un par de cosas que salen en la viñeta, analizando el famoso conjunto de datos de Thurstone (1933)
+
+
+```{r}
+library(psych)
+
+```
+```{r}
+f3w <- fa(Thurstone,3,n.obs = 213,fm="wls")
+
+f3w
+```
+
+Diagramas
+
+```{r}
+fa.diagram(f3w)
+```
+
+
+```{r}
+om.h <- omega(Thurstone,n.obs=213,sl=FALSE)
+```
+
+
+```{r}
+iclust(Thurstone)
+```
+
+Otro día contaré más en profundidad como se tratan cuando las variables son ordinales o nominales (correlaciones policóricas, análisis de correspondencias, escalamiento óptimo) o algunas cosas de las que conozco menos como la teoría del respuesta al ítem. Y cómo dice un amigo mío, si no tenemos en cuenta la estructuta, palmamos pasta
+
