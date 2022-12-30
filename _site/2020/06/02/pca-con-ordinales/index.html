@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2020-06-02">
+
+<title>Muestrear no es pecado - ¿PCA con ordinales? Primera entrega</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#science-data-puntuaciones-factoriales" id="toc-science-data-puntuaciones-factoriales" class="nav-link active" data-scroll-target="#science-data-puntuaciones-factoriales">Science data: Puntuaciones factoriales</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">¿PCA con ordinales? Primera entrega</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">factorial</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 2, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Supongo que todos sabemos lo de las escalas de medida, ¿verdad? Nominal, ordinal, intervalo y de razón. Y que todos sabemos lo que es un PCA y que sólo sirve para variables numéricas, ¿seguro?. Un PCA y otras técnicas relacionadas se basan en diagonalizar una matriz, ya sea mediante SVD, autovalores o a lo <a href="https://link.springer.com/chapter/10.1007/978-3-319-93177-7_8#:~:text=The%20Gifi%20system%20is%20a,first%20part%20of%20this%20chapter.">Gifi</a> en dónde se utiliza Alternative Least Squares.</p>
+<p>La materia prima de la que parte un PCA es una matriz de covarianzas o de correlaciones, pero, ¿qué pasa si nuestras variables no son numéricas sino ordinales? Pues entonces podemos utilizar lo que se conoce como correlaciones <a href="https://en.wikipedia.org/wiki/Polychoric_correlation">policóricas</a>, propuestas por Pearson en 1900, aunque os aconsejo leer el artículo que viene en la <a href="https://www.wiley.com/en-us/Encyclopedia+of+Statistical+Sciences%2C+16+Volume+Set%2C+2nd+Edition-p-9780471150442">Encyclopedia Of Statistica Sciences</a>, ojo, 9686 páginas y 7680$ que cuestan todos los volúmenes.</p>
+<p>Básicamente, las correlaciones policóricas suponen la existencia de variables latentes continuas asociadas a las variables ordinales observadas. La estimación de la correlación policórica entre dos variables se basa en encontrar la distribución normal bivariante subyacente y el coeficiente de correlación de pearson que mejor aproxima las frecuencias observadas en la tabla de contingencia entre las dos varibles ordinales. La librería <code>polycor</code> de R incorpora la función <code>polychor</code> que implementa el cálculo. Se puede ver el código simplemente poniendo <code>polycor::polychor</code>, si tienes la librería instalada, por supuesto.</p>
+<p>Pues una vez tenemos estas correlaciones podemos aplicar las técnicas de PCA o de Análisis factorial sobre nuestra matriz. Veamos un ejemplo, de un curso que di hace unos años en la Pablo de Olavide.</p>
+<p>Utilizamos el conjunto de datos Science: Consumer Protection and Perceptions of Science and Technology section of the 1992 Euro-Barometer Survey (Karlheinz and Melich, 1992) based on a sample from Great Britain. Se pregunta por diferentes aspectos de la ciencia, y las categorías de respuesta son “strongly disagree”,“disagree”, “agree” y “strongly agree” .</p>
+<p><strong>Variables</strong></p>
+<ul>
+<li><p>Comfort: <em>Science and technology are making our lives healthier, easier and more comfortable.</em></p></li>
+<li><p>Environment: <em>Scientific and technological research cannot play an important role in protecting the environment and repairing it.</em></p></li>
+<li><p>Work: <em>The application of science and new technology will make work more interesting.</em></p></li>
+<li><p>Future: <em>Thanks to science and technology, there will be more opportunities for the future generations.</em></p></li>
+<li><p>Technology: <em>New technology does not depend on basic scientific research.</em></p></li>
+<li><p>Industry: <em>Scientific and technological research do not play an important role in industrial development.</em></p></li>
+<li><p>Benefit: <em>The benefits of science are greater than any harmful effect it may</em> have.</p></li>
+</ul>
+<p>Tengo los datos guardados en un <code>rds</code> y subidos al github</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/science.rds"</span>))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(datos)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          Comfort       Environment           Work         Future     Technology</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 strongly agree    strongly agree strongly agree          agree strongly agree</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2          agree    strongly agree          agree          agree          agree</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3          agree          disagree       disagree       disagree strongly agree</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4          agree             agree       disagree       disagree strongly agree</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5          agree strongly disagree strongly agree strongly agree       disagree</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 strongly agree             agree strongly agree          agree          agree</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         Industry           Benefit</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1          agree          disagree</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2          agree             agree</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 strongly agree             agree</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 strongly agree             agree</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5          agree strongly disagree</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 strongly agree             agree</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(datos)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Comfort               Environment                 Work    </span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly disagree:  5   strongly disagree: 29   strongly disagree: 33  </span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  disagree         : 32   disagree         : 90   disagree         : 98  </span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  agree            :266   agree            :145   agree            :206  </span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly agree   : 89   strongly agree   :128   strongly agree   : 55  </span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                Future                Technology               Industry  </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly disagree: 14   strongly disagree: 18   strongly disagree: 10  </span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  disagree         : 72   disagree         : 91   disagree         : 47  </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  agree            :210   agree            :157   agree            :173  </span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly agree   : 96   strongly agree   :126   strongly agree   :162  </span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Benefit   </span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly disagree: 21  </span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  disagree         :100  </span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  agree            :193  </span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  strongly agree   : 78</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Nos aseguramos de que los niveles de los factores están codificados correctamente y en el orden que queremos</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(datos<span class="sc">$</span>Work)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "strongly disagree" "disagree"          "agree"            </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4] "strongly agree"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Pues ya podemos utilizar las correlaciones policóricas y el análisis factorial o un PCA.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psych)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(polycor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Utilizamos la función <code>hetcor</code> que nos permite calcular correlaciones entre variables continuas, entre continuas con dicotómicas, continuas con ordinales y entre ordinales.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cor_poly <span class="ot">&lt;-</span>  <span class="fu">hetcor</span>(datos)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cor_poly</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Two-Step Estimates</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Correlations/Type of Correlation:</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Comfort Environment       Work     Future Technology   Industry</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Comfort           1  Polychoric Polychoric Polychoric Polychoric Polychoric</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Environment 0.09934           1 Polychoric Polychoric Polychoric Polychoric</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Work         0.2012    -0.08277          1 Polychoric Polychoric Polychoric</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Future       0.3463    -0.02804     0.4786          1 Polychoric Polychoric</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Technology  0.08963      0.4638    -0.1039   -0.03596          1 Polychoric</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Industry     0.1857      0.4108  -0.007643     0.1027     0.4348          1</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Benefit       0.408    -0.03652     0.2086     0.3769   -0.01434      0.118</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                Benefit</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Comfort     Polychoric</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Environment Polychoric</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Work        Polychoric</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Future      Polychoric</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Technology  Polychoric</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Industry    Polychoric</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Benefit              1</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Standard Errors:</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Comfort Environment    Work  Future Technology Industry</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Comfort                                                            </span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Environment 0.06309                                                </span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Work        0.06062      0.0594                                    </span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Future      0.05651     0.06057 0.04566                            </span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Technology  0.06331     0.04529  0.0591 0.06049                    </span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Industry    0.06306     0.04979 0.06213 0.06176    0.04825         </span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Benefit     0.05315     0.05985  0.0566 0.05062    0.05977  0.06078</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; n = 392 </span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; P-values for Tests of Bivariate Normality:</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Comfort Environment      Work    Future Technology Industry</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Comfort                                                                </span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Environment  0.1763                                                    </span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Work        0.00592     0.01337                                        </span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Future       0.3163     0.00311    0.3021                              </span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Technology  0.01695    0.001547   0.07819  0.009519                    </span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Industry     0.4694   1.891e-05 0.0001493 0.0005283  4.817e-07         </span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Benefit     0.08673    0.005932   0.01871  0.009679    0.06082 0.007907</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(cor_poly<span class="sc">$</span>correlations)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y sin más hacemos el análisis factorial. Veamos qué número de factores elegimos</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">VSS</span>(cor_poly<span class="sc">$</span>correlations)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-8-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+<pre><code>#&gt; 
+#&gt; Very Simple Structure
+#&gt; Call: vss(x = x, n = n, rotate = rotate, diagonal = diagonal, fm = fm, 
+#&gt;     n.obs = n.obs, plot = plot, title = title, use = use, cor = cor)
+#&gt; VSS complexity 1 achieves a maximimum of 0.7  with  2  factors
+#&gt; VSS complexity 2 achieves a maximimum of 0.78  with  7  factors
+#&gt; 
+#&gt; The Velicer MAP achieves a minimum of 0.07  with  2  factors 
+#&gt; BIC achieves a minimum of  -19.96  with  3  factors
+#&gt; Sample Size adjusted BIC achieves a minimum of  -10.44  with  3  factors
+#&gt; 
+#&gt; Statistics by number of factors 
+#&gt;   vss1 vss2   map dof   chisq     prob sqresid  fit RMSEA BIC SABIC complex
+#&gt; 1 0.39 0.00 0.083  14 6.6e+02 2.4e-132     6.0 0.39 0.215 566   610     1.0
+#&gt; 2 0.70 0.73 0.074   8 7.7e+01  2.1e-13     2.6 0.73 0.093  22    47     1.1
+#&gt; 3 0.67 0.78 0.131   3 7.6e-01  8.6e-01     2.0 0.80 0.000 -20   -10     1.3
+#&gt; 4 0.67 0.78 0.244  -1 2.5e-07       NA     2.0 0.80    NA  NA    NA     1.2
+#&gt; 5 0.67 0.78 0.429  -4 9.0e-08       NA     1.9 0.80    NA  NA    NA     1.2
+#&gt; 6 0.67 0.78 1.000  -6 8.8e-13       NA     1.9 0.80    NA  NA    NA     1.2
+#&gt; 7 0.67 0.78    NA  -7 8.8e-13       NA     1.9 0.80    NA  NA    NA     1.2
+#&gt;    eChisq    SRMR  eCRMS eBIC
+#&gt; 1 1.3e+03 1.8e-01 0.2174 1227
+#&gt; 2 6.8e+01 4.0e-02 0.0651   13
+#&gt; 3 4.8e-01 3.4e-03 0.0089  -20
+#&gt; 4 1.6e-07 1.9e-06     NA   NA
+#&gt; 5 6.2e-08 1.2e-06     NA   NA
+#&gt; 6 3.5e-13 2.9e-09     NA   NA
+#&gt; 7 3.5e-13 2.9e-09     NA   NA</code></pre>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res_factorial <span class="ot">&lt;-</span>  <span class="fu">fa</span>(cor_poly<span class="sc">$</span>correlations, <span class="at">nfactors =</span> <span class="dv">3</span>, <span class="at">n.obs =</span> <span class="fu">nrow</span>(datos))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">diagram</span>(res_factorial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-10-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y listo ya tenemos el análsis factorial hecho. Ahora habría que interpretar y demás, ver las cargas factoriales y las comunalidades (cómo de bien está representada la variable en la estructura factorial)</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>res_factorial<span class="sc">$</span>loadings</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loadings:</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             MR2    MR1    MR3   </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Comfort      0.168  0.222  0.357</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Environment  0.666              </span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Work                0.617       </span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Future              0.813       </span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Technology   0.695              </span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Industry     0.632              </span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Benefit                    0.861</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  MR2   MR1   MR3</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; SS loadings    1.362 1.096 0.885</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Proportion Var 0.195 0.157 0.126</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Cumulative Var 0.195 0.351 0.478</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>res_factorial<span class="sc">$</span>communalities</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Comfort Environment        Work      Future  Technology    Industry </span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   0.2940500   0.4429437   0.3519061   0.6846375   0.4854217   0.4208926 </span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Benefit </span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   0.7309609</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Aunque el análisis lo hemos hecho utilizando las correlaciones policóricas, para obtener las puntuaciones para cada fila hay que convertir los datos a numéricos.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>science.num <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sapply</span>(datos, as.numeric))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(datos<span class="sc">$</span>Comfort, science.num<span class="sc">$</span>Comfort)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    </span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                       1   2   3   4</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   strongly disagree   5   0   0   0</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   disagree            0  32   0   0</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   agree               0   0 266   0</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   strongly agree      0   0   0  89</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="science-data-puntuaciones-factoriales" class="level2">
+<h2 class="anchored" data-anchor-id="science-data-puntuaciones-factoriales">Science data: Puntuaciones factoriales</h2>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>puntuaciones <span class="ot">&lt;-</span> <span class="fu">factor.scores</span>(science.num, res_factorial)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>puntuaciones<span class="sc">$</span>scores</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 MR2          MR1          MR3</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [1,]  0.983783784  0.586931403 -0.704801916</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [2,]  0.316308160  0.075403203  0.072119271</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [3,]  0.511214907 -1.267647217  0.111088544</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [4,]  0.971164636 -1.283190166  0.069652282</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [5,] -1.601261361  1.428869944 -1.845504751</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [6,]  0.483437248  0.817348345  0.546986739</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [7,]  0.511546440 -0.225286108  1.304894202</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [8,] -0.035027006 -0.161537530  1.334985660</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   [9,]  0.980349283  1.002260263 -0.808566327</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [10,]  0.016011850  0.319878827  0.455157733</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [11,] -0.666247071  1.124247892  0.248753651</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [12,] -0.059594604 -1.574845059  0.129568131</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [13,] -0.057017852  0.042740522  0.124900336</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [14,] -1.656341385  0.019112260 -0.995177681</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [15,]  0.948905669 -0.480305368 -1.046938254</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [16,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [17,] -0.549010849 -1.868036524 -1.172346199</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [18,] -0.690215015  0.154694729  0.143646992</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [19,] -0.517567236 -0.385470894 -0.933974272</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [20,] -1.220028066  0.076377257  0.052085055</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [21,] -0.897804321 -2.013344274 -0.408168528</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [22,]  0.510946786 -0.669040472  0.204583332</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [23,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [24,] -1.555827177 -0.838028790 -0.602960737</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [25,] -1.039904617  0.049224102 -0.892270941</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [26,] -0.057617506 -0.401013842 -0.975410534</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [27,]  0.378695812 -0.343748845  0.071852202</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [28,]  0.016011850  0.319878827  0.455157733</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [29,]  1.541106372 -0.821139944 -0.955643386</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [30,]  0.378695812 -0.343748845  0.071852202</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [31,]  0.012845469  0.136600942  0.257898535</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [32,] -0.603922832 -0.935872010 -1.038813862</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [33,]  0.211250129  0.019189516  1.687932664</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [34,]  0.822484801  0.226528620  1.252380205</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [35,]  1.431445899 -0.256372004  1.222021678</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [36,] -0.841499957 -0.068187324  0.537763188</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [37,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [38,] -1.150164745  0.170237677  0.185083253</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [39,] -0.046375802  0.739030874  0.455424802</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [40,] -1.293389301 -1.243122157 -1.471977999</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [41,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [42,] -0.286802713  0.318554172 -0.256205275</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [43,]  0.015080662 -1.166236647 -1.838958794</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [44,] -1.174132688 -0.799315486  0.079976594</span></span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [45,]  0.315976627 -0.966957907 -1.121686386</span></span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [46,]  1.599952430  1.215649990 -0.508400389</span></span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [47,] -0.665978950  0.525641147  0.155258864</span></span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [48,]  0.288242649 -2.563543320 -2.524363114</span></span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [49,] -0.296087439  0.973632688 -0.001286612</span></span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [50,] -1.679977795  0.091920206  0.093521317</span></span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [51,] -0.119673625  1.060499315  0.218662193</span></span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [52,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [53,] -0.119673625  1.060499315  0.218662193</span></span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [54,]  1.393026191  1.132333206  1.327395406</span></span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [55,]  1.393026191  1.132333206  1.327395406</span></span>
+<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [56,] -0.603591298  0.106489100  0.154991795</span></span>
+<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [57,] -0.057617506 -0.401013842 -0.975410534</span></span>
+<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [58,] -1.402003864 -0.990638475 -2.693408126</span></span>
+<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [59,] -1.543960787  0.393660827  1.523822514</span></span>
+<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [60,]  1.306339062 -0.460429019  0.028750158</span></span>
+<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [61,]  1.440299012  0.986717314 -0.850002589</span></span>
+<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [62,]  1.629519025 -1.416144540  1.458250149</span></span>
+<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [63,]  0.475961579  0.304335878  0.413721471</span></span>
+<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [64,]  1.469534074 -2.687438325 -0.077157708</span></span>
+<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [65,] -0.603591298  0.106489100  0.154991795</span></span>
+<span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [66,] -1.112076570 -2.260828643 -1.114096132</span></span>
+<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [67,] -0.168209167 -1.322361377 -1.091861997</span></span>
+<span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [68,] -1.033028602  0.118482204 -1.859316543</span></span>
+<span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [69,] -1.237119995 -0.823917804 -1.020067207</span></span>
+<span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [70,] -1.555202491 -0.746383889  0.092987179</span></span>
+<span id="cb14-74"><a href="#cb14-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [71,] -0.493930825 -0.458278840 -2.022673269</span></span>
+<span id="cb14-75"><a href="#cb14-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [72,]  1.431114366 -1.298733114  0.028216020</span></span>
+<span id="cb14-76"><a href="#cb14-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [73,]  1.490291957  1.780417929  1.669264675</span></span>
+<span id="cb14-77"><a href="#cb14-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [74,]  0.051328590  0.388863586  1.439825251</span></span>
+<span id="cb14-78"><a href="#cb14-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [75,]  0.971496170 -0.240829056  1.263457940</span></span>
+<span id="cb14-79"><a href="#cb14-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [76,]  0.622995850 -1.336853014  1.529777870</span></span>
+<span id="cb14-80"><a href="#cb14-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [77,] -0.666578605  0.081886782 -0.945052006</span></span>
+<span id="cb14-81"><a href="#cb14-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [78,] -0.822465989  0.479986356  0.010915862</span></span>
+<span id="cb14-82"><a href="#cb14-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [79,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-83"><a href="#cb14-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [80,]  1.513928368  1.707609983  0.580565678</span></span>
+<span id="cb14-84"><a href="#cb14-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [81,]  0.005369800 -0.376411525  0.124633267</span></span>
+<span id="cb14-85"><a href="#cb14-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [82,] -1.586146530  1.155333789  0.331626175</span></span>
+<span id="cb14-86"><a href="#cb14-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [83,] -0.373743025  1.471643304  1.823397851</span></span>
+<span id="cb14-87"><a href="#cb14-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [84,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-88"><a href="#cb14-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [85,]  1.662340082  0.796497942 -0.508667458</span></span>
+<span id="cb14-89"><a href="#cb14-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [86,]  1.541106372 -0.821139944 -0.955643386</span></span>
+<span id="cb14-90"><a href="#cb14-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [87,] -0.943368166 -0.095290420  0.757745590</span></span>
+<span id="cb14-91"><a href="#cb14-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [88,] -1.483881767 -2.241683546  1.434728452</span></span>
+<span id="cb14-92"><a href="#cb14-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [89,] -0.555986944  1.003234317 -0.828600543</span></span>
+<span id="cb14-93"><a href="#cb14-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [90,] -1.111745036 -1.218467534  0.079709525</span></span>
+<span id="cb14-94"><a href="#cb14-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [91,] -2.015152221 -0.730840941  0.134423441</span></span>
+<span id="cb14-95"><a href="#cb14-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [92,]  0.463010898 -2.608146799 -0.005629988</span></span>
+<span id="cb14-96"><a href="#cb14-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [93,]  1.304282004  0.684976693 -2.280303786</span></span>
+<span id="cb14-97"><a href="#cb14-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [94,]  0.465319529 -0.391954473  0.083197005</span></span>
+<span id="cb14-98"><a href="#cb14-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [95,] -3.438023559  1.325474742  0.925957627</span></span>
+<span id="cb14-99"><a href="#cb14-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [96,]  0.909108518  0.178322991  1.263725009</span></span>
+<span id="cb14-100"><a href="#cb14-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [97,]  0.621206913 -0.790054047 -0.872770862</span></span>
+<span id="cb14-101"><a href="#cb14-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [98,] -0.081585450 -1.370567006 -1.080517193</span></span>
+<span id="cb14-102"><a href="#cb14-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [99,] -0.839226384  0.622052405  0.132569257</span></span>
+<span id="cb14-103"><a href="#cb14-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [100,]  0.932413395 -0.936846064 -1.018779646</span></span>
+<span id="cb14-104"><a href="#cb14-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [101,]  1.502686664  0.567565267 -0.850269658</span></span>
+<span id="cb14-105"><a href="#cb14-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [102,]  1.068162282 -0.036498698  0.505016339</span></span>
+<span id="cb14-106"><a href="#cb14-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [103,]  0.300147419  0.661223616  1.294083536</span></span>
+<span id="cb14-107"><a href="#cb14-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [104,]  0.476561233  0.748090243  1.514032341</span></span>
+<span id="cb14-108"><a href="#cb14-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [105,] -0.167277980  0.163754097  1.202254530</span></span>
+<span id="cb14-109"><a href="#cb14-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [106,] -0.468173945 -0.035524643  0.484982123</span></span>
+<span id="cb14-110"><a href="#cb14-110" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [107,]  0.741647896 -1.605983261 -0.404948116</span></span>
+<span id="cb14-111"><a href="#cb14-111" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [108,]  0.967354922  1.771358561  0.610657136</span></span>
+<span id="cb14-112"><a href="#cb14-112" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [109,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-113"><a href="#cb14-113" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [110,] -1.975979755 -1.481114201 -2.872187738</span></span>
+<span id="cb14-114"><a href="#cb14-114" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [111,]  0.364180636  0.373541675 -1.004967854</span></span>
+<span id="cb14-115"><a href="#cb14-115" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [112,] -0.151448772 -1.464427425 -1.213515392</span></span>
+<span id="cb14-116"><a href="#cb14-116" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [113,] -1.047380287 -0.463788365 -1.025536208</span></span>
+<span id="cb14-117"><a href="#cb14-117" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [114,] -2.139927525  0.107463154  0.134957579</span></span>
+<span id="cb14-118"><a href="#cb14-118" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [115,]  1.416331068  0.017164151 -0.955109248</span></span>
+<span id="cb14-119"><a href="#cb14-119" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [116,] -1.656341385  0.019112260 -0.995177681</span></span>
+<span id="cb14-120"><a href="#cb14-120" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [117,]  0.409807892  0.096455676 -0.883581528</span></span>
+<span id="cb14-121"><a href="#cb14-121" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [118,] -3.118716722  1.783340093  1.609162027</span></span>
+<span id="cb14-122"><a href="#cb14-122" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [119,] -1.519992844  1.363213991  1.628929174</span></span>
+<span id="cb14-123"><a href="#cb14-123" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [120,] -0.049810304  1.154359734  0.351660391</span></span>
+<span id="cb14-124"><a href="#cb14-124" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [121,]  0.943718511  1.844166507  1.699356134</span></span>
+<span id="cb14-125"><a href="#cb14-125" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [122,] -0.555986944  1.003234317 -0.828600543</span></span>
+<span id="cb14-126"><a href="#cb14-126" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [123,] -1.150164745  0.170237677  0.185083253</span></span>
+<span id="cb14-127"><a href="#cb14-127" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [124,] -1.126528334  0.097429731 -0.903615744</span></span>
+<span id="cb14-128"><a href="#cb14-128" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [125,]  0.347751774  1.557968833  0.310491198</span></span>
+<span id="cb14-129"><a href="#cb14-129" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [126,]  0.763638742 -1.810261314  0.805137207</span></span>
+<span id="cb14-130"><a href="#cb14-130" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [127,] -0.270725504 -1.286942080  0.025262678</span></span>
+<span id="cb14-131"><a href="#cb14-131" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [128,]  1.392363124 -0.952389013 -1.060215908</span></span>
+<span id="cb14-132"><a href="#cb14-132" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [129,] -0.628158897 -1.306818428 -1.050425735</span></span>
+<span id="cb14-133"><a href="#cb14-133" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [130,]  1.415999535 -1.025196959 -2.148914906</span></span>
+<span id="cb14-134"><a href="#cb14-134" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [131,]  0.932744928  0.105515045  0.175026011</span></span>
+<span id="cb14-135"><a href="#cb14-135" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [132,] -0.603591298  0.106489100  0.154991795</span></span>
+<span id="cb14-136"><a href="#cb14-136" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [133,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-137"><a href="#cb14-137" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [134,]  1.455413843  0.713181159  1.327128337</span></span>
+<span id="cb14-138"><a href="#cb14-138" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [135,]  1.022866558  1.282948411  1.577435670</span></span>
+<span id="cb14-139"><a href="#cb14-139" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [136,]  1.439967479 -0.055643795 -2.043808246</span></span>
+<span id="cb14-140"><a href="#cb14-140" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [137,]  1.106913523 -0.382842799  1.593448267</span></span>
+<span id="cb14-141"><a href="#cb14-141" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [138,]  0.275579821 -0.752083912  0.088666007</span></span>
+<span id="cb14-142"><a href="#cb14-142" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [139,]  1.393026191  1.132333206  1.327395406</span></span>
+<span id="cb14-143"><a href="#cb14-143" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [140,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-144"><a href="#cb14-144" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [141,]  0.078399502 -0.099273221  0.454890664</span></span>
+<span id="cb14-145"><a href="#cb14-145" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [142,] -1.006940188  1.583597510  1.842144506</span></span>
+<span id="cb14-146"><a href="#cb14-146" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [143,] -0.541203646 -0.312662948  0.154724726</span></span>
+<span id="cb14-147"><a href="#cb14-147" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [144,] -0.033381441 -0.030067424 -0.963798661</span></span>
+<span id="cb14-148"><a href="#cb14-148" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [145,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-149"><a href="#cb14-149" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [146,]  1.493502018 -1.717885161  0.027948951</span></span>
+<span id="cb14-150"><a href="#cb14-150" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [147,] -1.815994803 -0.209820416 -1.336779881</span></span>
+<span id="cb14-151"><a href="#cb14-151" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [148,] -0.143973102 -0.951414958 -1.080250124</span></span>
+<span id="cb14-152"><a href="#cb14-152" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [149,] -1.108836751  1.441479157  1.268847388</span></span>
+<span id="cb14-153"><a href="#cb14-153" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [150,] -1.286181752 -0.131502945 -1.245217944</span></span>
+<span id="cb14-154"><a href="#cb14-154" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [151,]  0.910154428 -0.133961267 -2.135370183</span></span>
+<span id="cb14-155"><a href="#cb14-155" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [152,]  1.552679609  1.361265882  1.668997606</span></span>
+<span id="cb14-156"><a href="#cb14-156" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [153,]  1.454750776 -1.371541060 -1.060482977</span></span>
+<span id="cb14-157"><a href="#cb14-157" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [154,] -0.603591298  0.106489100  0.154991795</span></span>
+<span id="cb14-158"><a href="#cb14-158" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [155,] -0.517567236 -0.385470894 -0.933974272</span></span>
+<span id="cb14-159"><a href="#cb14-159" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [156,] -1.196391655  0.003569311 -1.036613943</span></span>
+<span id="cb14-160"><a href="#cb14-160" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [157,]  0.784065093  1.615233831  1.357753934</span></span>
+<span id="cb14-161"><a href="#cb14-161" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [158,]  0.316308160  0.075403203  0.072119271</span></span>
+<span id="cb14-162"><a href="#cb14-162" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [159,]  0.337109724  0.861678482 -0.020033267</span></span>
+<span id="cb14-163"><a href="#cb14-163" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [160,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-164"><a href="#cb14-164" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [161,]  0.608212552 -0.020955749  0.546452601</span></span>
+<span id="cb14-165"><a href="#cb14-165" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [162,] -0.081585450 -1.370567006 -1.080517193</span></span>
+<span id="cb14-166"><a href="#cb14-166" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [163,]  0.838913663 -0.957898538 -0.063078847</span></span>
+<span id="cb14-167"><a href="#cb14-167" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [164,] -0.019197798 -1.789719053 -1.080784262</span></span>
+<span id="cb14-168"><a href="#cb14-168" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [165,] -0.082962894 -2.100643857  1.124772341</span></span>
+<span id="cb14-169"><a href="#cb14-169" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [166,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-170"><a href="#cb14-170" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [167,] -0.189868480 -0.075722214 -1.108141663</span></span>
+<span id="cb14-171"><a href="#cb14-171" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [168,]  0.378695812 -0.343748845  0.071852202</span></span>
+<span id="cb14-172"><a href="#cb14-172" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [169,] -0.327262931 -1.107539688 -0.333153327</span></span>
+<span id="cb14-173"><a href="#cb14-173" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [170,] -0.022407859  1.708584038  0.560531462</span></span>
+<span id="cb14-174"><a href="#cb14-174" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [171,] -0.035090418 -1.802505385  0.047685216</span></span>
+<span id="cb14-175"><a href="#cb14-175" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [172,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-176"><a href="#cb14-176" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [173,]  1.392363124 -0.952389013 -1.060215908</span></span>
+<span id="cb14-177"><a href="#cb14-177" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [174,]  1.006106163  1.425014459  1.699089065</span></span>
+<span id="cb14-178"><a href="#cb14-178" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [175,] -0.024384956  0.534752821  1.665510126</span></span>
+<span id="cb14-179"><a href="#cb14-179" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [176,]  1.576316020  1.288457936  0.580298609</span></span>
+<span id="cb14-180"><a href="#cb14-180" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [177,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-181"><a href="#cb14-181" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [178,] -0.627559242 -0.863064064  0.049885135</span></span>
+<span id="cb14-182"><a href="#cb14-182" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [179,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-183"><a href="#cb14-183" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [180,] -0.738150903 -1.784411598 -0.066566328</span></span>
+<span id="cb14-184"><a href="#cb14-184" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [181,]  0.507405192  1.786901509  0.652093398</span></span>
+<span id="cb14-185"><a href="#cb14-185" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [182,] -1.077135043  0.447375981  0.515340650</span></span>
+<span id="cb14-186"><a href="#cb14-186" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [183,] -0.935331223 -1.131600907  0.299658330</span></span>
+<span id="cb14-187"><a href="#cb14-187" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [184,] -1.150164745  0.170237677  0.185083253</span></span>
+<span id="cb14-188"><a href="#cb14-188" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [185,] -0.143973102 -0.951414958 -1.080250124</span></span>
+<span id="cb14-189"><a href="#cb14-189" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [186,] -0.136765554  0.160204254 -0.853490069</span></span>
+<span id="cb14-190"><a href="#cb14-190" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [187,] -0.547321992  0.525693453  0.606902587</span></span>
+<span id="cb14-191"><a href="#cb14-191" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [188,] -0.690215015  0.154694729  0.143646992</span></span>
+<span id="cb14-192"><a href="#cb14-192" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [189,]  1.493833551 -0.675524052  1.221754609</span></span>
+<span id="cb14-193"><a href="#cb14-193" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [190,]  1.599952430  1.215649990 -0.508400389</span></span>
+<span id="cb14-194"><a href="#cb14-194" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [191,] -1.239954842  0.035165421 -0.023520748</span></span>
+<span id="cb14-195"><a href="#cb14-195" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [192,]  1.615067261  0.942113834  1.668730537</span></span>
+<span id="cb14-196"><a href="#cb14-196" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [193,] -0.610798847 -1.005130112 -0.071768260</span></span>
+<span id="cb14-197"><a href="#cb14-197" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [194,] -1.558744085  1.709558092  0.540497246</span></span>
+<span id="cb14-198"><a href="#cb14-198" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [195,] -0.134688376 -1.606493474 -1.335168787</span></span>
+<span id="cb14-199"><a href="#cb14-199" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [196,]  1.416662601  1.059525260  0.238696409</span></span>
+<span id="cb14-200"><a href="#cb14-200" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [197,] -0.771051920 -1.677817152 -1.513681330</span></span>
+<span id="cb14-201"><a href="#cb14-201" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [198,] -0.787480782 -0.493389994 -0.198222278</span></span>
+<span id="cb14-202"><a href="#cb14-202" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [199,]  0.956712872  1.075068209  0.280132671</span></span>
+<span id="cb14-203"><a href="#cb14-203" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [200,] -0.127212707 -1.093481007 -1.201903519</span></span>
+<span id="cb14-204"><a href="#cb14-204" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [201,] -1.529277569  2.018292506  1.883847837</span></span>
+<span id="cb14-205"><a href="#cb14-205" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [202,]  0.569792844  1.367749461  0.651826329</span></span>
+<span id="cb14-206"><a href="#cb14-206" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [203,] -0.603259765  1.148850209  1.348797452</span></span>
+<span id="cb14-207"><a href="#cb14-207" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [204,] -0.073778247  0.184806571  0.246553732</span></span>
+<span id="cb14-208"><a href="#cb14-208" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [205,] -0.604190953 -0.337265265 -0.945319075</span></span>
+<span id="cb14-209"><a href="#cb14-209" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [206,]  0.943718511  1.844166507  1.699356134</span></span>
+<span id="cb14-210"><a href="#cb14-210" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [207,]  0.260796524  0.563813353 -0.894659262</span></span>
+<span id="cb14-211"><a href="#cb14-211" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [208,] -0.081585450 -1.370567006 -1.080517193</span></span>
+<span id="cb14-212"><a href="#cb14-212" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [209,]  0.362535071  0.242071569  1.293816467</span></span>
+<span id="cb14-213"><a href="#cb14-213" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [210,] -0.264875279 -1.526691735 -0.333420396</span></span>
+<span id="cb14-214"><a href="#cb14-214" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [211,] -1.519992844  1.363213991  1.628929174</span></span>
+<span id="cb14-215"><a href="#cb14-215" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [212,]  0.492721974  0.162269830  0.292068076</span></span>
+<span id="cb14-216"><a href="#cb14-216" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [213,] -0.492141889 -1.005077807  0.379875463</span></span>
+<span id="cb14-217"><a href="#cb14-217" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [214,]  1.614735728 -0.100247275  0.474924880</span></span>
+<span id="cb14-218"><a href="#cb14-218" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [215,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-219"><a href="#cb14-219" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [216,] -1.174400809 -0.200708742  0.173471381</span></span>
+<span id="cb14-220"><a href="#cb14-220" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [217,]  0.796128266 -0.639979941 -2.355586056</span></span>
+<span id="cb14-221"><a href="#cb14-221" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [218,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-222"><a href="#cb14-222" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [219,] -0.112197956  1.573511782  0.351927460</span></span>
+<span id="cb14-223"><a href="#cb14-223" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [220,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-224"><a href="#cb14-224" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [221,]  0.355059402 -0.270940898  1.160551199</span></span>
+<span id="cb14-225"><a href="#cb14-225" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [222,] -0.616585659  0.875587398  1.574215258</span></span>
+<span id="cb14-226"><a href="#cb14-226" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [223,]  0.909108518  0.178322991  1.263725009</span></span>
+<span id="cb14-227"><a href="#cb14-227" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [224,] -0.690546549 -0.887666381 -1.050158666</span></span>
+<span id="cb14-228"><a href="#cb14-228" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [225,] -0.697422564 -0.956924483 -0.083113063</span></span>
+<span id="cb14-229"><a href="#cb14-229" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [226,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-230"><a href="#cb14-230" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [227,] -1.610714128 -0.257973739 -0.873791354</span></span>
+<span id="cb14-231"><a href="#cb14-231" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [228,]  0.608812207  0.422798615  1.646763471</span></span>
+<span id="cb14-232"><a href="#cb14-232" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [229,] -1.008629045 -0.810132466  0.062895720</span></span>
+<span id="cb14-233"><a href="#cb14-233" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [230,] -1.109767939 -0.044636318 -1.025269139</span></span>
+<span id="cb14-234"><a href="#cb14-234" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [231,] -0.627227709  0.179297046  1.243690792</span></span>
+<span id="cb14-235"><a href="#cb14-235" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [232,] -0.589407655 -1.653162530  0.038006194</span></span>
+<span id="cb14-236"><a href="#cb14-236" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [233,] -0.381550228 -0.083730272  0.496326926</span></span>
+<span id="cb14-237"><a href="#cb14-237" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [234,] -0.119673625  1.060499315  0.218662193</span></span>
+<span id="cb14-238"><a href="#cb14-238" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [235,]  0.464987996 -1.434315583 -1.110608652</span></span>
+<span id="cb14-239"><a href="#cb14-239" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [236,]  0.386503015  1.211624732  1.398923127</span></span>
+<span id="cb14-240"><a href="#cb14-240" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [237,] -0.530561597  0.383627404  0.485249192</span></span>
+<span id="cb14-241"><a href="#cb14-241" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [238,]  0.956381339  0.032707099 -0.913672986</span></span>
+<span id="cb14-242"><a href="#cb14-242" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [239,]  0.386171482  0.169263623  0.205117470</span></span>
+<span id="cb14-243"><a href="#cb14-243" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [240,] -1.150164745  0.170237677  0.185083253</span></span>
+<span id="cb14-244"><a href="#cb14-244" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [241,] -1.610114474  0.185780625  0.226519515</span></span>
+<span id="cb14-245"><a href="#cb14-245" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [242,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-246"><a href="#cb14-246" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [243,] -0.389918704 -0.089780895 -0.239391471</span></span>
+<span id="cb14-247"><a href="#cb14-247" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [244,] -0.534059510 -0.842011590 -0.905815664</span></span>
+<span id="cb14-248"><a href="#cb14-248" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [245,]  0.933076461  1.147876155  1.368831668</span></span>
+<span id="cb14-249"><a href="#cb14-249" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [246,]  1.354274949  1.478677308  0.238963478</span></span>
+<span id="cb14-250"><a href="#cb14-250" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [247,]  1.479050253  0.640373213  0.238429340</span></span>
+<span id="cb14-251"><a href="#cb14-251" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [248,] -0.213504890 -0.002914268 -0.019442666</span></span>
+<span id="cb14-252"><a href="#cb14-252" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [249,] -0.326931398 -0.065178578  0.860652330</span></span>
+<span id="cb14-253"><a href="#cb14-253" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [250,]  0.085875171  0.413739246  0.588155932</span></span>
+<span id="cb14-254"><a href="#cb14-254" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [251,] -1.071016697 -0.390980419  0.063162789</span></span>
+<span id="cb14-255"><a href="#cb14-255" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [252,] -0.074377902 -0.258947794 -0.853757138</span></span>
+<span id="cb14-256"><a href="#cb14-256" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [253,]  0.355327523 -0.869547643  1.067056412</span></span>
+<span id="cb14-257"><a href="#cb14-257" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [254,]  0.496431609  0.048250048 -0.872236724</span></span>
+<span id="cb14-258"><a href="#cb14-258" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [255,] -0.443937880  0.335421775  0.496593995</span></span>
+<span id="cb14-259"><a href="#cb14-259" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [256,] -2.092323170  1.004208371 -0.848634759</span></span>
+<span id="cb14-260"><a href="#cb14-260" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [257,]  0.886518017 -0.061153320 -1.046671185</span></span>
+<span id="cb14-261"><a href="#cb14-261" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [258,] -0.057617506 -0.401013842 -0.975410534</span></span>
+<span id="cb14-262"><a href="#cb14-262" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [259,] -0.990511326  0.399170352  0.526685454</span></span>
+<span id="cb14-263"><a href="#cb14-263" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [260,] -1.656341385  0.019112260 -0.995177681</span></span>
+<span id="cb14-264"><a href="#cb14-264" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [261,]  0.995132580 -0.313637002  0.174758942</span></span>
+<span id="cb14-265"><a href="#cb14-265" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [262,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-266"><a href="#cb14-266" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [263,]  1.537564778  1.634802037 -0.508133320</span></span>
+<span id="cb14-267"><a href="#cb14-267" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [264,] -0.635134991  1.564452413 -0.706680079</span></span>
+<span id="cb14-268"><a href="#cb14-268" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [265,] -2.867813702  1.188918218 -0.192832829</span></span>
+<span id="cb14-269"><a href="#cb14-269" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [266,]  0.316308160  0.075403203  0.072119271</span></span>
+<span id="cb14-270"><a href="#cb14-270" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [267,]  0.760097149  0.645680668  1.252647274</span></span>
+<span id="cb14-271"><a href="#cb14-271" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [268,]  0.054763091 -0.026465275  1.543589662</span></span>
+<span id="cb14-272"><a href="#cb14-272" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [269,]  0.210318942 -1.466925958 -0.606183863</span></span>
+<span id="cb14-273"><a href="#cb14-273" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [270,]  1.295097358 -1.600473736 -1.402085177</span></span>
+<span id="cb14-274"><a href="#cb14-274" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [271,] -1.087777093 -0.248914370  0.184816185</span></span>
+<span id="cb14-275"><a href="#cb14-275" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [272,]  1.493833551 -0.675524052  1.221754609</span></span>
+<span id="cb14-276"><a href="#cb14-276" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [273,] -1.634019005  0.857195316  1.408713300</span></span>
+<span id="cb14-277"><a href="#cb14-277" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [274,] -0.649486676  0.982181844  0.127100256</span></span>
+<span id="cb14-278"><a href="#cb14-278" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [275,] -1.512517174  1.876226458  1.762194442</span></span>
+<span id="cb14-279"><a href="#cb14-279" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [276,]  0.846121211  0.153720674  0.163681208</span></span>
+<span id="cb14-280"><a href="#cb14-280" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [277,]  0.464719875 -0.835708838 -1.017113864</span></span>
+<span id="cb14-281"><a href="#cb14-281" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [278,]  0.862881607  0.011654626  0.042027812</span></span>
+<span id="cb14-282"><a href="#cb14-282" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [279,] -0.530561597  0.383627404  0.485249192</span></span>
+<span id="cb14-283"><a href="#cb14-283" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [280,] -0.745395119  1.685465988  0.370674115</span></span>
+<span id="cb14-284"><a href="#cb14-284" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [281,]  1.046502969  1.210140465  0.488736672</span></span>
+<span id="cb14-285"><a href="#cb14-285" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [282,] -1.087777093 -0.248914370  0.184816185</span></span>
+<span id="cb14-286"><a href="#cb14-286" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [283,]  0.402931877  0.027197574  0.083464074</span></span>
+<span id="cb14-287"><a href="#cb14-287" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [284,]  0.402931877  0.027197574  0.083464074</span></span>
+<span id="cb14-288"><a href="#cb14-288" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [285,] -1.688930988  1.789359831  1.542245637</span></span>
+<span id="cb14-289"><a href="#cb14-289" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [286,]  1.393026191  1.132333206  1.327395406</span></span>
+<span id="cb14-290"><a href="#cb14-290" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [287,] -1.247762044 -1.520208156 -1.350591673</span></span>
+<span id="cb14-291"><a href="#cb14-291" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [288,] -0.701188598 -1.583956733 -1.380683131</span></span>
+<span id="cb14-292"><a href="#cb14-292" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [289,] -2.059090620  1.939975035  1.792285900</span></span>
+<span id="cb14-293"><a href="#cb14-293" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [290,] -0.541203646 -0.312662948  0.154724726</span></span>
+<span id="cb14-294"><a href="#cb14-294" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [291,] -0.603591298  0.106489100  0.154991795</span></span>
+<span id="cb14-295"><a href="#cb14-295" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [292,]  0.472795199  0.121057994  0.216462273</span></span>
+<span id="cb14-296"><a href="#cb14-296" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [293,] -0.850199967 -1.116599056 -1.391760866</span></span>
+<span id="cb14-297"><a href="#cb14-297" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [294,]  0.869757622  0.080912728 -0.925017790</span></span>
+<span id="cb14-298"><a href="#cb14-298" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [295,]  0.039648260  0.247070881 -0.633541264</span></span>
+<span id="cb14-299"><a href="#cb14-299" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [296,]  0.378963933 -0.942355589 -0.021642585</span></span>
+<span id="cb14-300"><a href="#cb14-300" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [297,]  0.005369800 -0.376411525  0.124633267</span></span>
+<span id="cb14-301"><a href="#cb14-301" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [298,] -0.105221861 -1.297759060  0.008181804</span></span>
+<span id="cb14-302"><a href="#cb14-302" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [299,] -1.656341385  0.019112260 -0.995177681</span></span>
+<span id="cb14-303"><a href="#cb14-303" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [300,]  1.537564778  1.634802037 -0.508133320</span></span>
+<span id="cb14-304"><a href="#cb14-304" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [301,] -0.049810304  1.154359734  0.351660391</span></span>
+<span id="cb14-305"><a href="#cb14-305" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [302,]  0.448559134 -0.249888425  0.204850401</span></span>
+<span id="cb14-306"><a href="#cb14-306" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [303,] -0.059594604 -1.574845059  0.129568131</span></span>
+<span id="cb14-307"><a href="#cb14-307" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [304,] -1.220028066  0.076377257  0.052085055</span></span>
+<span id="cb14-308"><a href="#cb14-308" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [305,] -1.126528334  0.097429731 -0.903615744</span></span>
+<span id="cb14-309"><a href="#cb14-309" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [306,] -1.220028066  0.076377257  0.052085055</span></span>
+<span id="cb14-310"><a href="#cb14-310" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [307,] -1.133672470  0.626778373  0.156924646</span></span>
+<span id="cb14-311"><a href="#cb14-311" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [308,]  1.493833551 -0.675524052  1.221754609</span></span>
+<span id="cb14-312"><a href="#cb14-312" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [309,]  0.410139426  1.138816786  0.310224129</span></span>
+<span id="cb14-313"><a href="#cb14-313" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [310,] -1.019646308  1.132797048  0.377140519</span></span>
+<span id="cb14-314"><a href="#cb14-314" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [311,]  0.862550073 -1.030706484 -1.151777845</span></span>
+<span id="cb14-315"><a href="#cb14-315" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [312,]  1.354274949  1.478677308  0.238963478</span></span>
+<span id="cb14-316"><a href="#cb14-316" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [313,]  1.478718720 -0.401987897 -0.955376317</span></span>
+<span id="cb14-317"><a href="#cb14-317" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [314,] -1.133404349  0.028171629  0.063429858</span></span>
+<span id="cb14-318"><a href="#cb14-318" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [315,]  0.346820586  0.071853359 -1.983625329</span></span>
+<span id="cb14-319"><a href="#cb14-319" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [316,] -1.236188807  0.662197671  1.274049320</span></span>
+<span id="cb14-320"><a href="#cb14-320" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [317,] -0.666247071  1.124247892  0.248753651</span></span>
+<span id="cb14-321"><a href="#cb14-321" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [318,]  0.101474638  1.377241787 -0.042455805</span></span>
+<span id="cb14-322"><a href="#cb14-322" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [319,] -1.033296723  0.717088949 -1.765821756</span></span>
+<span id="cb14-323"><a href="#cb14-323" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [320,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-324"><a href="#cb14-324" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [321,] -0.120005158  0.018138205 -0.975143465</span></span>
+<span id="cb14-325"><a href="#cb14-325" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [322,] -0.081585450 -1.370567006 -1.080517193</span></span>
+<span id="cb14-326"><a href="#cb14-326" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [323,] -0.096037214  0.987691369 -0.870036805</span></span>
+<span id="cb14-327"><a href="#cb14-327" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [324,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-328"><a href="#cb14-328" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [325,]  1.552348076  0.318904772  0.475191949</span></span>
+<span id="cb14-329"><a href="#cb14-329" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [326,] -0.666578605  0.081886782 -0.945052006</span></span>
+<span id="cb14-330"><a href="#cb14-330" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [327,] -2.037143067 -0.526562888 -1.075661883</span></span>
+<span id="cb14-331"><a href="#cb14-331" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [328,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-332"><a href="#cb14-332" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [329,] -0.229665632  0.582906145  1.202521599</span></span>
+<span id="cb14-333"><a href="#cb14-333" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [330,] -1.676479882  1.317559200  1.484586172</span></span>
+<span id="cb14-334"><a href="#cb14-334" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [331,]  0.316639694  1.117764312  1.265924928</span></span>
+<span id="cb14-335"><a href="#cb14-335" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [332,]  1.368726714 -0.879581067  0.028483089</span></span>
+<span id="cb14-336"><a href="#cb14-336" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [333,]  0.869757622  0.080912728 -0.925017790</span></span>
+<span id="cb14-337"><a href="#cb14-337" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [334,]  1.393026191  1.132333206  1.327395406</span></span>
+<span id="cb14-338"><a href="#cb14-338" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [335,] -0.711874328  1.401333891  0.127367325</span></span>
+<span id="cb14-339"><a href="#cb14-339" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [336,]  0.389937516  0.796295872  1.502687538</span></span>
+<span id="cb14-340"><a href="#cb14-340" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [337,]  0.423660002 -2.705557063 -2.194372786</span></span>
+<span id="cb14-341"><a href="#cb14-341" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [338,]  1.392363124 -0.952389013 -1.060215908</span></span>
+<span id="cb14-342"><a href="#cb14-342" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [339,] -0.057617506 -0.401013842 -0.975410534</span></span>
+<span id="cb14-343"><a href="#cb14-343" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [340,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-344"><a href="#cb14-344" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [341,] -0.849868434 -0.074237947 -0.197955209</span></span>
+<span id="cb14-345"><a href="#cb14-345" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [342,] -0.080985796 -0.926812641  0.019793677</span></span>
+<span id="cb14-346"><a href="#cb14-346" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [343,] -1.507330016 -0.448245417 -0.984099946</span></span>
+<span id="cb14-347"><a href="#cb14-347" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [344,]  1.416662601  1.059525260  0.238696409</span></span>
+<span id="cb14-348"><a href="#cb14-348" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [345,]  0.555109626 -0.256882217  0.291801007</span></span>
+<span id="cb14-349"><a href="#cb14-349" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [346,] -1.133072816  1.070532738  1.257235515</span></span>
+<span id="cb14-350"><a href="#cb14-350" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [347,] -0.199421327  1.177963046 -0.759728213</span></span>
+<span id="cb14-351"><a href="#cb14-351" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [348,]  1.092398347  0.334447721  0.516628211</span></span>
+<span id="cb14-352"><a href="#cb14-352" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [349,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-353"><a href="#cb14-353" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [350,]  0.981806686 -0.586899814  0.400176748</span></span>
+<span id="cb14-354"><a href="#cb14-354" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [351,]  0.884540919 -1.234984537  0.058307479</span></span>
+<span id="cb14-355"><a href="#cb14-355" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [352,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-356"><a href="#cb14-356" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [353,] -0.714182959 -0.814858435  0.038540332</span></span>
+<span id="cb14-357"><a href="#cb14-357" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [354,]  1.057520232 -0.732789050  0.174491873</span></span>
+<span id="cb14-358"><a href="#cb14-358" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [355,] -0.279658577 -0.210794470 -1.316745665</span></span>
+<span id="cb14-359"><a href="#cb14-359" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [356,]  0.869757622  0.080912728 -0.925017790</span></span>
+<span id="cb14-360"><a href="#cb14-360" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [357,]  0.598323260 -0.078814150 -2.685309315</span></span>
+<span id="cb14-361"><a href="#cb14-361" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [358,]  1.590767784 -1.069800439  0.369818221</span></span>
+<span id="cb14-362"><a href="#cb14-362" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [359,] -1.805309073 -3.195111040 -2.844830337</span></span>
+<span id="cb14-363"><a href="#cb14-363" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [360,] -0.143909690  0.689552896  0.207050320</span></span>
+<span id="cb14-364"><a href="#cb14-364" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [361,] -0.565171590 -1.282216111  0.049618066</span></span>
+<span id="cb14-365"><a href="#cb14-365" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [362,] -0.184038375  0.305820146  1.323907926</span></span>
+<span id="cb14-366"><a href="#cb14-366" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [363,]  0.023219398  1.431498039  0.681917788</span></span>
+<span id="cb14-367"><a href="#cb14-367" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [364,] -0.081253917 -0.328205896  0.113288464</span></span>
+<span id="cb14-368"><a href="#cb14-368" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [365,]  1.005774630  0.382653350  0.505283408</span></span>
+<span id="cb14-369"><a href="#cb14-369" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [366,]  0.039648260  0.247070881 -0.633541264</span></span>
+<span id="cb14-370"><a href="#cb14-370" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [367,]  0.386171482  0.169263623  0.205117470</span></span>
+<span id="cb14-371"><a href="#cb14-371" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [368,]  0.402931877  0.027197574  0.083464074</span></span>
+<span id="cb14-372"><a href="#cb14-372" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [369,]  1.392694657  0.089972097  0.133589749</span></span>
+<span id="cb14-373"><a href="#cb14-373" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [370,] -1.512517174  1.876226458  1.762194442</span></span>
+<span id="cb14-374"><a href="#cb14-374" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [371,] -0.230265286  0.139151780  0.102210730</span></span>
+<span id="cb14-375"><a href="#cb14-375" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [372,]  1.369058247  0.162780043  1.222288747</span></span>
+<span id="cb14-376"><a href="#cb14-376" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [373,] -0.119405504  0.461892570  0.125167405</span></span>
+<span id="cb14-377"><a href="#cb14-377" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [374,]  0.594028909  1.738695880  0.663438202</span></span>
+<span id="cb14-378"><a href="#cb14-378" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [375,]  1.490291957  1.780417929  1.669264675</span></span>
+<span id="cb14-379"><a href="#cb14-379" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [376,] -0.143641569  0.090946151  0.113555533</span></span>
+<span id="cb14-380"><a href="#cb14-380" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [377,]  1.197500058 -3.290919568 -2.937760103</span></span>
+<span id="cb14-381"><a href="#cb14-381" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [378,]  0.110442769  1.827046775  1.793573461</span></span>
+<span id="cb14-382"><a href="#cb14-382" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [379,]  0.005101679  0.222195220  0.218128055</span></span>
+<span id="cb14-383"><a href="#cb14-383" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [380,]  0.032772245  0.177812778  0.333504338</span></span>
+<span id="cb14-384"><a href="#cb14-384" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [381,]  0.029006211 -0.449219471 -0.964065730</span></span>
+<span id="cb14-385"><a href="#cb14-385" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [382,]  1.490291957  1.780417929  1.669264675</span></span>
+<span id="cb14-386"><a href="#cb14-386" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [383,]  1.018437457 -1.428806058 -2.107745713</span></span>
+<span id="cb14-387"><a href="#cb14-387" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [384,] -0.677220654 -0.614403569 -1.275576472</span></span>
+<span id="cb14-388"><a href="#cb14-388" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [385,] -0.689883482  1.197055838  1.337452649</span></span>
+<span id="cb14-389"><a href="#cb14-389" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [386,] -1.512517174  1.876226458  1.762194442</span></span>
+<span id="cb14-390"><a href="#cb14-390" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [387,] -0.689883482  1.197055838  1.337452649</span></span>
+<span id="cb14-391"><a href="#cb14-391" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [388,]  1.541106372 -0.821139944 -0.955643386</span></span>
+<span id="cb14-392"><a href="#cb14-392" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [389,] -1.117243608 -0.557648785 -1.158534407</span></span>
+<span id="cb14-393"><a href="#cb14-393" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [390,]  0.297527375 -3.218621835 -2.779281777</span></span>
+<span id="cb14-394"><a href="#cb14-394" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [391,] -1.710821754 -0.946891060  0.955460259</span></span>
+<span id="cb14-395"><a href="#cb14-395" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [392,] -0.096368748 -0.054669741 -2.063842462</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Y ya con esas tres dimensiones ya podemos hacer lo que queramos.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","descPosition":"bottom","openEffect":"zoom","loop":true,"closeEffect":"zoom"});</script>
+
+
+
+</body></html>
