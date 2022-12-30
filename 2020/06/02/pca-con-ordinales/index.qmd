@@ -1,0 +1,148 @@
+---
+title: ¿PCA con ordinales? Primera entrega
+date: '2020-06-02'
+categories:
+  - estadística
+  - factorial
+  - 2020
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>" 
+---
+
+Supongo que todos sabemos lo de las escalas de medida, ¿verdad? Nominal, ordinal, intervalo y de razón. 
+Y que todos sabemos lo que es un PCA y que sólo sirve para variables numéricas, ¿seguro?. Un PCA y otras técnicas relacionadas se basan en diagonalizar una matriz, ya sea mediante SVD, autovalores o a lo [Gifi](https://link.springer.com/chapter/10.1007/978-3-319-93177-7_8#:~:text=The%20Gifi%20system%20is%20a,first%20part%20of%20this%20chapter.) en dónde se utiliza Alternative Least Squares. 
+
+La materia prima de la que parte un PCA es una matriz de covarianzas o de correlaciones, pero, ¿qué pasa si nuestras variables no son numéricas sino ordinales? Pues entonces podemos utilizar lo que se conoce como correlaciones [policóricas](https://en.wikipedia.org/wiki/Polychoric_correlation), propuestas por Pearson en 1900,  aunque os aconsejo leer el artículo que viene en la [Encyclopedia Of Statistica Sciences](https://www.wiley.com/en-us/Encyclopedia+of+Statistical+Sciences%2C+16+Volume+Set%2C+2nd+Edition-p-9780471150442), ojo, 9686 páginas y 7680$ que cuestan todos los volúmenes.  
+
+Básicamente, las correlaciones policóricas suponen la existencia de variables latentes continuas asociadas a las variables ordinales observadas. La estimación de la correlación policórica entre dos variables se basa en encontrar la distribución normal bivariante subyacente y el coeficiente de correlación de pearson que mejor aproxima las frecuencias observadas en la tabla de contingencia entre las dos varibles ordinales.
+La librería `polycor` de R incorpora la función `polychor` que implementa el cálculo. Se puede ver el código simplemente poniendo `polycor::polychor`, si tienes la librería instalada, por supuesto. 
+
+Pues una vez tenemos estas correlaciones podemos aplicar las técnicas de PCA o de Análisis factorial sobre nuestra matriz. Veamos un ejemplo, de un curso que di hace unos años en la Pablo de Olavide. 
+
+Utilizamos el conjunto de datos Science:  Consumer Protection and Perceptions of Science and Technology section of the 1992 Euro-Barometer Survey (Karlheinz and Melich, 1992) based on a sample from Great Britain.
+Se pregunta por diferentes aspectos de la ciencia, y las categorías de respuesta son "strongly disagree","disagree", "agree" y "strongly agree" .
+
+ **Variables**
+
+* Comfort: _Science and technology are making our lives healthier, easier and more comfortable._
+
+* Environment: _Scientific and technological research cannot play an important role in protecting the environment and repairing it._
+
+* Work: _The application of science and new technology will make work more interesting._
+
+* Future: _Thanks to science and technology, there will be more opportunities for the future generations._
+
+* Technology: _New technology does not depend on basic scientific research._
+
+* Industry: _Scientific and technological research do not play an important role in industrial development._
+
+* Benefit: _The benefits of science are greater than any harmful effect it may_ have.
+
+
+Tengo los datos guardados en un `rds` y subidos al github
+
+
+```{r}
+
+datos <- readRDS(here::here("data/science.rds"))
+
+head(datos)
+```
+
+```{r}
+summary(datos)
+```
+
+Nos aseguramos de que los niveles de los factores están codificados correctamente y en el orden que queremos
+
+```{r}
+levels(datos$Work)
+```
+
+
+Pues ya podemos utilizar las correlaciones policóricas y el análisis factorial o un PCA. 
+
+```{r}
+library(psych)
+library(polycor)
+```
+
+Utilizamos la función `hetcor` que nos permite calcular correlaciones entre variables continuas, entre continuas con dicotómicas, continuas con ordinales y entre ordinales. 
+
+```{r}
+cor_poly <-  hetcor(datos)
+```
+
+```{r}
+cor_poly
+```
+
+
+```{r}
+corrplot::corrplot(cor_poly$correlations)
+```
+
+Y sin más hacemos el análisis factorial. Veamos qué número de factores elegimos 
+
+
+
+```{r}
+
+VSS(cor_poly$correlations)
+```
+
+
+```{r}
+res_factorial <-  fa(cor_poly$correlations, nfactors = 3, n.obs = nrow(datos))
+```
+
+```{r}
+diagram(res_factorial)
+```
+Y listo ya tenemos el análsis factorial hecho. Ahora habría que interpretar y demás, ver las cargas factoriales y las comunalidades (cómo  de bien está representada la variable en la estructura factorial)
+
+
+```{r}
+res_factorial$loadings
+res_factorial$communalities
+```
+
+
+Aunque el análisis lo hemos hecho utilizando las correlaciones policóricas, para obtener las puntuaciones para cada fila  hay que convertir los datos a numéricos. 
+
+```{r}
+science.num <- data.frame(sapply(datos, as.numeric))
+table(datos$Comfort, science.num$Comfort)
+```
+
+## Science data: Puntuaciones factoriales
+
+
+```{r}
+puntuaciones <- factor.scores(science.num, res_factorial)
+puntuaciones$scores
+```
+
+Y ya con esas tres dimensiones ya podemos hacer lo que queramos. 
+
+
+
+
+
