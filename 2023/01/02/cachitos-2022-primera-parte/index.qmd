@@ -1,6 +1,6 @@
 ---
-title: Cachitos 2021
-date: '2022-01-08'
+title: Cachitos 2022
+date: '2022-01-002'
 categories: 
   - estadística
   - polémica
@@ -9,32 +9,54 @@ categories:
   - ocr
   - linux
   - cachitos
-  
-image: "00000169.jpg"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "00001031.jpg"
 ---
 
 
 Retomando la entrada de [cachitos de la nochevieja de 2020](https://muestrear-no-es-pecado.netlify.app/2021/01/11/cachitos-primera-parte/)
 
-Actualizo el script para bajar el video de la nochevieja de este año, extraer los fotogramas y tener los subtítulos. 
 
-Este año parece (o yo no me he enterado) que ha habido menos polémica. Pero como siempre, nos hemos reído bastante. 
+Actualizamos el [script](https://github.com/joscani/blog_quarto/raw/master/2023/01/02/cachitos-2022-primera-parte/extract_subtitles.sh) que se baja el vídeo, recorta y extrae los subtítulos. 
+
+
+Sea como sea, siempre ha dejado perlas como estas
 
 Ejemplo:
 
-![](00000169.jpg)
+![](ejemplo_946.jpg)
+
+El fotograma se obtiene usando mplayer y sacando uno de 200 fotogramas como imagen, luego se recorta la parte del súbtitulo, se invierten los colores y se usa `tesseract` para el `ocr`
 
 
-Y el texto extraído con `tesseract`
+![](00000946_subtitulo.png)
+
+Y tesseract hace el trabajo de pasarlo a texto
 
 ```bash
-El cámara se arrima, pero sin tocar.... NW,
-SN
-4 como el PSOE con la monarquía. | aaa
+Izquierda... Derecha... Como veis, tienen la postura tan
+sólidamente definida como el gobierno respecto al Sahara.
 ```
 
-Aquí os dejo el script para bajar el vídeo y extraer los subtítulos. 
+Veamos las partes importantes de `extract_subtitles.sh`
 
+## Bajar el vídeo
 
 ```bash
 #!/bin/bash
@@ -57,48 +79,63 @@ suffix_txt_dir="_txt"
 video_file=$ANNO$suffix_video
 echo $video_file
 
-if [ "$ANNO" == "2021" ] ;
+
+if [ "$ANNO" == "2022" ] ;
 then
-    wget https://lote5-vod-hls-geoblockurl.akamaized.net/resources/TE_GLUCA/mp4/4/0/1641020001504.mp4 
-    mv 1641020001504.mp4 $video_file
-fi
- 
-if [ "$ANNO" == "2020" ] ;
-then
-    wget http://mediavod-lvlt.rtve.es/resources/TE_GLUCA/mp4/2/4/1609487028742.mp4
-    mv 1609487028742.mp4 $video_file
+    wget https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4
+    mv 1672556504451.mp4 $video_file
 fi
 
-if [ "$ANNO" == "2019" ] ;
-then
-    wget https://rtvehlsvod2020a-fsly.vod-rtve.cross-media.es/resources/TE_GLUCA/mp4/0/9/1577860099590.mp4
-    mv 1577860099590.mp4 $video_file
-fi
 
-# Pasar a jpg uno de cada 220 fotogramas
+
+```
+
+Como se contaba en el post original hay que ir a la web de rtve play, ir a reproducir el cachitos correspondiente, y luego darle a inspeccionar código y ver de qué url está haciendo el request.  Para 2021 por ejemplo estaba en 
+`https://lote5-vod-hls-geoblockurl.akamaized.net/resources/TE_GLUCA/mp4/4/0/1641020001504.mp4` . Cómo vemos, no hay mucha coherencia en dónde dejan los archivos. 
+
+## Convertir a jpg , cambiar tamaño y extraer subtítulos.
+
+Gracias a software de linux como `mplayer` `parallel` o `magick` se puede hacer un montón de cosas con los vídeos e imágenes.
+
+
+```bash
+# Pasar a jpg uno de cada 200 fotogramas
 
 mplayer -vf framestep=200 -framedrop -nosound $video_file -speed 100 -vo jpeg:outdir=$ANNO$suffix_jpg_dir 
  
 cd $ANNO$suffix_jpg_dir 
  
 # Convertir a formato más pequño
-find . -name '*.jpg' |  parallel -j 6 mogrify -resize 642x480 {}
+find . -name '*.jpg' |  parallel -j 8 mogrify -resize 642x480 {}
 
-# Seleccionar cacho dond estan subtitulos
-find . -name '*.jpg' |  parallel -j 6 convert {} -crop 460x50+90+295 +repage -compress none -depth 8 {}.subtitulo.tif
+# Seleccionar cacho dond están subtitulos
+find . -name '*.jpg' |  parallel -j 8 convert {} -crop 460x50+90+295 +repage -compress none -depth 8 {}.subtitulo.tif
 
 # Poner en negativo para que el ocr funcione mejor
-find . -name '*.tif' |  parallel -j 6 convert {} -negate -fx '.8*r+.8*g+0*b' -compress none -depth 8 {}
+find . -name '*.tif' |  parallel -j 8 convert {} -negate -fx '.8*r+.8*g+0*b' -compress none -depth 8 {}
 
-# Pasar el ocr con idioma en español
-find . -name '*.tif' |  parallel -j 6 tesseract -l spa {} {}
-
-# mover a directorio texto
-mkdir -p $root_directory/$ANNO$suffix_txt_dir
-
-mv *.txt $root_directory/$ANNO$suffix_txt_dir
-
-cd $root_directory
 ```
 
+* Con mplayer extraemso uno de cada 200 fotogramas y los guardamos como formato jpeg en la carpeta especificada. 
+* Con la utilidad `mogrify` de `magick` reescalamos cada uno de los archivos anteriores a 642x480 píxeles.  Con `parallel` ( `sudo apt install parallel`  si no lo tienes instalado) le decimos que haga esto en paralelo usando 8 hilos de ejecución
+* Con `convert`y opción `crop`  indicamos y recortamos la zona de la imagen dónde creemos que están los rótulos y creamos archivos tif que sólo tienen esa zona.
+* Con la opción `negate` de `convert` invertimos los colores de forma que sea más fácil para `tesseract` hacer el reconomicimiento óptico de caracteres. 
+
+
+## OCR. 
+
+Con tesseract simplemente pasamos los archivos tif generados y le indicamos que lo haga en paralelo usando 8 hilos y que como lenguaje utilizando el español `-l spa ` 
+
+```bash
+# Pasar el ocr con idioma en español
+find . -name '*.tif' |  parallel -j 8 tesseract -l spa {} {}
+
+```
+
+`tesseract` creará tantos archivos `txt` como fotogramas hayamos extraído (1302 ficheros para cachitos nochevieja de 2022), la mayoría estarán sin rótulos. 
+
+El nombre que hemos puesto a los archivos sigue este patrón `00000946.jpg.subtitulo.tif.txt` 
+indicando el número de fotograma así como las diferentes extensiones, así será más fácil luego identificar un texto con la imagen de la que viene. 
+
+En la siguiente entrada  veremos algo de limpieza de texto. 
 
