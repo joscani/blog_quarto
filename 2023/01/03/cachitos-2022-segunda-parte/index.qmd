@@ -55,7 +55,9 @@ nombre_ficheros <- list.files(path = str_glue("{root_directory}{anno}_txt/")) %>
 
 nombre_ficheros
 
+
 ```
+
 
 Ahora los podemos leer en orden
 
@@ -71,6 +73,9 @@ glimpse(subtitulos)
 subtitulos
 
 ```
+
+Tenemos 1302 rótulos de los cuales la mayoría estarán vacíos
+
 
 ## Contando letras
 
@@ -189,12 +194,6 @@ subtitulos_proces %>%
     select(name,texto,distancia, texto_anterior, everything()) %>% 
     arrange(distancia) %>% 
     DT::datatable()
-    
-    # 
-    # filter(distancia > 19) %>% 
-    # select(-texto_anterior)
-
-
 
 ```
 
