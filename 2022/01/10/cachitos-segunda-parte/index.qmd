@@ -88,6 +88,7 @@ Como sabemos que hay muchos ficheros sin texto podemos contar letras.
 
 
 ```{r}
+
 subtitulos <- subtitulos %>% 
     mutate(n_caracteres = nchar(value)) 
 
@@ -100,6 +101,7 @@ subtitulos %>%
     count() %>% 
   ggplot(aes(x = n_caracteres, y = n)) +
   geom_col()
+
 ```
 
 Y vemos que hay muchos subtitulos con pocos caracteres. Si vemos por ejemplo los que tienen menos de 12 caracteres

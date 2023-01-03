@@ -1,0 +1,232 @@
+---
+title: Cachitos 2022. Segunda parte
+date: '2023-01-03'
+categories: 
+  - estadística
+  - polémica
+  - 2023
+  - textmining
+  - ocr
+  - linux
+  - cachitos
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "eldrogas.jpg"
+---
+
+Una vez que ya hemos visto en la [entrada
+anterior](https://muestrear-no-es-pecado.netlify.app/2023/01/02/cachitos-2022-primera-parte/)
+como extraer los rótulos, vamos a juntarlos todos en un sólo csv y hacer
+algo de limpieza.
+
+Dejo el enlace a los ficheros de texto construidos por `tesseract`
+[enlace
+directorio](https://drive.google.com/drive/folders/1Ds00KlAU7FfqNKEOYVjo3t50xjOuOuN-?usp=share_link)
+
+
+## Lectura rótulos
+
+```{r, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2022"
+
+
+nombre_ficheros <- list.files(path = str_glue("{root_directory}{anno}_txt/")) %>% 
+    enframe() %>% 
+    rename(n_fichero = value)
+
+nombre_ficheros
+
+```
+
+Ahora los podemos leer en orden
+
+```{r}
+
+subtitulos <-  list.files(path = str_glue("{root_directory}{anno}_txt/"), 
+                        pattern = "*.txt", full.names = TRUE) %>% 
+    map(~read_file(.)) %>% 
+    enframe() %>%  
+    left_join(nombre_ficheros)
+
+glimpse(subtitulos)
+subtitulos
+
+```
+
+## Contando letras
+
+En n_fichero tenemos el nombre y en `value` el texto. Si vemos alguno de
+los subtítulos.
+
+```{r}
+
+subtitulos %>%
+    pull(value) %>%
+    pluck(946)
+
+```
+
+Muchos de los ficheros no tienen texto (son fotogramas sin rótulos).
+Contemos letras.
+
+
+```{r}
+
+subtitulos <- subtitulos %>% 
+    mutate(n_caracteres = nchar(value)) 
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count()
+
+subtitulos %>% 
+    group_by(n_caracteres) %>% 
+    count() %>% 
+  ggplot(aes(x = n_caracteres, y = n)) +
+  geom_col()
+
+```
+
+Y viendo el conteo podríamos ver cómo son los rótulos con menos de 25 caracteres. Y suele ser por haber pillado el nombre de la canción en vez del rótulo 
+
+
+```{r}
+
+subtitulos %>% 
+    filter(n_caracteres <= 25, n_caracteres > 0 ) %>% 
+    arrange(desc(n_caracteres)) %>% 
+    head(40) %>%
+    pull(value)
+
+```
+
+```{r}
+subtitulos %>% 
+    filter(n_caracteres == 30)
+```
+
+Usando la librería `magick` en R que permite usar `imagemagick` en R, ver **[post](https://analisisydecision.es/tratamiento-y-procesado-de-imagenes-con-r-y-magick/)** de Raúl Vaquerizo y su homenaje a Sean Connery, podemos ver el fotgrama correspondiente
+
+```{r}
+library(magick)
+(directorio_imagenes <- str_glue("{root_directory}video/{anno}_jpg/"))
+
+image_read(str_glue("{directorio_imagenes}00001258.jpg"))
+
+```
+
+Así que nos quedamos con los rótulos con más de 30 caracteres 
+
+```{r}
+subtitulos <-  subtitulos %>% 
+    filter(n_caracteres > 30)
+
+dim(subtitulos)
+```
+
+## Detección duplicados
+
+Mini limpieza de caracteres extraños y puntuación
+
+```{r}
+string_mini_clean <-  function(string){
+    string <- gsub("?\n|\n", " ", string)
+    string <- gsub("\r|?\f|=", " ", string)
+    string <- gsub('“|”|—|>'," ", string)
+    
+    string <- gsub("[[:punct:][:blank:]]+", " ", string)
+    string <- tolower(string)
+    string <- gsub("  ", " ", string)
+    
+    return(string)
+}
+
+# Haciendo uso de programación funciona con purrr es muy fácil pasar esta función a cada elemento. y decirle que 
+# el resultado es string con map_chr
+
+subtitulos_proces <- subtitulos %>% 
+    mutate(texto = map_chr(value, string_mini_clean)) %>% 
+    select(-value)
+
+subtitulos_proces %>% 
+  select(texto)
+```
+
+
+Distancia de texto entre rótulos  consecutivos 
+
+
+
+
+```{r}
+
+subtitulos_proces <- subtitulos_proces %>% 
+    mutate(texto_anterior = lag(texto)) %>% 
+    mutate(distancia = stringdist::stringdist(texto, texto_anterior, method = "lcs"))
+    
+ 
+subtitulos_proces %>% 
+    filter(!is.na(distancia)) %>% 
+    select(name,texto,distancia, texto_anterior, everything()) %>% 
+    arrange(distancia) %>% 
+    DT::datatable()
+    
+    # 
+    # filter(distancia > 19) %>% 
+    # select(-texto_anterior)
+
+
+
+```
+
+Decidimos eliminar texto cuya distancia sea menor de 36 
+
+```{r}
+subtitulos_proces <-  subtitulos_proces %>% 
+    filter(distancia > 36) %>% 
+    select(-texto_anterior)
+
+subtitulos_proces %>% 
+    select(name,texto, everything()) %>% 
+    DT::datatable()
+
+```
+
+No nos hemos quitado todos los duplicados pero sí algunos de ellos. 
+
+
+```{r}
+dim(subtitulos_proces)
+```
+
+
+
+Guardamos el fichero unido
+
+```{r}
+
+write_csv(subtitulos_proces,
+          file = str_glue("{root_directory}{anno}_txt_unido.csv"))
+```
+
+Y [aquí](https://drive.google.com/file/d/1S2Qm_Xv0UGshbwUpAWeF-nGX2JbZp7RV/view?usp=share_link) os dejo el enlace con los rótulos definitivos
+
