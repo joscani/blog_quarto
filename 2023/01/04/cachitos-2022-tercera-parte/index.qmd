@@ -1,0 +1,641 @@
+---
+title: Cachitos 2022. Tercera parte
+date: '2023-01-04'
+categories: 
+  - estadística
+  - polémica
+  - 2023
+  - textmining
+  - ocr
+  - linux
+  - cachitos
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "imagen_post.png"
+---
+
+Vamos ya con la última entrada del cachitos de este año. Las anteriores,
+las tenemos en [esta](/2023/01/02/cachitos-2022-primera-parte/) y [esta
+otra](/2023/01/03/cachitos-2022-segunda-parte/)
+
+El csv con el texto de los rótulos para 2022 lo tenemos en este
+[enlace](https://drive.google.com/file/d/1S2Qm_Xv0UGshbwUpAWeF-nGX2JbZp7RV/view?usp=share_link)
+
+Vamos al lío
+
+## Librerías
+
+```{r}
+
+    suppressPackageStartupMessages({
+        library(tidyverse) 
+        library(tidytext)
+        
+        library(magick)
+        library(RColorBrewer)
+        library(wordcloud)
+        library(topicmodels)
+        
+        }
+    )
+
+```
+
+## Lectura de datos, y vistazo datos
+
+```{r}
+root_directory = "/media/hd1/canadasreche@gmail.com/public/proyecto_cachitos/"
+anno <- "2022"
+```
+
+Leemos el csv. Uso DT y así podéis ver todos los datos o buscar cosas,
+por ejemplo `emérito` o `Ayuso`
+
+```{r}
+subtitulos_proces <-  read_csv(str_glue("{root_directory}{anno}_txt_unido.csv"))
+
+subtitulos_proces %>% 
+  select(texto, n_fichero, n_caracteres) %>% 
+  DT::datatable()
+
+```
+
+Pues nos valdría con esto para buscar términos polémicos.
+
+## Algo de minería de texto
+
+Quitamos stopwords y tokenizamos de forma que tengamos cada palabra en
+una fila manteniendo de qué rótulo proviene
+
+```{r}
+
+to_remove <- c(tm::stopwords("es"),
+               "110", "4","1","2","7","10","0","ñ","of",
+               "5","á","i","the","3", "n", "p",
+               "ee","uu","mm","ema", "zz",
+               "wr","wop","wy","x","xi","xl","xt",
+               "xte","yí", "your")
+
+
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% 
+    filter(nchar(word) > 1)
+
+# Se nos quedan 3766 filas/palabras de los 488 rótulos
+dim(subtitulos_proces_one_word)
+
+```
+
+```{r}
+DT::datatable(subtitulos_proces_one_word)
+```
+
+Contar ocurrencias de cosas es lo más básico.
+
+```{r}
+
+palabras_ordenadas_1 <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas_1 %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+Y como el año pasado la palabra más común es "canción" . ¿Y si añadimos
+las 20 palabras como stopword, junto con algunas como \["tan",
+"sólo","así", "aquí", "hoy"\] . La tarea de añadir palabras como
+stopwords requiere trabajo, tampoco nos vamos a parar tanto.
+
+```{r}
+(add_to_stop_words <- palabras_ordenadas_1 %>% 
+    slice(1:25) %>% 
+    pull(word) )
+
+
+to_remove <- unique(c(to_remove,
+                      add_to_stop_words,
+                      "tan", 
+                      "sólo", 
+                      "así",
+                      "aquí", 
+                      "hoy",
+                      "va"))
+
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% 
+    filter(nchar(word) > 1)
+
+```
+
+```{r}
+
+palabras_ordenadas_2 <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas_2 %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+También podemos ver ahora una nube de palabras
+
+```{r, fig.width=14}
+
+pal <- brewer.pal(8,"Dark2")
+
+subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    count() %>% 
+    with(wordcloud(word, n, random.order = FALSE, max.words = 80, colors=pal))    
+
+```
+
+## ¿Polémicos?
+
+Creamos lista de palabras polémicas (se aceptan otras, podéis poner en
+los comentarios)
+
+```{r}
+
+palabras_polem <- c("abascal", "almeida", "ayuso", "belarra", "bloqueo",
+                "borbon", "borras", "calvo", "celaa", "cgpj", "cis",
+                "ciudada", "comunidad", "conde", "constitucional", "coron",
+                "democr", "democracia", "derech", "díaz", "dioni",
+                "errejon", "extremadura", "fach", "falcon", "feij",
+                "gobierno", "guardia", "iglesias", "illa", "ivan",
+                "izquier", "ley", "madrid","manipulador", "marlaska", 
+                "marruecos","melilla", "militares", "minist", "monarca",
+                "montero","negacion", "negacionismo", "olona", "oposición",
+                "page", "pandem", "pp", "principe", "prisión", "psoe",
+                "redondo", "republic", "rey", "rufian", "rufián", 
+                "sabina", "sanchez", "sánchez", "sanz","tezanos", 
+                "toled", "trans", "transición", "tren", "ultra",
+                "vicepre", "vox", "yolanda", "zarzu", "zarzuela")
+
+
+```
+
+Y construimos una regex simple
+
+```{r}
+(exp_regx <- paste0("^",paste(palabras_polem, collapse = "|^")))
+
+```
+
+Y nos creamos una variable para identificar si es palabra polémica
+
+```{r}
+subtitulos_proces_one_word <- subtitulos_proces_one_word %>% 
+    mutate(polemica= str_detect(word, exp_regx))
+
+
+subtitulos_polemicos <- subtitulos_proces_one_word %>% 
+    filter(polemica) %>% 
+    pull(n_fichero) %>% 
+    unique()
+
+subtitulos_polemicos
+
+```
+
+Y podemos ver en el texto original antes de tokenizar qué rótulos hemos
+considerado polémicos y qué texto
+
+```{r}
+subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    pull(texto) %>% 
+    unique()
+```
+
+Y podemos ver los fotogramas.
+
+```{r}
+# identificamos nombre del archivo jpg con los rótulos polémicos
+polemica_1_fotogramas <- unique(substr(subtitulos_polemicos, 1,12))
+
+head(polemica_1_fotogramas)
+
+# creamos la ruta completa donde están
+polemica_1_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_1_fotogramas)
+
+
+# añadimos sufijo subtitulo.tif para tenr localizado la imagen que tiene solo los rótulos
+subtitulos_polemicos_1_full <- paste0(polemica_1_fotogramas_full,".subtitulo.tif")
+
+```
+
+
+Con la función `image_read` del paquete `magick` leemos las imágenes polémicas y los rótulos
+
+```{r}
+fotogramas_polemicos_img <- map(polemica_1_fotogramas_full, image_read)
+subtitulos_polemicos_img <- map(subtitulos_polemicos_1_full, image_read)
+
+```
+
+
+```{r}
+
+subtitulos_polemicos_img[[25]]
+
+```
+
+```{r}
+fotogramas_polemicos_img[[25]]
+```
+
+Podemos ver una muestra de algunos de ellos. 
+
+No es perfecto ( al meter ley o tren como palabras polémticas) pero bueno, nos vale. 
+
+```{r}
+set.seed(2023)
+indices <- sort(sample(1:length(fotogramas_polemicos_img), 9))
+
+lista_fotogram_polemicos <- lapply(fotogramas_polemicos_img[indices], grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_fotogram_polemicos )
+```
+
+
+Y el recorte de los subtítulos que hicimos enla primera entrega. 
+
+```{r}
+lista_subtitulos <-  lapply(subtitulos_polemicos_img[indices], grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_subtitulos)
+
+```
+
+
+## Tópicos
+
+Aquí no me refiero a los tópicos de este país nuestro, sino a identificar si hay temas comunes a varios documentos. 
+
+Ya aviso que con tan pocos "documentos", unos 488 y siendo tan cortos cada rótulo, es muy probable que no salga mucho..
+
+
+
+### Tópicos usando conteo de palabras. 
+
+Contamos palabras con 3 caracteres o más.
+
+Guardamos la variable `name` que nos indica en qué rótulo ha aparecido
+
+```{r}
+
+word_counts <- subtitulos_proces_one_word %>% 
+    group_by(name, word) %>% 
+    count(sort=TRUE) %>% 
+    mutate(ncharacters = nchar(word)) %>% 
+    filter(
+        ncharacters >= 3) %>% 
+    select(-ncharacters) %>% 
+    ungroup()
+
+
+length(unique(word_counts$name))
+
+head(word_counts, 15)
+
+```
+
+
+
+Ahora convertimos este `data.frame` a un `DocumentTermMatrix` 
+
+
+```{r}
+# usamos como peso la TermFrequency de la palabra
+rotulos_dtm <- word_counts %>%
+    cast_dtm(name, word, n, weighting = tm::weightTf)
+
+
+rotulos_dtm
+```
+
+Podríamos haberlo visto en forma de filas = palabras y columnas = rótulo
+
+```{r}
+word_counts  %>%
+    cast_dfm(word, name, n)
+
+```
+
+Vamos a ver si sale algo haciendo un LDA (Latent Dirichlet Allocation)
+
+Considero 7 tópicos porque me gusta el número 7. El que quiera elegir con algo más de criterio que se mire [esto](https://cran.r-project.org/web/packages/ldatuning/vignettes/topics.html)
+
+
+```{r}
+
+# Cons
+
+rotulos_lda <- LDA(rotulos_dtm, k = 7, control = list(seed = 1234))
+rotulos_lda
+
+rotulos_lda_td <- tidy(rotulos_lda)
+rotulos_lda_td
+
+# se suele ordenar por beta que ahora mismo no recuerdo que era, 
+
+top_terms <- rotulos_lda_td %>%
+    group_by(topic) %>%
+    top_n(3, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta)
+
+top_terms
+
+
+top_terms %>%
+    mutate(term = reorder_within(term, beta, topic)) %>%
+    ggplot(aes(term, beta)) +
+    geom_bar(stat = "identity") +
+    scale_x_reordered() +
+    facet_wrap(~ topic, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+Pues la verdad es que yo no veo nada interesante
+
+
+### Tópicos usando tfidf como peso
+
+Vamos a probar usando [tfidf](https://es.wikipedia.org/wiki/Tf-idf)
+
+Como la función `LDA` no permite usar un `DocumentTermMatrix` que se haya construido con `cast_dtm` y usando como parámetro de `weighting` el peso `tm::weightTfIdf` nos construimos los datos de otra forma. 
+
+```{r, warning=FALSE, message=FALSE}
+
+tf_idf_data <- subtitulos_proces_one_word %>% 
+    filter(nchar(word)>2) %>% 
+    group_by(name,word) %>% 
+    summarise(veces_palabra = n()) %>% 
+    bind_tf_idf(word, name, veces_palabra) %>% 
+    ungroup()
+
+tf_idf_data %>% 
+    arrange(desc(veces_palabra)) %>%
+    head()
+
+```
+
+Para cada palabra tenemos su `tf_idf` dentro de cada rótulo en el que aparece
+
+```{r}
+tf_idf_data %>% 
+    filter(word== "izquierda")
+
+```
+
+
+Como de nuevo LDA solo acepta peso con valores enteros, pues simplemente multiplicamos por 100 el `tf_idf` y redondeamos 
+
+ 
+```{r}
+dtm_long <- tf_idf_data %>% 
+    mutate(tf_idf_integer = round(100*tf_idf)) %>% 
+    cast_dfm(name, word, tf_idf_integer)
+```
+
+```{r}
+lda_model_long_1 <- LDA(dtm_long, k = 7, control = list(seed = 1234))
+```
+
+```{r}
+result <- tidy(lda_model_long_1, 'beta')
+
+result %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+Y claramente , yo sigo sin ver nada claro. Aunque me daría pistas para añadir más palabras a las `stopwords` y para aceptar que para el tamaño de los documentos (unas pocas palabras por rótulo), quizá no valga el LDA. 
+
+> Esta es la vida del analista de datos, prueba y error y sólo de vez en cuándo algún éxito. 
+
+
+### Sólo con los rótulos polémicos
+
+Asumiendo que parece que no tiene sentido hacer `topicmodelling` sobre estos datos, me picó la curiosidad de ver qué pasaba si sólo usaba los rótulos polémicos. 
+
+
+```{r, message=FALSE}
+
+tf_idf_data_polem <- subtitulos_proces_one_word %>% 
+    filter(nchar(word)>2, polemica == TRUE) %>% 
+    group_by(name,word) %>% 
+    summarise(veces_palabra = n()) %>% 
+    bind_tf_idf(word, name, veces_palabra) %>% 
+    ungroup() 
+
+
+tf_idf_data_polem %>% 
+    arrange(desc(veces_palabra)) %>%
+    head()
+```
+
+
+#### Topic modelling usando conteo de palabras
+
+
+```{r}
+dtm_long_polem <- tf_idf_data_polem %>% 
+    # filter(tf_idf > 0.00006) %>% 
+    # filter(veces_palabra>1) %>%
+    cast_dtm(name, word, veces_palabra)
+
+lda_model_long_polem <- LDA(dtm_long_polem, k = 7, control = list(seed = 1234))
+
+result_polem <- tidy(lda_model_long_polem, 'beta')
+
+```
+
+
+```{r, fig.width= 12, fig.height=6}
+result_polem %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+
+Y bueno parece que en el tópico 3 se meten juntos rótulos que hablan  de pandemia y de negacionistas, ha podido ser casalidad, quién sabe.
+
+
+Si vemos en qué tópico cae cada documento.
+
+
+```{r}
+result_documento_polem <-  tidy(lda_model_long_polem, 'gamma')
+
+
+result_documento_polem %>%
+    group_by(topic) %>%
+    top_n(5, gamma) %>%
+    ungroup() %>%
+    arrange(topic, -gamma) %>% 
+    mutate(document = reorder(document, gamma)) %>%
+    ggplot(aes(document, gamma, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+
+```
+
+Veamos algunos subtítulos del tópico 3 
+
+
+```{r}
+subtitulos_proces %>% 
+    filter(name %in% c(100, 706, 1061, 563)) %>% 
+    pull(texto)
+```
+
+```{r}
+top_10_topic3 <-  result_documento_polem %>%
+    group_by(topic) %>% 
+    top_n(10, gamma) %>% 
+    filter(topic==3) %>% 
+    pull(document)
+
+subtitulos_proces %>% 
+    filter(name %in% top_10_topic3) %>% 
+    pull(texto)
+
+```
+Y bueno si que parece que ha agrupado algunos rótulos relacionados con la pandemia
+
+
+
+#### Topic modelling usando tf_idf
+
+
+```{r}
+dtm_long_polem_tf_idf <- tf_idf_data_polem %>%
+    mutate(tf_idf_integer = round(100 * tf_idf)) %>%
+    cast_dfm(name, word, tf_idf_integer)
+
+lda_model_long_polem_tf_idf <- LDA(dtm_long_polem_tf_idf, k = 7, control = list(seed = 1234))
+
+result_polem_tf_idf <- tidy(lda_model_long_polem_tf_idf, 'beta')
+
+```
+
+
+```{r}
+result_polem_tf_idf %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+
+Y no parece tan diferente.  Veamos el tópico 4
+
+
+```{r}
+result_documento_polem_tf_idf <-  tidy(lda_model_long_polem_tf_idf, 'gamma')
+
+
+result_documento_polem_tf_idf %>%
+    group_by(topic) %>%
+    top_n(5, gamma) %>%
+    ungroup() %>%
+    arrange(topic, -gamma) %>% 
+    mutate(document = reorder(document, gamma)) %>%
+    ggplot(aes(document, gamma, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+
+```
+
+Veamos algunos subtítulos del tópico 4
+
+
+```{r}
+top_5_topic4 <-  result_documento_polem_tf_idf %>%
+    group_by(topic) %>% 
+    top_n(5, gamma) %>% 
+    filter(topic==4) %>% 
+    pull(document)
+
+subtitulos_proces %>% 
+    filter(name %in% top_5_topic4) %>% 
+    pull(texto)
+
+```
+
+
+Y bueno no lo veo tan poco muy claro. 
+
+
+
+### Otras pruebas realizadas
+
+*  En vez de considerar que cada rótulo es un documento, consideré los rótulos correspondientes a la primera parte del programa, a la segunda, y así hasta 10. pero no se obtuvo nada consistente
+
+
+Y bueno aquí acaba el análisis del cachitos de este año, salvo que alguien tenga interés en que haga alguna prueba o mejore algo. 
+
+**Feliz 2023 a todos**
