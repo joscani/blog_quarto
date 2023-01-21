@@ -28,22 +28,23 @@ image: "imagen_post.png"
 ---
 
 
-Me llamó la atención ayer el excelento post de Carlos sobre [regresión de poisson casi trivival con numpyro](https://www.datanalytics.com/2023/01/18/regresion-poisson-numpyro/) y le dije que iba a ver si podía replicarlo usando `brms` u otra cosa que se comunique con [stan](https://mc-stan.org/). 
+Me llamó la atención ayer el excelente post de Carlos sobre [regresión de poisson casi trivival con numpyro](https://www.datanalytics.com/2023/01/18/regresion-poisson-numpyro/) y le dije que iba a ver si podía replicarlo usando `brms` u otra cosa que se comunique con [stan](https://mc-stan.org/). 
 También estuve bicheando su código que tiene colgado [aquí](https://github.com/cjgb/datanalytics_code/blob/main/exercise_numpyro_00.ipynb)
 
 
 Lo primero, es que se trata de un ejercicio relativamente común, que es la de estimar el punto en que una serie de datos cambia de tendencia. Existen cosas como [prophet](https://facebook.github.io/prophet/) (que por debajo es Stan) o librerías como `mcp` `cmp` o `changepoint` en R específicas para este tipo de cosas.  Pero a Carlos le gusta , con buen criterio, especificar directamente el modelo. 
 
-He de reconocer que me ha gustado la sintaxis de `numpyro`.. 
+He de reconocer que me ha gustado la sintaxis de `numpyro`
 
 Bueno vamos al lío. 
 
 ## Datos y librerías
 
-Voy implementar los dos primeros modelos que hay en el notebook de Carlos usando la función `ulam` de la librería [`rethinking`](https://github.com/rmcelreath/rethinking)  de Richard McElreath. Dicha librería es un interfaz, incompleto aunque didáctico, de hacer modelos bayesianos con Stan.    El último modelo, el que detecta el punto de cambio no he sido capaz de hacerlo con esta librería, pero se podría hacer usando `stan` directamente, como [aquí](https://mc-stan.org/docs/2_21/stan-users-guide/change-point-section.html). 
+Voy implementar los dos primeros modelos que hay en el notebook de Carlos usando la función `ulam` de la librería [`rethinking`](https://github.com/rmcelreath/rethinking)  de Richard McElreath. Dicha librería es un interfaz, incompleto aunque didáctico, de hacer modelos bayesianos con Stan.  
+El último modelo, el que detecta el punto de cambio no he sido capaz de hacerlo con esta librería, pero se podría hacer usando `stan` directamente, como [aquí](https://mc-stan.org/docs/2_21/stan-users-guide/change-point-section.html). 
 
 
-Los datos, aunque Carlos ha puesto la variable del tiempo de 1 a 23, yo la voy a poner de 1999 a 2021, porque intuía a qué datos se refería y que los he buscado. 
+Los datos, aunque él ha puesto la variable del tiempo de 1 a 23, yo la voy a poner de 1999 a 2021, porque intuía a qué datos se refería y que los he buscado. 
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -141,7 +142,7 @@ def model02(t, datos):
 
 ```
 
-El problema reside en  `jnp.where(t > knot, (t - knot) * b1, 0)` para resolverlo habría que programar directamente en `stan` o que `ulam` pudiera usar la función [`step`](https://mc-stan.org/docs/2_26/functions-reference/logical-functions.html)  de Stan, que  si x es menor que 0 vale 0 y 1  en otro caso. El código en `ulam` si funcionara sería así
+El problema reside en  `jnp.where(t > knot, (t - knot) * b1, 0)` , para resolverlo habría que programar directamente en `stan` o que `ulam` pudiera usar la función [`step`](https://mc-stan.org/docs/2_26/functions-reference/logical-functions.html)  de Stan, que  si x es menor que 0 vale 0 y 1  en otro caso. El código en `ulam` si funcionara sería así
 
 ```{r, eval = FALSE}
 m2 <- ulam(
@@ -160,7 +161,7 @@ m2 <- ulam(
 
 ```
 
-pero no funciona , así que vamos a ver como sería usando `brms` . `brms` tiene una sintaxis digamos que peculiar, y su objetivo es parecerse a la especificación que se hace en R de los modelos lineales con `lm` y la que se hace con `lme4`. Es decir sería algo similar a esto
+pero no funciona , así que vamos a ver como sería usando `brms`. `brms` tiene una sintaxis digamos que peculiar, y su objetivo es parecerse a la especificación que se hace en R de los modelos lineales con `lm` y la que se hace con `lme4`. Es decir sería algo similar a esto
 
 
 ```{r, eval=FALSE}
@@ -199,7 +200,7 @@ bform <- bf(
 
 ```
 
-Especificamos las priors. En brms se escriben las priors y se "concatenan" mediante +
+Especificamos las priors. En brms se escriben las priors y se "concatenan" mediante `+`
 
 
 ```{r}
@@ -249,7 +250,7 @@ plot(conditional_effects(mbrm, method = "posterior_predict"),
      points = TRUE)
 ```
 
-Y básicamente, obtenermos los mismo resultados que Carlo con numpyro. 
+Y básicamente, obtenermos los mismo resultados que Carlos con numpyro. 
 
 
 Podemos obtener un histograma de la posterior del punto de cambio
@@ -261,6 +262,57 @@ ggplot2::ggplot(punto_cambio_posterior, aes(x =b_change_Intercept ))   +
     ggplot2::geom_histogram()
 
 ```
+
+
+```{r}
+posterior <- as_draws_df(mbrm)
+
+head(posterior)
+dim(posterior)
+```
+
+
+Pintando las posterior predict directamente 
+
+```{r}
+
+# Muy old R base, pero es que es la hora de comer y no tengo azúcar en el cerebro
+
+n_samples <- 10000
+idx_sample <-  sample(1:nrow(posterior), size = n_samples, replace = TRUE)
+
+posterior_df <-  as.data.frame(posterior)
+
+
+make_curve_functions <-  function(fila) {
+    
+    b0     <-  posterior_df[fila, "b_b0_Intercept"]
+    b1     <-  posterior_df[fila, "b_b1_Intercept"]
+    b2     <-  posterior_df[fila, "b_b2_Intercept"]
+    change <-  posterior_df[fila, "b_change_Intercept"]
+    lambda <- b0 + b1 * t + ifelse(t > change, (t-change) * b2, 0) 
+    return(lambda)
+    
+}
+
+
+t <-  df$t
+
+res <- sapply(idx_sample, make_curve_functions)
+
+
+plot(t, res[,1], pch = 19, col = scales::alpha("lightblue", 0.7), ylim = c(40, 80), type = "l")
+
+for (id in 2:n_samples) {
+    points(t, res[,id], pch = 19, col = scales::alpha("lightblue", 0.7), type = "l")
+    
+}
+
+points(t, df$y, pch = 19)
+```
+
+
+
 
 
 Una cosa interesante de `brms` es que nos construye código en Stan que luego nosotros podemos modificar
