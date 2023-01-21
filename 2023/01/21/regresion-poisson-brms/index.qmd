@@ -1,0 +1,335 @@
+---
+title: Una regresión de poisson, plagiando a Carlos
+date: '2023-01-21'
+categories: 
+  - estadística
+  - brms
+  - análisis bayesiano
+  - 2023
+
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "imagen_post.png"
+---
+
+
+Me llamó la atención ayer el excelento post de Carlos sobre [regresión de poisson casi trivival con numpyro](https://www.datanalytics.com/2023/01/18/regresion-poisson-numpyro/) y le dije que iba a ver si podía replicarlo usando `brms` u otra cosa que se comunique con [stan](https://mc-stan.org/). 
+También estuve bicheando su código que tiene colgado [aquí](https://github.com/cjgb/datanalytics_code/blob/main/exercise_numpyro_00.ipynb)
+
+
+Lo primero, es que se trata de un ejercicio relativamente común, que es la de estimar el punto en que una serie de datos cambia de tendencia. Existen cosas como [prophet](https://facebook.github.io/prophet/) (que por debajo es Stan) o librerías como `mcp` `cmp` o `changepoint` en R específicas para este tipo de cosas.  Pero a Carlos le gusta , con buen criterio, especificar directamente el modelo. 
+
+He de reconocer que me ha gustado la sintaxis de `numpyro`.. 
+
+Bueno vamos al lío. 
+
+## Datos y librerías
+
+Voy implementar los dos primeros modelos que hay en el notebook de Carlos usando la función `ulam` de la librería [`rethinking`](https://github.com/rmcelreath/rethinking)  de Richard McElreath. Dicha librería es un interfaz, incompleto aunque didáctico, de hacer modelos bayesianos con Stan.    El último modelo, el que detecta el punto de cambio no he sido capaz de hacerlo con esta librería, pero se podría hacer usando `stan` directamente, como [aquí](https://mc-stan.org/docs/2_21/stan-users-guide/change-point-section.html). 
+
+
+Los datos, aunque Carlos ha puesto la variable del tiempo de 1 a 23, yo la voy a poner de 1999 a 2021, porque intuía a qué datos se refería y que los he buscado. 
+
+
+```{r, warning=FALSE, message=FALSE}
+library(rethinking) 
+library(cmdstanr)
+library(brms)
+
+# por si uso splines
+library(mgcv)
+
+
+# uso cmdstan como backend para stan desde R en vez de rstan
+set_cmdstan_path("/home/jose/cmdstan")
+set_ulam_cmdstan(TRUE)
+```
+
+```{r}
+
+d  <- list(
+      y = c(54, 63, 50, 54, 71, 72, 57, 69, 71, 
+    76, 57, 73, 62, 51, 54, 55, 60, 49, 
+    50, 53, 56, 49, 48),
+
+    t = 1999:2021
+
+)
+```
+
+
+## Modelo lambda constante
+
+```{r}
+m0 <- ulam(
+    alist(y ~ poisson(lambda),
+          lambda <- a    ,
+          a ~ normal(60, 5)
+          ) ,
+    data = d,
+    chains = 2,
+    cores = 2 ,
+    sample = TRUE,
+    iter = 3000
+    
+)
+
+
+precis(m0)
+
+```
+
+## Modelo dónde lambda es una recta
+
+
+```{r}
+m1 <- ulam(
+    alist(
+        y ~ poisson(lambda),
+        lambda <- a + b * t   ,
+        a ~ normal(60, 5),
+        b ~ normal(0, 1)
+        
+    ) ,
+    data = d,
+    chains = 2,
+    cores = 2 ,
+    sample = TRUE,
+    iter = 3000
+    
+)
+
+precis(m1)
+
+
+```
+
+## Modelo para detectar el punto de cambio. 
+
+La verdad que me habría gustado seguir usando `ulam` para el modelo pero he sido incapaz de replicar este cacho de código de `numpyro`
+
+```python
+def model02(t, datos):
+
+  knot = numpyro.sample("knot", dist.Normal(len(t)/2, len(t)/4))
+
+  a0 = numpyro.sample("a0", dist.Normal(60, 5))
+  b0 = numpyro.sample("b0", dist.Normal( 0, 1))
+
+  b1 = numpyro.sample("b1", dist.Normal(0, 1))  
+
+  λ = a0 + t * b0 + jnp.where(t > knot, (t - knot) * b1, 0)
+
+  with numpyro.plate("data", len(t)):
+    numpyro.sample("obs", dist.Poisson(λ), obs=datos)
+
+
+```
+
+El problema reside en  `jnp.where(t > knot, (t - knot) * b1, 0)` para resolverlo habría que programar directamente en `stan` o que `ulam` pudiera usar la función [`step`](https://mc-stan.org/docs/2_26/functions-reference/logical-functions.html)  de Stan, que  si x es menor que 0 vale 0 y 1  en otro caso. El código en `ulam` si funcionara sería así
+
+```{r, eval = FALSE}
+m2 <- ulam(
+        alist(
+            y ~ poisson(lambda),
+            lambda <- b0 +  b1 * t + b2 * (t - knot) * step(t - knot) ,
+            knot ~ normal(23/2, 23/4),
+            b0 ~ normal(60, 5),
+            b1 ~ normal(0, 1),
+            b2 ~ normal(0, 1),
+
+        ) ,
+        data=d, chains=2, cores=1 , sample=TRUE, 
+        iter = 3000)
+
+
+```
+
+pero no funciona , así que vamos a ver como sería usando `brms` . `brms` tiene una sintaxis digamos que peculiar, y su objetivo es parecerse a la especificación que se hace en R de los modelos lineales con `lm` y la que se hace con `lme4`. Es decir sería algo similar a esto
+
+
+```{r, eval=FALSE}
+
+ brm( y ~ x1 + x2 + (1 | var_efecto_aleatorio) , 
+                 family = poisson("identity"), 
+                 data = df)
+
+```
+
+dónde no se especifican los $\beta_i$  de forma explícita. Pero también tiene sintaxis para hacerlo explícito. Veamos. 
+
+
+```{r}
+# Datos en dataframe
+df  <- data.frame(y = d$y, t = d$t)
+```
+
+
+```{r}
+bform <- bf(
+  y ~ b0 + b1 * t + 
+  
+  # brms si acepta la función step de Stan 
+  # cuando t-change >= 0  entonces step(t-change) = 1, es decir, cuanto t > change y 0 en otro caso     
+  b2 * (t-change) * step( t - change),
+  
+  # Hay que poner que estime el "intercept" de los parámetros y el nl = TRUE para que brms sepa que son parámetros
+  # y no variables en los datos 
+  b0 ~ 1,
+  b1 ~ 1, 
+  b2 ~ 1,
+  change ~ 1, 
+  nl = TRUE
+)
+
+```
+
+Especificamos las priors. En brms se escriben las priors y se "concatenan" mediante +
+
+
+```{r}
+bprior <- prior(normal(60, 5), nlpar = "b0") +
+          prior(normal(0, 1), nlpar = "b1") +
+          prior(normal(0, 1), nlpar = "b2") +
+         # para el cambio ponemos como media la mitad del intervalo y unos 5 años de desviación típica
+          prior(normal( 2010, 23/4), nlpar = "change")
+```
+
+
+Y ya podemos escribir el modelo en brms que lo compilara a stan y hace el mcmc
+
+```{r}
+mbrm <-
+    brm(
+        bform,
+        family = poisson("identity"), # pongo de link la identidad en vez del log por hacer como en el post original
+        prior = bprior,
+        data = df,
+        backend = "cmdstanr",
+        cores = 6,
+        chains = 6,
+        iter = 4000,
+        warmup = 500
+    )
+
+```
+
+Y bueno, no ha tardado mucho, unos 3 segundos por cadena. 
+
+```{r}
+summary(mbrm)
+```
+
+Podemos pintar la curva media estimada y su intervalo de credibilidad
+
+```{r}
+plot(conditional_effects(mbrm),
+     points = TRUE)
+```
+
+También la posterior predict function de los diferentes puntos. Evidentemente esto tiene más variabilidad que la posterior predict de la media condicionada que era el gráfico anterior. 
+
+```{r}
+plot(conditional_effects(mbrm, method = "posterior_predict"),
+     points = TRUE)
+```
+
+Y básicamente, obtenermos los mismo resultados que Carlo con numpyro. 
+
+
+Podemos obtener un histograma de la posterior del punto de cambio
+
+```{r}
+punto_cambio_posterior <- as_draws_df(mbrm, variable = "b_change_Intercept")
+
+ggplot2::ggplot(punto_cambio_posterior, aes(x =b_change_Intercept ))   +
+    ggplot2::geom_histogram()
+
+```
+
+
+Una cosa interesante de `brms` es que nos construye código en Stan que luego nosotros podemos modificar
+
+```{r}
+make_stancode(bform, data = df,prior= bprior, family = poisson("identity"))
+```
+
+
+### Notas 
+
+Una forma fácil de ajustar estos datos es usando splines. 
+
+```{r}
+m_spline  <- brm(
+                 y ~ s(t), 
+                 family = poisson("identity"), 
+                 data = df, 
+                 backend= "cmdstanr"
+)
+
+summary(m_spline)
+
+plot(conditional_smooths(m_spline, method = "posterior_predict") 
+    ) 
+```
+
+Y tendríamos la posterior del spline , pero la verdad, ahora no tengo ganas de buscar como interpretar ese spline para traducir a punto de cambio de tendencia.
+
+
+Por otro lado, leyendo por ahí he visto una implementación un pelín diferente 
+
+```{r}
+bform_alt <- bf(
+    y ~ b0 +
+        # aqui es donde cambia un poco
+        b1 * (t - change) * step(change - t) +
+        # post cambio
+        b2 * (t - change) * step(t - change),
+    b0 + b1 + b2 + change ~ 1,
+    nl = TRUE
+)
+
+bprior <- prior(normal(60, 5), nlpar = "b0") +
+    prior(normal(0, 1), nlpar = "b1") +
+    prior(normal(0, 1), nlpar = "b2") +
+    prior(normal(2010, 23 / 4), nlpar = "change")
+
+
+mbrm_alt <-
+    brm(
+        bform_alt, family = poisson("identity"),
+        prior = bprior,
+        data = df,
+        backend = "cmdstanr",
+        cores = 6,
+        chains = 6,
+        iter = 4000,
+        warmup = 500
+    )
+
+```
+
+Y sale prácticamente lo mismo 
+
+```{r}
+summary(mbrm_alt)
+```
+
+Me queda pendiente hacerlo con Turing.jl 
+Saludos
+
