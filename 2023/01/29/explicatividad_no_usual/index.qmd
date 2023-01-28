@@ -1,0 +1,602 @@
+---
+title: Explicatividad no usual 
+date: '2023-01-29'
+categories: 
+  - estadística
+  - ranger
+  - Explicatividad
+  - 2023
+
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: ""
+---
+
+
+## Intro 
+
+
+Buscando en el portátil sobre otras cosas me he encontrado un pequeño ejercicio para implementar la idea que se comenta [aquí](https://www.datanalytics.com/2020/10/14/explicacion-de-los-scorings-de-ciertos-modelos/)
+
+
+La idea es muy sencilla, tal y como comenta Carlos. Si tengo un modelo que sea tipo randomForest
+
+* De cada observación a predecir se anota en qué nodo terminal ha caído en cada árbol
+* Para cada nodo terminal en cada árbol se recorre el camino hacia "arriba" para saber qué variables están implicadas en ese nodo
+* Se cuenta para cada nodo terminal el número de veces que aparece una variable en cada árbol (o se da más importancia a las qeu estén más altos en el árbol)
+* Se agrega de alguna manera para cada observación qué variables y cómo de importantes están en los caminos de los nodos terminales en los que han caído. 
+* Esa info sería la importancia de las variables a nivel individual
+* Se podría clusterizar observaciones con similares variables importantes
+
+
+Antes de nada, sí, ya sé que existen cosas como los shap values y que a partir de ellos se puede hacer algo parecido. Pero no está de más de vez en cuando buscarse uno las habichueleas de forma más artesanal..
+
+## Ejemplo 1 
+
+Pues ale, vamos a hacerlo con iris, tan denostado hoy en día. Pobre Fisher o Anderson si levantaran la cabeza. 
+
+
+```{r}
+library(tidyverse)
+library(ranger)
+
+# ya veremos para que usamos furrr y FactoMineR
+library(furrr) 
+library(FactoMineR)
+library(factoextra)
+```
+
+
+
+```{r}
+
+# 5 arbolitos tiene mi.. 
+set.seed(47)
+rg_iris <-  ranger(Species ~ . , data = iris, num.trees = 5)
+```
+
+Info del árbol 3 
+
+```{r}
+(arbol3 <- treeInfo(rg_iris, tree = 3))
+```
+
+
+
+
+Analizando un poco, vemos que el nodo raíz (0) se parte por la variable `Sepal.Length`.  Luego el nodo 1 se bifurca a la izquierda hacia el 3 y a la derecha hacia el 4, siendo `Petal.Length` la variable que decide esa partición. 
+
+La idea sería recorrer el árbol partiendo de un nodo terminal y ver qué camino ha seguido. Para eso hacemos el siguiente código
+
+
+Hacemos un ejemplo, partiendo del nodo terminal 8 
+
+Camino del Nodo 8 
+
+
+
+```{r}
+nodo_terminal <-  8
+
+nodos <- nodo_terminal # vamos a ir sobreescribiendo la variable nodos hasta llegar al nodo raíz 0 
+variables <- vector() # guardamos el nombre de las variables de split
+
+  while (!0 %in% nodos) {
+    tmp <- arbol3 %>%
+      filter(leftChild %in% nodos |
+        rightChild %in% nodos)
+    
+    print(str_glue("Nodo hijo: {nodos}"))
+    
+    nodos <- unique(tmp$nodeID)
+    print(str_glue("Nodo padre: {nodos}"))
+    
+    
+    print(str_glue("variable de split en nodo padre: {tmp$splitvarName}"))
+    
+    variables <- c(variables, unique(tmp$splitvarName)) # la última variable de este vector es la que está más arriba en el árbol
+
+  }
+```
+
+Y vemos que para llegar al nodo terminal 8 ha utilizado dos veces la variable `Petal.Length`  y una la variable `Sepal.Length`
+
+
+Nos creamos una funcioncita para esto, donde al final construyo un data.frame donde guardo eel nodo terminal que estamos investigando, las variables que se han usado para llegar a ese nodo y una variable peso que se calcula asignando un peso igual 1 a la variable que está más alta en el árbol y menos a las demás. Si hay 4 variables se crea un vector c(4,3,2,1) en orden de más alta en el árbol  a más baja y se divide por el número de variables. así se tendrían estos pesos `r c(4,3,2,1) / 4`
+
+```{r}
+
+extraerVariables_nodos <- function(nodo_terminal, info_arbol) {
+  nodos <- nodo_terminal
+  variables <- vector()
+
+  while (!0 %in% nodos) {
+    tmp <- info_arbol %>%
+      filter(leftChild %in% nodos |
+        rightChild %in% nodos)
+
+
+    variables <- c(variables, unique(tmp$splitvarName))
+
+
+    nodos <- unique(tmp$nodeID)
+  }
+
+  return(
+      data.frame(
+          nodo_terminal = nodo_terminal,
+          variables = variables,
+          peso = seq_along(variables) / sum(length(variables))
+      )
+  )
+}
+
+```
+
+Comprobamos 
+
+```{r}
+
+extraerVariables_nodos(nodo_terminal = 8, info_arbol = arbol3)
+
+```
+
+Ok. Lo suyo sería extraer la misma info pero para cada nodo terminal del árbol que estamos considerando. 
+Pues nos creamos la funcioncita, que dado un modelo y un número de árbol,  saque la info anterior para todos los nodos terminales
+
+
+```{r}
+
+extraerVariablePorArbol <- function(modelo, arbol, verbose = FALSE) {
+  
+  info_arbol <- treeInfo(modelo, arbol)
+  nodos_terminales <- treeInfo(modelo, arbol) %>%
+    filter(terminal == TRUE) %>%
+    pull(nodeID) %>%
+    unique()
+ if(verbose) print(nodos_terminales)
+  
+  variables_por_arbol <- map_df(
+    nodos_terminales,
+    function(nodos) {
+      extraerVariables_nodos(nodos, info_arbol)
+    }
+  )
+
+  variables_por_arbol$arbol <- arbol
+  variables_por_arbol
+}
+
+```
+
+
+Comprobemos
+
+```{r}
+# arbol 3 
+(importancia_individual_arbol3 <- extraerVariablePorArbol(rg_iris, 3))
+```
+
+
+Solo queda extraer lo mismo pero para cada arbolito
+
+```{r}
+extraerVariablesPorModelo <- function(modelo, parallel = TRUE) {
+  
+  
+  arboles <- modelo$num.trees
+
+  if (parallel) {
+    # Si hay muchos árboles usamos procesamiento en paralelo
+    future::plan(multisession)
+    
+    furrr::future_map_dfr(
+      seq_len(arboles),
+      function(arbol) {
+        extraerVariablePorArbol(modelo, arbol = arbol)
+      }
+    )
+  } else{
+      map_df(
+          seq_len(arboles),
+          function(arbol) {
+              extraerVariablePorArbol(modelo, arbol = arbol)
+          }
+      )  
+  }
+}
+
+```
+
+
+```{r}
+(importancia_individual_todos_arboles <-  extraerVariablesPorModelo(rg_iris, parallel = FALSE))
+```
+
+
+
+Ahora ya tenemos qué variables llevan a cada nodo terminal en cada árbol e incluso un peso que vale 1 si la variable es la primera en el "camino" hacia el nodo
+
+Pero lo que nosotros queremos es para cada observación que predecimos, ver su nodo terminal en cada árbol y pegarle las variables importantes en cada nodo. 
+
+
+Sería algo así. 
+
+```{r}
+# lo hacems de momento con todo iris, en la realidad serían los datos de test o el conjunto de datos a predecir. 
+
+
+nodos_terminales <- predict(rg_iris, iris, type = "terminalNodes")$predictions
+
+# cada fila corresponde a una observación y cada columna al nodo terminal en cada árbol
+head(nodos_terminales, 10 )
+
+```
+
+Lo ponemos de otra forma. 
+
+```{r}
+# añadimos el id de la fila
+nodos_terminales_df <- nodos_terminales %>% 
+    as.data.frame() %>% 
+    rownames_to_column(var = "id")
+  
+  
+colnames(nodos_terminales_df)[-1] <- 1:(ncol(nodos_terminales_df)-1)
+
+head(nodos_terminales_df)
+```
+
+
+
+Pivotamos para facilitar  luego las agregaciones por observaciones
+
+```{r}
+ nodos_terminales_df <- nodos_terminales_df %>% 
+    tidyr::pivot_longer( colnames(nodos_terminales_df)[-1], names_to = "arbol", values_to = "nodo_terminal")
+
+head(nodos_terminales_df)
+
+```
+
+
+a la importancia en todos los árboles lo llamo info_modelo
+
+```{r}
+  
+info_modelo <-  importancia_individual_todos_arboles
+info_modelo$arbol <- as.character(info_modelo$arbol)
+
+head(info_modelo)
+```
+
+
+Hacemos el join con la info de cada nodo terminal para cada observación con las variables que llevan a cada nodo terminal (en cada árbol)
+
+
+```{r}
+final <- nodos_terminales_df %>% 
+    left_join(info_modelo, by = c("nodo_terminal", "arbol"))
+
+# para el individuo 30
+
+final %>% 
+    filter(id == 30)
+```
+
+Agregamos la info para cada individuo, de forma que contemos cuántas veces aparece cada variable, sumamos los pesos y ordenamos
+
+```{r}
+res <- final %>%
+    group_by(id, variables) %>%
+    summarise(
+      total = n(),
+      ponderado = sum(peso)) %>%
+    group_by(id) %>%
+    mutate(
+      importancia_caso = total / sum(total),
+      importancia_ponderada = ponderado / sum(ponderado)
+    ) %>% 
+    top_n(10, importancia_ponderada) %>% 
+    ungroup() %>% 
+    arrange(as.numeric(id), desc(importancia_ponderada))
+```
+
+```{r}
+res %>% 
+    filter(id == 30)
+```
+
+Y esa sería la importancia de las variables específica para la observación 30
+
+
+## Todo junto. 
+
+Nos podemos crear una funcioncita que lo haga todo. 
+
+
+```{r}
+getIndividualImportance <-  function(modelo, data, top = modelo$num.independent.variables, ...){
+    
+ params_ellipsis <- list(...)
+  
+  # get terminalNodes
+  nodos_terminales <- predict(modelo, data, type = "terminalNodes")$predictions
+  
+  nodos_terminales_df <- nodos_terminales %>% 
+    as.data.frame() 
+  nodos_terminales_df$id <- rownames(data)
+  nodos_terminales_df <-  nodos_terminales_df %>%
+      dplyr::select(id, everything())
+      
+  
+  
+  colnames(nodos_terminales_df)[-1] <- 1:(ncol(nodos_terminales_df)-1)
+  
+  nodos_terminales_df <- nodos_terminales_df %>% 
+    tidyr::pivot_longer( colnames(nodos_terminales_df)[-1], names_to = "arbol", values_to = "nodo_terminal")
+  
+  # get variables_path for each tree and terminal node
+  info_modelo <-  extraerVariablesPorModelo(modelo, parallel = params_ellipsis$parallel)
+  info_modelo$arbol <- as.character(info_modelo$arbol)
+  
+  # join both
+  
+  final <- nodos_terminales_df %>% 
+    left_join(info_modelo, by = c("nodo_terminal", "arbol"))
+  
+  res <- final %>%
+    group_by(id, variables) %>%
+    summarise(
+      total = n(),
+      ponderado = sum(peso)) %>%
+    group_by(id) %>%
+    # para poder comparar luego observaciones, para cadda individuo, divido las veces qeu 
+     # aparece una variable por el total de veces que han aparecido todas sus variables
+    mutate(
+      importancia_caso = total / sum(total),
+      importancia_ponderada = ponderado / sum(ponderado)
+    ) %>% 
+    top_n(top, importancia_ponderada) %>% 
+    ungroup() %>% 
+    arrange(as.numeric(id), desc(importancia_ponderada))
+  
+}
+```
+
+
+Y comprobamos 
+
+
+```{r}
+explicatividad_iris <-  getIndividualImportance(rg_iris, iris, parallel = TRUE)
+```
+
+```{r}
+DT::datatable(explicatividad_iris)
+```
+
+## Agrupando observaciones con similar importancia de variables
+
+Podríamos hacer ahora un PCA pero yo voy a utilizar un CA usando la importancia_ponderada
+
+```{r}
+
+  tabla_para_diagonalizar <- xtabs(ponderado ~ id+ variables, data= explicatividad_iris)
+  tabla_para_diagonalizar
+```
+
+
+Y al hacer un CA podemos ver qué individuos están asociados con las variables pero por la importancia ponderada. 
+
+```{r}
+
+res_ca <- FactoMineR::CA(tabla_para_diagonalizar, graph = FALSE)
+
+fviz_ca(res_ca)
+```
+
+## Ejemplo 2 
+
+Utilicemos esto para los datos de Boston Housing
+
+```{r}
+boston_df <-  MASS::Boston
+```
+
+> Housing Values in Suburbs of Boston
+  Description
+  The Boston data frame has 506 rows and 14 columns.
+  
+> Usage
+Boston
+Format
+This data frame contains the following columns:
+
+>  crim
+  per capita crime rate by town.
+
+> zn
+proportion of residential land zoned for lots over 25,000 sq.ft.
+
+> indus
+proportion of non-retail business acres per town.
+
+> chas
+Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+> nox
+nitrogen oxides concentration (parts per 10 million).
+
+> rm
+average number of rooms per dwelling.
+
+> age
+proportion of owner-occupied units built prior to 1940.
+
+> dis
+weighted mean of distances to five Boston employment centres.
+
+> rad
+index of accessibility to radial highways.
+
+> tax
+full-value property-tax rate per $10,000.
+
+> ptratio
+pupil-teacher ratio by town.
+
+> black
+1000(Bk−0.63)^2 where BkBk is the proportion of blacks by town.
+
+> lstat
+lower status of the population (percent).
+
+> medv
+median value of owner-occupied homes in $1000s.
+
+
+
+```{r}
+set.seed(47)
+
+idx <-  sample(1:nrow(boston_df),300)
+train_df <- boston_df[idx,]
+
+test_df <- boston_df[-idx, ]
+```
+
+### Modelo con ranger
+
+```{r}
+rg_boston <-  ranger(medv ~ ., data = train_df, num.trees = 50)
+```
+
+Variables importantes a nivel individual
+
+Por simplificar, voy a seleccionar solo las 5 variables más importantes para cada observación
+
+```{r}
+
+importancia_individual <- getIndividualImportance(rg_boston, test_df,top = 5, parallel = TRUE)
+
+```
+
+
+```{r}
+dim(importancia_individual)
+```
+```{r}
+DT::datatable(importancia_individual)
+```
+
+
+### Agrupando
+
+```{r}
+tabla_diag_boston <- xtabs(ponderado ~ id+ variables, data= importancia_individual)
+head(tabla_diag_boston)
+```
+
+```{r}
+res_ca <- FactoMineR::CA(tabla_diag_boston, graph = FALSE)
+
+fviz_ca(res_ca)
+
+```
+
+
+Podemos hacer un [HCPC](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/117-hcpc-hierarchical-clustering-on-principal-components-essentials/) usando las dimensiones obtenidas. Lo que hace es un cluster jerárquico usando las dimensiones obtenidas en la estructura factorial.
+
+
+```{r}
+res_hcpc <- HCPC(res_ca, graph = FALSE)
+
+fviz_cluster(res_hcpc,
+             repel = TRUE,            # Avoid label overlapping
+             show.clust.cent = TRUE, # Show cluster centers
+             palette = "jco",         # Color palette see ?ggpubr::ggpar
+             ggtheme = theme_minimal(),
+             main = "Factor map"
+             )
+```
+
+
+```{r}
+plot(res_hcpc, choice = "3D.map")
+```
+
+
+Una utilidad interesante es la descripción de las variables de los  clusters. Dónde nos dice cuales son la variables más importantes para cada uno. 
+
+Cuando en un cluster su `Intern %` para una variable se desvíe mucho de `glob %` quiere decir que en esa variable la distribución es distinta de en la población general y por tanto es una variables que caracteriza al cluster. 
+
+En este caso estaremos encontrando grupos de individuos con mismas variables importantes en el randomForest. 
+
+
+Claramente se ven grupos dónde es muy importante la variable de criminalidad o la edad
+
+```{r}
+res_hcpc$desc.var
+```
+
+Y por supuesto tenemos los datos con el cluster asignado y los valores de cada variable (no son los valores originales de las variables , sino la importancia ponderada que tenían con el procedimiento descrito para cada observación )
+
+```{r}
+res_hcpc$data.clust %>% 
+         dplyr::select(clust, everything()) %>% 
+    slice_sample(prop = 0.3) %>% 
+    DT::datatable()
+```
+
+
+Si unimos con el dataset original
+
+
+```{r}
+test_df_with_cluster <-  res_hcpc$data.clust %>% 
+    rownames_to_column(var = "id") %>% 
+    dplyr::select(id, clust)
+
+unido <- test_df %>% 
+    rownames_to_column(var = "id") %>% 
+    inner_join(test_df_with_cluster, by = "id")
+```
+
+
+Y efectivamente vemos que el cluster 1 tiene mucho más ratio de criminalidad, y además es la variable más importante para ese grupo en relación con la variable dependiente `medv`. No causa sorpresa ver que es justo en ese cluster dónde el precio de la propiedad es más bajo 
+
+```{r}
+unido %>% 
+    group_by(clust) %>% 
+    summarise(across(c(lstat,crim, age, black, medv), list(mean = mean, median = median), .names = "{.col}_{.fn}" )) %>% 
+    DT::datatable()
+```
+
+
+
+Carlos en el [post](https://www.datanalytics.com/2020/10/14/explicacion-de-los-scorings-de-ciertos-modelos/) que inspira este,  comenta que este tipo de procedimientos sería útil para aquellas de las observaciones con un mayor score predicho. En este ejemplo se podría aplicar para clusterizar las observaciones con un mayor valor predicho del valor de la propiedad. 
+
+## Nota
+
+>  Hice el código deprisa y corriendo, es claramente mejorable y podría ir mucho más rápido. El objetivo era mostrar como se puede obtener variables importantes a nivel de observación en este tipo de modelos, simplemente recorriendo por qué camino ha ido cada observación en cada árbol
+
+> Estaría chulo representar espacialmente la distribución de los clusters obtenidos
+
