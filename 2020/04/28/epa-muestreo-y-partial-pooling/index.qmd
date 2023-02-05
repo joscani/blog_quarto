@@ -1,0 +1,38 @@
+---
+title: EPA, muestreo y partial pooling
+date: '2020-04-28'
+categories:
+  - estadística
+  - 2020
+  - modelos mixtos
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>" 
+---
+
+Sale la EPA a a finales de Abril, con datos de Enero a Marzo. Es proverbial el retraso en la publicación de resultados por parte de las administraciones públicas. En intercambio de tweets con [Carlos Gil](https://www.datanalytics.com/), comentaba la posibilidad de ir actualizando datos poco a poco, en plan como las elecciones: 
+- Al 20% del escrutinio de la EPA, el número de parados y ocupados en España es de X
+y cosas así. 
+
+Gracias a que la EPA tiene un **buen diseño muestral** no sería tan difícil hacerlo, e incluso realizar buensa estimaciones con poco escrutado, al fin y al cabo la epa es un panel,(los sujetos permanecen en la EPA varias oleadas) y es de suponer que hay cierta relación entre la variable latente "estar en paro" y que se trate del mismo individuo, y relación de esa variable con los de determinado grupo de edad al que pertenece, y que la estimación en otros grupos de edad ayude a estimar la tasa de paro en otro grupo, etc....  En fin, que me lío. 
+
+Pues de toda esa estructura e información compartida es de lo que van, *grosso modo*, los modelos mixtos y el partial pooling. En este mismo blog los he comentado alguna vez y he puesto algún ejemplo. Con la EPA hice hace unos años un ejercicio para ver precisamente cómo, con poca muestra, se pueden tener buenas estimaciones. [Aquí](https://rpubs.com/joscani/modmixtosepa) os lo dejo, al final hay algunas referencias, justo las que usé (no me gusta poner referencias de cosas que no he leído solo por rellenar).
+
+Pues nada, buen confinamiento, yo voy a ver si instalo la nueva versión de R en mi linux, dudo entre arriesgarme y hacerlo a pelo o usar un docker. 
+
