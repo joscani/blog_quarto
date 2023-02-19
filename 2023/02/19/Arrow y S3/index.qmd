@@ -1,0 +1,171 @@
+---
+title: Arrow y S3
+date: '2023-02-19'
+categories: 
+  - big data
+  - R
+  - C++
+  - S3
+  - AWS
+  - 2023
+
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: ""
+---
+
+
+## Intro 
+
+[Apache Arrow](https://arrow.apache.org/) está de moda, permite trabajar de forma muy rápida con ficheros parquet por ejemplo, está escrito en C++, aunque también hay implementación en Rust, de hecho la librería [polars](https://www.pola.rs/) está escrita en Rust.
+
+Luego hay APis que permiten usar Arrow desde Java Julia, Go, Python o incluso R.  Vamos a ver un par de ejemplos de como usar arrow desde R. El primero de ellos es sólo copia de la excelente presentación de [Danielle Navarro](https://fosstodon.org/@djnavarro) que os dejo [aquí](https://djnavarro.net/slides-arrow-latinr-2022/#/title-slide) . Y el segundo ejemplo es como ver lo mismo pero con unos datos **fake** que he dejado en un bucket de S3 (del que no puedo poner la dirección)
+
+
+## Ejemplo 1 
+
+Una cosa maravillosa de Arrow es que puedes conectarte a un bucket remoto de S3 (o google cloud storage) y hacer consultas sobre varios millones de datos sin necesidad de que esos datos se traigan enteros a tu pc y sin necesidad de que te quepan en RAM. ¿Cómo lo hace? pues ni la más remota idea. Pero podéis leer las slides de Danielle para haceros una idea
+
+
+Cargamos librerías, nos conectamos a un bucket de s3 y vemos que hay
+
+```{r}
+library(arrow)
+library(tidyverse)
+library(tictoc) 
+library(duckdb) # compraberomos más tarde si usar duckdb mejora
+
+bucket <- s3_bucket("voltrondata-labs-datasets", anonymous = TRUE)
+bucket$ls("nyc-taxi")
+```
+
+
+
+```{r}
+tic()
+bucket <- s3_bucket("voltrondata-labs-datasets/nyc-taxi", anonymous = TRUE)
+remote_taxi <- open_dataset(bucket) 
+remote_taxi
+toc()
+
+
+```
+
+Cuánto tardaría en hacer el cálculo de cuántos viajes ha habido en Enero de 2019 y ver el número de viajes en los que ha habido más de un pasajero.  (Viendo el htop  de mi linuxmint se ve que no hay casi uso de mis cpus)
+
+
+```{r}
+tic()
+result <- remote_taxi |> 
+    filter(year == 2019, month == 1) |>
+    summarize(
+        all_trips = n(),
+        shared_trips = sum(passenger_count > 1, na.rm = TRUE)
+    ) |>
+    mutate(pct_shared = shared_trips / all_trips * 100) |>
+    collect()
+
+result |> 
+    print(n = 200)
+toc()
+
+
+
+```
+
+No está mal , ¿verdad? 
+
+
+## Ejemplo 2 
+
+
+
+
+```{r}
+BUCKET   = Sys.getenv("BUCKET_COMUN")
+
+ROLE_ARN = Sys.getenv("ROLE_ARN")
+S3_FOLDER = Sys.getenv("S3_FOLDER")
+
+
+
+
+bucket_comun <- s3_bucket(bucket = BUCKET, 
+                             role_arn = ROLE_ARN)
+
+
+ds <- open_dataset(bucket_comun$path(S3_FOLDER),
+                   partitioning = c("year", "month", "day"))
+```
+
+
+Cuántos datos 
+
+```{r}
+
+tic()
+res <- ds %>% 
+    filter(year == 2021 & month == 3)  |> 
+    select(year, month, day ) |> 
+    group_by(day) |> 
+    summarise(
+        n_filas = n()
+    ) |> 
+    collect()
+
+res |> 
+    arrange(day) |> 
+    print(n  = 10)
+toc()
+
+```
+Y usando `duckdb` como engine de consulta . 
+
+```{r}
+
+tic()
+res <- ds %>% 
+    filter(year == 2021 & month == 3)  |> 
+    select(year, month, day ) |> 
+    to_duckdb() %>%
+    group_by(day) |> 
+    summarise(
+        n_filas = n()
+    ) |> 
+    collect()
+
+res |> 
+    arrange(day) |> 
+    print(n  = 10)
+toc()
+
+```
+
+
+Pues a mi la verdad, arrow me parece impresionante. Poder hacer cosas como calcular medias, contar, filtrar etc, sobre conjuntos de datos que están en remoto sin tener una computadadora muy potente. 
+
+
+## Nota 
+
+Para instalar la última versión de Arrow en R, recomiendo que os leáis esta [documentación](https://arrow.apache.org/docs/r/articles/install.html)
+
+
+Feliz domingo
+
