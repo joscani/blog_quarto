@@ -1,0 +1,157 @@
+---
+title: Lecciones aprendidas instalando paquetes de R
+date: '2020-03-01'
+categories:
+  - estadística
+  - R
+  - 2020
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+---
+
+
+Ay, la nube.. que bien suena ¿verdad? 
+Si, hasta que te toca pelearte con amazonlinux y versiones viejunas de R.  Total, que me ha tocado lidiar un poco con la versión de R 3.4.1 de hace ya 3 años y tener que compilar en mi máquina un montón de librerías para amazon linux (que viene siendo un centos 7 modificado por aws)
+
+
+Así que lo primero es montarse un Dockerfile dónde id diciendo qué librerías de sistemas hay que añadir, y alguna ñapa por problemas con el compilador de C. 
+
+
+```bash
+FROM amazonlinux:2018.03-with-sources
+MAINTAINER canadasreche@gmail.com 
+
+# Update yum
+RUN yum -y update 
+
+# set locales
+RUN echo "LANG=en_US.utf8" >> /etc/locale.conf
+#RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
+RUN export LC_ALL=en_US.UTF-8
+
+
+# Install system libraries
+# El make -j 8 es para que al compilar en c use 9 jobs
+RUN export MAKE='make -j 8'
+RUN yum install -y xorg-x11-xauth.x86_64 xorg-x11-server-utils.x86_64 xterm libXt libX11-devel \
+libXt-devel libcurl-devel git compat-gmp4 compat-libffi5 libxml2-devel libjpeg-devel openssl-devel \
+boost boost-devel autoconf flex bison libssh2-devel java-1.8.0-openjdk java-1.8.0-openjdk-devel \
+fontconfig-devel cairo-devel
+
+# Development tools 
+RUN yum groupinstall 'Development Tools' -y
+
+# Install and update R
+RUN yum install -y R-core R-base R-core-devel R-devel
+RUN yum update -y R-core R-base R-core-devel R-devel
+
+
+# ENV JAVA_HOME /usr/java/latest
+
+# Fix problem with c compiler
+RUN mkdir ~/.R
+RUN echo "CC=gcc64" >> ~/.R/Makevars
+
+CMD ["bash"] 
+
+```
+
+Y ahora una vez que nos ponemos en el directorio dónde tenemos el dockerfile, lo construimos con 
+
+```bash
+docker build -t amazon-linux-r .
+```
+
+Si todo ha ido bien, ya tenemos nuestra imagen de docker de amazon linux con R 3.4.1 instalado. 
+
+Creamos y entramos en un container de esa imagen dónde adjuntamos un volumen (carpeta que se va a compartir entre mi máquina y el docker)
+
+
+```bash
+ docker run --rm -it -v ~/Descargas/libcentosR-3.4.1:/libR amazon-linux-r /bin/bash
+
+```
+
+Y listo ya estamos preparados para instalar paquetes
+
+Entramos en R y lo primero que hacemos es cambiar el `.libPaths` , para que todo lo que instalemos se quede en la carpeta que compartimos
+
+```{r eval=FALSE}
+.libPaths("/libR")
+
+```
+
+
+Como me acabo de comprar un portátil con 6 cores, establezco la variable de entorno `MAKE` para que el código de C se compile usando 6 jobs. Esto hará que la instalación de la mayoría de librerías vaya mucho más rápida.
+
+```{r eval=FALSE}
+Sys.setenv(MAKE = "make -j 6")
+```
+
+
+Como la versión de R que hay en amazon linux es viejuna (junio de 2017) y como hubo un cambio drástico en la versión 3.5 necesitamos hacer una vuelta al pasado para tener los repos de CRAN que habia en ese momento. Para eso, en primer lugar instalamos la librería `checkpoint` que nos va a facilitar el trabajo. Con esta librería podemos apuntar a los repos de CRAN que había en una fecha determinada. En realidad apuntamos a un repo de microsoft que hace mirror diarios del CRAN.
+
+```{r eval =FALSE}
+install.packages("checkpoint")
+library(checkpoint)
+
+# apuntamos justo al repo que había antes de la verión  de R 3.5
+setSnapshot("2018-03-31")
+
+```
+
+Y ahora ya podemos instalar las librerías, por ejemplo estas.
+
+```{r, eval = FALSE}
+
+list.of.packages <- c(
+  "BayesFactor", "C50", "car", "caret", "catboost",
+  "coin", "cowplot", "DALEX", "DALEXtra", "DataExplorer", "dqrng",
+  "drifter", "EIX", "emmeans", "factoextra", "FactoMineR", "FFTrees",
+  "flextable", "forecast", "gdtools", "ggforce", "ggiraph", "ggiraphExtra",
+  "ggpubr", "glmnet", "highcharter", "iBreakDown", "igraph", "imbalance",
+  "iml", "ingredients", "inum", "KernelKnn", "libcoin", "lime",
+  "lme4", "minqa", "ModelMetrics", "multcomp", "mvtnorm", "networkD3",
+  "party", "partykit", "pbkrtest", "plotrix", "prediction", "randomForestExplainer",
+  "ranger", "RcppArmadillo", "RcppEigen", "RMySQL", "RSpectra",
+  "sitmo", "sjPlot", "sjstats", "smotefamily",
+  "survey", "systemfonts", "threejs", "uwot", "xgb2sql",
+  "xgboost", "yarrr", "ztable", "tcltk"
+)
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages)) install.packages(new.packages)
+
+
+```
+
+Y una vez que estén instadas podemos hacer una vuelta al futuro y actualizar las que podamos.
+
+
+```{r, eval = FALSE}
+
+setSnapshot("2018-03-31")
+update.packages(ask=FALSE)
+
+
+```
+
+Y esto es todo, parece sencillo, pero me ha quitado bastante tiempo todas estas pequeñas vicisitudes.. 
+
+
+

@@ -1,0 +1,120 @@
+---
+title: 'Estimación muy burda del número de contagios. '
+author: jlcr
+date: '2020-03-29'
+slug: estimación-muy-burda-del-número-de-contagios
+categories:
+  - demografía
+  - estadística
+  - R
+tags:
+  - R
+description: ''
+topics: []
+---
+
+
+
+<p>Leo por ahí estimaciones de que hay en España más de 1 millón de contagiados y la verdad es que no tengo ni idea. Pero no se me ocurre ir poniendo ese dato por ahí como verdad absoluta, como hacen algunos .</p>
+<p>Hagamos un ejercicio simple y muy burdo, lo reconozco. Supongamos que el número de fallecidos por coronavirus está bien recogido, lo miro en mi <a href="https://canadasreche.shinyapps.io/dashboard_cvirus/">dashboard</a> que para eso lo hice y me dice que hoy 29 de Marzo hay un total acumulado de 6528 fallecidos.</p>
+<p>Los de las estimaciones de más de un millón de contagiados me dicen que usan una tasa de letalidad global del 2% ergo, le saldrían que esos 6528 se corresponderían con una población de contagiados de 326400, bastante lejos del más de un millón..</p>
+<p>Que si, que ya sé que desde que te contagias hasta que te recuperas pueden pasar de 6 a 22 días, pero aún así me parece que no se puede dar esa cifra tan alegremente.</p>
+<p>Otras estimaciones algo mas serias, también burdas, pero al menos se reconoce y se intenta medir la incertidumbre dan una cifra (si se ejecuta el modelo) entre 150 mil y 300 mil contagiados, <a href="https://www.datanalytics.com/2020/03/20/casos-de-coronavirus-en-madrid-provincia-un-modelo-un-poco-menos-crudo-basado-en-la-mortalidad-ii/">aquí</a> y el <a href="https://github.com/cjgb/covid_madrid">github</a> con el código</p>
+<p>En fin, yo voy a hacer el ejercicio de aplicar unas tasas de letalidad por edad, por ver qué sale. Ya aviso, que <strong>esto tiene la validez que tiene</strong> , aunque no creo que mucha menos que la de la empresa del millón.</p>
+<p>Leemos fallecidos oficiales por edad y sexo del repo de datadista (muchas gracias )</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────── tidyverse 1.3.0.9000 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.0     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.5
+## ✓ tidyr   1.0.2     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>dat1 &lt;- read_csv(&quot;https://raw.githubusercontent.com/datadista/datasets/master/COVID%2019/nacional_covid19_rango_edad.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   fecha = col_date(format = &quot;&quot;),
+##   rango_edad = col_character(),
+##   sexo = col_character(),
+##   casos_confirmados = col_double(),
+##   hospitalizados = col_double(),
+##   ingresos_uci = col_double(),
+##   fallecidos = col_double()
+## )</code></pre>
+<p>Las tasas de letalidad que vamos a utilizar vienen de un estudio en China, <a href="https://www.cebm.net/covid-19/global-covid-19-case-fatality-rates/">estudio</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Age</th>
+<th>(deaths/cases)</th>
+<th align="right">CFR (95% CI)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>≤ 9 years</td>
+<td>(0/416)</td>
+<td align="right">0%</td>
+</tr>
+<tr class="even">
+<td>10 to 19 years</td>
+<td>(1/549)</td>
+<td align="right">0.18% (0.03 to 1.02%)</td>
+</tr>
+<tr class="odd">
+<td>20 to 49 years</td>
+<td>(63/19790)</td>
+<td align="right">0.32% (0.25% to 0.41%)</td>
+</tr>
+<tr class="even">
+<td>50 to 59 years</td>
+<td>(130/10,008)</td>
+<td align="right">1.3% (1.1% to 1.5%)</td>
+</tr>
+<tr class="odd">
+<td>60 to 69. years</td>
+<td>(309/8583)</td>
+<td align="right">3.6% (3.2% to 4.0%)</td>
+</tr>
+<tr class="even">
+<td>70 to 79 years</td>
+<td>(312/3918)</td>
+<td align="right">8.0% (7.2% to 8.9%)</td>
+</tr>
+<tr class="odd">
+<td>≥80 years</td>
+<td>(208/1408)</td>
+<td align="right">14.8% (13.0% to 16.7%)</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tmp &lt;- dat1 %&gt;%
+    filter(rango_edad != &quot;Total&quot; &amp; sexo == &quot;ambos&quot;)  %&gt;%
+    mutate(rango_edad_2 =
+               fct_collapse(rango_edad,
+                   &quot;20-49&quot; = c(&quot;20-29&quot;,&quot;30-39&quot;,&quot;40-49&quot;),
+                   &quot;&gt;= 80&quot;  = c(&quot;80 y +&quot;,&quot;80-89&quot;,&quot;90 y +&quot;)
+               )
+           ) %&gt;% 
+    group_by(rango_edad_2) %&gt;% 
+    summarise(fallecidos = sum(fallecidos))
+
+tmp$tasa_letalidad &lt;-  c(0, 0.18, 0.32, 1.3, 3.6,8, 14.8)/100</code></pre>
+<p>Y nos saldría nuestra estimación estilo compadre de esta forma</p>
+<pre class="r"><code>(tmp &lt;-  tmp %&gt;% 
+    mutate(contagiados_estim = fallecidos / tasa_letalidad) )</code></pre>
+<pre><code>## # A tibble: 7 x 4
+##   rango_edad_2 fallecidos tasa_letalidad contagiados_estim
+##   &lt;fct&gt;             &lt;dbl&gt;          &lt;dbl&gt;             &lt;dbl&gt;
+## 1 0-9                   0         0                   NaN 
+## 2 10-19                 7         0.0018             3889.
+## 3 20-49               194         0.0032            60625 
+## 4 50-59               245         0.013             18846.
+## 5 60-69               797         0.036             22139.
+## 6 70-79              2253         0.08              28162.
+## 7 &gt;= 80              5966         0.148             40311.</code></pre>
+<p>Y un total de contagiados de</p>
+<pre class="r"><code>sum(tmp$contagiados_estim, na.rm=T)</code></pre>
+<pre><code>## [1] 173972.2</code></pre>
+<p>En fin, y oigan, si con el número de fallecidos el número de contagiados es el que dice esa empresa, no sería tan mala noticia, significaría que la letalidad es más baja de lo que dicen ciertos estudios.</p>

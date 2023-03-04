@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="jlcr">
+<meta name="dcterms.date" content="2020-03-29">
+
+<title>Muestrear no es pecado - Estimación muy burda del número de contagios.</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Estimación muy burda del número de contagios.</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">demografía</div>
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">R</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2020-03-29</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>
+Leo por ahí estimaciones de que hay en España más de 1 millón de contagiados y la verdad es que no tengo ni idea. Pero no se me ocurre ir poniendo ese dato por ahí como verdad absoluta, como hacen algunos .
+</p>
+<p>
+Hagamos un ejercicio simple y muy burdo, lo reconozco. Supongamos que el número de fallecidos por coronavirus está bien recogido, lo miro en mi <a href="https://canadasreche.shinyapps.io/dashboard_cvirus/">dashboard</a> que para eso lo hice y me dice que hoy 29 de Marzo hay un total acumulado de 6528 fallecidos.
+</p>
+<p>
+Los de las estimaciones de más de un millón de contagiados me dicen que usan una tasa de letalidad global del 2% ergo, le saldrían que esos 6528 se corresponderían con una población de contagiados de 326400, bastante lejos del más de un millón..
+</p>
+<p>
+Que si, que ya sé que desde que te contagias hasta que te recuperas pueden pasar de 6 a 22 días, pero aún así me parece que no se puede dar esa cifra tan alegremente.
+</p>
+<p>
+Otras estimaciones algo mas serias, también burdas, pero al menos se reconoce y se intenta medir la incertidumbre dan una cifra (si se ejecuta el modelo) entre 150 mil y 300 mil contagiados, <a href="https://www.datanalytics.com/2020/03/20/casos-de-coronavirus-en-madrid-provincia-un-modelo-un-poco-menos-crudo-basado-en-la-mortalidad-ii/">aquí</a> y el <a href="https://github.com/cjgb/covid_madrid">github</a> con el código
+</p>
+<p>
+En fin, yo voy a hacer el ejercicio de aplicar unas tasas de letalidad por edad, por ver qué sale. Ya aviso, que <strong>esto tiene la validez que tiene</strong> , aunque no creo que mucha menos que la de la empresa del millón.
+</p>
+<p>
+Leemos fallecidos oficiales por edad y sexo del repo de datadista (muchas gracias )
+</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────── tidyverse 1.3.0.9000 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.0     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.5
+## ✓ tidyr   1.0.2     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>dat1 &lt;- read_csv("https://raw.githubusercontent.com/datadista/datasets/master/COVID%2019/nacional_covid19_rango_edad.csv")</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   fecha = col_date(format = ""),
+##   rango_edad = col_character(),
+##   sexo = col_character(),
+##   casos_confirmados = col_double(),
+##   hospitalizados = col_double(),
+##   ingresos_uci = col_double(),
+##   fallecidos = col_double()
+## )</code></pre>
+<p>
+Las tasas de letalidad que vamos a utilizar vienen de un estudio en China, <a href="https://www.cebm.net/covid-19/global-covid-19-case-fatality-rates/">estudio</a>
+</p>
+
+<table class="table">
+<thead>
+<tr class="header">
+<th>
+Age
+</th>
+<th>
+(deaths/cases)
+</th>
+<th align="right">
+CFR (95% CI)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>
+≤ 9 years
+</td>
+<td>
+(0/416)
+</td>
+<td align="right">
+0%
+</td>
+</tr>
+<tr class="even">
+<td>
+10 to 19 years
+</td>
+<td>
+(1/549)
+</td>
+<td align="right">
+0.18% (0.03 to 1.02%)
+</td>
+</tr>
+<tr class="odd">
+<td>
+20 to 49 years
+</td>
+<td>
+(63/19790)
+</td>
+<td align="right">
+0.32% (0.25% to 0.41%)
+</td>
+</tr>
+<tr class="even">
+<td>
+50 to 59 years
+</td>
+<td>
+(130/10,008)
+</td>
+<td align="right">
+1.3% (1.1% to 1.5%)
+</td>
+</tr>
+<tr class="odd">
+<td>
+60 to 69. years
+</td>
+<td>
+(309/8583)
+</td>
+<td align="right">
+3.6% (3.2% to 4.0%)
+</td>
+</tr>
+<tr class="even">
+<td>
+70 to 79 years
+</td>
+<td>
+(312/3918)
+</td>
+<td align="right">
+8.0% (7.2% to 8.9%)
+</td>
+</tr>
+<tr class="odd">
+<td>
+≥80 years
+</td>
+<td>
+(208/1408)
+</td>
+<td align="right">
+14.8% (13.0% to 16.7%)
+</td>
+</tr>
+</tbody>
+
+</table>
+<pre class="r"><code>tmp &lt;- dat1 %&gt;%
+    filter(rango_edad != "Total" &amp; sexo == "ambos")  %&gt;%
+    mutate(rango_edad_2 =
+               fct_collapse(rango_edad,
+                   "20-49" = c("20-29","30-39","40-49"),
+                   "&gt;= 80"  = c("80 y +","80-89","90 y +")
+               )
+           ) %&gt;% 
+    group_by(rango_edad_2) %&gt;% 
+    summarise(fallecidos = sum(fallecidos))
+
+tmp$tasa_letalidad &lt;-  c(0, 0.18, 0.32, 1.3, 3.6,8, 14.8)/100</code></pre>
+<p>
+Y nos saldría nuestra estimación estilo compadre de esta forma
+</p>
+<pre class="r"><code>(tmp &lt;-  tmp %&gt;% 
+    mutate(contagiados_estim = fallecidos / tasa_letalidad) )</code></pre>
+<pre><code>## # A tibble: 7 x 4
+##   rango_edad_2 fallecidos tasa_letalidad contagiados_estim
+##   &lt;fct&gt;             &lt;dbl&gt;          &lt;dbl&gt;             &lt;dbl&gt;
+## 1 0-9                   0         0                   NaN 
+## 2 10-19                 7         0.0018             3889.
+## 3 20-49               194         0.0032            60625 
+## 4 50-59               245         0.013             18846.
+## 5 60-69               797         0.036             22139.
+## 6 70-79              2253         0.08              28162.
+## 7 &gt;= 80              5966         0.148             40311.</code></pre>
+<p>
+Y un total de contagiados de
+</p>
+<pre class="r"><code>sum(tmp$contagiados_estim, na.rm=T)</code></pre>
+<pre><code>## [1] 173972.2</code></pre>
+<p>
+En fin, y oigan, si con el número de fallecidos el número de contagiados es el que dice esa empresa, no sería tan mala noticia, significaría que la letalidad es más baja de lo que dicen ciertos estudios.
+</p>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
