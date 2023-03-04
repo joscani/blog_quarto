@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="jlcr">
+<meta name="dcterms.date" content="2020-03-10">
+
+<title>Muestrear no es pecado - El virus</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml"><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">El virus</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">estadística</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2020-03-10</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<script src="../../../../rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="../../../../rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="../../../../rmarkdown-libs/leaflet/leaflet.css" rel="stylesheet">
+<script src="../../../../rmarkdown-libs/leaflet/leaflet.js"></script>
+<link href="../../../../rmarkdown-libs/leafletfix/leafletfix.css" rel="stylesheet">
+<script src="../../../../rmarkdown-libs/Proj4Leaflet/proj4-compressed.js"></script>
+<script src="../../../../rmarkdown-libs/Proj4Leaflet/proj4leaflet.js"></script>
+<link href="../../../../rmarkdown-libs/rstudio_leaflet/rstudio_leaflet.css" rel="stylesheet">
+<script src="../../../../rmarkdown-libs/leaflet-binding/leaflet.js"></script>
+<script src="../../../../rmarkdown-libs/leaflet-providers/leaflet-providers_1.9.0.js"></script>
+<script src="../../../../rmarkdown-libs/leaflet-providers-plugin/leaflet-providers-plugin.js"></script>
+<p>
+En estos tiempos tan asépticos ya no estamos acostumbrados (en algunos países), a tratar con agentes patógenos altamente contagiosos como el que llena los titulares de periódicos y televisiones estos días.
+</p>
+<p>
+Sin más, vamos a comparar los datos de España e Italia, plagiando con total descaro a mi amigo Carlos Gil que puso este <a href="https://www.datanalytics.com/2020/03/09/seguimiento-del-coronavirus-en-tiempo-real-con-r/">post</a> de ayer y en <a href="https://www.datanalytics.com/2020/03/10/seguimiento-de-los-nuevos-casos-diarios-de-coronavirus-en-tiempo-real-con-r/">este</a> de hoy.
+</p>
+<p>
+Yo me acabo de enterar de que estoy en cuarentena preventiva por un posible contagio de la mujer de un compañero, así que en casita a teletrabajar unos días.
+</p>
+<p>
+El código
+</p>
+<pre class="r"><code># Librerías ----
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────── tidyverse 1.3.0.9000 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.0     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.5
+## ✓ tidyr   1.0.2     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+
+<pre class="r"><code>library(leaflet)
+library(htmlwidgets)
+library(htmltools)
+
+
+# nos bajamos  los datos, actualizados a día de ayer ----
+
+url &lt;- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+
+cvirus &lt;- read.table(url, sep = ",", header = T)
+cvirus$Province.State &lt;- NULL
+
+# Pasamos a formato largo ----
+
+cvirus_longer &lt;- cvirus %&gt;%
+  pivot_longer(
+    cols = starts_with("X"),
+    values_to = "casos"
+  )
+
+colnames(cvirus_longer) &lt;- c("país", "Lat", "Long", "fecha", "casos")
+cvirus_longer$fecha &lt;- as.Date(as.character(cvirus_longer$fecha), format = "X%m.%d.%y")
+
+# Nos quedamos con los paises que nos interesan
+cvirus_it_sp &lt;- cvirus_longer %&gt;%
+  filter(país %in% c("Italy", "Spain"))
+
+head(cvirus_it_sp)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   país    Lat  Long fecha      casos
+##   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;date&gt;     &lt;int&gt;
+## 1 Italy    43    12 2020-01-22     0
+## 2 Italy    43    12 2020-01-23     0
+## 3 Italy    43    12 2020-01-24     0
+## 4 Italy    43    12 2020-01-25     0
+## 5 Italy    43    12 2020-01-26     0
+## 6 Italy    43    12 2020-01-27     0</code></pre>
+<p>
+A pintar.
+</p>
+<pre class="r"><code>cvirus_it_sp %&gt;%
+  filter(fecha &gt; as.Date("2020-02-23")) %&gt;%
+  ggplot(aes(x = fecha, y = casos, col = país)) +
+  geom_point() +
+  geom_line()</code></pre>
+<p>
+<img src="unnamed-chunk-2-1.png" width="672">
+</p>
+<p>
+Si quitamos 9 días a la fecha de España vemos que estamso alineados a como estaba Itala en ese día.
+</p>
+<pre class="r"><code>tmp &lt;- cvirus_it_sp
+tmp$fecha[tmp$país == "Spain"] &lt;- tmp$fecha[tmp$país == "Spain"] - 9
+
+tmp %&gt;%
+  filter(fecha &gt; as.Date("2020-02-10")) %&gt;%
+  ggplot(aes(x = fecha, y = casos, col = país)) +
+  geom_line(size = rel(1.2))</code></pre>
+<p>
+<img src="unnamed-chunk-3-1.png" width="672">
+</p>
+<p>
+Y bueno, sigo plagiando a Carlos.
+</p>
+<pre class="r"><code>tmp &lt;- tmp[tmp$fecha &gt; as.Date("2020-02-10"), ]
+
+ggplot(tmp, aes(x = fecha, y = log10(casos), col = país)) +
+  geom_line(size = rel(2))</code></pre>
+<p>
+<img src="unnamed-chunk-4-1.png" width="672">
+</p>
+<section id="mapa-en-leaflet" class="level2">
+<h2 class="anchored" data-anchor-id="mapa-en-leaflet">
+Mapa en leaflet
+</h2>
+<p>
+Y ahora un mapita con los datos del último día, del 9 de Marzo en el momento de escribir estas líneas
+</p>
+<pre class="r"><code>cvirus_map_data &lt;- cvirus_longer %&gt;%
+  filter(fecha == max(fecha))
+
+
+pal &lt;- colorNumeric(
+  palette = "Reds",
+  domain = c(-1, log(max(cvirus_map_data$casos + 1)))
+)
+
+
+leaflet(cvirus_map_data) %&gt;%
+  # addProviderTiles('CartoDB.Positron') %&gt;%
+  addProviderTiles("Stamen.Toner") %&gt;%
+  addCircleMarkers(
+    lng = ~Long,
+    lat = ~Lat,
+    label = ~ paste0( país, ": ", casos ),
+    radius = ~ 3 * log( casos + 1 ) ,
+    color = ~ pal(log( casos + 1 ) )
+  ) </code></pre>
+<div id="htmlwidget-1" class="leaflet html-widget" style="width:672px;height:480px;">
+
+</div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["Stamen.Toner",null,null,{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addCircleMarkers","args":[[31.8257,40.1824,30.0572,26.0789,36.0611,23.3417,23.8298,26.8154,19.1959,38.0428,47.862,33.88202,30.9756,27.6104,44.0935,32.9711,27.614,43.6661,41.2956,37.2692,35.7452,35.1917,36.3427,31.202,37.5777,30.6171,39.3054,31.6927,41.1129,24.974,29.1832,15,36,47.6062,41.7377,1.2833,47,28.1667,2.5,49.2827,34.0522,-33.8688,-37.8136,-28.0167,11.55,7,51,64,24,13,21,43,55,63,40,-34.9285,36.5761,50.8333,35.4437,32.7157,26,35.4437,33.8547,40.745,38.4747,33,21,33,26.0275,29.5,28.0339,45.1,46.8182,47.5162,31,30.3753,-14.235,42.3154,39.0742,41.6086,60.472,45.9432,56.2639,58.5953,52.1326,43.9424,53.7098,64.9631,55.1694,23.6345,-40.9006,9.082,-31.9505,53.1424,49.8153,43.7333,25.3548,48.033,-1.8312,40.1431,49.8175,40.0691,18.7357,-0.7893,39.3999,42.5063,-41.4545,56.8796,31.7917,24,14.4974,43.9088,27.9904,39.0916,37.563,38.578,45.775,33.8034,45.547,-38.4161,-35.6751,31.24,42.1767,33.2918,35.8032,41.122,48.3794,17.9,33.7879,47.1625,-12.4634,61.8926,36.1408,47.14,51.9194,34,37.8534,43.9159,46.1512,40.9263,29.7752,37.7749,-30.5595,36.0796,29.5693,47.1981,30.769,35.9179,40.7128,39.1547,42.3601,39.7392,39.5912,27.5142,3.848,4.5709,9.7489,-9.19,44.0165,48.669,8.6195,35.7211,39.9078,41.3148,38.0606,39.8362,42.4672,40.6546,44.9964,40.5608,41.6739,38.7646,37.3541,3.9339,35.9375,39.2587,41.8882,14.6415,37.6017,26.1901,26.663,32.8162,41.1489,43.0324,32.7957,45.7466,33.8999,40.9629,38.9108,21.307,42.3345,47.7425,34.3672,42.6953,37.2519,47.0676,36.1593,42.7339,3.2028,40.229,23.685,38.9085,42.9931,38.9072,-23.4425,42.3118,36.1343,43.1261,36.9859,39.5839,39.8065,40.7453,38.8454,47.175,27.4799,44.8446,30.5773,34.0132,33.9533,35.1269,38.6103,40.9849,41.8586,29.028,51.2538,53.9333,52.9399,41.6699,41.1533,35.1264,38.4333,4.5353,43.0279,44.8254,26.8946,34.2515,33.1795,38.1938,29.6499,40.7909,34.8606,32,36,47.4009,42.1657,36.1162,22.3,42.2302,23.7,35.4437,16,31.9522,37.6489,33.0406,39.0598,27.7663,40.2989,44.572,31.0545,40.3495,40.5908,22.1667,60,42.0115,39.0639,35.6301,33.8569,35.7478,37.7693,33.7298,39.8494,37.6681,38.8974,38.3135,43.4525,47.4116,45.6945,41.1254,40.3888,41.6809,44.2685,18.0708,41.5978,21.0943,35.5653,40.15,12.2383,49.3723,41.9029,46.8625,8.538,38.5266,31.1695,38.4561,44.0459,61.3707,34.9697,39.3185,44.2405,44.6939,43.3266,32.7416,46.9219,34.8405,47.5289,44.2998,38.4912,42.756,47.6477,38.3105,37.0454,38.5025,34.3705,42.4097,33.9191,33.7956,37.5455,33.4502,32.4893,40.2589,40.0712,39.9259,40.8568,40.6976,39.6553,40.6956,39.6203,38.5458,41.9879,41.0458,39.9526,36.8508,38.8816,38.2042,39.0768,38.7849,41.3912,34.2465,32.0575,41.4277,39.8522,40.0106,43.0186,44.7509,41.4339,41.2603,41.1954],[117.2264,116.4142,107.874,117.9874,103.8343,113.4244,108.7881,106.8748,109.7453,114.5149,127.7615,113.614,112.2707,111.7088,113.9448,119.455,115.7221,126.1923,122.6085,106.1655,95.9956,108.8701,118.1498,121.4491,112.2922,102.7103,117.323,88.0924,85.2401,101.487,120.0934,101,138,-122.3321,-87.6976,103.8333,2,84.25,112.5,-123.1207,-118.2437,151.2093,144.9631,153.4,104.9167,81,9,26,54,122,78,12,-3,16,-4,138.6007,-120.9876,4,139.638,-117.1611,30,139.638,35.8623,-123.8695,-121.3542,44,57,65,50.55,47.75,1.6596,15.2,8.2275,14.5501,35,69.3451,-51.9253,43.3569,21.8243,21.7453,8.4689,24.9668,9.5018,25.0136,5.2913,12.4578,27.9534,-19.0208,23.8813,-102.5528,174.886,8.6753,115.8605,-7.6921,6.1296,7.4167,51.1839,-121.8339,-78.1834,47.5769,15.473,45.0382,-70.1627,113.9213,-8.2245,1.5218,145.9707,24.6032,-7.0926,45,-14.4524,-71.826,-82.3018,-120.8039,-122.3255,-122.9888,-118.7606,-84.3963,-123.1386,-63.6167,-71.543,36.51,-71.1449,-112.4291,-78.5661,-73.7949,31.1656,-62.8333,-117.8531,19.5033,130.8456,-6.9118,-5.3536,9.55,19.1451,9,-121.9018,17.6791,14.9955,-74.077,-95.3103,-122.4194,22.9375,-115.094,-95.8143,-119.3732,-86.9824,-86.8622,-74.006,-77.2405,-71.0589,-104.9903,-106.064,90.4336,11.5021,-74.2973,-83.7534,-75.0152,21.0059,19.699,0.8248,-79.1781,-75.3879,-96.1951,-84.4803,-86.1752,-71.2874,-73.5594,-93.0616,-119.6035,-75.2479,-121.9018,-121.9552,-53.1258,14.3754,-104.9389,-71.4774,-61.0242,-121.7195,-80.3659,-81.9535,-111.2845,-73.983,-73.936,-79.7848,-122.5194,-84.5641,-112.0953,-104.4723,-157.8584,-122.7647,-123.304,-80.5883,-121.6142,-119.6963,-122.1295,-95.941,25.4858,73.2207,-75.3879,90.3563,-77.2405,-71.0498,-77.0369,-58.4438,-73.1822,-86.822,-123.2492,-119.2321,-76.3637,-86.5401,-74.0535,-94.8521,-120.9319,-82.3452,-122.5927,-86.6611,-85.1479,-117.3961,-89.9253,-90.4125,-72.6151,-74.3118,-81.0755,-85.3232,-116.5765,-73.5491,-91.5984,20.1683,33.4299,-84.3542,114.7277,-73.135,-93.7842,-81.9098,-84.4803,-96.493,-85.6435,-90.1121,-121.8474,-81.9535,53,128,-121.4905,-74.9481,-119.6816,114.2,-71.5301,121,139.638,108,35.2332,-122.6655,-83.6431,-105.3111,-81.6868,-74.521,-122.0709,-97.5635,-88.9861,-77.2098,113.55,90,-93.2105,-76.8021,-79.8064,-80.945,-86.6923,-78.17,-111.4312,-86.2583,-84.6701,-77.0268,-117.0554,-71.5639,28.3699,-93.9002,-98.2681,-82.7649,-71.5118,-89.6165,-63.0501,-72.7554,-157.4983,-96.9289,-111.8624,-1.5616,-2.3644,12.4534,103.8467,-80.7821,-96.7265,-91.8678,-92.2884,-72.7107,-152.4044,-92.3731,-75.5071,-114.4788,-69.3819,-84.5361,-89.6787,-110.4544,-106.2485,-99.784,-99.4388,-80.9545,-107.3025,-122.6413,-121.9018,-121.958,-122.2654,-119.1391,-71.8571,-84.0167,-84.2279,-82.7779,-84.4803,-94.8521,-74.124,-74.8649,-75.1196,-74.1285,-74.2632,-106.8287,-105.5943,-104.3326,-106.9253,-88.4016,-75.2479,-75.1652,-76.2859,-77.091,-77.6078,-77.6536,-76.8721,-95.4778,-80.607,-111.6661,-85.355,-77.2865,-86.4997,-89.5498,-92.3814,-81.6758,-111.9522,-73.4379],[20.69614360299,18.1913556260628,19.0735267995243,17.0811964164081,14.5088457208544,21.6324553604167,16.6001684661826,14.9712977603362,15.3896961447692,17.2955733083545,18.5338323421518,21.4473947956722,33.371226261559,20.7797310996682,12.992200020859,19.3466681824406,20.5248464294328,13.62988434681,14.5088457208544,12.992200020859,8.83331693749932,16.5159946077971,19.8960053321869,17.5306332510941,14.6935193998527,18.874707418675,14.7599427774844,2.07944154167984,13.0314162655611,15.4943579217705,21.3099661875783,11.9669521396928,19.0994113431943,14.2865218043933,7.454719949364,15.2442130949534,22.4615210826412,2.07944154167984,14.6026033513667,10.4895226843994,9.13356731317027,12.0760550722054,8.83331693749932,8.83331693749932,3.29583686600433,2.07944154167984,21.8544627377058,11.1407162001129,12.9524643406089,10.5790815738485,12.1291538035037,27.6756869534098,17.8441049675419,17.6247921925561,22.3080834490555,6.23832462503951,3.29583686600433,16.7729609415326,19.6403562322816,4.15888308335967,12.2830336866663,0,11.2130088548501,2.07944154167984,7.19368581839511,12.8299983570482,8.83331693749932,5.37527840768417,14.128590603937,12.7454857261481,9.13356731317027,8.12415060330663,18.5954361494769,15.6284584585243,12.2326123317172,8.49964003216865,10.3972077083992,8.31776616671934,13.4994290109908,6.23832462503951,17.9818842819197,9.77428961406445,16.7164620965333,7.69484807238461,17.8441049675419,11.8537311557443,6.90775527898214,12.7454857261481,2.07944154167984,6.23832462503951,5.37527840768417,3.29583686600433,5.83773044716594,10.6660441844682,5.37527840768417,2.07944154167984,9.6566274746046,10.9127584791792,8.31776616671934,7.454719949364,11.2130088548501,2.07944154167984,5.37527840768417,9.99661353052561,11.2130088548501,2.07944154167984,3.29583686600433,6.59167373200866,4.15888308335967,9.13356731317027,4.8283137373023,4.15888308335967,3.29583686600433,6.23832462503951,6.90775527898214,4.15888308335967,2.07944154167984,5.37527840768417,6.59167373200866,8.67111527368849,7.91717198884577,2.07944154167984,7.19368581839511,3.29583686600433,5.83773044716594,13.7853595504038,2.07944154167984,2.07944154167984,5.37527840768417,6.90775527898214,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,9.40648264778745,5.37527840768417,6.90775527898214,5.37527840768417,10.3972077083992,6.23832462503951,5.83773044716594,8.31776616671934,6.23832462503951,3.29583686600433,5.83773044716594,2.07944154167984,2.07944154167984,2.07944154167984,9.77428961406445,4.8283137373023,7.19368581839511,4.15888308335967,2.07944154167984,2.07944154167984,3.29583686600433,4.15888308335967,6.90775527898214,7.454719949364,5.37527840768417,6.23832462503951,2.07944154167984,2.07944154167984,2.07944154167984,4.15888308335967,3.29583686600433,2.07944154167984,8.31776616671934,8.98719682066197,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,11.3525689017548,5.37527840768417,5.37527840768417,4.15888308335967,4.15888308335967,3.29583686600433,4.15888308335967,5.37527840768417,3.29583686600433,4.15888308335967,4.8283137373023,3.29583686600433,2.07944154167984,2.07944154167984,4.8283137373023,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,4.8283137373023,3.29583686600433,4.8283137373023,5.83773044716594,6.59167373200866,4.15888308335967,4.8283137373023,2.07944154167984,5.37527840768417,2.07944154167984,5.37527840768417,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,4.8283137373023,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,10.8327537379327,6.23832462503951,4.8283137373023,6.23832462503951,7.19368581839511,4.15888308335967,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,4.15888308335967,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,26.9776722807122,26.7735696784017,16.7729609415326,15.4771658976436,14.9302012272617,14.3873716367902,13.5977984794598,11.6136030327237,11.5504428051302,10.3972077083992,9.77428961406445,9.27312736007495,8.67111527368849,8.31776616671934,8.31776616671934,8.31776616671934,8.31776616671934,7.91717198884577,7.69484807238461,7.69484807238461,7.19368581839511,9.13356731317027,6.59167373200866,6.59167373200866,6.23832462503951,6.23832462503951,6.23832462503951,6.23832462503951,5.83773044716594,5.83773044716594,5.83773044716594,5.37527840768417,4.8283137373023,4.8283137373023,4.15888308335967,4.15888308335967,4.15888308335967,4.15888308335967,4.15888308335967,4.15888308335967,3.29583686600433,3.29583686600433,3.29583686600433,3.29583686600433,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,0,0,0,0,0,0,0,0,0,0,0,0,0,2.07944154167984,4.15888308335967,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,3.29583686600433,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,2.07944154167984,2.07944154167984,2.07944154167984,4.15888308335967,2.07944154167984,4.8283137373023,2.07944154167984,2.07944154167984,2.07944154167984,2.07944154167984,3.29583686600433,2.07944154167984,4.15888308335967,2.07944154167984,2.07944154167984],null,null,{"interactive":true,"className":"","stroke":true,"color":["#E73429","#F34D36","#F14330","#F6583D","#FB7050","#E02E26","#F85D41","#FB6C4C","#FB6849","#F6563C","#F24934","#E12F26","#67000D","#E73428","#FC7E5D","#F0402F","#E93629","#FC7858","#FB7050","#FC7E5D","#FDA384","#F85E41","#EE3A2B","#F5543A","#FB6F4E","#F14532","#FB6E4E","#FEDCCC","#FC7E5D","#FA6748","#E23027","#FC8766","#F14330","#FC7252","#FDAF93","#FB694A","#D92823","#FEDCCC","#FB6F4F","#FC9374","#FDA081","#FC8665","#FDA384","#FDA384","#FED2BF","#FEDCCC","#DE2C25","#FC8E6E","#FC7E5E","#FC9373","#FC8565","#AE1117","#F45138","#F5533A","#DB2923","#FCBA9F","#FED2BF","#F75B3F","#EF3C2D","#FECBB6","#FC8463","#FFE7DC","#FC8D6D","#FEDCCC","#FDB195","#FC7F5F","#FDA384","#FDC1A9","#FC7453","#FC805F","#FDA081","#FDA98C","#F24833","#FA6647","#FC8564","#FDA688","#FC9474","#FDA78A","#FC7959","#FCBA9F","#F44F37","#FC9A7B","#F75C40","#FDAD90","#F45138","#FC8867","#FCB498","#FC805F","#FEDCCC","#FCBA9F","#FDC1A9","#FED2BF","#FCBDA4","#FC9272","#FDC1A9","#FEDCCC","#FD9B7C","#FC9070","#FDA78A","#FDAF93","#FC8D6D","#FEDCCC","#FDC1A9","#FC9879","#FC8D6D","#FEDCCC","#FED2BF","#FCB79C","#FECBB6","#FDA081","#FDC5AE","#FECBB6","#FED2BF","#FCBA9F","#FCB498","#FECBB6","#FEDCCC","#FDC1A9","#FCB79C","#FDA486","#FDAB8E","#FEDCCC","#FDB195","#FED2BF","#FCBDA4","#FC7756","#FEDCCC","#FEDCCC","#FDC1A9","#FCB498","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FD9D7F","#FDC1A9","#FCB498","#FDC1A9","#FC9474","#FCBA9F","#FCBDA4","#FDA78A","#FCBA9F","#FED2BF","#FCBDA4","#FEDCCC","#FEDCCC","#FEDCCC","#FC9A7B","#FDC5AE","#FDB195","#FECBB6","#FEDCCC","#FEDCCC","#FED2BF","#FECBB6","#FCB498","#FDAF93","#FDC1A9","#FCBA9F","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FED2BF","#FEDCCC","#FDA78A","#FDA183","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FC8C6C","#FDC1A9","#FDC1A9","#FECBB6","#FECBB6","#FED2BF","#FECBB6","#FDC1A9","#FED2BF","#FECBB6","#FDC5AE","#FED2BF","#FEDCCC","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FDC5AE","#FED2BF","#FDC5AE","#FCBDA4","#FCB79C","#FECBB6","#FDC5AE","#FEDCCC","#FDC1A9","#FEDCCC","#FDC1A9","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FC9070","#FCBA9F","#FDC5AE","#FCBA9F","#FDB195","#FECBB6","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#B41318","#B61319","#F75B3F","#FA6748","#FB6C4C","#FB7151","#FC7958","#FC8A69","#FC8A6A","#FC9474","#FC9A7B","#FD9F80","#FDA486","#FDA78A","#FDA78A","#FDA78A","#FDA78A","#FDAB8E","#FDAD90","#FDAD90","#FDB195","#FDA081","#FCB79C","#FCB79C","#FCBA9F","#FCBA9F","#FCBA9F","#FCBA9F","#FCBDA4","#FCBDA4","#FCBDA4","#FDC1A9","#FDC5AE","#FDC5AE","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FED2BF","#FED2BF","#FED2BF","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FEDCCC","#FECBB6","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FECBB6","#FEDCCC","#FEDCCC"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#E73429","#F34D36","#F14330","#F6583D","#FB7050","#E02E26","#F85D41","#FB6C4C","#FB6849","#F6563C","#F24934","#E12F26","#67000D","#E73428","#FC7E5D","#F0402F","#E93629","#FC7858","#FB7050","#FC7E5D","#FDA384","#F85E41","#EE3A2B","#F5543A","#FB6F4E","#F14532","#FB6E4E","#FEDCCC","#FC7E5D","#FA6748","#E23027","#FC8766","#F14330","#FC7252","#FDAF93","#FB694A","#D92823","#FEDCCC","#FB6F4F","#FC9374","#FDA081","#FC8665","#FDA384","#FDA384","#FED2BF","#FEDCCC","#DE2C25","#FC8E6E","#FC7E5E","#FC9373","#FC8565","#AE1117","#F45138","#F5533A","#DB2923","#FCBA9F","#FED2BF","#F75B3F","#EF3C2D","#FECBB6","#FC8463","#FFE7DC","#FC8D6D","#FEDCCC","#FDB195","#FC7F5F","#FDA384","#FDC1A9","#FC7453","#FC805F","#FDA081","#FDA98C","#F24833","#FA6647","#FC8564","#FDA688","#FC9474","#FDA78A","#FC7959","#FCBA9F","#F44F37","#FC9A7B","#F75C40","#FDAD90","#F45138","#FC8867","#FCB498","#FC805F","#FEDCCC","#FCBA9F","#FDC1A9","#FED2BF","#FCBDA4","#FC9272","#FDC1A9","#FEDCCC","#FD9B7C","#FC9070","#FDA78A","#FDAF93","#FC8D6D","#FEDCCC","#FDC1A9","#FC9879","#FC8D6D","#FEDCCC","#FED2BF","#FCB79C","#FECBB6","#FDA081","#FDC5AE","#FECBB6","#FED2BF","#FCBA9F","#FCB498","#FECBB6","#FEDCCC","#FDC1A9","#FCB79C","#FDA486","#FDAB8E","#FEDCCC","#FDB195","#FED2BF","#FCBDA4","#FC7756","#FEDCCC","#FEDCCC","#FDC1A9","#FCB498","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FD9D7F","#FDC1A9","#FCB498","#FDC1A9","#FC9474","#FCBA9F","#FCBDA4","#FDA78A","#FCBA9F","#FED2BF","#FCBDA4","#FEDCCC","#FEDCCC","#FEDCCC","#FC9A7B","#FDC5AE","#FDB195","#FECBB6","#FEDCCC","#FEDCCC","#FED2BF","#FECBB6","#FCB498","#FDAF93","#FDC1A9","#FCBA9F","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FED2BF","#FEDCCC","#FDA78A","#FDA183","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FC8C6C","#FDC1A9","#FDC1A9","#FECBB6","#FECBB6","#FED2BF","#FECBB6","#FDC1A9","#FED2BF","#FECBB6","#FDC5AE","#FED2BF","#FEDCCC","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FDC5AE","#FED2BF","#FDC5AE","#FCBDA4","#FCB79C","#FECBB6","#FDC5AE","#FEDCCC","#FDC1A9","#FEDCCC","#FDC1A9","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FC9070","#FCBA9F","#FDC5AE","#FCBA9F","#FDB195","#FECBB6","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#B41318","#B61319","#F75B3F","#FA6748","#FB6C4C","#FB7151","#FC7958","#FC8A69","#FC8A6A","#FC9474","#FC9A7B","#FD9F80","#FDA486","#FDA78A","#FDA78A","#FDA78A","#FDA78A","#FDAB8E","#FDAD90","#FDAD90","#FDB195","#FDA081","#FCB79C","#FCB79C","#FCBA9F","#FCBA9F","#FCBA9F","#FCBA9F","#FCBDA4","#FCBDA4","#FCBDA4","#FDC1A9","#FDC5AE","#FDC5AE","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FECBB6","#FED2BF","#FED2BF","#FED2BF","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FFE7DC","#FEDCCC","#FECBB6","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FED2BF","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FEDCCC","#FEDCCC","#FECBB6","#FEDCCC","#FDC5AE","#FEDCCC","#FEDCCC","#FEDCCC","#FEDCCC","#FED2BF","#FEDCCC","#FECBB6","#FEDCCC","#FEDCCC"],"fillOpacity":0.2},null,null,null,null,["Mainland China: 990","Mainland China: 429","Mainland China: 576","Mainland China: 296","Mainland China: 125","Mainland China: 1353","Mainland China: 252","Mainland China: 146","Mainland China: 168","Mainland China: 318","Mainland China: 481","Mainland China: 1272","Mainland China: 67760","Mainland China: 1018","Mainland China: 75","Mainland China: 631","Mainland China: 935","Mainland China: 93","Mainland China: 125","Mainland China: 75","Mainland China: 18","Mainland China: 245","Mainland China: 758","Mainland China: 344","Mainland China: 133","Mainland China: 539","Mainland China: 136","Mainland China: 1","Mainland China: 76","Mainland China: 174","Mainland China: 1215","Thailand: 53","Japan: 581","US: 116","US: 11","Singapore: 160","France: 1784","Nepal: 1","Malaysia: 129","Canada: 32","US: 20","Australia: 55","Australia: 18","Australia: 18","Cambodia: 2","Sri Lanka: 1","Germany: 1457","Finland: 40","United Arab Emirates: 74","Philippines: 33","India: 56","Italy: 10149","UK: 382","Sweden: 355","Spain: 1695","Australia: 7","US: 2","Belgium: 267","Others: 696","US: 3","Egypt: 59","Australia: 0","Lebanon: 41","US: 1","US: 10","Iraq: 71","Oman: 18","Afghanistan: 5","Bahrain: 110","Kuwait: 69","Algeria: 20","Croatia: 14","Switzerland: 491","Austria: 182","Israel: 58","Pakistan: 16","Brazil: 31","Georgia: 15","Greece: 89","North Macedonia: 7","Norway: 400","Romania: 25","Denmark: 262","Estonia: 12","Netherlands: 382","San Marino: 51","Belarus: 9","Iceland: 69","Lithuania: 1","Mexico: 7","New Zealand: 5","Nigeria: 2","Australia: 6","Ireland: 34","Luxembourg: 5","Monaco: 1","Qatar: 24","US: 37","Ecuador: 15","Azerbaijan: 11","Czech Republic: 41","Armenia: 1","Dominican Republic: 5","Indonesia: 27","Portugal: 41","Andorra: 1","Australia: 2","Latvia: 8","Morocco: 3","Saudi Arabia: 20","Senegal: 4","US: 3","US: 2","US: 7","US: 9","US: 3","US: 1","US: 5","US: 8","Argentina: 17","Chile: 13","Jordan: 1","US: 10","US: 2","US: 6","US: 98","Ukraine: 1","Saint Barthelemy: 1","US: 5","Hungary: 9","Australia: 1","Faroe Islands: 2","Gibraltar: 1","Liechtenstein: 1","Poland: 22","Tunisia: 5","US: 9","Bosnia and Herzegovina: 5","Slovenia: 31","US: 7","US: 6","US: 15","South Africa: 7","US: 2","US: 6","US: 1","US: 1","US: 1","US: 25","US: 4","US: 10","US: 3","US: 1","Bhutan: 1","Cameroon: 2","Colombia: 3","Costa Rica: 9","Peru: 11","Serbia: 5","Slovakia: 7","Togo: 1","US: 1","US: 1","US: 3","US: 2","US: 1","US: 15","US: 19","US: 1","US: 2","US: 1","US: 1","US: 43","French Guiana: 5","Malta: 5","US: 3","US: 3","Martinique: 2","US: 3","US: 5","US: 2","US: 3","US: 4","US: 2","US: 1","US: 1","US: 4","US: 1","US: 1","US: 1","US: 2","US: 1","US: 1","US: 1","US: 1","US: 4","US: 2","Bulgaria: 4","Maldives: 6","US: 8","Bangladesh: 3","US: 4","US: 1","US: 5","Paraguay: 1","US: 5","US: 1","US: 1","US: 1","US: 1","US: 2","US: 1","US: 1","US: 1","US: 2","US: 1","US: 1","US: 1","US: 4","US: 1","US: 1","US: 1","US: 1","US: 2","Canada: 36","Canada: 7","Canada: 4","US: 7","Albania: 10","Cyprus: 3","US: 2","Brunei: 1","US: 1","US: 1","US: 1","US: 1","US: 3","US: 1","US: 1","US: 1","US: 1","Iran (Islamic Republic of): 8042","Republic of Korea: 7513","US: 267","US: 173","US: 144","Hong Kong SAR: 120","US: 92","Taipei and environs: 47","US: 46","Viet Nam: 31","occupied Palestinian territory: 25","US: 21","US: 17","US: 15","US: 15","US: 15","US: 15","US: 13","US: 12","US: 12","Macao SAR: 10","Russian Federation: 20","US: 8","US: 8","US: 7","US: 7","US: 7","US: 7","US: 6","US: 6","US: 6","US: 5","US: 4","US: 4","Republic of Moldova: 3","US: 3","US: 3","US: 3","US: 3","US: 3","Saint Martin: 2","US: 2","US: 2","US: 2","US: 2","Burkina Faso: 1","Channel Islands: 1","Holy See: 1","Mongolia: 1","Panama: 1","US: 1","US: 1","US: 1","US: 1","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 0","US: 1","US: 3","US: 2","US: 1","US: 1","US: 1","US: 2","US: 2","US: 1","US: 1","US: 1","US: 2","US: 2","US: 1","US: 1","US: 1","US: 2","US: 2","US: 2","US: 1","US: 1","US: 1","US: 1","US: 2","US: 1","US: 1","US: 1","US: 3","US: 1","US: 4","US: 1","US: 1","US: 1","US: 1","US: 2","US: 1","US: 3","US: 1","US: 1"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[-41.4545,64.9631],"lng":[-157.8584,174.886]}},"evals":[],"jsHooks":[]}</script>
+<p>
+Y me he quedado con ganas de hacer un mapa con <code>mapview</code> del estilo de estos, <a href="https://r-spatial.github.io/mapview/articles/articles/mapview_04-popups.html">mapview</a>, pero la verdad es que entre unas cosas y otras hoy ando bastante cansado. Mañana lo hago.
+</p>
+</section>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

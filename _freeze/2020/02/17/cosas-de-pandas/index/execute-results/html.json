@@ -1,0 +1,14 @@
+{
+  "hash": "a83eae42298b5091f4c575bdf107a298",
+  "result": {
+    "markdown": "---\ntitle: Cosas de pandas\nauthor: jlcr\ndate: '2020-02-17'\nslug: cosas-de-pandas\ncategories:\n  - R python\n  - python\n  - 2020\ntags:\n  - Python\ndescription: ''\ntopics: []\n---\n\n\n\nEstoy usando Rmarkdown así que primero defino que versión  o entorno de python quiero\n\n\n::: {.cell}\n\n```{.r .cell-code}\nSys.setenv(RETICULATE_PYTHON = \"/usr/bin/python3\")\n```\n:::\n\n::: {.cell}\n\n```{.python .cell-code}\nimport pandas as pd\ndf = pd.DataFrame({'A' : [1, 2, 3, 4], 'B' : [4, 3, 2, 1]})\ndf\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n   A  B\n0  1  4\n1  2  3\n2  3  2\n3  4  1\n```\n:::\n:::\n\n\n\nEl `index` es autonumérico\n\n\n::: {.cell}\n\n```{.python .cell-code}\ndf.index\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nRangeIndex(start=0, stop=4, step=1)\n```\n:::\n:::\n\n\n\nPues ahora viene lo raro, al menos para mí. Si hacemos iloc O:3 me devuelve las 3 primeras filas (como debe ser)\n\n\n::: {.cell}\n\n```{.python .cell-code}\ndf.iloc[0:3,]\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n   A  B\n0  1  4\n1  2  3\n2  3  2\n```\n:::\n:::\n\n\nPero si hacemos loc poniendo 0:3 me devuelve 4 filas !!!\n\n\n::: {.cell}\n\n```{.python .cell-code}\ndf.loc[0:3, ]\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n   A  B\n0  1  4\n1  2  3\n2  3  2\n3  4  1\n```\n:::\n:::\n\n\n¿Algún pythoniso que me pueda aclarar el porqué de este comportamiento?\n\n\n\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -1,0 +1,54 @@
+---
+title: Cosas de pandas
+author: jlcr
+date: '2020-02-17'
+slug: cosas-de-pandas
+categories:
+  - R python
+  - python
+  - 2020
+tags:
+  - Python
+description: ''
+topics: []
+---
+
+
+Estoy usando Rmarkdown así que primero defino que versión  o entorno de python quiero
+
+```{r}
+Sys.setenv(RETICULATE_PYTHON = "/usr/bin/python3")
+```
+
+
+```{python}
+import pandas as pd
+df = pd.DataFrame({'A' : [1, 2, 3, 4], 'B' : [4, 3, 2, 1]})
+df
+```
+
+
+El `index` es autonumérico
+
+```{python}
+df.index
+```
+
+
+Pues ahora viene lo raro, al menos para mí. Si hacemos iloc O:3 me devuelve las 3 primeras filas (como debe ser)
+
+```{python}
+df.iloc[0:3,]
+```
+
+Pero si hacemos loc poniendo 0:3 me devuelve 4 filas !!!
+
+```{python}
+df.loc[0:3, ]
+```
+
+¿Algún pythoniso que me pueda aclarar el porqué de este comportamiento?
+
+
+
+
