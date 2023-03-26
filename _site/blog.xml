@@ -10,7 +10,635 @@
 <atom:link href="https://muestrear-no-es-pecado-rebranding.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.2.269</generator>
-<lastBuildDate>Sat, 18 Feb 2023 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 25 Mar 2023 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Conformal prediction. Estilo compadre</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<section id="intro" class="level2">
+<h2 class="anchored" data-anchor-id="intro">Intro</h2>
+<p>El jueves pasado asistí al más que recomendable meetup de <a href="https://www.meetup.com/es-ES/pydata-madrid/events/292228851/">PyData Madrid</a>, que cuenta entre sus organizadores con el gran <a href="https://www.meetup.com/es-ES/pydata-madrid/?_locale=es-ES">Juan Luis Cano Rodríguez</a>, antiguo compañero mío de curro y tocayo de iniciales.</p>
+<p>El caso es que en una de las charlas, <a href="https://www.linkedin.com/in/ignacio-peletier/">Ignacio Peletier</a>, mencionó de pasada lo del “Conformal Prediction”. Y siendo que Ignacio es un gran científico de datos, y que hacía unos meses que había tenido varias charlas con <a href="https://www.datanalytics.com/">Carlos</a> sobre el particular, pues he decidido ver un poco más en detalle de qué iba el asunto .</p>
+</section>
+<section id="recursos" class="level2">
+<h2 class="anchored" data-anchor-id="recursos">Recursos</h2>
+<p>Un excelente sitio para empezar a bichear con este tema es el Readme de este <a href="https://github.com/valeman/awesome-conformal-prediction">repo</a>, dónde han ido recopilando enlaces a libros, posts, papers y código relativo a lo de conformal prediction.</p>
+<p>En particular, uno de los recursos que me ha gustado es este <a href="https://mindfulmodeler.substack.com/p/e-mail-course-on-conformal-prediction">minicurso</a> de Christoph Molnar.</p>
+<p>Otro recurso útil es este <a href="https://www.datanalytics.com/2023/03/02/prediccion-conforme/">post</a> de Carlos, dónde se esboza un poco en qué consiste esto de la predicción conforme y en por qué no es algo tan novedoso como se cree.</p>
+</section>
+<section id="experimentando" class="level2">
+<h2 class="anchored" data-anchor-id="experimentando">Experimentando</h2>
+<p>La predicción conforme se puede aplicar tanto a modelos de regresión de clasificación. Su objetivo es <em>simplemente</em> medir la incertidumbre de una predicción dada.</p>
+<p>En el caso de regresión no tiene mucho misterio:</p>
+<ul>
+<li><p>Se entrena un modelo usando un conjunto de datos de <em>entrenamiento</em>.</p></li>
+<li><p>Se mide el error en un conjunto de datos de <em>validación</em>, <em>calibración</em>, utilizando la norma L1, es decir <img src="https://latex.codecogs.com/png.latex?%5Cmid%20y%20-%20%5Chat%7By%7D%5Cmid"></p></li>
+<li><p>Se elige una medida de dispersión del error, por ejemplo el cuantil <img src="https://latex.codecogs.com/png.latex?(1-%20%5Calpha)%20=%200.95"> de los errores anteriores.</p></li>
+<li><p>Para una nueva predicción se da su intervalo como <img src="https://latex.codecogs.com/png.latex?(%5Chat%7By%7D%20-%20q_%7B1-%5Calpha%7D,%20%5Chat%7By%7D%20+%20q_%7B1-%5Calpha%7D)"></p></li>
+</ul>
+<p>En el caso de clasificación la cosa es más divertida. Puesto que lo que se quiere obtener es un conjunto de etiquetas probables. Tipo {A} {A, B} {B, C}</p>
+<p>En este caso según he leído <a href="https://mindfulmodeler.substack.com/p/week-1-getting-started-with-conformal">aquí</a> el algoritmo sería</p>
+<ul>
+<li><p>Se entrena un modelo usando un conjunto de datos de <em>entrenamiento</em>.</p></li>
+<li><p>Se mide el error en un conjunto de datos de <em>validación</em>, <em>calibración</em>, viendo para cada observación el valor que el modelo le ha dado para la predicción de la clase verdadera. Es un conjunto de validación , sabemos cuál es la verdad. Y se calcula el error como <img src="https://latex.codecogs.com/png.latex?1-%20p_%7Bi%7D"> siendo <img src="https://latex.codecogs.com/png.latex?p_i">, la probabilidad predicha para la clase verdadera</p></li>
+<li><p>Se calcula el cuantil de orden <img src="https://latex.codecogs.com/png.latex?1-%5Calpha"> de esos <em>errores</em> y se guarda. Se entiende que el modelo está bien calibrado y que el conjunto de validación y que los <em>scores</em> que da el modelo se pueden asumir como probabilidades</p></li>
+<li><p>Para una nueva predicción se tendrá una <img src="https://latex.codecogs.com/png.latex?p_i"> para cada clase. Se calcula <img src="https://latex.codecogs.com/png.latex?1-p_i"> para cada clase y se considera que esa clase forma parte del <em>prediction set</em> si ese valor es menor o igual que el valor del cuantil anterior.</p></li>
+</ul>
+<p>Pues vamos a ver como se haría con R en estilo compadre, y puede que con alguna pequeña modificación por mi parte.</p>
+<section id="ejemplo" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo">Ejemplo</h3>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;">library</span>(tidyverse)</span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;">library</span>(MASS)</span></code></pre></div>
+</details>
+</div>
+<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" title="Help housing" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"></span>
+<span id="cb2-2">skimr<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">skim</span>(housing)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<caption>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">housing</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Number of rows</td>
+<td style="text-align: left;">72</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Number of columns</td>
+<td style="text-align: left;">5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">_______________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Column type frequency:</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">factor</td>
+<td style="text-align: left;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">numeric</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">________________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Group variables</td>
+<td style="text-align: left;">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: factor</strong></p>
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 11%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: left;">ordered</th>
+<th style="text-align: right;">n_unique</th>
+<th style="text-align: left;">top_counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Sat</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">Low: 24, Med: 24, Hig: 24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Infl</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">Low: 24, Med: 24, Hig: 24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Type</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">Tow: 18, Apa: 18, Atr: 18, Ter: 18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Cont</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">Low: 36, Hig: 36</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 12%">
+<col style="width: 17%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">p0</th>
+<th style="text-align: right;">p25</th>
+<th style="text-align: right;">p50</th>
+<th style="text-align: right;">p75</th>
+<th style="text-align: right;">p100</th>
+<th style="text-align: left;">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Freq</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">23.35</td>
+<td style="text-align: right;">17.67</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">19.5</td>
+<td style="text-align: right;">31.75</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: left;">▇▅▂▁▁</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Y vamos a justar un modelito tonto usando regresión logística ordinal, sobre los 40 primeros datos</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"></span>
+<span id="cb3-2">house.plr <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">polr</span>(Sat <span class="sc" style="color: #5E5E5E;">~</span> Infl <span class="sc" style="color: #5E5E5E;">+</span> Type <span class="sc" style="color: #5E5E5E;">+</span> Cont, <span class="at" style="color: #657422;">weights =</span> Freq, <span class="at" style="color: #657422;">data =</span> housing[<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">40</span>,])</span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="fu" style="color: #4758AB;">head</span>(<span class="fu" style="color: #4758AB;">predict</span>(house.plr, <span class="at" style="color: #657422;">type =</span> <span class="st" style="color: #20794D;">"probs"</span>))</span>
+<span id="cb3-5"><span class="co" style="color: #5E5E5E;">#&gt;         Low    Medium      High</span></span>
+<span id="cb3-6"><span class="co" style="color: #5E5E5E;">#&gt; 1 0.3639420 0.2575531 0.3785049</span></span>
+<span id="cb3-7"><span class="co" style="color: #5E5E5E;">#&gt; 2 0.3639420 0.2575531 0.3785049</span></span>
+<span id="cb3-8"><span class="co" style="color: #5E5E5E;">#&gt; 3 0.3639420 0.2575531 0.3785049</span></span>
+<span id="cb3-9"><span class="co" style="color: #5E5E5E;">#&gt; 4 0.3263764 0.2552793 0.4183443</span></span>
+<span id="cb3-10"><span class="co" style="color: #5E5E5E;">#&gt; 5 0.3263764 0.2552793 0.4183443</span></span>
+<span id="cb3-11"><span class="co" style="color: #5E5E5E;">#&gt; 6 0.3263764 0.2552793 0.4183443</span></span></code></pre></div>
+</details>
+</div>
+<p>Guardamos las predicciones para el conjunto de validación , que va a ser las filas de la 41 a la 55, junto con el valor de <code>Sat</code> verdadero</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"></span>
+<span id="cb4-2">predictions <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.data.frame</span>(<span class="fu" style="color: #4758AB;">predict</span>(house.plr, <span class="at" style="color: #657422;">type =</span> <span class="st" style="color: #20794D;">"probs"</span>, <span class="at" style="color: #657422;">newdata =</span> housing[<span class="dv" style="color: #AD0000;">41</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">55</span>,]))</span>
+<span id="cb4-3"></span>
+<span id="cb4-4">tt <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">cbind</span>(predictions, <span class="at" style="color: #657422;">True_class=</span>housing<span class="sc" style="color: #5E5E5E;">$</span>Sat[<span class="dv" style="color: #AD0000;">41</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">55</span>])</span>
+<span id="cb4-5"></span>
+<span id="cb4-6">tt</span>
+<span id="cb4-7"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High True_class</span></span>
+<span id="cb4-8"><span class="co" style="color: #5E5E5E;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium</span></span>
+<span id="cb4-9"><span class="co" style="color: #5E5E5E;">#&gt; 42 0.3055662 0.2524868 0.4419471       High</span></span>
+<span id="cb4-10"><span class="co" style="color: #5E5E5E;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low</span></span>
+<span id="cb4-11"><span class="co" style="color: #5E5E5E;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium</span></span>
+<span id="cb4-12"><span class="co" style="color: #5E5E5E;">#&gt; 45 0.1595073 0.1930758 0.6474169       High</span></span>
+<span id="cb4-13"><span class="co" style="color: #5E5E5E;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low</span></span>
+<span id="cb4-14"><span class="co" style="color: #5E5E5E;">#&gt; 47 0.4671694 0.2484190 0.2844116     Medium</span></span>
+<span id="cb4-15"><span class="co" style="color: #5E5E5E;">#&gt; 48 0.4671694 0.2484190 0.2844116       High</span></span>
+<span id="cb4-16"><span class="co" style="color: #5E5E5E;">#&gt; 49 0.4260865 0.2544760 0.3194375        Low</span></span>
+<span id="cb4-17"><span class="co" style="color: #5E5E5E;">#&gt; 50 0.4260865 0.2544760 0.3194375     Medium</span></span>
+<span id="cb4-18"><span class="co" style="color: #5E5E5E;">#&gt; 51 0.4260865 0.2544760 0.3194375       High</span></span>
+<span id="cb4-19"><span class="co" style="color: #5E5E5E;">#&gt; 52 0.2425400 0.2363201 0.5211399        Low</span></span>
+<span id="cb4-20"><span class="co" style="color: #5E5E5E;">#&gt; 53 0.2425400 0.2363201 0.5211399     Medium</span></span>
+<span id="cb4-21"><span class="co" style="color: #5E5E5E;">#&gt; 54 0.2425400 0.2363201 0.5211399       High</span></span>
+<span id="cb4-22"><span class="co" style="color: #5E5E5E;">#&gt; 55 0.4014928 0.2566312 0.3418760        Low</span></span></code></pre></div>
+</details>
+</div>
+<p>Ahora, para la primera fila sería hacer (1-0.2524), puesto que la clase real es “Medium” y para la segunda sería (1-0.44), puesto que la clase real es “High”. No estoy muy inspirado hoy y no he conseguido una forma elegante de hacerlo en R, y ChatGpt no me ha servido de mucha ayuda, seguramente porque aún no soy muy ducho preguntándole.</p>
+<p>Así que he tirado iterando para cada fila con un map y quedándode con el valor predicho de la columna cuyo nombre coincida con el valor en <code>True_class</code></p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"></span>
+<span id="cb5-2">tt<span class="sc" style="color: #5E5E5E;">$</span>prob_true_class <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">map_dbl</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">nrow</span>(tt), <span class="at" style="color: #657422;">.f =</span> <span class="cf" style="color: #003B4F;">function</span>(i) </span>
+<span id="cb5-3">    tt[i, <span class="fu" style="color: #4758AB;">colnames</span>(tt) <span class="sc" style="color: #5E5E5E;">==</span> tt<span class="sc" style="color: #5E5E5E;">$</span>True_class[i]])</span>
+<span id="cb5-4"></span>
+<span id="cb5-5">tt<span class="sc" style="color: #5E5E5E;">$</span>resid <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">-</span>tt<span class="sc" style="color: #5E5E5E;">$</span>prob_true_class</span>
+<span id="cb5-6"></span>
+<span id="cb5-7"><span class="fu" style="color: #4758AB;">head</span>(tt)</span>
+<span id="cb5-8"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High True_class prob_true_class     resid</span></span>
+<span id="cb5-9"><span class="co" style="color: #5E5E5E;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium       0.2524868 0.7475132</span></span>
+<span id="cb5-10"><span class="co" style="color: #5E5E5E;">#&gt; 42 0.3055662 0.2524868 0.4419471       High       0.4419471 0.5580529</span></span>
+<span id="cb5-11"><span class="co" style="color: #5E5E5E;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low       0.1595073 0.8404927</span></span>
+<span id="cb5-12"><span class="co" style="color: #5E5E5E;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium       0.1930758 0.8069242</span></span>
+<span id="cb5-13"><span class="co" style="color: #5E5E5E;">#&gt; 45 0.1595073 0.1930758 0.6474169       High       0.6474169 0.3525831</span></span>
+<span id="cb5-14"><span class="co" style="color: #5E5E5E;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low       0.4671694 0.5328306</span></span></code></pre></div>
+</details>
+</div>
+<p>Definimos un <img src="https://latex.codecogs.com/png.latex?%5Calpha%20=%200.3"> y calculamos el cuantil 70 .</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1">(<span class="at" style="color: #657422;">qhat =</span> <span class="fu" style="color: #4758AB;">quantile</span>(tt<span class="sc" style="color: #5E5E5E;">$</span>resid, <span class="fl" style="color: #AD0000;">0.7</span>))</span>
+<span id="cb6-2"><span class="co" style="color: #5E5E5E;">#&gt;       70% </span></span>
+<span id="cb6-3"><span class="co" style="color: #5E5E5E;">#&gt; 0.7507675</span></span></code></pre></div>
+</details>
+</div>
+<p>Y ya estamos listos para hacer la <em>predicción conforme</em> para nuevos datos.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><span class="co" style="color: #5E5E5E;"># predecimos de la fila 51 a la 70 </span></span>
+<span id="cb7-2">predicciones <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">predict</span>(house.plr, <span class="at" style="color: #657422;">newdata =</span> housing[<span class="dv" style="color: #AD0000;">51</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">70</span>,], <span class="at" style="color: #657422;">type  =</span> <span class="st" style="color: #20794D;">"probs"</span>)</span>
+<span id="cb7-3"></span>
+<span id="cb7-4"><span class="fu" style="color: #4758AB;">head</span>(predicciones)</span>
+<span id="cb7-5"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High</span></span>
+<span id="cb7-6"><span class="co" style="color: #5E5E5E;">#&gt; 51 0.4260865 0.2544760 0.3194375</span></span>
+<span id="cb7-7"><span class="co" style="color: #5E5E5E;">#&gt; 52 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb7-8"><span class="co" style="color: #5E5E5E;">#&gt; 53 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb7-9"><span class="co" style="color: #5E5E5E;">#&gt; 54 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb7-10"><span class="co" style="color: #5E5E5E;">#&gt; 55 0.4014928 0.2566312 0.3418760</span></span>
+<span id="cb7-11"><span class="co" style="color: #5E5E5E;">#&gt; 56 0.4014928 0.2566312 0.3418760</span></span></code></pre></div>
+</details>
+</div>
+<p>Nos creamos un data.frame que indique si el valor de 1 - predicciones es menor o igual que el cuantil elegido</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1">set <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.data.frame</span>(<span class="dv" style="color: #AD0000;">1</span> <span class="sc" style="color: #5E5E5E;">-</span> predicciones <span class="sc" style="color: #5E5E5E;">&lt;=</span> qhat)</span>
+<span id="cb8-2"></span>
+<span id="cb8-3"><span class="fu" style="color: #4758AB;">head</span>(set)</span>
+<span id="cb8-4"><span class="co" style="color: #5E5E5E;">#&gt;      Low Medium High</span></span>
+<span id="cb8-5"><span class="co" style="color: #5E5E5E;">#&gt; 51  TRUE   TRUE TRUE</span></span>
+<span id="cb8-6"><span class="co" style="color: #5E5E5E;">#&gt; 52 FALSE  FALSE TRUE</span></span>
+<span id="cb8-7"><span class="co" style="color: #5E5E5E;">#&gt; 53 FALSE  FALSE TRUE</span></span>
+<span id="cb8-8"><span class="co" style="color: #5E5E5E;">#&gt; 54 FALSE  FALSE TRUE</span></span>
+<span id="cb8-9"><span class="co" style="color: #5E5E5E;">#&gt; 55  TRUE   TRUE TRUE</span></span>
+<span id="cb8-10"><span class="co" style="color: #5E5E5E;">#&gt; 56  TRUE   TRUE TRUE</span></span></code></pre></div>
+</details>
+</div>
+<p>Al igual que antes, utilizo un map para obtener el conjunto de etiquetas, para la primera fila serían todas, para la segunda sería {“Medium”, “High”}</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"></span>
+<span id="cb9-2">set<span class="sc" style="color: #5E5E5E;">$</span>conformal <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">map_chr</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">nrow</span>(set), <span class="at" style="color: #657422;">.f=</span> <span class="cf" style="color: #003B4F;">function</span>(i) {</span>
+<span id="cb9-3">     set_list <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(set)[<span class="fu" style="color: #4758AB;">unlist</span>(set[i,])]</span>
+<span id="cb9-4">     <span class="fu" style="color: #4758AB;">paste0</span>(set_list, <span class="at" style="color: #657422;">collapse =</span> <span class="st" style="color: #20794D;">","</span>)</span>
+<span id="cb9-5">     })</span>
+<span id="cb9-6"></span>
+<span id="cb9-7"><span class="fu" style="color: #4758AB;">head</span>(set)</span>
+<span id="cb9-8"><span class="co" style="color: #5E5E5E;">#&gt;      Low Medium High       conformal</span></span>
+<span id="cb9-9"><span class="co" style="color: #5E5E5E;">#&gt; 51  TRUE   TRUE TRUE Low,Medium,High</span></span>
+<span id="cb9-10"><span class="co" style="color: #5E5E5E;">#&gt; 52 FALSE  FALSE TRUE            High</span></span>
+<span id="cb9-11"><span class="co" style="color: #5E5E5E;">#&gt; 53 FALSE  FALSE TRUE            High</span></span>
+<span id="cb9-12"><span class="co" style="color: #5E5E5E;">#&gt; 54 FALSE  FALSE TRUE            High</span></span>
+<span id="cb9-13"><span class="co" style="color: #5E5E5E;">#&gt; 55  TRUE   TRUE TRUE Low,Medium,High</span></span>
+<span id="cb9-14"><span class="co" style="color: #5E5E5E;">#&gt; 56  TRUE   TRUE TRUE Low,Medium,High</span></span></code></pre></div>
+</details>
+</div>
+<p>Se lo pego al dataset original de test (filas 51 a 70), junto con las predicciones y la clase verdadera.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
+<span id="cb10-2">set_fin <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">cbind</span>( <span class="at" style="color: #657422;">True_class =</span> housing<span class="sc" style="color: #5E5E5E;">$</span>Sat[<span class="dv" style="color: #AD0000;">51</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">70</span>], <span class="fu" style="color: #4758AB;">as.data.frame</span>(predicciones),</span>
+<span id="cb10-3">                  <span class="at" style="color: #657422;">set_conformal =</span>set<span class="sc" style="color: #5E5E5E;">$</span>conformal)</span>
+<span id="cb10-4"></span>
+<span id="cb10-5"><span class="fu" style="color: #4758AB;">head</span>(set_fin)</span>
+<span id="cb10-6"><span class="co" style="color: #5E5E5E;">#&gt;    True_class       Low    Medium      High   set_conformal</span></span>
+<span id="cb10-7"><span class="co" style="color: #5E5E5E;">#&gt; 51       High 0.4260865 0.2544760 0.3194375 Low,Medium,High</span></span>
+<span id="cb10-8"><span class="co" style="color: #5E5E5E;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High</span></span>
+<span id="cb10-9"><span class="co" style="color: #5E5E5E;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High</span></span>
+<span id="cb10-10"><span class="co" style="color: #5E5E5E;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High</span></span>
+<span id="cb10-11"><span class="co" style="color: #5E5E5E;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760 Low,Medium,High</span></span>
+<span id="cb10-12"><span class="co" style="color: #5E5E5E;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760 Low,Medium,High</span></span></code></pre></div>
+</details>
+</div>
+<p>Y ya estaría.</p>
+<p>Una cosa que se suele calcular es la cobertura de cada clase, es decir, la proporción de veces que cada clase está dentro del conjunto.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">set_fin <span class="ot" style="color: #003B4F;">&lt;-</span> set_fin <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb11-2">    <span class="fu" style="color: #4758AB;">mutate</span>(</span>
+<span id="cb11-3">        <span class="at" style="color: #657422;">class_in_set =</span> <span class="fu" style="color: #4758AB;">map2_lgl</span>(<span class="at" style="color: #657422;">.x =</span> True_class,</span>
+<span id="cb11-4">                               <span class="at" style="color: #657422;">.y =</span> set_conformal , </span>
+<span id="cb11-5">                               <span class="sc" style="color: #5E5E5E;">~</span> .x <span class="sc" style="color: #5E5E5E;">%in%</span>  <span class="fu" style="color: #4758AB;">unlist</span>(<span class="fu" style="color: #4758AB;">str_split</span>(.y,<span class="st" style="color: #20794D;">","</span>)))</span>
+<span id="cb11-6">    )</span>
+<span id="cb11-7"></span>
+<span id="cb11-8"><span class="fu" style="color: #4758AB;">head</span>(set_fin)</span>
+<span id="cb11-9"><span class="co" style="color: #5E5E5E;">#&gt;    True_class       Low    Medium      High   set_conformal class_in_set</span></span>
+<span id="cb11-10"><span class="co" style="color: #5E5E5E;">#&gt; 51       High 0.4260865 0.2544760 0.3194375 Low,Medium,High         TRUE</span></span>
+<span id="cb11-11"><span class="co" style="color: #5E5E5E;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
+<span id="cb11-12"><span class="co" style="color: #5E5E5E;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
+<span id="cb11-13"><span class="co" style="color: #5E5E5E;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High         TRUE</span></span>
+<span id="cb11-14"><span class="co" style="color: #5E5E5E;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760 Low,Medium,High         TRUE</span></span>
+<span id="cb11-15"><span class="co" style="color: #5E5E5E;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760 Low,Medium,High         TRUE</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1">set_fin <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb12-2">    <span class="fu" style="color: #4758AB;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb12-3">    <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">cov =</span> <span class="fu" style="color: #4758AB;">mean</span>(class_in_set))</span>
+<span id="cb12-4"><span class="co" style="color: #5E5E5E;">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb12-5"><span class="co" style="color: #5E5E5E;">#&gt;   True_class   cov</span></span>
+<span id="cb12-6"><span class="co" style="color: #5E5E5E;">#&gt;   &lt;ord&gt;      &lt;dbl&gt;</span></span>
+<span id="cb12-7"><span class="co" style="color: #5E5E5E;">#&gt; 1 Low        0.571</span></span>
+<span id="cb12-8"><span class="co" style="color: #5E5E5E;">#&gt; 2 Medium     0.5  </span></span>
+<span id="cb12-9"><span class="co" style="color: #5E5E5E;">#&gt; 3 High       1</span></span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="modificación-1." class="level3">
+<h3 class="anchored" data-anchor-id="modificación-1.">Modificación 1.</h3>
+<p>No me convence lo de tener un sólo cuantil, común a todas las clases, ¿no sería mejor tener una medida de cómo se distribuyen los errores para cada una de las clases?</p>
+<p>Usamos el conjunto de <em>validación</em> dónde tenemos el <img src="https://latex.codecogs.com/png.latex?1-p_i"> que nos dice en cuánto se ha equivocado el modelo en predecir la clase real</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><span class="fu" style="color: #4758AB;">head</span>(tt)</span>
+<span id="cb13-2"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High True_class prob_true_class     resid</span></span>
+<span id="cb13-3"><span class="co" style="color: #5E5E5E;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium       0.2524868 0.7475132</span></span>
+<span id="cb13-4"><span class="co" style="color: #5E5E5E;">#&gt; 42 0.3055662 0.2524868 0.4419471       High       0.4419471 0.5580529</span></span>
+<span id="cb13-5"><span class="co" style="color: #5E5E5E;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low       0.1595073 0.8404927</span></span>
+<span id="cb13-6"><span class="co" style="color: #5E5E5E;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium       0.1930758 0.8069242</span></span>
+<span id="cb13-7"><span class="co" style="color: #5E5E5E;">#&gt; 45 0.1595073 0.1930758 0.6474169       High       0.6474169 0.3525831</span></span>
+<span id="cb13-8"><span class="co" style="color: #5E5E5E;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low       0.4671694 0.5328306</span></span></code></pre></div>
+</details>
+</div>
+<p>Calculamos el quantil 70 para cada clase, y así vemos que varía por clase</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1">(qhat_by_class <span class="ot" style="color: #003B4F;">&lt;-</span> tt <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb14-2">    <span class="fu" style="color: #4758AB;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb14-3">    <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">qhat =</span> <span class="fu" style="color: #4758AB;">quantile</span>(resid, <span class="fl" style="color: #AD0000;">0.7</span>)) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb14-4">        <span class="fu" style="color: #4758AB;">pivot_wider</span>(<span class="at" style="color: #657422;">names_from =</span> True_class, <span class="at" style="color: #657422;">values_from =</span> qhat))</span>
+<span id="cb14-5"><span class="co" style="color: #5E5E5E;">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb14-6"><span class="co" style="color: #5E5E5E;">#&gt;     Low Medium  High</span></span>
+<span id="cb14-7"><span class="co" style="color: #5E5E5E;">#&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb14-8"><span class="co" style="color: #5E5E5E;">#&gt; 1 0.726  0.761 0.656</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1">predicciones <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">predict</span>(house.plr, <span class="at" style="color: #657422;">newdata =</span> housing[<span class="dv" style="color: #AD0000;">51</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">70</span>,], <span class="at" style="color: #657422;">type  =</span> <span class="st" style="color: #20794D;">"probs"</span>)</span>
+<span id="cb15-2">complementarios <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">-</span>predicciones</span>
+<span id="cb15-3"><span class="fu" style="color: #4758AB;">head</span>(complementarios)</span>
+<span id="cb15-4"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High</span></span>
+<span id="cb15-5"><span class="co" style="color: #5E5E5E;">#&gt; 51 0.5739135 0.7455240 0.6805625</span></span>
+<span id="cb15-6"><span class="co" style="color: #5E5E5E;">#&gt; 52 0.7574600 0.7636799 0.4788601</span></span>
+<span id="cb15-7"><span class="co" style="color: #5E5E5E;">#&gt; 53 0.7574600 0.7636799 0.4788601</span></span>
+<span id="cb15-8"><span class="co" style="color: #5E5E5E;">#&gt; 54 0.7574600 0.7636799 0.4788601</span></span>
+<span id="cb15-9"><span class="co" style="color: #5E5E5E;">#&gt; 55 0.5985072 0.7433688 0.6581240</span></span>
+<span id="cb15-10"><span class="co" style="color: #5E5E5E;">#&gt; 56 0.5985072 0.7433688 0.6581240</span></span></code></pre></div>
+</details>
+</div>
+<p>Y vemos si cada <img src="https://latex.codecogs.com/png.latex?1-p_i"> es menor o igual que el cuantil correspondiente de cada clase</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1">set_adjust <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">data.frame</span>(<span class="at" style="color: #657422;">Low =</span> complementarios[,<span class="dv" style="color: #AD0000;">1</span>] <span class="sc" style="color: #5E5E5E;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;">$</span>Low,</span>
+<span id="cb16-2">                        <span class="at" style="color: #657422;">Medium =</span> complementarios[,<span class="dv" style="color: #AD0000;">2</span>] <span class="sc" style="color: #5E5E5E;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;">$</span>Medium,</span>
+<span id="cb16-3">                         <span class="at" style="color: #657422;">High =</span> complementarios[,<span class="dv" style="color: #AD0000;">3</span>] <span class="sc" style="color: #5E5E5E;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;">$</span>High )</span>
+<span id="cb16-4"></span>
+<span id="cb16-5"></span>
+<span id="cb16-6"><span class="fu" style="color: #4758AB;">head</span>(set_adjust)</span>
+<span id="cb16-7"><span class="co" style="color: #5E5E5E;">#&gt;      Low Medium  High</span></span>
+<span id="cb16-8"><span class="co" style="color: #5E5E5E;">#&gt; 51  TRUE   TRUE FALSE</span></span>
+<span id="cb16-9"><span class="co" style="color: #5E5E5E;">#&gt; 52 FALSE  FALSE  TRUE</span></span>
+<span id="cb16-10"><span class="co" style="color: #5E5E5E;">#&gt; 53 FALSE  FALSE  TRUE</span></span>
+<span id="cb16-11"><span class="co" style="color: #5E5E5E;">#&gt; 54 FALSE  FALSE  TRUE</span></span>
+<span id="cb16-12"><span class="co" style="color: #5E5E5E;">#&gt; 55  TRUE   TRUE FALSE</span></span>
+<span id="cb16-13"><span class="co" style="color: #5E5E5E;">#&gt; 56  TRUE   TRUE FALSE</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1">set_adjust<span class="sc" style="color: #5E5E5E;">$</span>conformal <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">map_chr</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">nrow</span>(set_adjust), <span class="at" style="color: #657422;">.f=</span> <span class="cf" style="color: #003B4F;">function</span>(i) {</span>
+<span id="cb17-2">    set_list <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">colnames</span>(set_adjust)[<span class="fu" style="color: #4758AB;">unlist</span>(set_adjust[i,])]</span>
+<span id="cb17-3">    <span class="fu" style="color: #4758AB;">paste0</span>(set_list, <span class="at" style="color: #657422;">collapse =</span> <span class="st" style="color: #20794D;">","</span>)</span>
+<span id="cb17-4">})</span>
+<span id="cb17-5"></span>
+<span id="cb17-6"><span class="fu" style="color: #4758AB;">head</span>(set_adjust)</span>
+<span id="cb17-7"><span class="co" style="color: #5E5E5E;">#&gt;      Low Medium  High  conformal</span></span>
+<span id="cb17-8"><span class="co" style="color: #5E5E5E;">#&gt; 51  TRUE   TRUE FALSE Low,Medium</span></span>
+<span id="cb17-9"><span class="co" style="color: #5E5E5E;">#&gt; 52 FALSE  FALSE  TRUE       High</span></span>
+<span id="cb17-10"><span class="co" style="color: #5E5E5E;">#&gt; 53 FALSE  FALSE  TRUE       High</span></span>
+<span id="cb17-11"><span class="co" style="color: #5E5E5E;">#&gt; 54 FALSE  FALSE  TRUE       High</span></span>
+<span id="cb17-12"><span class="co" style="color: #5E5E5E;">#&gt; 55  TRUE   TRUE FALSE Low,Medium</span></span>
+<span id="cb17-13"><span class="co" style="color: #5E5E5E;">#&gt; 56  TRUE   TRUE FALSE Low,Medium</span></span></code></pre></div>
+</details>
+</div>
+<p>Como antes, nos quedamos con la clase de verdad, la predicción en probabilidad de cada clase y la predicción conforme</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1">set_adjust_fin <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">cbind</span>( <span class="at" style="color: #657422;">True_class =</span> housing<span class="sc" style="color: #5E5E5E;">$</span>Sat[<span class="dv" style="color: #AD0000;">51</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">70</span>], <span class="fu" style="color: #4758AB;">as.data.frame</span>(<span class="fu" style="color: #4758AB;">predict</span>(house.plr, <span class="at" style="color: #657422;">newdata =</span> housing[<span class="dv" style="color: #AD0000;">51</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">70</span>,],<span class="at" style="color: #657422;">type=</span><span class="st" style="color: #20794D;">"probs"</span>)),</span>
+<span id="cb18-2">                   <span class="at" style="color: #657422;">set_conformal =</span>set_adjust<span class="sc" style="color: #5E5E5E;">$</span>conformal)</span>
+<span id="cb18-3"></span>
+<span id="cb18-4"><span class="fu" style="color: #4758AB;">head</span>(set_adjust_fin)</span>
+<span id="cb18-5"><span class="co" style="color: #5E5E5E;">#&gt;    True_class       Low    Medium      High set_conformal</span></span>
+<span id="cb18-6"><span class="co" style="color: #5E5E5E;">#&gt; 51       High 0.4260865 0.2544760 0.3194375    Low,Medium</span></span>
+<span id="cb18-7"><span class="co" style="color: #5E5E5E;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399          High</span></span>
+<span id="cb18-8"><span class="co" style="color: #5E5E5E;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399          High</span></span>
+<span id="cb18-9"><span class="co" style="color: #5E5E5E;">#&gt; 54       High 0.2425400 0.2363201 0.5211399          High</span></span>
+<span id="cb18-10"><span class="co" style="color: #5E5E5E;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760    Low,Medium</span></span>
+<span id="cb18-11"><span class="co" style="color: #5E5E5E;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760    Low,Medium</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1">set_adjust_fin <span class="ot" style="color: #003B4F;">&lt;-</span> set_adjust_fin <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb19-2">    <span class="fu" style="color: #4758AB;">mutate</span>(</span>
+<span id="cb19-3">        <span class="at" style="color: #657422;">class_in_set =</span> <span class="fu" style="color: #4758AB;">map2_lgl</span>(<span class="at" style="color: #657422;">.x =</span> True_class,</span>
+<span id="cb19-4">                                <span class="at" style="color: #657422;">.y =</span> set_conformal , </span>
+<span id="cb19-5">                                <span class="sc" style="color: #5E5E5E;">~</span> .x <span class="sc" style="color: #5E5E5E;">%in%</span>  <span class="fu" style="color: #4758AB;">unlist</span>(<span class="fu" style="color: #4758AB;">str_split</span>(.y,<span class="st" style="color: #20794D;">","</span>)))</span>
+<span id="cb19-6">    )</span>
+<span id="cb19-7"></span>
+<span id="cb19-8">set_adjust_fin</span>
+<span id="cb19-9"><span class="co" style="color: #5E5E5E;">#&gt;    True_class       Low    Medium      High   set_conformal class_in_set</span></span>
+<span id="cb19-10"><span class="co" style="color: #5E5E5E;">#&gt; 51       High 0.4260865 0.2544760 0.3194375      Low,Medium        FALSE</span></span>
+<span id="cb19-11"><span class="co" style="color: #5E5E5E;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
+<span id="cb19-12"><span class="co" style="color: #5E5E5E;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
+<span id="cb19-13"><span class="co" style="color: #5E5E5E;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High         TRUE</span></span>
+<span id="cb19-14"><span class="co" style="color: #5E5E5E;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760      Low,Medium         TRUE</span></span>
+<span id="cb19-15"><span class="co" style="color: #5E5E5E;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760      Low,Medium         TRUE</span></span>
+<span id="cb19-16"><span class="co" style="color: #5E5E5E;">#&gt; 57       High 0.4014928 0.2566312 0.3418760      Low,Medium        FALSE</span></span>
+<span id="cb19-17"><span class="co" style="color: #5E5E5E;">#&gt; 58        Low 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
+<span id="cb19-18"><span class="co" style="color: #5E5E5E;">#&gt; 59     Medium 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
+<span id="cb19-19"><span class="co" style="color: #5E5E5E;">#&gt; 60       High 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
+<span id="cb19-20"><span class="co" style="color: #5E5E5E;">#&gt; 61        Low 0.1967801 0.2160332 0.5871868            High        FALSE</span></span>
+<span id="cb19-21"><span class="co" style="color: #5E5E5E;">#&gt; 62     Medium 0.1967801 0.2160332 0.5871868            High        FALSE</span></span>
+<span id="cb19-22"><span class="co" style="color: #5E5E5E;">#&gt; 63       High 0.1967801 0.2160332 0.5871868            High         TRUE</span></span>
+<span id="cb19-23"><span class="co" style="color: #5E5E5E;">#&gt; 64        Low 0.4732214 0.2472855 0.2794931      Low,Medium         TRUE</span></span>
+<span id="cb19-24"><span class="co" style="color: #5E5E5E;">#&gt; 65     Medium 0.4732214 0.2472855 0.2794931      Low,Medium         TRUE</span></span>
+<span id="cb19-25"><span class="co" style="color: #5E5E5E;">#&gt; 66       High 0.4732214 0.2472855 0.2794931      Low,Medium        FALSE</span></span>
+<span id="cb19-26"><span class="co" style="color: #5E5E5E;">#&gt; 67        Low 0.4320378 0.2537829 0.3141793      Low,Medium         TRUE</span></span>
+<span id="cb19-27"><span class="co" style="color: #5E5E5E;">#&gt; 68     Medium 0.4320378 0.2537829 0.3141793      Low,Medium         TRUE</span></span>
+<span id="cb19-28"><span class="co" style="color: #5E5E5E;">#&gt; 69       High 0.4320378 0.2537829 0.3141793      Low,Medium        FALSE</span></span>
+<span id="cb19-29"><span class="co" style="color: #5E5E5E;">#&gt; 70        Low 0.2470311 0.2378946 0.5150743            High        FALSE</span></span></code></pre></div>
+</details>
+</div>
+<p>Y aquí ya vemos que la cobertura es distinta y que la clase “High” ya no está en el 100% de los <em>prediction sets</em></p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1">set_adjust_fin <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb20-2">    <span class="fu" style="color: #4758AB;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb20-3">    <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">cov =</span> <span class="fu" style="color: #4758AB;">mean</span>(class_in_set))</span>
+<span id="cb20-4"><span class="co" style="color: #5E5E5E;">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb20-5"><span class="co" style="color: #5E5E5E;">#&gt;   True_class   cov</span></span>
+<span id="cb20-6"><span class="co" style="color: #5E5E5E;">#&gt;   &lt;ord&gt;      &lt;dbl&gt;</span></span>
+<span id="cb20-7"><span class="co" style="color: #5E5E5E;">#&gt; 1 Low        0.571</span></span>
+<span id="cb20-8"><span class="co" style="color: #5E5E5E;">#&gt; 2 Medium     0.667</span></span>
+<span id="cb20-9"><span class="co" style="color: #5E5E5E;">#&gt; 3 High       0.429</span></span></code></pre></div>
+</details>
+</div>
+<p>De hecho si tabulamos ambas predicciones conformes , vemos que de las 10 predicciones que el primer método ponía como {Low, Medium, High} , el segundo pone 7 como {Low, Medium } y 3 como {Low, Medium, High}</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"></span>
+<span id="cb21-2"><span class="fu" style="color: #4758AB;">table</span>(set_fin<span class="sc" style="color: #5E5E5E;">$</span>set_conformal, set_adjust_fin<span class="sc" style="color: #5E5E5E;">$</span>set_conformal)</span>
+<span id="cb21-3"><span class="co" style="color: #5E5E5E;">#&gt;                  </span></span>
+<span id="cb21-4"><span class="co" style="color: #5E5E5E;">#&gt;                   High Low,Medium Low,Medium,High</span></span>
+<span id="cb21-5"><span class="co" style="color: #5E5E5E;">#&gt;   High               7          0               0</span></span>
+<span id="cb21-6"><span class="co" style="color: #5E5E5E;">#&gt;   Low,High           0          3               0</span></span>
+<span id="cb21-7"><span class="co" style="color: #5E5E5E;">#&gt;   Low,Medium,High    0          7               3</span></span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="modificación-2." class="level3">
+<h3 class="anchored" data-anchor-id="modificación-2.">Modificación 2.</h3>
+<p>Vale, todo esto está muy bien, pero ¿y si simplemente para cada observación ordeno de forma decreciente su probabilidad predicha y me quedo con las clases que lleguen al 60% de probabilidad, por ejemplo?</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"></span>
+<span id="cb22-2">(predicciones_df <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">as.data.frame</span>(predicciones ))</span>
+<span id="cb22-3"><span class="co" style="color: #5E5E5E;">#&gt;          Low    Medium      High</span></span>
+<span id="cb22-4"><span class="co" style="color: #5E5E5E;">#&gt; 51 0.4260865 0.2544760 0.3194375</span></span>
+<span id="cb22-5"><span class="co" style="color: #5E5E5E;">#&gt; 52 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb22-6"><span class="co" style="color: #5E5E5E;">#&gt; 53 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb22-7"><span class="co" style="color: #5E5E5E;">#&gt; 54 0.2425400 0.2363201 0.5211399</span></span>
+<span id="cb22-8"><span class="co" style="color: #5E5E5E;">#&gt; 55 0.4014928 0.2566312 0.3418760</span></span>
+<span id="cb22-9"><span class="co" style="color: #5E5E5E;">#&gt; 56 0.4014928 0.2566312 0.3418760</span></span>
+<span id="cb22-10"><span class="co" style="color: #5E5E5E;">#&gt; 57 0.4014928 0.2566312 0.3418760</span></span>
+<span id="cb22-11"><span class="co" style="color: #5E5E5E;">#&gt; 58 0.3622588 0.2575226 0.3802186</span></span>
+<span id="cb22-12"><span class="co" style="color: #5E5E5E;">#&gt; 59 0.3622588 0.2575226 0.3802186</span></span>
+<span id="cb22-13"><span class="co" style="color: #5E5E5E;">#&gt; 60 0.3622588 0.2575226 0.3802186</span></span>
+<span id="cb22-14"><span class="co" style="color: #5E5E5E;">#&gt; 61 0.1967801 0.2160332 0.5871868</span></span>
+<span id="cb22-15"><span class="co" style="color: #5E5E5E;">#&gt; 62 0.1967801 0.2160332 0.5871868</span></span>
+<span id="cb22-16"><span class="co" style="color: #5E5E5E;">#&gt; 63 0.1967801 0.2160332 0.5871868</span></span>
+<span id="cb22-17"><span class="co" style="color: #5E5E5E;">#&gt; 64 0.4732214 0.2472855 0.2794931</span></span>
+<span id="cb22-18"><span class="co" style="color: #5E5E5E;">#&gt; 65 0.4732214 0.2472855 0.2794931</span></span>
+<span id="cb22-19"><span class="co" style="color: #5E5E5E;">#&gt; 66 0.4732214 0.2472855 0.2794931</span></span>
+<span id="cb22-20"><span class="co" style="color: #5E5E5E;">#&gt; 67 0.4320378 0.2537829 0.3141793</span></span>
+<span id="cb22-21"><span class="co" style="color: #5E5E5E;">#&gt; 68 0.4320378 0.2537829 0.3141793</span></span>
+<span id="cb22-22"><span class="co" style="color: #5E5E5E;">#&gt; 69 0.4320378 0.2537829 0.3141793</span></span>
+<span id="cb22-23"><span class="co" style="color: #5E5E5E;">#&gt; 70 0.2470311 0.2378946 0.5150743</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1">modificacion_2 <span class="ot" style="color: #003B4F;">&lt;-</span> predicciones_df <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-2">     <span class="fu" style="color: #4758AB;">rownames_to_column</span>(<span class="at" style="color: #657422;">var =</span> <span class="st" style="color: #20794D;">"individuo"</span>) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-3">    <span class="fu" style="color: #4758AB;">pivot_longer</span>(<span class="at" style="color: #657422;">cols =</span> Low<span class="sc" style="color: #5E5E5E;">:</span>High) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-4">    <span class="fu" style="color: #4758AB;">group_by</span>(individuo) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-5">    <span class="fu" style="color: #4758AB;">arrange</span>( <span class="fu" style="color: #4758AB;">desc</span>(value)) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-6">    <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">suma_acumulada =</span> <span class="fu" style="color: #4758AB;">cumsum</span>(value)) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb23-7">    <span class="fu" style="color: #4758AB;">arrange</span>(individuo)</span>
+<span id="cb23-8"></span>
+<span id="cb23-9"><span class="fu" style="color: #4758AB;">head</span>(modificacion_2, <span class="dv" style="color: #AD0000;">10</span>)</span>
+<span id="cb23-10"><span class="co" style="color: #5E5E5E;">#&gt; # A tibble: 10 × 4</span></span>
+<span id="cb23-11"><span class="co" style="color: #5E5E5E;">#&gt; # Groups:   individuo [4]</span></span>
+<span id="cb23-12"><span class="co" style="color: #5E5E5E;">#&gt;    individuo name   value suma_acumulada</span></span>
+<span id="cb23-13"><span class="co" style="color: #5E5E5E;">#&gt;    &lt;chr&gt;     &lt;chr&gt;  &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb23-14"><span class="co" style="color: #5E5E5E;">#&gt;  1 51        Low    0.426          0.426</span></span>
+<span id="cb23-15"><span class="co" style="color: #5E5E5E;">#&gt;  2 51        High   0.319          0.746</span></span>
+<span id="cb23-16"><span class="co" style="color: #5E5E5E;">#&gt;  3 51        Medium 0.254          1    </span></span>
+<span id="cb23-17"><span class="co" style="color: #5E5E5E;">#&gt;  4 52        High   0.521          0.521</span></span>
+<span id="cb23-18"><span class="co" style="color: #5E5E5E;">#&gt;  5 52        Low    0.243          0.764</span></span>
+<span id="cb23-19"><span class="co" style="color: #5E5E5E;">#&gt;  6 52        Medium 0.236          1    </span></span>
+<span id="cb23-20"><span class="co" style="color: #5E5E5E;">#&gt;  7 53        High   0.521          0.521</span></span>
+<span id="cb23-21"><span class="co" style="color: #5E5E5E;">#&gt;  8 53        Low    0.243          0.764</span></span>
+<span id="cb23-22"><span class="co" style="color: #5E5E5E;">#&gt;  9 53        Medium 0.236          1    </span></span>
+<span id="cb23-23"><span class="co" style="color: #5E5E5E;">#&gt; 10 54        High   0.521          0.521</span></span></code></pre></div>
+</details>
+</div>
+<p>Uhmm, pero no me acaba de convencer ordenar de forma descendente por la probabilidad predicha de cada clase. Por ejemplo para el individuo 51, si tomo Low +High llegaría a 0.74, pero si tomo Low + Medium llego al 67% . Si quisiera el menor conjunto de etiquetas que lleguen como mínimo al 60% la opción buena sería Low + Medium para ese individuo.</p>
+<p>No me veo con ganas de implementar todas las posibles sumas de probabilidades estimadas y elegir el conjunto que cumpla la restricción de llegar al menos al 60% y si hay varios para mismo individuos que se quede con el conjunto más pequeño.</p>
+</section>
+</section>
+<section id="conclusión." class="level2">
+<h2 class="anchored" data-anchor-id="conclusión.">Conclusión.</h2>
+<ul>
+<li><p>Lo de la predicción conforme para el caso de regresión me parece bastante sencillo, no es más que sumar y restar una medida de dispersión de los residuos a la predicción para nuevos datos.</p></li>
+<li><p>Para clasificación es un poco más interesante, sobre todo para casos en los que el usuario quiere una etiqueta o etiquetas y no se conforma con las probabilidades predichas de cada clase.</p></li>
+<li><p>Subyace la hipótesis de que los scores del modelo están bien calibrados y reflejan la verdadera probabilidad.</p></li>
+</ul>
+<p>Pues nada más, tengan un feliz día.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>Estadística</category>
+  <category>R</category>
+  <category>2023</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/index.html</guid>
+  <pubDate>Sat, 25 Mar 2023 23:00:00 GMT</pubDate>
+  <media:content url="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" medium="image" type="image/png" height="107" width="144"/>
+</item>
 <item>
   <title>Arrow y S3</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -9323,766 +9951,6 @@ Pero ¿cómo podemos predecir para nuevos datos?</p>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/03/20/palabras-para-julia-parte-3-n/index.html</guid>
   <pubDate>Sat, 19 Mar 2022 23:00:00 GMT</pubDate>
   <media:content url="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/03/20/palabras-para-julia-parte-3-n/plurarlista_turing.png" medium="image" type="image/png" height="216" width="144"/>
-</item>
-<item>
-  <title>Mediator. Full luxury bayes</title>
-  <dc:creator>jlcr</dc:creator>
-  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/12/mediator-full-luxury-bayes/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>Continuando con la serie sobre cosas de inferencia causal y full luxury bayes, antes de que empiece mi amigo <a href="https://www.datanalytics.com/">Carlos Gil</a>, y dónde seguramente se aprenderá más.</p>
-<p>Este ejemplo viene motivado precisamente por una charla que tuve el otro día con él.</p>
-<p>Sea el siguiente diagrama causal</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1">  <span class="fu" style="color: #4758AB;">library</span>(tidyverse)</span>
-<span id="cb1-2">  <span class="fu" style="color: #4758AB;">library</span>(dagitty)</span>
-<span id="cb1-3">  <span class="fu" style="color: #4758AB;">library</span>(ggdag)</span>
-<span id="cb1-4">  </span>
-<span id="cb1-5">  g <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">dagitty</span>(<span class="st" style="color: #20794D;">"dag{ </span></span>
-<span id="cb1-6"><span class="st" style="color: #20794D;">  x -&gt; y ;</span></span>
-<span id="cb1-7"><span class="st" style="color: #20794D;">  z -&gt; y ;</span></span>
-<span id="cb1-8"><span class="st" style="color: #20794D;">  x -&gt; z</span></span>
-<span id="cb1-9"><span class="st" style="color: #20794D;"> }"</span>)</span>
-<span id="cb1-10">  </span>
-<span id="cb1-11">  </span>
-<span id="cb1-12">  <span class="fu" style="color: #4758AB;">ggdag</span>(g) </span></code></pre></div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><a href="index_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/12/mediator-full-luxury-bayes/index_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Se tiene que <code>z</code> es un mediador entre x e y, y la teoría nos dice que si quiero obtener el efecto directo de x sobre y he de condicionar por <code>z</code> , y efectivamente, así nos lo dice el backdoor criterio. Mientras que si quiero el efecto total de x sobre y no he de condicionar por <code>z</code>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">  <span class="fu" style="color: #4758AB;">adjustmentSets</span>(g, <span class="at" style="color: #657422;">exposure =</span> <span class="st" style="color: #20794D;">"x"</span>, <span class="at" style="color: #657422;">outcome =</span> <span class="st" style="color: #20794D;">"y"</span>, <span class="at" style="color: #657422;">effect =</span> <span class="st" style="color: #20794D;">"total"</span>  )</span>
-<span id="cb2-2"><span class="co" style="color: #5E5E5E;">#&gt;  {}</span></span>
-<span id="cb2-3">  <span class="fu" style="color: #4758AB;">adjustmentSets</span>(g, <span class="at" style="color: #657422;">exposure =</span> <span class="st" style="color: #20794D;">"x"</span>, <span class="at" style="color: #657422;">outcome =</span> <span class="st" style="color: #20794D;">"y"</span>, <span class="at" style="color: #657422;">effect =</span> <span class="st" style="color: #20794D;">"direct"</span>  )</span>
-<span id="cb2-4"><span class="co" style="color: #5E5E5E;">#&gt; { z }</span></span></code></pre></div>
-</div>
-<section id="datos-simulados" class="level2">
-<h2 class="anchored" data-anchor-id="datos-simulados">Datos simulados</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"></span>
-<span id="cb3-2"><span class="fu" style="color: #4758AB;">set.seed</span>(<span class="dv" style="color: #AD0000;">155</span>)</span>
-<span id="cb3-3">N <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">1000</span> </span>
-<span id="cb3-4"></span>
-<span id="cb3-5">x <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(N, <span class="dv" style="color: #AD0000;">2</span>, <span class="dv" style="color: #AD0000;">1</span>) </span>
-<span id="cb3-6">z <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(N, <span class="dv" style="color: #AD0000;">4</span><span class="sc" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">4</span><span class="sc" style="color: #5E5E5E;">*</span>x , <span class="dv" style="color: #AD0000;">2</span> ) <span class="co" style="color: #5E5E5E;"># a z le ponemos más variabilidad, pero daría igual</span></span>
-<span id="cb3-7">y <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(N, <span class="dv" style="color: #AD0000;">2</span><span class="sc" style="color: #5E5E5E;">+</span> <span class="dv" style="color: #AD0000;">3</span><span class="sc" style="color: #5E5E5E;">*</span>x <span class="sc" style="color: #5E5E5E;">+</span> z, <span class="dv" style="color: #AD0000;">1</span>)</span></code></pre></div>
-</div>
-<p><strong>Efecto total de x sobre y </strong></p>
-<p>Tal y como hemos simulado los datos, se esperaría que el efecto <em>total</em> de x sobre y fuera</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20%5Cdfrac%7Bcov(x,y)%7D%20%7Bvar(x)%7D%20%5Capprox%207%20"></p>
-<p>Y qué el efecto <em>directo</em> fuera de 3</p>
-<p>Efectivamente</p>
-<p>Efecto total</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><span class="co" style="color: #5E5E5E;"># efecto total</span></span>
-<span id="cb4-2"><span class="fu" style="color: #4758AB;">lm</span>(y<span class="sc" style="color: #5E5E5E;">~</span>x)</span>
-<span id="cb4-3"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb4-4"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
-<span id="cb4-5"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = y ~ x)</span></span>
-<span id="cb4-6"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb4-7"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
-<span id="cb4-8"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            x  </span></span>
-<span id="cb4-9"><span class="co" style="color: #5E5E5E;">#&gt;       5.881        7.112</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><span class="co" style="color: #5E5E5E;"># efecto directo</span></span>
-<span id="cb5-2"><span class="fu" style="color: #4758AB;">lm</span>(y<span class="sc" style="color: #5E5E5E;">~</span>x<span class="sc" style="color: #5E5E5E;">+</span>z)</span>
-<span id="cb5-3"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb5-4"><span class="co" style="color: #5E5E5E;">#&gt; Call:</span></span>
-<span id="cb5-5"><span class="co" style="color: #5E5E5E;">#&gt; lm(formula = y ~ x + z)</span></span>
-<span id="cb5-6"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb5-7"><span class="co" style="color: #5E5E5E;">#&gt; Coefficients:</span></span>
-<span id="cb5-8"><span class="co" style="color: #5E5E5E;">#&gt; (Intercept)            x            z  </span></span>
-<span id="cb5-9"><span class="co" style="color: #5E5E5E;">#&gt;      2.0318       3.0339       0.9945</span></span></code></pre></div>
-</div>
-</section>
-<section id="full-luxury-bayes" class="level2">
-<h2 class="anchored" data-anchor-id="full-luxury-bayes">Full luxury bayes</h2>
-<p>Hagamos lo mismo pero estimando el dag completo</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"></span>
-<span id="cb6-2"><span class="fu" style="color: #4758AB;">library</span>(cmdstanr)</span>
-<span id="cb6-3"><span class="fu" style="color: #4758AB;">library</span>(rethinking)</span>
-<span id="cb6-4"><span class="fu" style="color: #4758AB;">set_cmdstan_path</span>(<span class="st" style="color: #20794D;">"~/Descargas/cmdstan/"</span>)</span>
-<span id="cb6-5"></span>
-<span id="cb6-6">dat <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(</span>
-<span id="cb6-7">  <span class="at" style="color: #657422;">N =</span> N,</span>
-<span id="cb6-8">  <span class="at" style="color: #657422;">x =</span> x,</span>
-<span id="cb6-9">  <span class="at" style="color: #657422;">y =</span> y,</span>
-<span id="cb6-10">  <span class="at" style="color: #657422;">z =</span> z</span>
-<span id="cb6-11">)</span>
-<span id="cb6-12"><span class="fu" style="color: #4758AB;">set.seed</span>(<span class="dv" style="color: #AD0000;">1908</span>)</span>
-<span id="cb6-13"></span>
-<span id="cb6-14">flbi <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ulam</span>(</span>
-<span id="cb6-15">  <span class="fu" style="color: #4758AB;">alist</span>(</span>
-<span id="cb6-16">    <span class="co" style="color: #5E5E5E;"># x model, si quiero estimar la media de x sino, no me hace falta</span></span>
-<span id="cb6-17">    x <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>(mux, k),</span>
-<span id="cb6-18">    mux <span class="ot" style="color: #003B4F;">&lt;-</span> a0,</span>
-<span id="cb6-19">    z <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( mu , sigma ),</span>
-<span id="cb6-20">    </span>
-<span id="cb6-21">    mu <span class="ot" style="color: #003B4F;">&lt;-</span> a1 <span class="sc" style="color: #5E5E5E;">+</span> bx <span class="sc" style="color: #5E5E5E;">*</span> x,</span>
-<span id="cb6-22">   </span>
-<span id="cb6-23">    y <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( nu , tau ),</span>
-<span id="cb6-24">    nu <span class="ot" style="color: #003B4F;">&lt;-</span> a2 <span class="sc" style="color: #5E5E5E;">+</span> bx2 <span class="sc" style="color: #5E5E5E;">*</span> x <span class="sc" style="color: #5E5E5E;">+</span> bz <span class="sc" style="color: #5E5E5E;">*</span> z,</span>
-<span id="cb6-25"></span>
-<span id="cb6-26">    <span class="co" style="color: #5E5E5E;"># priors</span></span>
-<span id="cb6-27">    </span>
-<span id="cb6-28">    <span class="fu" style="color: #4758AB;">c</span>(a0,a1,a2,bx,bx2, bz) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( <span class="dv" style="color: #AD0000;">0</span> , <span class="fl" style="color: #AD0000;">0.5</span> ),</span>
-<span id="cb6-29">    <span class="fu" style="color: #4758AB;">c</span>(sigma,tau, k) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">exponential</span>( <span class="dv" style="color: #AD0000;">1</span> )</span>
-<span id="cb6-30">  ), <span class="at" style="color: #657422;">data=</span>dat , <span class="at" style="color: #657422;">chains=</span><span class="dv" style="color: #AD0000;">10</span> , <span class="at" style="color: #657422;">cores=</span><span class="dv" style="color: #AD0000;">10</span> , <span class="at" style="color: #657422;">warmup =</span> <span class="dv" style="color: #AD0000;">500</span>, <span class="at" style="color: #657422;">iter=</span><span class="dv" style="color: #AD0000;">2000</span> , <span class="at" style="color: #657422;">cmdstan=</span><span class="cn" style="color: #8f5902;">TRUE</span> )</span>
-<span id="cb6-31"><span class="co" style="color: #5E5E5E;">#&gt; Running MCMC with 10 parallel chains, with 1 thread(s) per chain...</span></span>
-<span id="cb6-32"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb6-33"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-34"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-35"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-36"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-37"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-38"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-39"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-40"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-41"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-42"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-43"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb6-44"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-45"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-46"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-47"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-48"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-49"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-50"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-51"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-52"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb6-53"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-54"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-55"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-56"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-57"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-58"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-59"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-60"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-61"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-62"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb6-63"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-64"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-65"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-66"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-67"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-68"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-69"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-70"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-71"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-72"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-73"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-74"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb6-75"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-76"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-77"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-78"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-79"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-80"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-81"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-82"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-83"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-84"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-85"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-86"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb6-87"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-88"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-89"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-90"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-91"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-92"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-93"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-94"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-95"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-96"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-97"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-98"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-99"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-100"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-101"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-102"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-103"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-104"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb6-105"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb6-106"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-107"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-108"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-109"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-110"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-111"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-112"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-113"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-114"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-115"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-116"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-117"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-118"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-119"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-120"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb6-121"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-122"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-123"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-124"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-125"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-126"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-127"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-128"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-129"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-130"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-131"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-132"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb6-133"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-134"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-135"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-136"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-137"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-138"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-139"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-140"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-141"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-142"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-143"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-144"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb6-145"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-146"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-147"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-148"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-149"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-150"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-151"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-152"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-153"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-154"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-155"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-156"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-157"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb6-158"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-159"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-160"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-161"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-162"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-163"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-164"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-165"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-166"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-167"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-168"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-169"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-170"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb6-171"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-172"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-173"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-174"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-175"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-176"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-177"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-178"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-179"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-180"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-181"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-182"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-183"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb6-184"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-185"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-186"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-187"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-188"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-189"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-190"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-191"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-192"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-193"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-194"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-195"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-196"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-197"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb6-198"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-199"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-200"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-201"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-202"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-203"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-204"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-205"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-206"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-207"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-208"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-209"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-210"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb6-211"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 finished in 10.6 seconds.</span></span>
-<span id="cb6-212"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 finished in 10.6 seconds.</span></span>
-<span id="cb6-213"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-214"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-215"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-216"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-217"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-218"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-219"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-220"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-221"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 finished in 11.0 seconds.</span></span>
-<span id="cb6-222"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-223"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-224"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-225"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-226"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb6-227"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-228"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-229"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 finished in 11.5 seconds.</span></span>
-<span id="cb6-230"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-231"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-232"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-233"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-234"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-235"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb6-236"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-237"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-238"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-239"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-240"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-241"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb6-242"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-243"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-244"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 finished in 12.4 seconds.</span></span>
-<span id="cb6-245"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 finished in 12.4 seconds.</span></span>
-<span id="cb6-246"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-247"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-248"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-249"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb6-250"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-251"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-252"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 finished in 12.9 seconds.</span></span>
-<span id="cb6-253"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-254"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb6-255"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-256"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-257"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 finished in 13.3 seconds.</span></span>
-<span id="cb6-258"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb6-259"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-260"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 finished in 13.6 seconds.</span></span>
-<span id="cb6-261"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb6-262"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 finished in 13.9 seconds.</span></span>
-<span id="cb6-263"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb6-264"><span class="co" style="color: #5E5E5E;">#&gt; All 10 chains finished successfully.</span></span>
-<span id="cb6-265"><span class="co" style="color: #5E5E5E;">#&gt; Mean chain execution time: 12.2 seconds.</span></span>
-<span id="cb6-266"><span class="co" style="color: #5E5E5E;">#&gt; Total execution time: 14.0 seconds.</span></span></code></pre></div>
-</div>
-<p>Y recuperamos los coeficientes y varianzas</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"></span>
-<span id="cb7-2"><span class="fu" style="color: #4758AB;">precis</span>(flbi)</span>
-<span id="cb7-3"><span class="co" style="color: #5E5E5E;">#&gt;            mean         sd      5.5%    94.5%     n_eff     Rhat4</span></span>
-<span id="cb7-4"><span class="co" style="color: #5E5E5E;">#&gt; bz    1.0131931 0.01557219 0.9883466 1.038241  8226.042 1.0005919</span></span>
-<span id="cb7-5"><span class="co" style="color: #5E5E5E;">#&gt; bx2   2.9610334 0.07098661 2.8447278 3.073501  9640.122 1.0004040</span></span>
-<span id="cb7-6"><span class="co" style="color: #5E5E5E;">#&gt; bx    4.1535508 0.06180592 4.0552767 4.252771  8753.661 1.0001456</span></span>
-<span id="cb7-7"><span class="co" style="color: #5E5E5E;">#&gt; a2    1.9440850 0.09315785 1.7952495 2.093027 11266.267 1.0001373</span></span>
-<span id="cb7-8"><span class="co" style="color: #5E5E5E;">#&gt; a1    3.7089914 0.13578637 3.4916007 3.926010  8709.448 1.0002893</span></span>
-<span id="cb7-9"><span class="co" style="color: #5E5E5E;">#&gt; a0    1.9857103 0.03108199 1.9357773 2.035712 16252.310 0.9997523</span></span>
-<span id="cb7-10"><span class="co" style="color: #5E5E5E;">#&gt; k     0.9719412 0.02166791 0.9378896 1.007410 15276.158 0.9999036</span></span>
-<span id="cb7-11"><span class="co" style="color: #5E5E5E;">#&gt; tau   0.9859183 0.02216068 0.9512944 1.021932 15735.140 1.0001540</span></span>
-<span id="cb7-12"><span class="co" style="color: #5E5E5E;">#&gt; sigma 1.9636543 0.04382554 1.8950489 2.034130 15855.098 1.0000898</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><span class="co" style="color: #5E5E5E;"># extraemos 10000 muestras de la posteriori </span></span>
-<span id="cb8-2">post <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">extract.samples</span>(flbi, <span class="at" style="color: #657422;">n =</span> <span class="dv" style="color: #AD0000;">10000</span>) </span></code></pre></div>
-</div>
-<p>Y el efecto directo de x sobre y sería</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><span class="fu" style="color: #4758AB;">quantile</span>(post<span class="sc" style="color: #5E5E5E;">$</span>bx2, <span class="at" style="color: #657422;">probs =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>))</span>
-<span id="cb9-2"><span class="co" style="color: #5E5E5E;">#&gt;     2.5%      50%    97.5% </span></span>
-<span id="cb9-3"><span class="co" style="color: #5E5E5E;">#&gt; 2.823659 2.962330 3.099855</span></span></code></pre></div>
-</div>
-<p>En este ejemplo sencillo, podríamos estimar el efecto causal de x sobre y simplemente sumando las posterioris</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><span class="fu" style="color: #4758AB;">quantile</span>(post<span class="sc" style="color: #5E5E5E;">$</span>bx <span class="sc" style="color: #5E5E5E;">+</span> post<span class="sc" style="color: #5E5E5E;">$</span>bx2, <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>))</span>
-<span id="cb10-2"><span class="co" style="color: #5E5E5E;">#&gt;     2.5%      50%    97.5% </span></span>
-<span id="cb10-3"><span class="co" style="color: #5E5E5E;">#&gt; 6.928046 7.114180 7.299252</span></span></code></pre></div>
-</div>
-<p>También podríamos obtener el efecto causal total de x sobre y simulando una intervención. En este caso, al ser la variable continua, lo que queremos obtener como de diferente es y cuando <img src="https://latex.codecogs.com/png.latex?X%20=%20x_i"> versus cuando <img src="https://latex.codecogs.com/png.latex?X%20=%20x_i+1">.</p>
-<p>Siempre podríamos ajustar otro modelo bayesiano dónde no tuviéramos en cuenta a z y obtendríamos la estimación de ese efecto total de x sobre y, pero siguiendo a Rubin y Gelman, la idea es incluir en nuestro modelo toda la información disponible. Y tal y como dice Richard McElreath , <a href="https://github.com/rmcelreath/stat_rethinking_2022">Statistical Rethinking 2022</a>, el efecto causal se puede estimar simulando la intervención.</p>
-<p>Así que el objetivo es dado nuestro modelo que incluye la variable z, simular la intervención cuando <img src="https://latex.codecogs.com/png.latex?X%20=%20x_i"> y cuando <img src="https://latex.codecogs.com/png.latex?X%20=%20x_i+1"> y una estimación del efecto directo es la resta de ambas distribuciones a posteriori de y.</p>
-<p>Creamos función para calcular el efecto de la intervención <code>y_do_x</code></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">get_total_effect <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="cf" style="color: #003B4F;">function</span>(<span class="at" style="color: #657422;">x_value =</span> <span class="dv" style="color: #AD0000;">0</span>, <span class="at" style="color: #657422;">incremento =</span> <span class="fl" style="color: #AD0000;">0.5</span>) {</span>
-<span id="cb11-2">  n <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">length</span>(post<span class="sc" style="color: #5E5E5E;">$</span>bx)</span>
-<span id="cb11-3">  <span class="fu" style="color: #4758AB;">with</span>(post, {</span>
-<span id="cb11-4">    <span class="co" style="color: #5E5E5E;"># simulate z, y  for x= x_value</span></span>
-<span id="cb11-5">    z_x0 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(n, a1 <span class="sc" style="color: #5E5E5E;">+</span> bx <span class="sc" style="color: #5E5E5E;">*</span> x_value  , sigma)</span>
-<span id="cb11-6">    y_x0 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(n, a2  <span class="sc" style="color: #5E5E5E;">+</span> bz <span class="sc" style="color: #5E5E5E;">*</span> z_x0 <span class="sc" style="color: #5E5E5E;">+</span> bx <span class="sc" style="color: #5E5E5E;">*</span> x_value , tau)</span>
-<span id="cb11-7">    </span>
-<span id="cb11-8">    <span class="co" style="color: #5E5E5E;"># simulate z,y for x= x_value +1 </span></span>
-<span id="cb11-9">    z_x1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(n, a1 <span class="sc" style="color: #5E5E5E;">+</span> bx <span class="sc" style="color: #5E5E5E;">*</span> (x_value <span class="sc" style="color: #5E5E5E;">+</span> incremento)  , sigma)</span>
-<span id="cb11-10">    y_x1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rnorm</span>(n, a2  <span class="sc" style="color: #5E5E5E;">+</span> bz <span class="sc" style="color: #5E5E5E;">*</span> z_x1 <span class="sc" style="color: #5E5E5E;">+</span> bx2 <span class="sc" style="color: #5E5E5E;">*</span> (x_value <span class="sc" style="color: #5E5E5E;">+</span> incremento) , tau)</span>
-<span id="cb11-11">    </span>
-<span id="cb11-12">    </span>
-<span id="cb11-13">    <span class="co" style="color: #5E5E5E;"># compute contrast</span></span>
-<span id="cb11-14">    y_do_x <span class="ot" style="color: #003B4F;">&lt;-</span> (y_x1 <span class="sc" style="color: #5E5E5E;">-</span> y_x0) <span class="sc" style="color: #5E5E5E;">/</span> incremento</span>
-<span id="cb11-15">    <span class="fu" style="color: #4758AB;">return</span>(y_do_x)</span>
-<span id="cb11-16">  })</span>
-<span id="cb11-17">  </span>
-<span id="cb11-18">}</span></code></pre></div>
-</div>
-<p>Dado un valor de x, podemos calcular el efecto total</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1">y_do_x_0_2 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">get_total_effect</span>(<span class="at" style="color: #657422;">x_value =</span> <span class="fl" style="color: #AD0000;">0.2</span>) </span>
-<span id="cb12-2"></span>
-<span id="cb12-3"><span class="fu" style="color: #4758AB;">quantile</span>(y_do_x_0_2)</span>
-<span id="cb12-4"><span class="co" style="color: #5E5E5E;">#&gt;         0%        25%        50%        75%       100% </span></span>
-<span id="cb12-5"><span class="co" style="color: #5E5E5E;">#&gt; -15.324628   2.395551   6.702379  10.987520  28.909002</span></span></code></pre></div>
-</div>
-<p>Podríamos hacer lo mismo para varios valores de x</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1">x_seq <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">seq</span>(<span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="at" style="color: #657422;">length =</span> <span class="dv" style="color: #AD0000;">1000</span>)</span>
-<span id="cb13-2">y_do_x <span class="ot" style="color: #003B4F;">&lt;-</span></span>
-<span id="cb13-3">  <span class="fu" style="color: #4758AB;">mclapply</span>(x_seq,  <span class="cf" style="color: #003B4F;">function</span>(lambda)</span>
-<span id="cb13-4">    <span class="fu" style="color: #4758AB;">get_total_effect</span>(<span class="at" style="color: #657422;">x_value =</span> lambda))</span></code></pre></div>
-</div>
-<p>Y para cada uno de estos 1000 valores tendría 10000 valores de su efecto total de x sobre y.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><span class="fu" style="color: #4758AB;">length</span>(y_do_x[[<span class="dv" style="color: #AD0000;">500</span>]])</span>
-<span id="cb14-2"><span class="co" style="color: #5E5E5E;">#&gt; [1] 10000</span></span>
-<span id="cb14-3"></span>
-<span id="cb14-4"><span class="fu" style="color: #4758AB;">head</span>(y_do_x[[<span class="dv" style="color: #AD0000;">500</span>]])</span>
-<span id="cb14-5"><span class="co" style="color: #5E5E5E;">#&gt; [1]  3.055107  4.988595  5.030397 12.469616 14.944735 22.881773</span></span></code></pre></div>
-</div>
-<p>Calculamos los intervalos de credibilidad del efecto total de x sobre y para cada valor de x.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><span class="co" style="color: #5E5E5E;"># lo hacemos simplemente por cuantiles, aunque podríamos calcular el hdi también, </span></span>
-<span id="cb15-2"></span>
-<span id="cb15-3">intervalos_credibilidad <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">mclapply</span>( y_do_x, <span class="cf" style="color: #003B4F;">function</span>(x) <span class="fu" style="color: #4758AB;">quantile</span>(x, <span class="at" style="color: #657422;">probs =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>)))</span>
-<span id="cb15-4"></span>
-<span id="cb15-5"><span class="co" style="color: #5E5E5E;"># Media e intervalor de credibilidad para el valor de x_seq en la posición 500 </span></span>
-<span id="cb15-6"><span class="fu" style="color: #4758AB;">mean</span>(y_do_x[[<span class="dv" style="color: #AD0000;">500</span>]])</span>
-<span id="cb15-7"><span class="co" style="color: #5E5E5E;">#&gt; [1] 7.278184</span></span>
-<span id="cb15-8">intervalos_credibilidad[[<span class="dv" style="color: #AD0000;">500</span>]]</span>
-<span id="cb15-9"><span class="co" style="color: #5E5E5E;">#&gt;      2.5%       50%     97.5% </span></span>
-<span id="cb15-10"><span class="co" style="color: #5E5E5E;">#&gt; -4.867513  7.337732 19.761850</span></span></code></pre></div>
-</div>
-<p><strong>intervalo de predicción clásico con el lm</strong></p>
-<p>Habría que calcular la predicción de y para un valor de x y para el de x + 1, podemos calcular los intervalos de predicción clásicos parea cada valor de x, pero no para la diferencia ( al menos con la función predict)</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"></span>
-<span id="cb16-2">mt_lm <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">lm</span>(y<span class="sc" style="color: #5E5E5E;">~</span>x)</span>
-<span id="cb16-3"><span class="fu" style="color: #4758AB;">predict</span>(mt_lm, <span class="at" style="color: #657422;">newdata =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">x=</span> x_seq[[<span class="dv" style="color: #AD0000;">500</span>]]), <span class="at" style="color: #657422;">interval  =</span> <span class="st" style="color: #20794D;">"prediction"</span>)</span>
-<span id="cb16-4"><span class="co" style="color: #5E5E5E;">#&gt;        fit      lwr     upr</span></span>
-<span id="cb16-5"><span class="co" style="color: #5E5E5E;">#&gt; 1 5.877439 1.578777 10.1761</span></span>
-<span id="cb16-6"><span class="fu" style="color: #4758AB;">predict</span>(mt_lm, <span class="at" style="color: #657422;">newdata =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">x=</span> x_seq[[<span class="dv" style="color: #AD0000;">500</span>]] <span class="sc" style="color: #5E5E5E;">+</span><span class="dv" style="color: #AD0000;">1</span>), <span class="at" style="color: #657422;">interval  =</span> <span class="st" style="color: #20794D;">"prediction"</span>)</span>
-<span id="cb16-7"><span class="co" style="color: #5E5E5E;">#&gt;        fit      lwr     upr</span></span>
-<span id="cb16-8"><span class="co" style="color: #5E5E5E;">#&gt; 1 12.98993 8.698051 17.2818</span></span></code></pre></div>
-</div>
-<p><strong>Pero como sería obtener el intervalo de credibilidad para la media de los efectos totales?</strong></p>
-<p>Calculando para cada valor de x la media de la posteriori del efecto global y juntando todas las medias.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1">slopes_mean <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">lapply</span>(y_do_x, mean)</span>
-<span id="cb17-2"></span>
-<span id="cb17-3"><span class="fu" style="color: #4758AB;">quantile</span>(<span class="fu" style="color: #4758AB;">unlist</span>(slopes_mean), <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>))</span>
-<span id="cb17-4"><span class="co" style="color: #5E5E5E;">#&gt;     2.5%      50%    97.5% </span></span>
-<span id="cb17-5"><span class="co" style="color: #5E5E5E;">#&gt; 6.023455 7.180465 8.326128</span></span></code></pre></div>
-</div>
-<p>Que tiene mucha menos variabilidad que el efecto global en un valor concreto de x, o si juntamos todas las estimaciones</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><span class="fu" style="color: #4758AB;">quantile</span>(<span class="fu" style="color: #4758AB;">unlist</span>(y_do_x),  <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>))</span>
-<span id="cb18-2"><span class="co" style="color: #5E5E5E;">#&gt;      2.5%       50%     97.5% </span></span>
-<span id="cb18-3"><span class="co" style="color: #5E5E5E;">#&gt; -5.219611  7.168985 19.562729</span></span></code></pre></div>
-</div>
-<p>Evidentemente, podríamos simplemente no haber tenido en cuenta la variable z en nuestro modelo bayesiano.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1">flbi_2 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ulam</span>(</span>
-<span id="cb19-2">  <span class="fu" style="color: #4758AB;">alist</span>(</span>
-<span id="cb19-3">    <span class="co" style="color: #5E5E5E;"># x model, si quiero estimar la media de x sino, no me hace falta</span></span>
-<span id="cb19-4">    x <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>(mux, k),</span>
-<span id="cb19-5">    mux <span class="ot" style="color: #003B4F;">&lt;-</span> a1,</span>
-<span id="cb19-6">    </span>
-<span id="cb19-7">    y <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( nu , tau ),</span>
-<span id="cb19-8">    nu <span class="ot" style="color: #003B4F;">&lt;-</span> a2 <span class="sc" style="color: #5E5E5E;">+</span> bx <span class="sc" style="color: #5E5E5E;">*</span> x ,</span>
-<span id="cb19-9">    </span>
-<span id="cb19-10">    <span class="co" style="color: #5E5E5E;"># priors</span></span>
-<span id="cb19-11">    </span>
-<span id="cb19-12">    <span class="fu" style="color: #4758AB;">c</span>(a1,a2,bx) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">normal</span>( <span class="dv" style="color: #AD0000;">0</span> , <span class="fl" style="color: #AD0000;">0.5</span> ),</span>
-<span id="cb19-13">    <span class="fu" style="color: #4758AB;">c</span>(tau, k) <span class="sc" style="color: #5E5E5E;">~</span> <span class="fu" style="color: #4758AB;">exponential</span>( <span class="dv" style="color: #AD0000;">1</span> )</span>
-<span id="cb19-14">  ), <span class="at" style="color: #657422;">data=</span>dat , <span class="at" style="color: #657422;">chains=</span><span class="dv" style="color: #AD0000;">10</span> , <span class="at" style="color: #657422;">cores=</span><span class="dv" style="color: #AD0000;">10</span> , <span class="at" style="color: #657422;">warmup =</span> <span class="dv" style="color: #AD0000;">500</span>, <span class="at" style="color: #657422;">iter=</span><span class="dv" style="color: #AD0000;">2000</span> , <span class="at" style="color: #657422;">cmdstan=</span><span class="cn" style="color: #8f5902;">TRUE</span> )</span>
-<span id="cb19-15"><span class="co" style="color: #5E5E5E;">#&gt; Running MCMC with 10 parallel chains, with 1 thread(s) per chain...</span></span>
-<span id="cb19-16"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb19-17"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-18"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-19"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-20"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-21"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-22"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-23"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-24"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-25"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-26"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-27"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-28"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-29"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-30"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-31"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-32"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-33"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-34"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-35"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-36"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-37"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-38"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-39"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-40"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-41"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-42"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-43"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-44"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-45"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-46"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-47"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-48"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-49"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-50"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-51"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-52"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:    1 / 2000 [  0%]  (Warmup) </span></span>
-<span id="cb19-53"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  100 / 2000 [  5%]  (Warmup) </span></span>
-<span id="cb19-54"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-55"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-56"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-57"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-58"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-59"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-60"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-61"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-62"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-63"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-64"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-65"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-66"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-67"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-68"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-69"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-70"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-71"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-72"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-73"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-74"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-75"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-76"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-77"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-78"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  200 / 2000 [ 10%]  (Warmup) </span></span>
-<span id="cb19-79"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-80"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-81"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-82"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-83"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-84"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-85"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-86"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-87"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-88"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-89"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-90"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-91"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-92"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-93"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-94"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-95"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-96"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-97"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  300 / 2000 [ 15%]  (Warmup) </span></span>
-<span id="cb19-98"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-99"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-100"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-101"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-102"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-103"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-104"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-105"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-106"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-107"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-108"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-109"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-110"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-111"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  400 / 2000 [ 20%]  (Warmup) </span></span>
-<span id="cb19-112"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-113"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-114"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-115"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-116"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-117"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-118"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-119"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-120"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-121"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-122"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-123"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-124"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-125"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-126"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-127"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  500 / 2000 [ 25%]  (Warmup) </span></span>
-<span id="cb19-128"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  501 / 2000 [ 25%]  (Sampling) </span></span>
-<span id="cb19-129"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  600 / 2000 [ 30%]  (Sampling) </span></span>
-<span id="cb19-130"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-131"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-132"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-133"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-134"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-135"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-136"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-137"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-138"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-139"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-140"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-141"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-142"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-143"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  700 / 2000 [ 35%]  (Sampling) </span></span>
-<span id="cb19-144"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-145"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-146"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-147"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-148"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-149"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-150"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-151"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-152"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-153"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-154"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-155"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-156"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-157"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-158"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-159"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  800 / 2000 [ 40%]  (Sampling) </span></span>
-<span id="cb19-160"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration:  900 / 2000 [ 45%]  (Sampling) </span></span>
-<span id="cb19-161"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-162"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-163"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-164"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-165"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-166"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-167"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-168"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-169"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-170"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-171"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-172"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-173"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-174"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-175"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1000 / 2000 [ 50%]  (Sampling) </span></span>
-<span id="cb19-176"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-177"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-178"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-179"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-180"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-181"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-182"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-183"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-184"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-185"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1100 / 2000 [ 55%]  (Sampling) </span></span>
-<span id="cb19-186"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1200 / 2000 [ 60%]  (Sampling) </span></span>
-<span id="cb19-187"><span class="co" style="color: #5E5E5E;">#&gt; Chain 5 finished in 1.1 seconds.</span></span>
-<span id="cb19-188"><span class="co" style="color: #5E5E5E;">#&gt; Chain 6 finished in 1.1 seconds.</span></span>
-<span id="cb19-189"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-190"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-191"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-192"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-193"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-194"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-195"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-196"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-197"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-198"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-199"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-200"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-201"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-202"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1300 / 2000 [ 65%]  (Sampling) </span></span>
-<span id="cb19-203"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-204"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-205"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-206"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-207"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-208"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-209"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-210"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1400 / 2000 [ 70%]  (Sampling) </span></span>
-<span id="cb19-211"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-212"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-213"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1500 / 2000 [ 75%]  (Sampling) </span></span>
-<span id="cb19-214"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-215"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-216"><span class="co" style="color: #5E5E5E;">#&gt; Chain 1 finished in 1.4 seconds.</span></span>
-<span id="cb19-217"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-218"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-219"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-220"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-221"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-222"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1600 / 2000 [ 80%]  (Sampling) </span></span>
-<span id="cb19-223"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-224"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-225"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-226"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-227"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-228"><span class="co" style="color: #5E5E5E;">#&gt; Chain 2 finished in 1.4 seconds.</span></span>
-<span id="cb19-229"><span class="co" style="color: #5E5E5E;">#&gt; Chain 4 finished in 1.5 seconds.</span></span>
-<span id="cb19-230"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-231"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1700 / 2000 [ 85%]  (Sampling) </span></span>
-<span id="cb19-232"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-233"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-234"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-235"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-236"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1800 / 2000 [ 90%]  (Sampling) </span></span>
-<span id="cb19-237"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-238"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-239"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 1900 / 2000 [ 95%]  (Sampling) </span></span>
-<span id="cb19-240"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-241"><span class="co" style="color: #5E5E5E;">#&gt; Chain 3 finished in 1.6 seconds.</span></span>
-<span id="cb19-242"><span class="co" style="color: #5E5E5E;">#&gt; Chain 8 finished in 1.5 seconds.</span></span>
-<span id="cb19-243"><span class="co" style="color: #5E5E5E;">#&gt; Chain 9 finished in 1.5 seconds.</span></span>
-<span id="cb19-244"><span class="co" style="color: #5E5E5E;">#&gt; Chain 10 finished in 1.4 seconds.</span></span>
-<span id="cb19-245"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 Iteration: 2000 / 2000 [100%]  (Sampling) </span></span>
-<span id="cb19-246"><span class="co" style="color: #5E5E5E;">#&gt; Chain 7 finished in 1.6 seconds.</span></span>
-<span id="cb19-247"><span class="co" style="color: #5E5E5E;">#&gt; </span></span>
-<span id="cb19-248"><span class="co" style="color: #5E5E5E;">#&gt; All 10 chains finished successfully.</span></span>
-<span id="cb19-249"><span class="co" style="color: #5E5E5E;">#&gt; Mean chain execution time: 1.4 seconds.</span></span>
-<span id="cb19-250"><span class="co" style="color: #5E5E5E;">#&gt; Total execution time: 1.8 seconds.</span></span></code></pre></div>
-</div>
-<p>Y obtenemos directamente el efecto total de x sobre y.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><span class="fu" style="color: #4758AB;">precis</span>(flbi_2)</span>
-<span id="cb20-2"><span class="co" style="color: #5E5E5E;">#&gt;          mean         sd      5.5%    94.5%    n_eff     Rhat4</span></span>
-<span id="cb20-3"><span class="co" style="color: #5E5E5E;">#&gt; bx  7.1948083 0.06787458 7.0863389 7.302933 10446.14 1.0001211</span></span>
-<span id="cb20-4"><span class="co" style="color: #5E5E5E;">#&gt; a2  5.6085615 0.14948341 5.3685467 5.848723 10598.69 1.0001680</span></span>
-<span id="cb20-5"><span class="co" style="color: #5E5E5E;">#&gt; a1  1.9860307 0.03058033 1.9368689 2.034631 14116.13 1.0004122</span></span>
-<span id="cb20-6"><span class="co" style="color: #5E5E5E;">#&gt; k   0.9721054 0.02159773 0.9382407 1.006761 15044.78 0.9995902</span></span>
-<span id="cb20-7"><span class="co" style="color: #5E5E5E;">#&gt; tau 2.1898100 0.04953736 2.1120600 2.269831 14995.33 0.9999084</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1">post2 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">extract.samples</span>(flbi_2,  <span class="at" style="color: #657422;">n =</span> <span class="dv" style="color: #AD0000;">10000</span>)</span>
-<span id="cb21-2"></span>
-<span id="cb21-3"><span class="fu" style="color: #4758AB;">quantile</span>(post2<span class="sc" style="color: #5E5E5E;">$</span>bx, <span class="at" style="color: #657422;">probs =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.025</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.975</span>))</span>
-<span id="cb21-4"><span class="co" style="color: #5E5E5E;">#&gt;     2.5%      50%    97.5% </span></span>
-<span id="cb21-5"><span class="co" style="color: #5E5E5E;">#&gt; 7.061389 7.194525 7.327361</span></span></code></pre></div>
-</div>
-</section>
-<section id="pensamientos-finales" class="level2">
-<h2 class="anchored" data-anchor-id="pensamientos-finales">Pensamientos finales</h2>
-<ul>
-<li><p>Parece que no es tan mala idea incluir en tu modelo bayesiano toda la información disponible.</p></li>
-<li><p>Ser pluralista es una buena idea, usando el backdoor criterio dado que nuestro dag sea correcto, nos puede llevar a un modelo más simple y fácil de estimar.</p></li>
-<li><p>Como dije en el último <a href="https://muestrear-no-es-pecado.netlify.app/2022/02/09/2022-02-09/">post</a>, estimar todo el dag de forma conjunta puede ser útil en varias situaciones.</p></li>
-<li><p>Ya en 2009 se hablaba de esto <a href="https://statmodeling.stat.columbia.edu/2009/07/10/rubinism_separa/">aquí</a></p></li>
-</ul>
-
-
-</section>
-
- ]]></description>
-  <category>análisis bayesiano</category>
-  <category>estadística</category>
-  <category>causal inference</category>
-  <category>R</category>
-  <category>2022</category>
-  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/02/12/mediator-full-luxury-bayes/index.html</guid>
-  <pubDate>Fri, 11 Feb 2022 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
