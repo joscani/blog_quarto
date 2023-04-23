@@ -1,0 +1,244 @@
+---
+title: Regresión cuantil a lo machín lenin con catboost
+date: '2023-04-23'
+categories: 
+  - Estadística
+  - machine learning
+  - R
+  - 2023
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: ""
+---
+
+Hay veces, más de las que se cree, en que nos interesa estimar un cuantil en vez de la media. Si tenemos una variable dependinte $y$ y una o varias independientes $X$, lo que se suele hacer es una regresión cuantil.
+
+Si visitamos uno de los papers originales de dicha técnica [Computing Regression Quantiles](https://www.jstor.org/stable/2347802) vemos que trata de minimizar la siguiente expresión.
+
+$$ 
+\arg\min_b R_{\theta}(b)  = \sum_{i = 1}^{n}\rho_\theta \left( y_i - x_ib\right)
+$$
+Con $\theta \in (0,1)$  y
+
+$$
+\begin{equation}
+    \rho_\theta(u) = 
+        \begin{cases}
+        \theta u  &  u \geq 0\\
+        (\theta -1) & u  < 0 \\
+        \end{cases}
+\end{equation}
+$$
+
+Lo cual es simplemente "penalizar" por $\theta$ cuando el residuo sea mayor o igual que 0, es decir, cuando nos equivocamos por arriba y por $(\theta -1)$ si nos equivocamos por abajo.
+
+Ejemplo, si $y_i = 40$ y $f(x) = 50$ y queremos estimar el cuantil 0.95. Entonces como el residuo es menor que 0, se pondera por 0.05
+
+$$\rho_(40 - 50) = (0.95 -1) (40 - 50) = 0.5 $$ Si en cambio
+$f(x) = 30$, es decir, nos equivocamos por abajo, pero a la misma distancia del valor real entonces
+
+$$\rho(40-30) = 0.95 (40-30) = 9.5 $$
+
+Y por tanto la función a minimizar $\arg\min_b R_{\theta}(b)$ cuando $\theta > 0.5$ va a tener un valor mucho mayor cuando nos
+"equivocamos" por abajo que por arriba. Y debido a cómo está definido $\rho_\theta(u)$ se consigue la regresión cuantil con cuantil igual a $\theta$. En el paper (de 1987) viene mejor explicado y el algoritmo para resolverlo en el caso de que $f(x)$ sea lineal.
+
+::: callout-warning
+Pero, ¿qué me estás contando??
+
+¡¡Estamos en la segunda década del siglo XXI y ahora todo es IA y Machín Lenin!!
+:::
+
+Fuera coñas, el caso es que la gente de yandex en su librería [catboost](https://catboost.ai/) han utilizado esto para hacer la regresión cuantil, simplemente utilizando la expresión anterior como función de pérdida. [Aquí](https://catboost.ai/en/docs/concepts/loss-functions-regression) se puede ver las diferentes funciones de pérdida que usan según el caso.
+
+Para la regresión cuantil usan
+
+$$L(t, a, \alpha) = \dfrac{\sum_{i}^{N} \omega_i(\alpha - I(t_i \leq a_i))(t_i-a_i)}{\sum_{i}^{N} \omega_i}$$
+Dónde 
+
+* $t_i$ es el valor real de la variable
+* $a_i$ el valor de la predicción 
+* $\alpha$ es el cuantil que se quiere predecir 
+* $\omega_i$ son los pesos de cada observación 
+* I es la función indicadora
+
+Como vemos, es lo mismo que se cuenta en el paper de 1987. Pero al meterlo como función de pérdida en el algoritmo sirve para el algoritmo de boosting que se utiliza en la librería.
+
+::: callout-important
+Ojo, que los de yandex han ido un poquito más allá
+:::
+
+La gente de catboost, atinadamente ha dicho, y ¿por qué no construimos un función de pérdida que minimice globalmente varios cuantiles? Lo cual es algo así como "encuéntrame la distribución de los parámetros que mejor se ajusta a estos datos en vez de un sólo parámetro". 
+
+Pero esto son arbolitos y boosting, no hay lo que se dice un parámetro de la función propiamente dicho, por lo que al final lo que se "aprende" debe ser la configuración de árboles que minimiza globalmente los cuantiles indicados.  
+
+Bueno, la función de pérdida "multi-quantile" es una modificación simple de la anterior. 
+
+$$L(t, a, \alpha_q) = \dfrac{\sum_{i}^{N} \omega_i \sum_{q=1}^{Q}(\alpha_q - I(t_i \leq a_i))(t_i-a_i)}{\sum_{i}^{N} \omega_i}$$
+
+## Ejemplo
+
+
+
+El ejemplo  no es mío, lo he visto por algún sitio que no me acuerdo.
+
+::: callout-tip
+`catboost` se puede utilizar en R y python.
+:::
+
+```{python}
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from catboost import CatBoostRegressor
+sns.set()
+
+n = 800
+
+# X aleatorias
+x_train = np.random.rand(n)
+x_test = np.random.rand(n)
+
+# un poquito de ruido gaussiano
+
+noise_train = np.random.normal(0, 0.3, n)
+noise_test = np.random.normal(0, 0.3, n)
+
+# Simulamos y_train e y _x como y = 2 + 3 * x + ruido
+a, b = 2, 3
+
+# al lio
+y_train = a * x_train + b + noise_train
+y_test = a * x_test + b + noise_test
+
+```
+
+Pintamos 
+
+```{python}
+sns.scatterplot(x = x_train, y = y_train).set(title = "Ejemplillo")
+```
+
+Vaos a predecir 10 cuantiles
+
+```{python}
+quantiles = [q/10 for q in range(1, 10)]
+
+# se ponen en string separados por commas
+quantile_str = str(quantiles).replace('[','').replace(']','')
+
+print(quantile_str)
+```
+
+
+Modelito
+
+```{python}
+model = CatBoostRegressor(iterations=100,
+                          loss_function=f'MultiQuantile:alpha={quantile_str}')
+
+model.fit(x_train.reshape(-1,1), y_train)
+```
+
+Predecimos
+
+```{python}
+
+# Make predictions on the test set
+preds = model.predict(x_test.reshape(-1, 1))
+preds = pd.DataFrame(preds, columns=[f'pred_{q}' for q in quantiles])
+
+preds.head(6)
+
+```
+
+Pintamos 
+
+```{python}
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.scatter(x_test, y_test)
+
+for col in ['pred_0.1', 'pred_0.5', 'pred_0.9']:
+    ax.scatter(x_test.reshape(-1,1), preds[col], alpha=0.50, label=col)
+
+ax.legend()
+
+```
+
+Y ya estaría, no parece mala alternativa si uno tiene que hacer este tipo de cosas. 
+
+:::callout-tip
+Ojalá le sirva a mi amigo Kenet para una cosa que estaba bicheando. 
+::: 
+
+Pues poco más. __Feliz domingo__
+
+Con R también se puede, como no. 
+
+
+```{r}
+library(reticulate) # para comunicar R y python y poder convertir datos y funciones de uno a otro bidireccionalmente
+library(catboost)
+
+X_train <- as.matrix(py$x_train) # catboost en R espera  una matriz
+Y_train <-  as.matrix(py$y_train)
+
+
+X_test <- as.matrix(py$x_test) 
+Y_test <-  as.matrix(py$y_test)
+
+head(X_train) ; head(Y_train)
+
+(quantiles_str <-  py$quantile_str)
+
+```
+
+```{r}
+train_pool <- catboost.load_pool(data = X_train, label = Y_train)
+test_pool <- catboost.load_pool(data = X_test)
+loss_function <-  paste0("MultiQuantile:alpha=", quantiles_str)
+
+fit_params <-  list(
+    iterations = 100,
+    loss_function= loss_function
+    )
+```
+
+
+```{r}
+
+model <- catboost.train(train_pool, params=fit_params)
+
+```
+
+```{r}
+predicciones <- catboost.predict(model, pool = test_pool)
+```
+
+
+```{r}
+colnames(predicciones) <- paste0("quantile_", 1:9) 
+
+head(predicciones)
+```
+
+
+
