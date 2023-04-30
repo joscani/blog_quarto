@@ -1,0 +1,93 @@
+---
+title: Malditas proporciones pequeñas III
+date: '2019-07-03'
+categories:
+  - 2019
+  - estadística
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+Volviendo al ejemplo de lo de las proporciones pequeñas, se trataba básicamente de que se tenía una población con una prevalencia de cierto evento del 4 x 1000 más o menos y en post anteriores veíamos cómo calcular tamaños de muestra y tal para ver cómo detectar un incremento de un 15% en esa proporción.
+
+Ahora vamos a suponer que tenemos una población de 1.5 millones, pero que hay 5 grupos diferenciados, con prevalencias del 6, 5, 4, 3 y 2 por mil respectivamente y todos del mismo tamaño. Simulemos dicha población
+
+
+```{r}
+set.seed(155)
+
+gr1 <- rbinom(n = 3E5, size = 1, prob = 0.006)
+gr2 <- rbinom(n = 3E5, size = 1, prob = 0.005)
+gr3 <- rbinom(n = 3E5, size = 1, prob = 0.004)
+gr4 <- rbinom(n = 3E5, size = 1, prob = 0.003)
+gr5 <- rbinom(n = 3E5, size = 1, prob = 0.002)
+
+pop <-  data.frame(grupo = rep(letters[1:5],each= 3E5),
+                   evento = c(gr1,gr2,gr3,gr4,gr5))
+```
+
+Veamos 30 casos al azar.
+
+```{r}
+pop[sample(1:nrow(pop), 30),]
+```
+
+Comprobamos la prevalencia en la población total y por grupos
+
+```{r}
+mean(pop$evento)
+```
+
+```{r}
+with(pop,tapply(evento, grupo, mean))
+```
+
+Supongamos ahora que encuentro un grupo por ahí del mismo tamaño (300k) con una prevalencia igual al mejor grupo que tengo, es decir, del 6 x 1000 y que la gente de marketing me cree y me deja que quite 300K con peor prevalencia y que los sustituya con mi grupo.  ¿Cuánto sería la mejora de la prevalencia en esa nueva población?
+
+Simulemos
+
+```{r}
+pop_new <- pop
+pop_new$evento[pop_new$grupo=="e"] <- rbinom(n = 3E5, size = 1, prob = 0.006)
+
+mean(pop_new$evento)
+mean(pop_new$evento)/mean(pop$evento)
+```
+
+La mejora sería del `r 100 * (mean(pop_new$evento)/mean(pop$evento) -1)`, % pero, ¿es porque he tenido suerte?. Si todos los meses encontrara un grupo así de majo, ¿en qué valores de mejora me estaría moviendo?
+
+Simulemos 100 realizaciones de este ejercicio
+
+```{r}
+res <- replicate(100, {
+  pop$evento[pop$grupo=="e"] <- rbinom(n = 3E5, size = 1, prob = 0.006)
+  return(100 * (mean(pop$evento) / 0.004 - 1))
+})
+```
+
+
+Y si dibujamos la función de densidad tenemos
+
+```{r}
+plot(density(res), main = "% de mejora", lwd = 2, col = "darkblue")
+```
+
+
+Vaya, pues parece que aún encontrando ese grupo tan molón y quitando el grupo malo mi mejora se va a quedar en torno al 19%.. Uhmm, ¿qué le digo a mi jefe cuándo me pida una mejora del 30%? 
+

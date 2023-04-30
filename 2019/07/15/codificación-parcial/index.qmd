@@ -1,0 +1,149 @@
+---
+title: Codificación parcial y python
+date: '2019-07-15'
+categories:
+  - 2019    
+  - ciencia de datos
+  - estadística
+  - R
+  - python
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+O como se conoce en estos tiempos modernos __one hot encoding__. En realidad se trata simplemente de cómo codificar una variable categórica en un conjunto de números que un algoritmo pueda utilizar. 
+
+Ya hablé de esto mismo en el post **[codificación de variables categóricas I](https://muestrear-no-es-pecado.netlify.com/2019/02/27/codificacion-de-variables-categoricas-i/)**
+
+Básicamente, la codificación parcial lo que hace es crearse tantas variables indicadoras como niveles tengo en mi variable menos 1. 
+
+Ejemplo. 
+Construimos un conjunto de datos simple, con 3 variables
+
+```{r}
+set.seed(155)
+
+x1 <- rnorm(n = 100, mean = 4, sd = 1.5 )
+x2_cat <- factor(rep(c("a","b","c","d"),  25 ))
+y <- numeric(length = 100)
+
+# Construimos artificialmente relación entre x e y
+y <- 2 +  4 * x1 + rnorm(25, 0, 1)
+
+# cambiamos "el intercept" según la variable categórica
+
+y[x2_cat == "a"] <- y[x2_cat == "a"] + 8
+y[x2_cat == "b"] <- y[x2_cat == "b"] - 5
+y[x2_cat == "c"] <- y[x2_cat == "c"] + 3
+y[x2_cat == "d"] <- y[x2_cat == "d"] - 3
+
+dat <- data.frame(y, x1, x2_cat)
+head(dat)
+```
+
+
+En R al definir x2_cat como un factor él ya sabe que para ciertos métodos (por ejemplo una regresión) hay que codificar esa variable y por defecto utiliza la codificación parcial. Con la función *contrasts* vemos como lo hace.
+
+```{r}
+contrasts(dat$x2_cat)
+```
+
+Y en las columnas tenemos las 3 variables indicadoras que ha construido. ¿Por qué 3? pues muy fácil, puesto que la "a" se puede codificar con el valor 0 en las tres variables indicadoras.
+Esto que parece una obviedad evita problemas de colinealidad en los algoritmos de regresión por ejemplo.
+
+
+```{r}
+fit1 <-  lm(y ~ x1 + x2_cat, data = dat)
+summary(fit1)
+```
+
+¿Qué hubiera pasado si hubiéramos tratado con 4 variables indicadoras?
+
+```{r}
+dat2 <- dat
+dat2$ind1 <- ifelse(dat$x2_cat == "a", 1, 0)
+dat2$ind2 <- ifelse(dat$x2_cat == "b", 1, 0)
+dat2$ind3 <- ifelse(dat$x2_cat == "c", 1, 0)
+dat2$ind4 <- ifelse(dat$x2_cat == "d", 1, 0)
+```
+
+```{r}
+head(dat2[dat2$x2_cat=="d", ],3)
+```
+
+
+Si metemos ahora esas variables en el modelo
+
+```{r}
+fit2 <-  lm(y ~ x1 +  ind2 + ind3 + ind4 + ind1, data = dat2)
+summary(fit2)
+```
+
+Y vemos que  como hay colinealidad R no estima el coeficiente de una de las variables indicadoras y hasta nos avisa con el mensaje ` Coefficients: (1 not defined because of singularities)`
+
+Pues la verdad es que mola que R sepa como tratar las categóricas si las has definido como `factor` pero también hace que la gente se olvide de que lo que en realidad hace es la codificación parcial. 
+
+Hablando de esto con un colega salió a colación  que en python hay que explicitar la codificación y que quizá eso sea bueno porque así se sabe lo que se está haciendo y no hay lugar a dudas. Hasta aquí todo correcto, salvo que leyendo la documentación de [pandas get_dummies](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.get_dummies.html) resulta que por defecto construye tantas variables indicadoras como categorías y sólo tiene como opcional lo de quitar la primera con el parámetro `drop_first`, total me dije, no pasa nada, veamos como lo hace `scikit learn` y nada, resulta que por defecto también deja todas [OneHotEncoder](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html). 
+
+Reflexionando me dije, bueno, pues entonces cuando haga una regresión lineal con sklearn si uso las opciones por defecto de codificar las categóricas pues me debe saltar lo mismo que en R, es decir que hay un coeficiente que no puede estimar, pero resulta que sklearn hace un pelín de trampa y no salta el error, y no salta porque en sklearn la regresión lineal no ajusta una regresión lineal clásica, sino que por defecto y sin que tú lo pidas te hace una regresión regularizada y entonces no salta ese problema. 
+
+Pues la verdad , ¿qué puedo decir? no me hace gracia que por defecto no me quite la variable indicadora que sobra ni que haga regresión con regularización sin yo decirle nada.
+
+
+En fin, veamos el ejemplo con python, aprovecho que escribo en un rmarkdown y puedo **[pasar objetos de R a python](https://rstudio.github.io/reticulate/articles/r_markdown.html#python-chunks)** entre chunks sin muchos problemas.
+
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+dat_py = r.dat
+dat_py.describe()
+dat_py.x2_cat.value_counts()
+```
+
+convertimos a dummies con pandas por ejemplo
+
+```{python}
+dat_py = pd.get_dummies(data=dat_py)
+print(dat_py.head())
+```
+
+
+```{python}
+x_variables = ['x1', 'x2_cat_a', 'x2_cat_b','x2_cat_c','x2_cat_d']
+# Selecciono y convierto a numpy array
+X = dat_py[x_variables].values  
+y = dat_py['y'].values
+X[0:3]
+y[0:3]
+```
+
+```{python}
+
+lm = LinearRegression()
+fit_python = lm.fit(X,y)
+print('Intercept: ',fit_python.intercept_)
+print('Coef: ',fit_python.coef_)
+
+```
+
+Y vemos que si estima todos los coeficientes cuando no debería haber podido, esto tiene que ver como he dicho antes con que `LinearRegression` de sklearn no es la regresión lineal al uso sino que mete regularización.
+
+Otro día veremos la librería `statmodels` de python cuya salida nos da una información más rica de los modelos y bastante parecida a lo que estamos acostumbrados con R.
+
+**Nota:** Leyendo la docu de `LinearRegression` en ningún sitio dice que use regularización así que no alcanzo a entender por qué ha podido estimar todos los coeficientes. A ver si alguno de mis amigos *pythonisos* me lo aclara. 
