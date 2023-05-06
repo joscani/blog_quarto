@@ -10,7 +10,295 @@
 <atom:link href="https://muestrear-no-es-pecado-rebranding.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.2.269</generator>
-<lastBuildDate>Sat, 22 Apr 2023 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 05 May 2023 22:00:00 GMT</lastBuildDate>
+<item>
+  <title>Mapeando</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Siempre me ha gustado el tema de los Sistemas de información geográfica y derivados. Ya cuando trabajaba en el <a href="https://www.iesa.csic.es/">IESA</a> fui a un curso en Vigo sobre <a href="http://www.gvsig.com/es">gvSIG</a> y luego aprendí cosas con <a href="https://www.qgis.org/es/site/">QGIS</a> , el cual me sigue pareciendo un software más que excelente.</p>
+<p>Hoy en día se pueden hacer muchísimas cosas con Python y con R, incluso tienen conectores con librerías de javascript para hacer cosas resultonas y con interactividad, veáse <a href="https://r-graph-gallery.com/map.html">esto</a> por ejemplo. En realidad tanto python como R tiran de las mismas librerías de bajo nivel, a saber, <code>gdal</code>, <code>libproj</code>, <code>libgeos</code> y similares, las cuales, para ser honestos, pueden meterte en un infierno de dependencias en según qué sistemas unix. Eso sí, una vez sales de ahí es una gozada.</p>
+<p>Total, el caso es que el pasado jueves me llega una duda del gran <a href="https://www.linkedin.com/in/analisisdedatos/">Leonardo Hansa</a>, que reproduzco a continuación.</p>
+<blockquote class="blockquote">
+<p>Vicepresi, tú sabes cómo se puede saber si dos códigos postales son adyancentes? Con datos, claro, no a ojo</p>
+</blockquote>
+<p>Y bueno, como no tenía mucho más que hacer esa tarde y soy un picado de la vida, pues me dije.</p>
+<blockquote class="blockquote">
+<p>Creo que tengo un shapefile de códigos postales de 2019 que no recuerdo como llegó a mis manos, quizá pueda hacer algo.</p>
+</blockquote>
+<p>Y me puse manos a la obra a investigar a ver cómo se podría hacer eso de encontrar polígonos adyacentes a uno dado usando <code>Rstats</code>. El caso es que llegué a varios hilos dónde se comentaban diferentes formas, una era usando la función <code>poly2nb</code> de la librería <code>spdep</code> y también cómo hacerlo usando la función <code>st_intersects</code> de la librería <code>sf</code> . En este <a href="https://github.com/r-spatial/sf/issues/234"><code>issue</code></a> incluso comentaban los grandes de estas cosas, Edzer Pebesma , Roger Bivand y nuestro conocico Virgilio Gómez Rubio.</p>
+<p>Bueno, vamos al código, que de eso se trata.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;">library</span>(tidyverse)</span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;">library</span>(sf)</span>
+<span id="cb1-3"></span>
+<span id="cb1-4">mapa <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">st_read</span>(here<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">here</span>(<span class="st" style="color: #20794D;">"data/shapefiles/cod_postales/cp_19_dis.shp"</span>))</span>
+<span id="cb1-5"><span class="co" style="color: #5E5E5E;">#&gt; Reading layer `cp_19_dis' from data source </span></span>
+<span id="cb1-6"><span class="co" style="color: #5E5E5E;">#&gt;   `/media/hd1/canadasreche@gmail.com/blog_quarto/data/shapefiles/cod_postales/cp_19_dis.shp' </span></span>
+<span id="cb1-7"><span class="co" style="color: #5E5E5E;">#&gt;   using driver `ESRI Shapefile'</span></span>
+<span id="cb1-8"><span class="co" style="color: #5E5E5E;">#&gt; Simple feature collection with 10809 features and 4 fields (with 1 geometry empty)</span></span>
+<span id="cb1-9"><span class="co" style="color: #5E5E5E;">#&gt; Geometry type: MULTIPOLYGON</span></span>
+<span id="cb1-10"><span class="co" style="color: #5E5E5E;">#&gt; Dimension:     XY</span></span>
+<span id="cb1-11"><span class="co" style="color: #5E5E5E;">#&gt; Bounding box:  xmin: -2021660 ymin: 3203377 xmax: 481778.5 ymax: 5433002</span></span>
+<span id="cb1-12"><span class="co" style="color: #5E5E5E;">#&gt; Projected CRS: WGS 84 / Pseudo-Mercator</span></span>
+<span id="cb1-13"></span>
+<span id="cb1-14"><span class="fu" style="color: #4758AB;">head</span>(mapa)</span>
+<span id="cb1-15"><span class="co" style="color: #5E5E5E;">#&gt; Simple feature collection with 6 features and 4 fields</span></span>
+<span id="cb1-16"><span class="co" style="color: #5E5E5E;">#&gt; Geometry type: MULTIPOLYGON</span></span>
+<span id="cb1-17"><span class="co" style="color: #5E5E5E;">#&gt; Dimension:     XY</span></span>
+<span id="cb1-18"><span class="co" style="color: #5E5E5E;">#&gt; Bounding box:  xmin: -1536953 ymin: 3373964 xmax: -41802.13 ymax: 5247186</span></span>
+<span id="cb1-19"><span class="co" style="color: #5E5E5E;">#&gt; Projected CRS: WGS 84 / Pseudo-Mercator</span></span>
+<span id="cb1-20"><span class="co" style="color: #5E5E5E;">#&gt;      cp cp_num cp_2 cp_2_num                       geometry</span></span>
+<span id="cb1-21"><span class="co" style="color: #5E5E5E;">#&gt; 1 35560  35560   35       35 MULTIPOLYGON (((-1518970 33...</span></span>
+<span id="cb1-22"><span class="co" style="color: #5E5E5E;">#&gt; 2 27330  27330   27       27 MULTIPOLYGON (((-821864.3 5...</span></span>
+<span id="cb1-23"><span class="co" style="color: #5E5E5E;">#&gt; 3 46680  46680   46       46 MULTIPOLYGON (((-51610.46 4...</span></span>
+<span id="cb1-24"><span class="co" style="color: #5E5E5E;">#&gt; 4 49706  49706   49       49 MULTIPOLYGON (((-641488.4 5...</span></span>
+<span id="cb1-25"><span class="co" style="color: #5E5E5E;">#&gt; 5 21120  21120   21       21 MULTIPOLYGON (((-776955.2 4...</span></span>
+<span id="cb1-26"><span class="co" style="color: #5E5E5E;">#&gt; 6 16623  16623   16       16 MULTIPOLYGON (((-256256.7 4...</span></span></code></pre></div>
+</details>
+</div>
+<p>Pinto códigos postales de la provincia de Madrid por ejemplo, coloreando por área de cada polígono.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">mapa <span class="sc" style="color: #5E5E5E;">|&gt;</span></span>
+<span id="cb2-2">    </span>
+<span id="cb2-3">    <span class="co" style="color: #5E5E5E;"># calculo area usando st_area</span></span>
+<span id="cb2-4">    <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">area_m2 =</span> <span class="fu" style="color: #4758AB;">st_area</span>(mapa) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb2-5">               <span class="fu" style="color: #4758AB;">as.numeric</span>()) <span class="sc" style="color: #5E5E5E;">|&gt;</span></span>
+<span id="cb2-6">    <span class="fu" style="color: #4758AB;">filter</span>(cp_2 <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">28</span>) <span class="sc" style="color: #5E5E5E;">|&gt;</span></span>
+<span id="cb2-7">    <span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-8">    <span class="fu" style="color: #4758AB;">geom_sf</span>(<span class="fu" style="color: #4758AB;">aes</span>(<span class="at" style="color: #657422;">fill =</span> area_m2)) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-9">    <span class="fu" style="color: #4758AB;">scale_fill_viridis_c</span>()</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-2-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Para encontrar los polígonos adyacentes uso <code>st_intersects</code> que permite por ejemplo saber qué puntos están dentro de un polígono y cosas así. Al aplicarlo sobre una geometría de tipo polígono lo que encuentra son los polígonos adyacentes.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><span class="co" style="color: #5E5E5E;"># mido a ver cuánto tarda. </span></span>
+<span id="cb3-2">tictoc<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">tic</span>()</span>
+<span id="cb3-3">lista_adyacentes <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">st_intersects</span>(mapa)</span>
+<span id="cb3-4">tictoc<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">toc</span>()</span>
+<span id="cb3-5"><span class="co" style="color: #5E5E5E;">#&gt; 2.121 sec elapsed</span></span></code></pre></div>
+</details>
+</div>
+<p>Ahora si quisiera saber qué polígonos son adyacentes a uno dado, es simplemente seleccionar en lista adyacentes, por ejemplo</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1">lista_adyacentes[<span class="dv" style="color: #AD0000;">1</span>]</span>
+<span id="cb4-2"><span class="co" style="color: #5E5E5E;">#&gt; [[1]]</span></span>
+<span id="cb4-3"><span class="co" style="color: #5E5E5E;">#&gt; [1]    1 3684 4621 6345 7017 7996</span></span></code></pre></div>
+</details>
+</div>
+<p>Para ver los adyacentes a mi código postal en Madrid.</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">(fila_mi_cp <span class="ot" style="color: #003B4F;">&lt;-</span>  mapa <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb5-2">    <span class="fu" style="color: #4758AB;">rownames_to_column</span>() <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb5-3">    <span class="fu" style="color: #4758AB;">filter</span>(cp <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"28043"</span>) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb5-4">    <span class="fu" style="color: #4758AB;">pull</span>(rowname))</span>
+<span id="cb5-5"><span class="co" style="color: #5E5E5E;">#&gt; [1] "9138"</span></span>
+<span id="cb5-6"></span>
+<span id="cb5-7"></span>
+<span id="cb5-8">(mis_vecinos_fila <span class="ot" style="color: #003B4F;">&lt;-</span> lista_adyacentes[<span class="fu" style="color: #4758AB;">as.numeric</span>(fila_mi_cp)])</span>
+<span id="cb5-9"><span class="co" style="color: #5E5E5E;">#&gt; [[1]]</span></span>
+<span id="cb5-10"><span class="co" style="color: #5E5E5E;">#&gt; [1]  493 4831 4998 5127 6941 7662 9138 9427</span></span></code></pre></div>
+</details>
+</div>
+<p>Pero me devuelve el número de fila, para ver el cp sería</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1">mi_cp <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="st" style="color: #20794D;">"28043"</span></span>
+<span id="cb6-2">(mis_vecinos <span class="ot" style="color: #003B4F;">&lt;-</span> mapa<span class="sc" style="color: #5E5E5E;">$</span>cp[mis_vecinos_fila[[<span class="dv" style="color: #AD0000;">1</span>]]])</span>
+<span id="cb6-3"><span class="co" style="color: #5E5E5E;">#&gt; [1] "28028" "28042" "28002" "28022" "28033" "28016" "28043" "28027"</span></span>
+<span id="cb6-4"></span>
+<span id="cb6-5">(adyacentes <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">setdiff</span>(mis_vecinos, mi_cp))</span>
+<span id="cb6-6"><span class="co" style="color: #5E5E5E;">#&gt; [1] "28028" "28042" "28002" "28022" "28033" "28016" "28027"</span></span></code></pre></div>
+</details>
+</div>
+<p>Pintamos</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1">  mapa <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb7-2">    <span class="fu" style="color: #4758AB;">filter</span>(cp_2 <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">28</span>) <span class="sc" style="color: #5E5E5E;">|&gt;</span></span>
+<span id="cb7-3">        <span class="fu" style="color: #4758AB;">mutate</span>(</span>
+<span id="cb7-4">            <span class="at" style="color: #657422;">tipo =</span> <span class="fu" style="color: #4758AB;">case_when</span>(</span>
+<span id="cb7-5">                cp <span class="sc" style="color: #5E5E5E;">==</span> mi_cp <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"mi_cp"</span>, </span>
+<span id="cb7-6">                cp <span class="sc" style="color: #5E5E5E;">%in%</span> adyacentes <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"mis_copostales_vecinos"</span>, </span>
+<span id="cb7-7">                <span class="cn" style="color: #8f5902;">TRUE</span> <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"resto de codpostales"</span></span>
+<span id="cb7-8">            )</span>
+<span id="cb7-9">        ) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb7-10">        <span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb7-11">        <span class="fu" style="color: #4758AB;">geom_sf</span>(<span class="fu" style="color: #4758AB;">aes</span>(<span class="at" style="color: #657422;">fill =</span> tipo)) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb7-12">        <span class="fu" style="color: #4758AB;">scale_fill_viridis_d</span>()</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>y listo.. Lo ponemos en unas funcioncitas todo</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1">get_adyacentes <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="cf" style="color: #003B4F;">function</span>(<span class="at" style="color: #657422;">mapa =</span> mapa, <span class="at" style="color: #657422;">id_col =</span> <span class="st" style="color: #20794D;">"cp_num"</span>) {</span>
+<span id="cb8-2">  </span>
+<span id="cb8-3">  <span class="co" style="color: #5E5E5E;"># quiza sacar el st_intersects de la función sea mejor</span></span>
+<span id="cb8-4">  nb <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">st_intersects</span>(mapa)</span>
+<span id="cb8-5">  </span>
+<span id="cb8-6">  get_nb <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="cf" style="color: #003B4F;">function</span>(x){</span>
+<span id="cb8-7">      res <span class="ot" style="color: #003B4F;">&lt;-</span> mapa[[id_col]][x]</span>
+<span id="cb8-8">      res</span>
+<span id="cb8-9">  }</span>
+<span id="cb8-10">  </span>
+<span id="cb8-11">  adjacency_list <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">lapply</span>(nb, get_nb)</span>
+<span id="cb8-12">  adjacency_list_names <span class="ot" style="color: #003B4F;">&lt;-</span>  mapa[[id_col]][<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="fu" style="color: #4758AB;">length</span>(adjacency_list)]</span>
+<span id="cb8-13">  <span class="fu" style="color: #4758AB;">names</span>(adjacency_list) <span class="ot" style="color: #003B4F;">&lt;-</span> adjacency_list_names</span>
+<span id="cb8-14">  adjacency_list</span>
+<span id="cb8-15">}</span>
+<span id="cb8-16"></span>
+<span id="cb8-17"></span>
+<span id="cb8-18"></span>
+<span id="cb8-19"></span>
+<span id="cb8-20">get_mis_vecinos <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="cf" style="color: #003B4F;">function</span>(mi_cp, cps_adyacentes){</span>
+<span id="cb8-21">    cp_simbol <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">as.symbol</span>(mi_cp) <span class="co" style="color: #5E5E5E;"># a simbolo para poder llamara cps_adyacentes[[`18814`]]</span></span>
+<span id="cb8-22">    mis_vecinos <span class="ot" style="color: #003B4F;">&lt;-</span>  cps_adyacentes[[cp_simbol]]</span>
+<span id="cb8-23">}</span>
+<span id="cb8-24"></span>
+<span id="cb8-25"></span>
+<span id="cb8-26"></span>
+<span id="cb8-27"><span class="co" style="color: #5E5E5E;"># mapa seleccionando solo tu provincia </span></span>
+<span id="cb8-28"></span>
+<span id="cb8-29"></span>
+<span id="cb8-30">plot_cp_vecinos <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="cf" style="color: #003B4F;">function</span>(mi_cp, cps_adyacentes, mapa){</span>
+<span id="cb8-31">    cp_simbol <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">as.symbol</span>(mi_cp)</span>
+<span id="cb8-32">    mis_vecinos <span class="ot" style="color: #003B4F;">&lt;-</span>  cps_adyacentes[[cp_simbol]]</span>
+<span id="cb8-33">    mi_prop <span class="ot" style="color: #003B4F;">&lt;-</span>  stringr<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">str_sub</span>(mi_cp, <span class="dv" style="color: #AD0000;">1</span>, <span class="dv" style="color: #AD0000;">2</span>) <span class="sc" style="color: #5E5E5E;">|&gt;</span> <span class="fu" style="color: #4758AB;">as.numeric</span>()</span>
+<span id="cb8-34">    adyacentes <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">setdiff</span>(mis_vecinos, mi_cp)</span>
+<span id="cb8-35">    mapa <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb8-36">        <span class="fu" style="color: #4758AB;">filter</span>(cp_2_num <span class="sc" style="color: #5E5E5E;">==</span> mi_prop) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb8-37">        <span class="fu" style="color: #4758AB;">mutate</span>(</span>
+<span id="cb8-38">            <span class="at" style="color: #657422;">tipo =</span> <span class="fu" style="color: #4758AB;">case_when</span>(</span>
+<span id="cb8-39">                cp_num <span class="sc" style="color: #5E5E5E;">==</span> mi_cp <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"mi_cp"</span>, </span>
+<span id="cb8-40">                cp_num <span class="sc" style="color: #5E5E5E;">%in%</span> adyacentes <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"mis_copostales_vecinos"</span>, </span>
+<span id="cb8-41">                <span class="cn" style="color: #8f5902;">TRUE</span> <span class="sc" style="color: #5E5E5E;">~</span> <span class="st" style="color: #20794D;">"resto de codpostales"</span></span>
+<span id="cb8-42">            )</span>
+<span id="cb8-43">        ) <span class="sc" style="color: #5E5E5E;">|&gt;</span> </span>
+<span id="cb8-44">        <span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb8-45">        <span class="fu" style="color: #4758AB;">geom_sf</span>(<span class="fu" style="color: #4758AB;">aes</span>(<span class="at" style="color: #657422;">fill =</span> tipo)) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb8-46">        <span class="fu" style="color: #4758AB;">scale_fill_viridis_d</span>()</span>
+<span id="cb8-47">}</span></code></pre></div>
+</details>
+</div>
+<p>Y ya podemos usarlo</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1">cps_adyacentes <span class="ot" style="color: #003B4F;">&lt;-</span>  <span class="fu" style="color: #4758AB;">get_adyacentes</span>(mapa, <span class="at" style="color: #657422;">id_col =</span> <span class="st" style="color: #20794D;">"cp_num"</span>)</span>
+<span id="cb9-2"></span>
+<span id="cb9-3">(mis_cps_vecinos_pueblo <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">get_mis_vecinos</span>(<span class="dv" style="color: #AD0000;">18814</span>, cps_adyacentes))</span>
+<span id="cb9-4"><span class="co" style="color: #5E5E5E;">#&gt; [1] 18815 18800 18817 18811 18814 18818 18816</span></span></code></pre></div>
+</details>
+</div>
+<p>Pintamos</p>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
+<span id="cb10-2"><span class="fu" style="color: #4758AB;">plot_cp_vecinos</span>(<span class="dv" style="color: #AD0000;">18814</span>, cps_adyacentes, mapa) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb10-3">    <span class="fu" style="color: #4758AB;">labs</span>(<span class="at" style="color: #657422;">title =</span> <span class="st" style="color: #20794D;">"CP núcleo principal Cortes de Baza"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-10-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><span class="co" style="color: #5E5E5E;"># plaza cascorro</span></span>
+<span id="cb11-2"></span>
+<span id="cb11-3"><span class="fu" style="color: #4758AB;">plot_cp_vecinos</span>(<span class="dv" style="color: #AD0000;">28005</span>, cps_adyacentes, mapa) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb11-4">    <span class="fu" style="color: #4758AB;">labs</span>(<span class="at" style="color: #657422;">title =</span> <span class="st" style="color: #20794D;">"cp Plaza Cascorro"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-11-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="">
+<summary>Mostrar / ocultar código</summary>
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><span class="co" style="color: #5E5E5E;"># Pongo Carmona por ser el de mayor área </span></span>
+<span id="cb12-2"></span>
+<span id="cb12-3">(<span class="fu" style="color: #4758AB;">get_mis_vecinos</span>(<span class="dv" style="color: #AD0000;">41410</span>, cps_adyacentes))</span>
+<span id="cb12-4"><span class="co" style="color: #5E5E5E;">#&gt;  [1] 41620 41300 41449 41339 41420 41359 41610 41600 41320 41309 41520 41429</span></span>
+<span id="cb12-5"><span class="co" style="color: #5E5E5E;">#&gt; [13] 41410 41510 41310 41016 41500 41440</span></span>
+<span id="cb12-6"></span>
+<span id="cb12-7"><span class="fu" style="color: #4758AB;">plot_cp_vecinos</span>(<span class="dv" style="color: #AD0000;">41410</span>, cps_adyacentes, mapa) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb12-8">    <span class="fu" style="color: #4758AB;">labs</span>(<span class="at" style="color: #657422;">title=</span> <span class="st" style="color: #20794D;">"Carmona"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="index_files/figure-html/unnamed-chunk-12-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="notas" class="level2">
+<h2 class="anchored" data-anchor-id="notas">Notas</h2>
+<ul>
+<li>Los códigos postales que uso están desactualizados. La capa de shapefile es un producto que vende Correos a precio no barato. Antes se podían descargar de CartoCiudad, pero ya no. Algún enlace interesante:
+<ul>
+<li><a href="https://analisisydecision.es/como-hacer-un-mapa-de-espana-por-codigos-postales-con-qgis/">post de Raúl Vaquerizo</a></li>
+<li><a href="https://www.nosolosig.com/articulos/1191-asi-hice-el-mapa-de-los-codigos-postales-de-espana-con-sig-y-datos-abiertos">post de nosolosig</a></li>
+</ul></li>
+<li>Libros online sobre GIS en R:
+<ul>
+<li><a href="https://r-spatial.org/book/">r-spatial</a></li>
+<li><a href="https://r.geocompx.org/index.html">geocomputation with R</a></li>
+</ul></li>
+<li><a href="https://asdar-book.org/">Applied Spatial Data Analysis with R</a> . Un poco antiguo ya, no sé si Virgilio, Roger y Edzer están trabajando sobre nueva edición o no</li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>Estadística</category>
+  <category>gis</category>
+  <category>R</category>
+  <category>2023</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/05/06/mapeando/index.html</guid>
+  <pubDate>Fri, 05 May 2023 22:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Regresión cuantil a lo machín lenin con catboost</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -10156,33 +10444,6 @@ Pero ¿cómo podemos predecir para nuevos datos?</p>
   <category>2022</category>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/05/29/no-mentir-s/index.html</guid>
   <pubDate>Sat, 28 May 2022 22:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Transparente</title>
-  <dc:creator>jlcr</dc:creator>
-  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/04/10/transparente/2022-04-10-transparente.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>El otro día le decía a mis compañeros que hay cosas que no entiendo de la jerga del mundillo en el que nos movemos, (para echar unas risas ver el video de <a href="https://www.youtube.com/watch?v=skn2OeY4X9o">Pantomima Full</a>) .</p>
-<p>Ya lo de “tengo una call”, o lo de “estamos alineados” me toca bastante los … pero bueno. Pero hay varias expresiones que me repatean profundamente, y voy a enumerarlas por orden decreciente de odio.</p>
-<ul>
-<li><p>“Reglas de negocio”. Esta frase te la sueltan cuándo no quieren decirte que lo que se hace son 3 “wheres” que alguien decidió en su día y que ni se evaluó su eficacia entonces, ni ahora. Es como un mantra bajo el cual cabe todo, cuándo no te quieren decir alguna cosa absurda que se hace, se dice “son reglas de negocio”, y ya es como que no puedes preguntar de qué se trata, es eso y fin.</p></li>
-<li><p>“Hacer foco”. ¿Cómo que hacer foco? ¿quíén ha empezado a maltratar el idioma de tal manera? Uno se enfoca, se pone el foco, etc, pero no se hace foco. Con lo bonito que sería decir “énfasis” o “hincapié”. Supongo que esto lo dijo alguien con poder en el pasado, y ya nadie se atrevió a corregir, y no sólo eso, sino que se adoptó y ahora es ley.</p></li>
-<li><p>“Transparente”. Igual que con reglas de negocio, alguien dice, “para vosotros esto será transparente” y te quedas igual, no sabes si significa que te va a afectar lo que sea que se haga, si no te afecta, si te afecta pero poco, o vete tu a saber el qué. Con lo que fácil que sería un “sujeto , verbo, predicado”.</p></li>
-</ul>
-<p>En fin, buena semana santa, no hagan muchos “quick win” , beban algo “transparente” y si no saben como explicar algún desastre digan que “son reglas de negocio” y que “hay que hacer foco” en “el roadmap” para que estemos todos “alineados” y llegar a los “Okr’s” del próximo “Q”.</p>
-<p>Advertencia: Huyan de todo áquel que use estas expresiones más de 2 veces cada media hora. Su productividad aumentará</p>
-
-
-
- ]]></description>
-  <category>agile</category>
-  <category>empresas</category>
-  <category>2022</category>
-  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/04/10/transparente/2022-04-10-transparente.html</guid>
-  <pubDate>Sat, 09 Apr 2022 22:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
