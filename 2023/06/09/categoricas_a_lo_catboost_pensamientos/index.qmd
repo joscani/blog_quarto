@@ -1,0 +1,406 @@
+---
+title: Categóricas a lo catboost. Pensamientos
+date: '2023-06-09'
+categories: 
+  - Estadística
+  - categóricas
+  - R
+  - catboost
+  - 2023
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar / ocultar código"
+    html-math-method: mathml
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+editor_options:
+  markdown:
+    wrap: none
+image: ""
+---
+
+La gente de Yandex es gente lista y son los que están detrás de [catboost](https://catboost.ai/). Ya el pasado mes de Abril conté como hacían la regresión cuantil y obtenían estimación de varios cuantiles a la vez [aquí](../../../04/23/quantile-catboost/)
+
+## Codificación de las categóricas.
+
+Catboost por defecto usa `one-hot-encoding` pero si por algo es conocido es por tener otro método de codificación, el cual viene descrito en la [docu](https://catboost.ai/en/docs/concepts/algorithm-main-stages_cat-to-numberic). Otro sitio dónde viene relativamente bien explicado es en este [post](https://towardsdatascience.com/how-catboost-encodes-categorical-variables-3866fb2ae640)
+
+Vamos a ver el detalle, para cuándo hay variables categóricas y la variable a predecir es binaria.
+
+La idea en la que se basan tiene que ver con los test de permutación. Lo que hacen son varias iteraciones desordenando los datos y en cada iteración
+
+1.  Desordenan las filas del data frame de forma aleatoria de forma que se crea un nuevo orden
+2.  La codificación del nivel de la variable categórica se calcula **para cada fila** como: $$\text{avg_target} = \dfrac{countInClass + prior}{totalCount +1}$$ pero usando sólo los datos previos a esa fila
+
+Y luego para cada observación toman como codificación la media de las codificaciones obtenidas en las diferentes permutaciones.
+
+En $\text{avg_target}$ de la fila i se tiene que
+
+-   countInClass: Cuenta las veces que en todos los datos previos a la fila i, se tiene un target = 1 para cuando el nivel de la variable categórica es igual al de la fila i.
+
+-   prior: Constante que se define al principio del algoritmo. Puede ser la proporción de 1's en los datos por ejemplo.
+
+-   totalCount: El número de observaciones con el mismo nivel en la variable categórica que tiene la fila i, en los datos previos.
+
+En el segundo [post](https://towardsdatascience.com/how-catboost-encodes-categorical-variables-3866fb2ae640) podemos ver la siguiente figura.
+
+![Figura](coches_cod_catboost.png){width="1224"}
+
+En este caso, si queremos calcular el valor de $\text{avg_target}$ para la quinta observación es tan sencillo como
+
+-   prior : La fijamos a 0.05, por ejemplo
+-   countInClass: En los datos previos sólo había un caso en que el target fuera 1 y la marca Toyota, por lo tanto 1.
+-   totalCount: En los datos previos hay 2 observaciones con marca Toyota.
+
+Así que $$\text{avg_target} = \dfrac{countInClass + prior}{totalCount +1} = \dfrac{1+0.05}{2+1} = 0.35$$
+
+Los autores de catboost reconocen que de esta forma si sólo haces una permutación de los datos para los primeros valores no se tiene info suficiente para obtener una buena codificación, así que proponen hacer varias permutaciones y tomar como codificación la media de las codificaciones anteriores.
+
+## Pensamientos
+
+Pero, pero...
+
+-   ¿No os recuerda un poco a como se hace un aprendizaje bayesiano? . Es decir parto de una priori (puede que poco informativa) y conforme voy obteniendo datos voy actualizando la distribución de mi parámetro, y de esa forma puedo obtener la posterior predictive distribution, que es la que aplicaría por ejemplo a un dato no visto.
+
+- De hecho al hacer varias permutaciones ¿ no está convergiendo de alguna manera la solución de catboost hacia la aproximación bayesiana? 
+
+-   ¿No os parece un poco de sobreingeniería, para algo que quizá con una aproximación *estilo compadre bayesiana* se podría obtener algo muy similar y con menos esfuerzo?
+
+### Pruebecilla
+
+El ejemplo que viene en la [docu](https://catboost.ai/en/docs/concepts/algorithm-main-stages_cat-to-numberic), dónde se ejemplifica con un pequeño dataset de 7 filas y muestran una de las permutaciones generadas.
+
+![permutation1](ejemplo_docu.png)
+
+Que tras aplicar el algoritmo quedaría para esta permutación queda como ![permutation_process](ejemplo_docu_processed.png)
+
+Replicamos en código
+
+```{r}
+library(tidyverse) # pa 4 tontás de hacer sample y de groups bys que hago luego
+library(parallel) # para usar varios cores con mclapply
+library(patchwork) # pa juntar ggplots
+```
+
+
+```{r}
+
+mydf <- tribble(
+    ~id,~f2, ~cat, ~label, 
+    1,53,"rock",  0,
+    2,55,"indie", 0, 
+    3,40,"rock",  1, 
+    4,42,"rock",  1,
+    5,34,"pop",   1,
+    6,48,"indie", 1,
+    7,45, "rock",  0
+)
+
+mydf
+
+```
+
+Funcioncita para obtener la codificación a lo catboost
+
+```{r}
+avg_target <- function(prev_df, nivel, prior = 0.05){
+    countInClass <- sum(prev_df[['label']][prev_df[['cat']]== nivel])
+    totalCount <- sum(prev_df[['cat']]==nivel)
+    res <-  (countInClass + prior) /(totalCount + 1)
+    return(res)
+}
+
+```
+
+A la primer fila se le asigna siempre la prior
+
+```{r}
+# No estaba fino para ver como podría hacerlo sin iterar sobre todas las filas. 
+
+foo1 <-  function(df, prior = 0.05) {
+    
+    df$cat_code[1] <-  prior
+    
+    for (fila in 2:nrow(df)) {
+        prev_df <- df[1:(fila - 1),]
+        df$cat_code[fila] <-
+            avg_target(prev_df = prev_df, nivel = df$cat[fila], prior = prior)
+    }
+    return(df)
+}
+
+```
+
+```{r}
+res1 <- foo1(mydf, prior = 0.05)
+res1
+```
+
+Ahora lo repetimos varias veces. Dónde en cada iteración hacemos una permutación de las filas
+
+```{r}
+foo2 <-  function(df, prior = 0.05) {
+    require(tidyverse)
+    mynew_df <-  df |> slice_sample(prop = 1, replace = FALSE)
+    mynew_df$cat_code[1] <-  prior
+    
+    for (fila in 2:nrow(mynew_df)) {
+        prev_df <- mynew_df[1:(fila - 1),]
+        mynew_df$cat_code[fila] <-
+            avg_target(prev_df = prev_df, nivel = mynew_df$cat[fila], prior = prior)
+    }
+    return(mynew_df)
+}
+```
+
+```{r}
+
+iteraciones <-  1000
+
+res2 <-  bind_rows(mclapply(1:iteraciones, FUN = function(x) foo2(mydf,prior = 0.05), mc.cores = 10))
+
+dim(res2)
+
+(res2 <- res2 |>
+    group_by(id) |>
+    mutate(cat_code = mean(cat_code)) |>
+    distinct() |> 
+    arrange(id) )
+```
+
+### Aproximación compadre bayesiana
+
+¿Y si tomamos como priori una $\mathcal{B}(2,2)$ y para cada categoría {rock, indie, pop} tomamos como su distribución a posteriori 
+
+ $\mathcal{B}(2 + \text{exitos en datos},2 + text{fracasos en los datos})$ y para obtener un valor de la codificación para cada observación simplemente extraemos un valor aleatorio de esa distribución a posteriori?
+
+```{r}
+
+res3 <-  mydf |> 
+    group_by(cat) |> 
+    mutate(
+        n = n(), 
+        exitos = sum(label)
+    )  |> 
+    ungroup() |> 
+    mutate(
+     cat_code = map2_dbl(exitos, n, function(exitos, n) rbeta(1, exitos + 2 , n - exitos + 2))
+    ) 
+
+res3
+
+
+```
+
+Pues tiene pinta de que esta aproximación podría ser tan válida como la que describen los de catboost y en principio es más sencilla. 
+
+### Más datos
+
+Creemos un dataset artificial partiendo de estos mismos datos. 
+
+
+```{r}
+n= 200
+mydf_big= mydf[rep(seq_len(nrow(mydf)), n), ]
+mydf_big$id <- 1:nrow(mydf_big)
+
+nrow(mydf_big)
+
+head(mydf_big, 10)
+```
+
+
+```{r}
+## Cambiamos de forma aleatoria el valor de label para un % de las observaciones, para que no sea 200 veces exactamente el original
+
+table(mydf_big$label)
+
+mydf_big$label <- rbinom(n = nrow(mydf_big), size =1,  prob = ifelse(mydf_big$label==0, 0.3, 0.9))
+table(mydf_big$label)
+
+# vemos que hemos cambiado algunos valores en label
+head(mydf_big, 10)
+
+```
+
+### Comparamos 
+
+
+Para elegir las priori poco informativa para ambos métodos vemos una muestra de los datos de tamaño 10
+
+```{r}
+(muestra <- mydf_big |> 
+    slice_sample(n = 10) |> 
+    group_by(label) |>
+    count())
+
+
+(prior_shape1 <-  muestra$n[muestra$label==1])
+(prior_shape2 <-  muestra$n[muestra$label==0])
+
+
+(prior_catboost <- prior_shape1 /(prior_shape1 + prior_shape2))
+
+```
+
+#### Catboost codificación
+
+```{r}
+iteraciones = 50
+tictoc::tic("catbost_code")
+
+cod_catboost <- bind_rows(mclapply(1:iteraciones, FUN = function(x) foo2(mydf_big, prior = prior_catboost), mc.cores = 10))
+
+
+tictoc::toc(log=TRUE)
+
+dim(cod_catboost)
+
+
+```
+
+
+```{r}
+cod_catboost <- cod_catboost |>
+    group_by(id) |>
+    mutate(cat_code = mean(cat_code)) |>
+    distinct() |> 
+    arrange(id)
+
+
+dim(cod_catboost)
+
+head(cod_catboost)
+```
+
+
+#### Estilo compadre codificación
+
+
+```{r}
+tictoc::tic("estilo compadre")
+estilo_compadre <-  mydf_big |> 
+    group_by(cat) |> 
+    mutate(
+        n = n(), 
+        exitos = sum(label)
+    )  |> 
+    ungroup() |> 
+    mutate(
+     cat_code = map2_dbl(exitos, n, function(exitos, n) rbeta(1, exitos + prior_shape1 , n - exitos + prior_shape2))
+    ) 
+
+tictoc::toc(log = TRUE)
+
+head(estilo_compadre)
+```
+
+
+
+¿cómo de parecidas son las dos codificaciones? 
+
+
+Por el momento parece que bastante
+
+```{r}
+cor(cod_catboost$cat_code, estilo_compadre$cat_code)
+```
+
+
+Parece que la codificación estilo compadre es un poco más dispersa, lo cual no tiene por qué ser necesariamente malo. 
+
+```{r}
+
+cod_catboost |> 
+    group_by(cat) |> 
+    summarise(media = mean(cat_code), 
+              low = quantile(cat_code, 0.05), 
+              high = quantile(cat_code, 0.95), 
+              sd_value = sd(cat_code))
+
+
+estilo_compadre |> 
+    group_by(cat) |> 
+    summarise(media = mean(cat_code), 
+              low = quantile(cat_code, 0.05), 
+              high = quantile(cat_code, 0.95), 
+              sd_value = sd(cat_code))
+
+
+
+```
+
+
+
+```{r}
+p1 <- cod_catboost |> 
+    ggplot(aes(x=cat_code, fill=cat))  +
+    geom_density(alpha = 0.4) +
+    labs(title = "Gráfico densidad de las codificanes", 
+         subtitle = "catboost")
+
+p2 <- estilo_compadre |> 
+    ggplot(aes(x=cat_code, fill=cat))  +
+    geom_density(alpha = 0.4) +
+        labs(title = "Gráfico densidad de las codificanes", 
+         subtitle = "Estilo bayesian compadre")
+
+p1 + p2
+
+```
+
+
+Y si hacemos un modelito tonto usando estas codificaciones. Si, ya sé que son datos fakes y que no tiene mucho sentido y tal, y que lo suyo sería con unos datos reales (mandadme algunos !! )
+
+
+
+```{r}
+# set.seed(47)
+
+id_train <-  sample(1:nrow(mydf_big), size = 700)
+
+
+train_predict_simple <- function(df){
+    train <-  df[id_train, ]
+    test <- df[-id_train, ]
+    
+    fit_base <- glm(label ~ f2+ cat, data = train, family = binomial)
+    fit <-  glm(label ~  f2 +  cat_code, data = train, family = binomial)
+    
+    auc_base <- pROC::auc(test$label, predict(fit_base, test, type = "response"))
+    auc <- pROC::auc(test$label, predict(fit, test, type = "response"))
+    
+    return(list(auc_base = auc_base, auc = auc))
+    
+}
+
+
+mclapply(list(cod_catboost, estilo_compadre), train_predict_simple, mc.cores = 2)
+
+```
+
+## Más pensamientos
+
+* El ejemplo que he hecho no es del todo válido puesto que tanto para la codificación con catboost como la de estilo compadre han intervenido todos los datos. 
+
+* La variable categórica que codifico sólo tiene 3 niveles, de hecho no haría falta hacer este tipo de codificación. Tengo pendiente probar con algo como códigos postales o similar. 
+
+* La forma en que catboost hace esta codificación me parece que está en mitad entre la aproximación bayesiana y hacer un target_encoding al uso. De hecho si hay un nivel con muy pocos valores  el valor de la codificación de catboost para ese nivel va a parecerse más a la prior que elijas que a la proporción de éxitos en esa categoría, lo cual es muy parecido a la estimación bayesiana compadre. 
+
+* Se podrían utilizar codificaciones basadas en modelos mixtos o algún tipo de combinación convexa entre la información particular que tiene una categoría y la general aportada por el conjunto de los datos. 
+
+
+
