@@ -1,0 +1,41 @@
+---
+title: El randomforest no nos deja ver el árbol
+date: '2019-07-02'
+categories:
+  - 2019
+  - estadística
+  - R
+  - ciencia de datos
+  - tiempos modernos
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+En primer lugar, el título de este post se lo debo a Mario Passani y no va sobre estadística.
+
+En realidad va sobre que últimamente me da la sensación de que la profesión del científico de datos se está centrado más en las formas que en el fondo. Os cuento un par de ejemplos.
+
+Hace un tiempo en una empresa en la que trabajé se estaban implementando temas de análisis exploratorios usando pyspark de forma que se generaban unos bonitos htmls con info sobre las variables de un sparkdataframe. Hasta aquí todo bien, el git del proyecto estaba muy bonito, había gente que programaba de forma más que aceptable, pero oye, de repente cuando me pongo a utilizar la librería y pido que me saque un boxplot resulta que me salta a la vista la ausencia de los puntitos típicos de los outliers (y sabía que había varios), total, que cuando me pongo a bichear el código resulta que como bigotes del boxplot me habían puesto el mínimo y el máximo. Hay que decir que el gráfico era muy bonito y todo eso, pero era inútil, no habían implementado un boxplot, se le parecía pero no era.
+
+Otro caso me lo contó un compañero de  una telco. Resulta que un compañero suyo había implementado toda una etl que juntaba varias tablas para al final obtener datos sobre la fuga de clientes, mi compañero al ver el resultado le dijo que algo estaba mal porque salían unas tasas de "churn" bastante mayores que las de meses anteriores. El hacedor de la etl le dijo que se peinara  y que eso estaba bien porque, ojo ¡¡había pasado los test unitarios!! y por lo que se ve acabó la cosa un pelín disputada.
+
+A lo que me refiero, noto que últimamente nos estamos centrado más en el cómo implementamos las cosas que en saber lo que estamos haciendo, y no quiero decir con esto que las formas no sean importantes, sino simplemente que tengamos claro qué narices estamos haciendo.
+
+
+
