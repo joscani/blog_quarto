@@ -56,7 +56,7 @@ Total, que dado que conozco a Ana y a Virgilio y son bayesianos y yo sólo un ap
 
 Lo primero era intentar encontrar datos de las encuestas que se han hecho, importante que tengan tanto la estimación como el tamaño muestral. Si, ya sé que cada empresa tiene su cocina y sus cosas, que unas son telefónicas, que otras son tracking o paneles y tal, pero ya he dicho que lo estoy haciendo por diversión.. 
 
-Bueno, pues [aquí](https://www.epdata.es/datos/elecciones-generales-cortes-23j-resultados-analisis-encuestas-censo-comunidades-provincias-municipios-estadisticas-mapas-datos-graficos/690#encuestas) he encontrado la info que buscaba. El tema es que la tabla está en una tabla de datawrapper  [enlace_table](https://www.datawrapper.de/_/I2mqK/) y no he sido capaz de escrapear de fora programática, que se le va a hacer, no vale uno pa to. 
+Bueno, pues [aquí](https://www.epdata.es/datos/elecciones-generales-cortes-23j-resultados-analisis-encuestas-censo-comunidades-provincias-municipios-estadisticas-mapas-datos-graficos/690#encuestas) he encontrado la info que buscaba. El tema es que la tabla está en una tabla de datawrapper  [enlace_table](https://www.datawrapper.de/_/I2mqK/) y no he sido capaz de escrapear de forma programática, que se le va a hacer, no vale uno pa to. 
 
 Como eran muchas encuestas pues he ido seleccionando algunas del mes de julio y al final me he quedado con unas 23. Para cada encuesta he puesto su tamaño muestral, la diferencia entre la fecha de las elecciones y la fecha de la realización de la encuesta, variable `time` , también he convertido a votos la estimación que dan para pp, psoe, sumar, vox y resto, simplemente multiplicando la estimación que dan por su tamaño muestral.  
 
@@ -336,4 +336,11 @@ Bueno, pues así es como he pasado el sábado. ¿Cosas que le faltaría a esto p
 Y como decía al principio, seguramente esto del meta-análisis se pueda hacer de otra manera, mucho mejor, así que si alguien sabe, que lo ponga en los comentarios. Pues nada más, que voten ustedes lo que les de la gana mañana, que de eso se trata. 
 
 
+## El código que genera en `Stan`
+
+Con la función `stancode` podemos ver las tripas de lo qeu se ha mandado a Stan
+
+```{r}
+stancode(model_multinomial)
+```
 
