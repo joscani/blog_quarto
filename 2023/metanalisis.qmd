@@ -1,0 +1,339 @@
+---
+title: Meta-análisis. Agregando encuestas
+date: '2023-07-22'
+categories:
+  - muestreo
+  - 2023
+  - encuestas electorales
+  - análisis bayesiano
+  
+image: metanalisis.png
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+## Introducción
+
+Ya en
+[2022](https://muestrear-no-es-pecado.netlify.app/2022/01/01/cocinando/)
+os mostraba uno de los ingredientes principales de la cocina electoral,
+al menos de la tradicional, no de la postmoderna Alaminos-Tezanos.
+
+Hoy os quiero contar como haría yo la agregación de encuestas, cuando no
+se tienen los datos brutos. En primer lugar aviso de lo que sigue a
+continuación sólo lo he hecho **por diversión** y faltaría mucho más
+trabajo para considerarlo un intento serio.
+
+La diversión viene por este
+[tweet](https://twitter.com/AnaBayes/status/1682035400507002881) de
+[Anabel Forte](https://twitter.com/AnaBayes) que puso como contestación
+a un hilo dónde Kiko Llaneras explicaba su modelo de predicción
+agregando encuestas y haciendo simulaciones. Aquí el [hilo de
+kiko](https://twitter.com/kikollan/status/1681610401367326720) y en la
+imagen la respuesta de Ana.
+
+![Tweet de Ana](tweet_ana_bayes.png)
+
+
+Total, que dado que conozco a Ana y a Virgilio y son bayesianos y yo sólo un aprendiz de la cosa, pues he intentado un metaanálisis bayesiano sencillo juntando varias encuestas. 
+
+
+## Datos 
+
+Lo primero era intentar encontrar datos de las encuestas que se han hecho, importante que tengan tanto la estimación como el tamaño muestral. Si, ya sé que cada empresa tiene su cocina y sus cosas, que unas son telefónicas, que otras son tracking o paneles y tal, pero ya he dicho que lo estoy haciendo por diversión.. 
+
+Bueno, pues [aquí](https://www.epdata.es/datos/elecciones-generales-cortes-23j-resultados-analisis-encuestas-censo-comunidades-provincias-municipios-estadisticas-mapas-datos-graficos/690#encuestas) he encontrado la info que buscaba. El tema es que la tabla está en una tabla de datawrapper  [enlace_table](https://www.datawrapper.de/_/I2mqK/) y no he sido capaz de escrapear de fora programática, que se le va a hacer, no vale uno pa to. 
+
+Como eran muchas encuestas pues he ido seleccionando algunas del mes de julio y al final me he quedado con unas 23. Para cada encuesta he puesto su tamaño muestral, la diferencia entre la fecha de las elecciones y la fecha de la realización de la encuesta, variable `time` , también he convertido a votos la estimación que dan para pp, psoe, sumar, vox y resto, simplemente multiplicando la estimación que dan por su tamaño muestral.  
+
+
+Mejor vemos la tabla 
+
+```{r}
+library(tidyverse)
+library(DT)
+df <-  read_csv(here::here("data/encuestas_agregadas.csv")) |> 
+    select(empresa, time, partido, everything())
+
+datatable(df)
+
+```
+
+
+Pintamos 
+
+```{r}
+
+colores <-  c(
+    "pp" = "#005999",
+    "psoe" = "#FF0126", 
+    "sumar" = "#A00B85", 
+    "vox" = "#51962A", 
+    "resto" = "grey"
+    )
+
+df |> 
+    ggplot(aes(x = time, y = estim,color = partido )) +
+    geom_point() +
+    scale_color_manual(values = colores) +
+    geom_smooth(se = FALSE)
+
+```
+
+
+La selección de encuestas la he hecho sin mucho orden, son todas del mes de julio, algunas empresas repiten como sigma2 , gad3, simple_logica o sociométrica, otras veces he puesto como nombre el medio (okdiario o prisa). 
+
+Bueno, pues vamos a ver como hago el metaanálisis. 
+
+### Preparación datos
+
+Voy a poner los datos en un formato que me conviene más para lo que quiero hacer.
+
+- n es tamaño de muestra
+- time : es días hasta elecciones, -7 quiere decir qeu la encuesta se publicó (o se hizo, no lo sé) 7 días antes del 23 de julio
+- Columnas resultantes de multiplicar la estimación en la encuesta para cada partido por el tamaño muestral
+
+
+Como vemos voy a considerar 23 encuestas. 
+
+
+```{r}
+df_wider <- df |> 
+    select(-estim) |> 
+    pivot_wider( id_cols = c(empresa, n, time),
+                 names_from = partido, 
+                 values_from = votos) |> 
+    arrange(empresa)
+
+DT::datatable(df_wider)
+```
+
+
+Pues con esto ya puedo hacer mi intento de meta-análisis, que es probable que esté mal, que no soy un experto en estas cosas. 
+
+
+## Meta-análisis
+
+Pues lo voy a hacer de forma bayesiana. Los datos los tenemos a nivel de encuesta, por lo que puedo considerar que los votos estimados a cada partido en cada encuesta siguen una distribución multinomial , dónde `n` (tamaño muestral) es el número de intentos y tengo el vector de votos a cada partido que se obtendría. La suma de pp+psoe+sumar+vox+resto es igual a `n` para cada fila de los datos. 
+
+También puedo considerar que las estimaciones de varias encuestas realizadas por la misma empresa no son independientes, no es descabellado ¿verdad?.  Y también podría considerar que las estimaciones varían conforme se acerca la fecha de las elecciones y que esta variación podría ser diferente para cada empresa encuestadora. Pues con estos ingredientes ya puedo hacer el "meta-análisis" 
+
+
+Utilizo la librería `brms`  que me va a permitir hacerlo con una interfaz sencilla. Y en algún momento del futuro miraré como hacerlo con `numpyro` que me está picando con eso [Carlos](https://www.datanalytics.com/2023/07/04/3pl-numpyro/)
+
+```{r}
+
+library(cmdstanr)
+library(brms)
+library(tidybayes)
+
+options(brms.backend="cmdstanr")
+
+
+```
+
+Creamos una columna que una las columnas de los votos a partidos para que sea nuestro vector de respuesta _multinomial_
+
+```{r}
+
+df_wider$cell_counts <- with(df_wider, cbind(pp, psoe,sumar, vox, resto))
+
+DT::datatable(head(df_wider))
+```
+
+Y pasamos a ajustar el modelo, dónde vamos a considerar como efecto aleatorio la empresa y como efecto fijo el tiempo, aunque diferente para cada empresa. 
+
+
+En la fórmula de `brms` añadimos informacióna la variable respuesta, en este caso añadimos la info del tamaño muestral. Mirando cosas sobre meta-análisis con `brms` se puede añadir cosas como desviación estándar de la estimación del efecto y cosas así. 
+
+```{r}
+
+formula <- brmsformula(
+    cell_counts | trials(n) ~  (time |empresa))
+
+# vemos las priors por defecto qeu h
+(priors <- get_prior(formula, df_wider, family = multinomial()))
+
+```
+
+
+Ajustamos el modelo 
+
+```{r}
+model_multinomial <-
+    brm(
+        formula,
+        df_wider,
+        multinomial(),
+        prior = priors,
+        iter = 4000,
+        warmup = 1000,
+        cores = 4,
+        chains = 4,
+        seed = 47,
+        backend = "cmdstanr",
+        control = list(adapt_delta = 0.95), 
+        refresh = 0
+    )
+
+summary(model_multinomial)
+```
+
+Y ya tendríamos el modelo. 
+
+
+## ¿Predicción / estimación?
+
+Vuelvo a decir que esto es sólo por diversión, para hacer algo serio tendría que haber usado mayor número de encuestas y realizadas en diferentes momentos del tiempo, tener las estimaciones que daban en cada provincia y realizar la estimación de escaños. Todo eso y más ya lo hace, y muy bien, Kiko Llaneras para [_El País_ ](https://elpais.com/espana/elecciones-generales/2023-07-19/quien-va-a-ganar-las-elecciones-esto-dicen-las-encuestas.html)
+
+¿Cómo podríamos estimar lo que va a pasar el día de las elecciones con este modelo?
+
+
+Pues podríamos considerar que las elecciones fueran una encuesta realizada por una _empresa_ que no tengo en los datos (un nuevo nivel de la variable empresa) , en este caso el gobierno, y ponemos la variable `time = 0` 
+
+
+```{r}
+# pongo n = 1 para que me devuelva las probabilidades , si ponenemos n = 15000000 nos devolvería una # estimación de cuántos votos van a cada partido
+
+newdata <- tibble(
+    empresa = "votaciones_dia_23", 
+    time = 0,
+    n= 1)
+
+newdata
+
+```
+
+
+Ahora utilizando una función de la librería `tidybayes` tenemos una forma fácil de añadir las _posterior predict_
+
+```{r}
+estimaciones <-  newdata %>% 
+    add_epred_draws(model_multinomial, allow_new_levels = TRUE) %>% 
+    mutate(partido = as_factor(.category)) |> 
+    select(-.category)
+
+dim(estimaciones )
+
+DT::datatable(head(estimaciones, 100))
+
+```
+
+Y tenemos 12000 estimaciones de la posteriori para cada partido. Esto se podría decir que es _equivalente_ a las 15000 simulaciones que hace Kiko con su modelo. Bueno, salvo que él en cada simulación calcula más cosas, como los escaños obtenidos etc.. 
+
+
+Podemos hacer un summary de las posteriores y ver intervalo de _credibilidad_ al 80% por ejemplo 
+
+```{r}
+estimaciones |> 
+    group_by(partido) |> 
+    summarise(
+        media = mean(.epred), 
+        mediana= median(.epred), 
+        low = quantile(.epred, 0.1), 
+        high= quantile(.epred, 0.9)
+    )
+
+```
+
+O pintar las distribuciones. .
+
+
+```{r}
+
+estimaciones %>% 
+    ggplot(aes(x=.epred, fill = partido)) +
+    geom_density(alpha = 0.5 ) +
+    scale_x_continuous(labels = scales::percent) +
+    scale_fill_manual(values = colores) +
+    labs(title="Agregando encuestas por diversión. Resultado",
+        x = "Porcentaje estimado", 
+        y = "Density")
+
+
+```
+
+¿Qué más cosas podemos hacer? Ya que tengo las posterioris puedo usarlas y calcular las posterioris del bloque PP+ Vox o de cualquier otra cosa. 
+
+
+Supongamos que hubiera 15 millones de votos válidos. 
+
+
+
+```{r}
+votantes <- 15e6
+posterioris <- estimaciones  |> 
+    ungroup() |> 
+    mutate(votos = votantes * .epred) |> 
+    select(partido, votos) |> 
+    pivot_wider(names_from = partido, values_from = votos) 
+
+# tenemos columnas que son listas.  hay que hacer un unnest
+posterioris
+```
+
+
+```{r}
+posterioris <- posterioris  |> 
+    unnest(c(pp, psoe, sumar, vox, resto)) 
+
+head(posterioris)
+```
+
+
+Sumo votos de los bloques para cada una de las 12000 filas. Además. añado al bloque de la izquierda el 50% de los votos que están en resto. 
+
+```{r}
+posterioris <- posterioris |> 
+    mutate(
+        derecha = pp + vox, 
+        izquierda = psoe + sumar + 0.5*resto) |> 
+    mutate(derecha_posterior = derecha / votantes, 
+           izquierda_posterior = izquierda/votantes)
+
+posterioris |> 
+    head(20)
+
+```
+
+
+Ahora nos podemos hacer preguntas como , ¿en cuántas de estas posterioris gana el bloque de la derecha así construido al de la izquierda? o ¿en cuántas la diferencia que le saca el bloque de la derecha es mayor a un punto porcentual? 
+
+
+```{r}
+posterioris |> 
+    mutate(gana_derecha = derecha_posterior>izquierda_posterior, 
+           gana_derecha_mas1_pct = (derecha_posterior - izquierda_posterior) >= 0.01) |> 
+    summarise(
+        mean(gana_derecha),
+        mean(gana_derecha_mas1_pct)
+        )
+```
+
+
+## Coda
+
+Bueno, pues así es como he pasado el sábado. ¿Cosas que le faltaría a esto para ser algo serio?
+
+* Que tuviera en cuenta más encuestas y analizara mejor qué tipo de encuestas son, sus cambios de estimación según el tiempo
+* Que añadiera estimación de escaños, lo cual no es trivial. 
+* Añadir encuestas a nivel autónomico o datos de las municipales y poder hacer un modelo jerárquico en condiciones. 
+
+Y como decía al principio, seguramente esto del meta-análisis se pueda hacer de otra manera, mucho mejor, así que si alguien sabe, que lo ponga en los comentarios. Pues nada más, que voten ustedes lo que les de la gana mañana, que de eso se trata. 
+
+
+
