@@ -346,11 +346,16 @@ Y claramente el promedio de encuestas infraestimó el voto al psoe. Para pp, sum
 
 
 
+
 ```{r}
 df_update <-  read_csv(here::here("data/encuestas_agregadas_39.csv")) |> 
     select(empresa, time, partido, everything())
-
-datatable(df)
+# Añado botones para descarga de datos 
+datatable(df, extensions = "Buttons",
+          options = list(
+              dom = 'Bfrtip',
+              buttons = c('copy', 'csv', 'excel', 'pdf') )
+          )
 ```
 
 ```{r}
