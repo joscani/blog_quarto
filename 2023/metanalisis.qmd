@@ -1,6 +1,7 @@
 ---
 title: Meta-análisis. Agregando encuestas
 date: '2023-07-22'
+date-modified: last-modified
 categories:
   - muestreo
   - 2023
@@ -244,8 +245,8 @@ estimaciones |>
     summarise(
         media = mean(.epred), 
         mediana= median(.epred), 
-        low = quantile(.epred, 0.1), 
-        high= quantile(.epred, 0.9)
+        low = quantile(.epred, 0.05), 
+        high= quantile(.epred, 0.95)
     )
 
 ```
@@ -325,6 +326,112 @@ posterioris |>
 ```
 
 
+
+## Actualización [2023-07-24]
+
+Ya fueron las elecciones generales y escrutado al 100% se tiene que 
+
+```{r, echo = FALSE}
+resultado <- tibble(
+    partido = c("pp","psoe", "sumar", "vox"),
+    porcentaje_sobre_voto_valido = c(33.05, 31.70, 12.31, 12.39))
+
+DT::datatable(resultado)
+```
+
+Y claramente el promedio de encuestas infraestimó el voto al psoe. Para pp, sumar o o vox si que acertaron relativamente bien, aunque pp y vox se han quedado más cerda del extremo inferior del intervalo que del punto medio. 
+
+
+### ¿Si hubiera considerado más encuestas habría cambiado algo?
+
+
+
+```{r}
+df_update <-  read_csv(here::here("data/encuestas_agregadas_39.csv")) |> 
+    select(empresa, time, partido, everything())
+
+datatable(df)
+```
+
+```{r}
+
+df_wider <- df_update |> 
+    select(-estim) |> 
+    pivot_wider( id_cols = c(empresa, n, time),
+                 names_from = partido, 
+                 values_from = votos) |> 
+    arrange(empresa)
+
+df_wider$cell_counts <- with(df_wider, cbind(resto,pp, psoe,sumar, vox))
+
+DT::datatable(df_wider)
+```
+
+
+```{r}
+
+# cambio un poco la formla pq quiero efecto fijo del tiempo además del varying 
+# slope
+formula <- brmsformula(
+    cell_counts | trials(n) ~ time +  (time |empresa))
+
+model_multinomial_update <- brm(formula, df_wider, multinomial(),
+                          iter = 4000, warmup = 1000, cores = 4, chains = 4,
+                          seed = 3,
+                          backend = "cmdstanr", 
+                         control = list(adapt_delta = 0.95)
+)
+
+```
+
+```{r}
+estimaciones_update <-  newdata %>% 
+    add_epred_draws(model_multinomial_update, allow_new_levels = TRUE) %>% 
+    mutate(partido = as_factor(.category)) |> 
+    select(-.category)
+
+```
+
+Pues parece que no cambia mucho.  Si acaso añade más incertidumbre y ahora el resultado del psoe está dentro del intervalo de credibilidad del 90%
+
+```{r}
+
+estimaciones_update |> 
+    group_by(partido) |> 
+    summarise(
+        media = mean(.epred), 
+        mediana= median(.epred), 
+        low = quantile(.epred, 0.05), 
+        high= quantile(.epred, 0.95)
+    )
+
+```
+
+```{r}
+
+estimaciones_update %>% 
+    ggplot(aes(x=.epred, fill = partido)) +
+    geom_density(alpha = 0.5 ) +
+    scale_x_continuous(labels = scales::percent) +
+    scale_fill_manual(values = colores) +
+    labs(title="Agregando encuestas por diversión. Resultado",
+         subtitle = "Actualización con más encuestas",
+        x = "Porcentaje estimado", 
+        y = "Density")
+
+
+```
+
+Cosas interesantes que puedo sacar del modelo.  Por ejemplo los efectos aleatorios asociados a las diferentes empresas encuestadoras. Por ejemplo con `mupsoe_Intercept` se ve por ejemplo que la de `prisa`(40db) ,`simple_logica` (para el diario.es) sigma2 o el cis fueron las más favorables hacia el psoe.  
+
+Esto parece sugerir que los resultados de las diferentes encuestas parecen estar _afectados_ por la mano que les da de comer. 
+
+```{r}
+ranef(model_multinomial_update)
+```
+
+
+
 ## Coda
 
 Bueno, pues así es como he pasado el sábado. ¿Cosas que le faltaría a esto para ser algo serio?
@@ -332,15 +439,6 @@ Bueno, pues así es como he pasado el sábado. ¿Cosas que le faltaría a esto p
 * Que tuviera en cuenta más encuestas y analizara mejor qué tipo de encuestas son, sus cambios de estimación según el tiempo
 * Que añadiera estimación de escaños, lo cual no es trivial. 
 * Añadir encuestas a nivel autónomico o datos de las municipales y poder hacer un modelo jerárquico en condiciones. 
+* Hablando con Virgilio o Ana, queda claro que al ser encuestas a nivel nacional y tener un error muy grande a nivel provincial, es muy complicado hacer luego la predicción de escaños. 
 
-Y como decía al principio, seguramente esto del meta-análisis se pueda hacer de otra manera, mucho mejor, así que si alguien sabe, que lo ponga en los comentarios. Pues nada más, que voten ustedes lo que les de la gana mañana, que de eso se trata. 
-
-
-## El código que genera en `Stan`
-
-Con la función `stancode` podemos ver las tripas de lo qeu se ha mandado a Stan
-
-```{r}
-stancode(model_multinomial)
-```
-
+Y como decía al principio, seguramente esto del meta-análisis se pueda hacer de otra manera, mucho mejor, así que si alguien sabe, que lo ponga en los comentarios. 
