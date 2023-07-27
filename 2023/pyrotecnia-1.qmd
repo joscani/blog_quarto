@@ -1,0 +1,362 @@
+---
+title: Pyrotecnia. Full luxury bayes con numpyro
+date: '2023-07-27'
+date-modified: last-modified
+categories:
+  - python
+  - 2023
+  - numpyro
+  - análisis bayesiano
+  
+image: pluralista.png
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+## Introducción
+
+Ahora que va a salir el tan esperado [Tutorial de
+numpyro](https://www.datanalytics.com/2023/07/25/tutorial-numpyro-modelos-probabilisticos/)
+creo que es momento de empezar una serie de post sobre lo que estoy
+aprendiendo con `numpyro`
+
+Lo primero que se me ocurre decir de `numpyro` es que va muy bien, es
+muy rápido y es relativamente sencillo. Su velocidad se debe al uso de
+[`jax`](https://github.com/google/jax) , una librería de google que ha
+tomado una parte pequeña de `numpy` y la ha optimizado, gran parte de su
+desempeño se debe a [xla](https://www.tensorflow.org/xla) Acdelerated
+Linear Algebra. Gracias a xla se están entrenando algunos de los modelos
+de LLM.
+
+`numpyro`  es un dsl de programación probabilística, es decir, para
+hacer cosas bayesianas y ahora mismo es el estado del arte para este
+tema, al menos en lo concerniente a velocidad. Con `numpyro` he tardado
+en obtener las posterioris de un modelo sencillo con unas 20 mil filas
+en torno a 6 o 7 minutos mientras que con `Stan` se tardaba 1 hora. Así
+que con el uso de `numpyro` ya no puedo decir a algún amigo bayesiano
+aquello de "si, lo bayesiano está muy bien, pero se acaba el universo
+antes de que tengas tus 4 cadenas MCMC".
+
+## Ejemplo
+
+En mi post de [pluralista](2022/02/06/pluralista) comentaba el siguiente
+ejemplo
+
+Diagrama causal:
+
+-   M: Número de hijos de la madre
+-   D: Número de hijos de la hija
+-   B1: Orden de nacimiento de la madre
+-   B2: Orden de nacimiento de la hija
+-   U: Variable no medida en los datos, que pudiera ser cosas como
+    influencia del entorno social y económico dónde viven madre e hija,
+    que influye en las decisión del número de hijos de ambas.
+
+```{r}
+library(tidyverse)
+library(dagitty)
+library(ggdag)
+library(patchwork)
+library(reticulate) # para poder convertir de R a python y a la inversa 
+
+g <- dagitty("dag{ 
+  M -> D ;
+  B2 -> D;
+  B1 -> M;
+  U -> M;
+  U -> D
+ }")
+
+
+coords <-  
+  list(
+  x = c(B1 = 1, M = 2,  U = 3.5, D = 5, B2 = 6),
+  y = c(B1 = 0, M = 0, U = 1, D = 0, B2 = 0)
+)
+
+coordinates(g) <- coords
+
+ggdag(g) + 
+  theme_void()
+```
+
+Y simulaba unos valores, reproduciendo el DAG anterior, añadiendo los
+valores de una variable de confusión que luego no puedo usar en el
+ajuste puesto que el ejemplo trata de que existe una variable de
+confusión no observada.
+
+```{r}
+
+set.seed(1908)
+N <- 1000 # número de pares, 1000 madres y 1000 hijas
+
+
+U <- rnorm(N,0,1) # Simulamos el confounder
+
+# orden de nacimiento y 
+B1 <- rbinom(N,size=1,prob=0.5)  # 50% de madres nacieeron en primer lugar
+M <- rnorm( N , 2 * B1 + U )
+
+B2 <- rbinom(N,size=1,prob=0.5) # 50% son las primogénitas
+D <- rnorm( N , 2 * B2 + U + 0 * M )
+
+
+```
+
+En el post comentaba que si queremos ajustar el efecto global (o el
+directo ) de M sobre D , habría que condicionar por U , tal y como nos
+ha enseñado Pearl. Pero tanto Gelman como Richard McElreath nos ilustran
+en que si ajustamos el modelo generativo al completo no hay problema en
+condicionar por un collider (en los casos en que Pearl dice que no se puede)
+o incluso por una variable no observada. Condicionar en un marco
+bayesiano no es lo mismo que condicionar en el marco de modelos no
+bayesianos.
+
+```{r}
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "total"  )
+adjustmentSets(g, exposure = "M", outcome = "D", effect = "direct"  )
+```
+
+```{r}
+
+ggdag_adjustment_set(g, exposure = "M", outcome = "D", effect = "direct")
+
+```
+
+En este orden de cosas, ¿como ajustamos este DAG con `numpyro`?
+
+Librerías necesarias
+
+```{python}
+
+import numpy as np
+import jax
+import jax.numpy as jnp
+import numpyro
+import numpyro.distributions as dist
+from numpyro.infer import MCMC, NUTS, Predictive
+import pandas as pd
+
+from matplotlib import pyplot as plt
+import seaborn as sn
+
+
+numpyro.set_platform("cpu")
+numpyro.set_host_device_count(4)
+
+jax.local_device_count()
+
+```
+
+Uso `reticulate` para pasar las variables simuladas a pyhon.
+
+```{python}
+dat_list = dict(
+    id = np.array(range(0,1000)),
+    D  = np.array(r.D), # con r. accedo a lo que está en el enviromment de R , 
+    M  = np.array(r.M), 
+    B1 = np.array(r.B1),
+    B2 = np.array(r.B2)
+)
+
+# vemos los 4 primeros valores de D por ejemplo 
+
+
+dat_list['D'][0:4]
+```
+
+Pues siguiendo como ajustamos el DAG con ulam lo hacemos ahora con
+`numpyro`
+
+Es relativamente faćil, lo único qeu hay que tener cuidado porque la
+variable U no observada la simulamos dentro del modelo y que tiene que
+tener de dimensión el número de datos que tenemos, es decir, 1000.
+
+Luego en la parte de
+
+```         
+mu1 = a1 + b * B1 + k * U[id]
+mu2 = a2 + b * B2 + m * M + k * U[id]
+```
+
+vemos que metemos el `id` que no es más que un índice para saber que
+observación se trata . Es decir, tener un dato perdido ( o todos en el
+caso de U ) se reduce a estimar tantos parámetros como datos perdidos
+tengo. Es un pensamiento interesante, un dato perdido se puede ver como
+un parámetro que hay que estimar.
+
+Y el resto de la definición que tenemos en el modelo es igual de
+sencilla que cuándo lo hacía en el post original, al fin y al cabo esto
+es sólo sintaxis.
+
+```{python}
+
+
+def model(id,D, M, B1, B2):
+    
+    # variable no observada
+    U = numpyro.sample("U", dist.Normal(0, 1), sample_shape= D.shape) 
+   
+      # Prior coeficientes
+    a1 = numpyro.sample("a1", dist.Normal(0, 0.5))
+    a2 = numpyro.sample("a2", dist.Normal(0, 0.5))
+    
+    m = numpyro.sample("m", dist.Normal(0, 0.5))
+    b1 = numpyro.sample("b1", dist.Normal(0, 0.5))
+    b2 = numpyro.sample("b2", dist.Normal(0, 0.5))
+    p = numpyro.sample("p", dist.Beta(2, 2))
+
+    k = numpyro.sample("k", dist.Exponential(1))
+    sigma1 = numpyro.sample("sigma1", dist.Exponential(1))
+    sigma2 = numpyro.sample("sigma2", dist.Exponential(1))
+    
+    # verosimilitud
+    
+    B1_obs = numpyro.sample("B1_obs", dist.Bernoulli(probs = p), obs = B1  )
+    B2_obs = numpyro.sample("B2_obs", dist.Bernoulli(probs = p), obs = B2  )
+
+    
+    #  transformed parameters
+    mu1 = a1 + b1 * B1 + k * U[id]
+    mu2 = a2 + b2 * B2 + m * M + k * U[id]
+    
+    M_obs = numpyro.sample("M_obs", dist.Normal(mu1, sigma1), obs = M)
+    D_obs = numpyro.sample("D_obs", dist.Normal(mu2, sigma2), obs = D)
+
+
+```
+
+y nada, vamos a ajustar.
+
+```{python}
+# Ajusto
+
+
+mcmc = MCMC(NUTS(model), num_warmup=500, num_samples=2500, num_chains=4)
+# fijaros qeu en dat_list en ningún momento está la variable no observada U, pero 
+# en el modelo si se tiene en cuenta
+mcmc.run(jax.random.PRNGKey(0), **dat_list)
+
+```
+
+Y vemos que lo que en `Stan` tardaba unos 18 segundos, en `numpyro` se
+queda en unos 10. No parece mucha mejora, pero cuando aumenta el número
+de datos y la complejidad del modelo se nota y mucho.
+
+Bien, veamos el resumen del modelo . El resumen muestra también los valores estimados para la variable no observada
+
+```{python}
+# si pongo exclude_deterministic=True no veo las estimaciones de mu1 y mu2. 
+mcmc.print_summary(exclude_deterministic=False)
+```
+
+## Efecto de M sobre D
+
+Como hemos simulado sabemos que el efecto de `D` sobre `M` es 0. Y que
+Pearl nos advierte que para estimarlo habría que ajustar por `U`
+
+Efectivamente, sin ajustar tenemos
+
+```{r}
+lm(D ~ M)
+```
+
+Y haciendo trampas , ajustando por `U`
+
+```{r}
+lm(D ~ M + U)
+```
+
+Pero en la vida real no podemos ajustar por `U` puesto que no la hemos
+observado. Sin embargo al incorporar esa variable no observada dentro de
+un modelo generativo, si que podemos tener en cuenta que existe aunque
+no la hayamos observado.
+
+Veamos la posterior que nos da `numpyro`
+
+Se trata de la distribución de `m`
+
+```{python}
+res = mcmc.get_samples()
+
+m_posterior = res['m']
+np.quantile(m_posterior, q = [0, 0.25, 0.5, 0.75, 1])
+```
+
+Y vemos que efectivamente la distribución de m está centrada en 0.
+
+```{python}
+sn.kdeplot(m_posterior)
+```
+
+## Efecto de B1 sobre D
+
+Para ver el efecto de B1 sobre D podemos hacer tal y como dice Richard
+una intervención , de hecho, el efecto causal no es más que eso. Para
+eso, simplemente utilizo las posterioris y vamos siguiendo las flechas
+del DAG. y utilizar las expresiones de mu1 y mu2 que puse en el modelo.
+También fijamos B2 = 0 en ambos casos
+
+::: callout-tip
+En este caso al ser un modelo lineal el efecto de B1 sobre D, se puede
+estimar simplemente multiplicando la posterior de B1 por la posterior de
+M, pero en modelos no lineales no se puede
+:::
+
+### Para B1 = 0 , B2= 0
+
+```{python}
+M_B1_0 = res['a1'] + res['b1']* 0 # pongo el 0 para que quede claro qeu B1 = 0 
+```
+
+y ahora utilzo la posteriori obtenida de M cuando B1 es igual a 0 para
+obtener la de D
+
+```{python}
+D_B1_0 =  res['a2'] + res['b2'] * 0  + res['m']*M_B1_0 
+```
+
+### Para B1 = 1, B2= 0
+
+```{python}
+M_B1_1 = res['a1'] + res['b1']* 1 # pongo el 0 para que quede claro qeu B1 = 0 
+```
+
+```{python}
+D_B1_1 =  res['a2'] + res['b2'] * 0  + res['m']*M_B1_1 
+```
+
+Y el efecto causal de B1 sobre M sería simplemente restar esas dos
+posterioris.
+
+```{python}
+
+
+d_D_B1 = D_B1_1 - D_B1_0
+np.quantile(d_D_B1, q = [0, 0.25, 0.5, 0.75, 1])
+
+sn.kdeplot(d_D_B1)
+
+
+```
+
+## Notas finales
+
+El uso de `numpyro` es relativamente sencillo y permite expresar de forma fácil los modelos generativos. Además, es muy rápido y se puede usar con GPu's . En mi opinión estamos ante un avance importante en la computación de modelos bayesianos. 
+
+Hasta la próxima entrada de __pyrotecnia__ . Feliz verano !! 
+
