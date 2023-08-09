@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2019-06-07">
+
+<title>Muestrear no es pecado - Agua con gas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<script src="../../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../blog.html" rel="" target="">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani" rel="" target=""><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani" rel="" target=""><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../../blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/" rel="" target="">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/" rel="" target="">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/" rel="" target="">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../archive.html" rel="" target="">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#antecedentes" id="toc-antecedentes" class="nav-link active" data-scroll-target="#antecedentes">Antecedentes</a></li>
+  <li><a href="#una-posible-solución-buena-bonita-y-barata" id="toc-una-posible-solución-buena-bonita-y-barata" class="nav-link" data-scroll-target="#una-posible-solución-buena-bonita-y-barata">Una posible solución (buena, bonita y barata)</a></li>
+  <li><a href="#ejemplo-con-spark-scala" id="toc-ejemplo-con-spark-scala" class="nav-link" data-scroll-target="#ejemplo-con-spark-scala">Ejemplo con spark-scala</a></li>
+  <li><a href="#serializarguardar-el-modelo" id="toc-serializarguardar-el-modelo" class="nav-link" data-scroll-target="#serializarguardar-el-modelo">Serializar/guardar el modelo</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Agua con gas</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">h2o</div>
+    <div class="quarto-category">2019</div>
+    <div class="quarto-category">bigdata</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 7, 2019</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">August 9, 2023</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<p>O mejor dicho <strong><a href="https://www.h2o.ai/download/#sparkling-water">Sparkling Water</a></strong> , que es una librería de la buena gente de <strong><a href="https://www.h2o.ai/">h2o</a></strong> que permite aunar el mundo spark con el mundo de h2o.</p>
+<p>En un <strong><a href="https://muestrear-no-es-pecado.netlify.com/2019/03/12/productivizando-modelos-binarios-con-h20/">post anterior</a></strong> ya comentaba cómo poner modelos de h2o en producción en un cluster de spark, pero tengo que rectificar el punto en el que decía que con sparkling water había un cuello de botella al pasar de sparkdataframe a h2oframe, ese cuello ya no es tal, puesto que la <strong>conversión se hace en distribuido</strong>.</p>
+<section id="antecedentes" class="level2">
+<h2 class="anchored" data-anchor-id="antecedentes">Antecedentes</h2>
+<p>En mi corta experiencia en el mundo del big data (2016- actualidad), en todos los sitios por los que paso se me presenta la disyuntiva de cómo pasar modelos a producción. Yo vengo del mundo de R y otra mucha gente del mundo de python y las soluciones que se nos ocurren son cosas basadas en docker, hacer udf’s dentro de spark o cosas así. Otra gente siempre me dice que lo que hay que usar es <strong><a href="https://spark.apache.org/docs/latest/ml-guide.html">MLlib</a></strong> ya sea usando pyspark, sparkr, sparklyr o directamente la API con Scala (no conozco a nadie que use la API de Java), pero seamos honestos, los <strong>modelos implementados en MLlib son una basura</strong>, son lentos, consumen muchos recursos y dan peores resultados que los implementados con R o python por ejemplo.</p>
+<p>Como dice el título de este blog “muestrear no es pecado” y a la hora de entrenar un modelo prefiero hacer 1000 muestreos aleatorios con reemplazamiento y ver la estabilidad de las predicciones e incluso sacar intervalos de confianza que cualquier otra cosa. Pero a todos nos piden implementar nuestros modelos (entrenamiento y predicción) en un <strong>entorno productivo</strong>.</p>
+</section>
+<section id="una-posible-solución-buena-bonita-y-barata" class="level2">
+<h2 class="anchored" data-anchor-id="una-posible-solución-buena-bonita-y-barata">Una posible solución (buena, bonita y barata)</h2>
+<p>Tal y como se cuenta en la comparativa que hace <strong><a href="https://github.com/szilard/benchm-ml">Szilard</a></strong> H2O es más eficiente que R, Python y Spark y con resultados iguales o mejores. Y un ingeniero me diría, -sí vale, muy bonito, pero yo lo que uso es spark y es lo que tenemos en el entorno de producción y no nos dejan instalar ni R, ni python, ni montar un cluster de h2o en los workers- . Pues aquí es dónde entra <code>sparkling-water</code>.</p>
+<p>Con Sparkling Water tenemos lo mejor de los dos mundos, <strong>Spark para tratar los datos y h2o para entrenar modelos en distribuido y para predicción</strong>, y lo mejor de todo, podemos utilizar sparkling-water como si fuera una librería más de SPARK e incluirlo dentro de nuestras Apps sin ningún problema, con lo que el paso a producción es tan simple como con cualquier otro proceso de spark.</p>
+<p>Otra ventaja es qué h2o y sparkling-water están ampliamente documentados, y por ejemplo <strong><a href="http://docs.h2o.ai/sparkling-water/2.3/latest-stable/doc/deployment/deployment.html">aquí</a></strong> viene información de cómo utilizar en un <strong>EMR de Amazon</strong>, en <strong>Azure</strong> o en <strong>Google Cloud</strong>. Os recomiendo encarecidamente que leáis la docu, es una joya, así como los códigos de ejemplo que tienen en su <strong><a href="https://github.com/h2oai/sparkling-water/tree/master/examples">github</a></strong></p>
+<p>Y bueno, después de tanto rollo y que parezco el comercial de la empresa voy a poner un ejemplo de cómo usar sparkling-water en spark con scala. En otro post lo comentaré con R.</p>
+</section>
+<section id="ejemplo-con-spark-scala" class="level2">
+<h2 class="anchored" data-anchor-id="ejemplo-con-spark-scala">Ejemplo con spark-scala</h2>
+<p>Vamos a probar funcionalidad con spark-shell, para construir una app en condiciones una opción sería crear el jar ya sea mediante sbt o con gradle, en un <strong><a href="https://muestrear-no-es-pecado.netlify.com/2019/03/12/productivizando-modelos-binarios-con-h20/">post anterior</a></strong> conté más o menos como era.</p>
+<p>Lo primero es lanzar el spark-shell añadiendo el <strong>jar correspondiente de sparkling water</strong>, spark ya se encarga de distribuirlo entre los workers.</p>
+<p>La prueba la hago sobre mi portátil aunque todo esto ya está probado sobre un cluster de spark tocho y funciona perfectamente. Habría que cambiar el modelo de ejecución a <code>--master yarn</code> y elegir más ejecutores y memoria.</p>
+<p>La versión de sparkling-water correspondiente a cada versión de spark se puede consultar <strong><a href="https://github.com/h2oai/sparkling-water/tree/master/r">Aquí</a></strong> Yo voy a utilizar spark 2.4.0 y sparkling-water 2.4.10</p>
+<p><strong>Arrancamos un spark shell en modo local</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/home/jose/spark/spark-2.4.0-bin-hadoop2.7/bin/spark-shell</span> <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>--jars /home/jose/Descargas/sparkling-water-2.4.10/assembly/build/libs/sparkling-water-assembly_2.11-2.4.10-all.jar <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>--conf <span class="st">"spark.dynamicAllocation.enabled=false"</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>--conf <span class="st">"spark.scheduler.minRegisteredResourcesRatio=1"</span>  <span class="at">--executor-memory</span> 7G <span class="at">--executor-cores</span> 2 <span class="at">--num-executors</span> 1 <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>--name sparkling_water_scala <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Podemos ver el sparkui en <code>http://127.0.0.1:4040/jobs/</code></p>
+<p>Todo lo necesario para ejecutar h2o y su enlace con spark está en el jar <code>sparkling-water-assembly_2.11-2.4.10-all.jar</code> y al añadirlo al lanzar el spark-shell ya podemos utilizar h2o dentro de spark como una librería más.</p>
+<p>Importamos librerías (no todas son necesarias)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>SparkFiles</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>h2o<span class="op">.</span>_</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>examples<span class="op">.</span>h2o<span class="op">.</span>_</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>ml<span class="op">.</span>h2o<span class="op">.</span>models<span class="op">.</span>_</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>sql<span class="op">.</span>functions<span class="op">.</span>_</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>sql<span class="op">.{</span>DataFrame<span class="op">,</span> SQLContext<span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> water<span class="op">.</span><span class="ex">Key</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> java<span class="op">.</span>io<span class="op">.</span><span class="ex">File</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> java<span class="op">.</span>net<span class="op">.</span><span class="ex">URI</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>tree<span class="op">.</span>gbm<span class="op">.</span>GBM</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>tree<span class="op">.</span>gbm<span class="op">.</span>GBMModel</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>tree<span class="op">.</span>gbm<span class="op">.</span>GBMModel<span class="op">.</span>GBMParameters</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>ModelMetricsSupervised</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>Model</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>ScoreKeeper</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">//import _root_.hex._</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> _root_<span class="op">.</span>hex<span class="op">.</span>ModelMetricsBinomial</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> water<span class="op">.</span>support<span class="op">.{</span>H2OFrameSupport<span class="op">,</span> SparkContextSupport<span class="op">,</span> ModelMetricsSupport<span class="op">}</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> water<span class="op">.</span>support<span class="op">.</span>SparkContextSupport<span class="op">.</span>addFiles</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> water<span class="op">.</span>support<span class="op">.</span>H2OFrameSupport<span class="op">.</span>_</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> water<span class="op">.</span>support<span class="op">.</span>ModelSerializationSupport</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>sql<span class="op">.{</span>SaveMode<span class="op">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Levantamos un <code>h2ocontext</code> sobre el <code>sparkcontext</code>, lo que hace es levantar un cluster de h2o dentro de spark, sin necesidad de tener que instalar nada en los workers, no R, no python 3.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="internal_backend.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="backendh2o"><img src="internal_backend.png" class="img-fluid figure-img"></a></p>
+<figcaption class="figure-caption">backendh2o</figcaption>
+</figure>
+</div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">implicit</span> <span class="kw">val</span> sqlContext <span class="op">=</span> spark<span class="op">.</span>sqlContext</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> hc <span class="op">=</span> H2OContext<span class="op">.</span><span class="fu">getOrCreate</span><span class="op">(</span>sc<span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> hc<span class="op">.</span>_</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> hc<span class="op">.</span>implicits<span class="op">.</span>_</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> sqlContext<span class="op">.</span>implicits<span class="op">.</span>_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Y se nos levanta el flow de h2o en</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hc<span class="op">.</span>flowURL</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>res0<span class="op">:</span> <span class="ex">String</span> <span class="op">=</span> http<span class="op">:</span><span class="co">//192.168.1.37:54321</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>O lo abrimos de esta forma</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>openFlow</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>imagen<a href="h2o_flow.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="flow"><img src="h2o_flow.png" class="img-fluid" alt="flow"></a></p>
+<p>Leemos datos con spark</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> dataPath <span class="op">=</span> <span class="st">"mtcars.csv"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> df<span class="op">=</span> spark<span class="op">.</span>read<span class="op">.</span><span class="fu">option</span><span class="op">(</span><span class="st">"header"</span><span class="op">,</span> <span class="st">"true"</span><span class="op">).</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">option</span><span class="op">(</span><span class="st">"inferSchema"</span><span class="op">,</span> <span class="st">"true"</span><span class="op">).</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">csv</span><span class="op">(</span>dataPath<span class="op">)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>df<span class="op">.</span><span class="fu">show</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span><span class="kw">false</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="op">+----+---+----+---+----+-----+-----+---+---+----+----+-------------+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="op">|</span>mpg <span class="op">|</span>cyl<span class="op">|</span>disp<span class="op">|</span>hp <span class="op">|</span>drat<span class="op">|</span>wt   <span class="op">|</span>qsec <span class="op">|</span>vs <span class="op">|</span>am <span class="op">|</span>gear<span class="op">|</span>carb<span class="op">|</span>id           <span class="op">|</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">+----+---+----+---+----+-----+-----+---+---+----+----+-------------+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">|</span><span class="dv">21</span>  <span class="op">|</span><span class="dv">6</span>  <span class="op">|</span><span class="dv">160</span> <span class="op">|</span><span class="dv">110</span><span class="op">|</span><span class="fl">3.9</span> <span class="op">|</span><span class="fl">2.62</span> <span class="op">|</span><span class="fl">16.46</span><span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">1</span>  <span class="op">|</span><span class="dv">4</span>   <span class="op">|</span><span class="dv">4</span>   <span class="op">|</span>Mazda RX4    <span class="op">|</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">|</span><span class="dv">21</span>  <span class="op">|</span><span class="dv">6</span>  <span class="op">|</span><span class="dv">160</span> <span class="op">|</span><span class="dv">110</span><span class="op">|</span><span class="fl">3.9</span> <span class="op">|</span><span class="fl">2.875</span><span class="op">|</span><span class="fl">17.02</span><span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">1</span>  <span class="op">|</span><span class="dv">4</span>   <span class="op">|</span><span class="dv">4</span>   <span class="op">|</span>Mazda RX4 Wag<span class="op">|</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">|</span><span class="fl">22.8</span><span class="op">|</span><span class="dv">4</span>  <span class="op">|</span><span class="dv">108</span> <span class="op">|</span><span class="dv">93</span> <span class="op">|</span><span class="fl">3.85</span><span class="op">|</span><span class="fl">2.32</span> <span class="op">|</span><span class="fl">18.61</span><span class="op">|</span><span class="dv">1</span>  <span class="op">|</span><span class="dv">1</span>  <span class="op">|</span><span class="dv">4</span>   <span class="op">|</span><span class="dv">1</span>   <span class="op">|</span>Datsun <span class="dv">710</span>   <span class="op">|</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">+----+---+----+---+----+-----+-----+---+---+----+----+-------------+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>only showing top <span class="dv">3</span> rows</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Creamos variable binaria que sea tener 6 cilindros vs 4 u 8</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> df2 <span class="op">=</span> df<span class="op">.</span><span class="fu">withColumn</span><span class="op">(</span><span class="st">"cyl_cat"</span><span class="op">,</span> <span class="fu">when</span><span class="op">(</span>$<span class="st">"cyl"</span> <span class="op">===</span> <span class="dv">6</span> <span class="op">,</span> <span class="st">"1"</span><span class="op">).</span><span class="fu">otherwise</span><span class="op">(</span><span class="st">"0"</span><span class="op">)).</span><span class="fu">drop</span><span class="op">(</span>$<span class="st">"cyl"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Convertimos el sparkdataframe a h2oframe. Esto antes era un cuello de botella pero ahora el paso de sparkdataframe a h2oframe se hace en distribuido y es bastante rápido, incluso con datos de 40 millones de filas y más de 100 columnas</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// convertir a h2oframe</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> trainFrame<span class="op">:</span>H2OFrame <span class="op">=</span> df2</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>trainFrame<span class="op">.</span>names</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>trainFrame<span class="op">.</span>means</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Convertimos <code>cyl_cat</code>, <code>gear</code>, <code>carb</code> a Categorical, esto se puede hacer en spark previamente convirtiendo a string y luego pasar todos los strings a categorical en h2o con <code>withLockAndUpdate(trainFrame){ allStringVecToCategorical(_) }</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>H2OFrameSupport<span class="op">.</span><span class="fu">withLockAndUpdate</span><span class="op">(</span>trainFrame<span class="op">)</span> <span class="op">{</span> fr <span class="op">=&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  fr<span class="op">.</span><span class="fu">replace</span><span class="op">(</span>fr<span class="op">.</span><span class="fu">find</span><span class="op">(</span><span class="st">"gear"</span><span class="op">),</span> fr<span class="op">.</span><span class="fu">vec</span><span class="op">(</span><span class="st">"gear"</span><span class="op">).</span>toCategoricalVec<span class="op">).</span><span class="fu">remove</span><span class="op">()</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>H2OFrameSupport<span class="op">.</span><span class="fu">withLockAndUpdate</span><span class="op">(</span>trainFrame<span class="op">)</span> <span class="op">{</span> fr <span class="op">=&gt;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  fr<span class="op">.</span><span class="fu">replace</span><span class="op">(</span>fr<span class="op">.</span><span class="fu">find</span><span class="op">(</span><span class="st">"cyl_cat"</span><span class="op">),</span> fr<span class="op">.</span><span class="fu">vec</span><span class="op">(</span><span class="st">"cyl_cat"</span><span class="op">).</span>toCategoricalVec<span class="op">).</span><span class="fu">remove</span><span class="op">()</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>H2OFrameSupport<span class="op">.</span><span class="fu">withLockAndUpdate</span><span class="op">(</span>trainFrame<span class="op">)</span> <span class="op">{</span> fr <span class="op">=&gt;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  fr<span class="op">.</span><span class="fu">replace</span><span class="op">(</span>fr<span class="op">.</span><span class="fu">find</span><span class="op">(</span><span class="st">"carb"</span><span class="op">),</span> fr<span class="op">.</span><span class="fu">vec</span><span class="op">(</span><span class="st">"carb"</span><span class="op">).</span>toCategoricalVec<span class="op">).</span><span class="fu">remove</span><span class="op">()</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>res8<span class="op">:</span> org<span class="op">.</span>apache<span class="op">.</span>spark<span class="op">.</span>h2o<span class="op">.</span>H2OFrame <span class="op">=</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Frame</span> key<span class="op">:</span> frame_rdd_44_864202a286d438fb206334d98079482a</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   cols<span class="op">:</span> <span class="dv">12</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>   rows<span class="op">:</span> <span class="dv">32</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a> chunks<span class="op">:</span> <span class="dv">1</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>   size<span class="op">:</span> <span class="dv">4896</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Dividimos en traint, test y hold. H2O hace esta tarea bastante mejor que spark</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> keys <span class="op">=</span> <span class="bu">Seq</span><span class="op">[</span><span class="ex">String</span><span class="op">](</span><span class="st">"train.hex"</span><span class="op">,</span> <span class="st">"test.hex"</span><span class="op">,</span> <span class="st">"hold.hex"</span><span class="op">)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> ratios <span class="op">=</span> <span class="bu">Seq</span><span class="op">[</span><span class="ex">Double</span><span class="op">](</span><span class="fl">0.6</span><span class="op">,</span> <span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> frs <span class="op">=</span> <span class="fu">splitFrame</span><span class="op">(</span>trainFrame<span class="op">,</span> keys <span class="op">,</span> ratios<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> <span class="op">(</span>train<span class="op">,</span> test<span class="op">,</span> hold<span class="op">)</span> <span class="op">=</span> <span class="op">(</span><span class="fu">frs</span><span class="op">(</span><span class="dv">0</span><span class="op">),</span> <span class="fu">frs</span><span class="op">(</span><span class="dv">1</span><span class="op">),</span> <span class="fu">frs</span><span class="op">(</span><span class="dv">2</span><span class="op">))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Ajustamos un modelo gbm para predecir <code>cyl_cat</code>, cambiamos la métrica de early stopping a AUC</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> ignore_columns <span class="op">=</span> <span class="ex">Array</span><span class="op">[</span><span class="ex">String</span><span class="op">](</span><span class="st">"id"</span><span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> stopping_metric <span class="op">=</span> ScoreKeeper<span class="op">.</span>StoppingMetric<span class="op">.</span>AUC</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> gbmParams <span class="op">=</span> <span class="kw">new</span> <span class="fu">GBMParameters</span><span class="op">()</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_train <span class="op">=</span> train</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_valid <span class="op">=</span> test</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_response_column <span class="op">=</span> <span class="st">"cyl_cat"</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_ignored_columns <span class="op">=</span> ignore_columns</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_ntrees <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_max_depth <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_seed <span class="op">=</span> <span class="dv">155</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_min_rows <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_learn_rate_annealing <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_col_sample_rate <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_sample_rate <span class="op">=</span> <span class="fl">0.98</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_balance_classes <span class="op">=</span> <span class="kw">false</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_stopping_metric <span class="op">=</span> stopping_metric </span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_stopping_rounds <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>gbmParams<span class="op">.</span>_score_tree_interval <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Entrenamos, (en la interfaz se puede ver como va avanzando el entrenamiento y las métricas en train y validación)</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> gbmModel <span class="op">=</span> <span class="kw">new</span> <span class="fu">GBM</span><span class="op">(</span>gbmParams<span class="op">).</span>trainModel<span class="op">.</span>get</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> holdMetrics <span class="op">=</span>  ModelMetricsSupport<span class="op">.</span>modelMetrics<span class="op">[</span>ModelMetricsBinomial<span class="op">](</span>gbmModel<span class="op">,</span> hold<span class="op">)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span>holdMetrics<span class="op">.</span>auc<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>En la interfaz podemos ver todas las métricas, el gainlift, etc.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span>holdMetrics<span class="op">.</span>gainsLift<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="serializarguardar-el-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="serializarguardar-el-modelo">Serializar/guardar el modelo</h2>
+<p>¿Cómo guardamos el modelo? Hay dos formas</p>
+<ul>
+<li>Serializando con <code>ModelSerializationSupport.exportH2OModel</code> lo que implica que cuando queramos cargarlo y predecir tenemos que lanzar de nuevo un <code>spark-shell</code> o <code>spark-submit</code> con el jar de <code>sparkling-water</code></li>
+<li>Guardarlo como mojo (model object java optimization) tal y como conté en post anterior</li>
+</ul>
+<p>Ambas formas de salvarlo se pueden hacer desde la interfaz y desde las diferentes apis. Voy a contar como sería con la primera</p>
+<p>Creamos un uri de dónde vamos a guardarlo, puede ser una ruta de hdfs, el filesystem o incluso un bucket de s3.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> destinationURI <span class="op">=</span> <span class="ex">URI</span><span class="op">.</span><span class="fu">create</span><span class="op">(</span><span class="st">"file:///home/jose/mi_modelo"</span><span class="op">)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">//val uri_mojo = URI.create("file:///opt/datos2/jcanadar/modelo_sparkling_mojo.zip")</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>ModelSerializationSupport<span class="op">.</span><span class="fu">exportH2OModel</span><span class="op">(</span>gbmModel<span class="op">,</span> destinationURI<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Cargar modelo guardado y hacer predicciones</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> loadedModel<span class="op">:</span> GBMModel <span class="op">=</span> ModelSerializationSupport<span class="op">.</span><span class="fu">loadH2OModel</span><span class="op">(</span>destinationURI<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Al cargarlo ya me da información de las métricas que se obtuvieron con ese modelo</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">val</span> loadedModel: GBMModel = ModelSerializationSupport.loadH2OModel<span class="er">(</span><span class="ex">destinationURI</span><span class="kw">)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">loadedModel:</span> hex.tree.gbm.GBMModel =</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Model</span> Metrics Type: Binomial</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a> <span class="ex">Description:</span> N/A</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a> <span class="ex">model</span> id: GBM_model_1559923164707_105</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a> <span class="ex">frame</span> id: train.hex</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a> <span class="ex">MSE:</span> 0.07837714</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">RMSE:</span> 0.27995917</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">AUC:</span> 1.0</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">pr_auc:</span> 0.0</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a> <span class="ex">logloss:</span> 0.30478087</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">mean_per_class_error:</span> 0.0</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a> <span class="ex">default</span> threshold: 0.6001753807067871</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">CM:</span> Confusion Matrix <span class="er">(</span><span class="ex">Row</span> labels: Actual class<span class="kw">;</span> <span class="ex">Column</span> labels: Predicted class<span class="kw">)</span><span class="bu">:</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>         <span class="ex">0</span>  1   Error    Rate</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>     <span class="ex">0</span>  11  0  0,0000  0 / 11</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>     <span class="ex">1</span>   0  5  0,0000   0 / 5</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="ex">Totals</span>  11  5  0,0000  0 / 16</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="ex">Gains/Lift</span> Table <span class="er">(</span><span class="ex">Avg</span> response rate: 31,25 %, avg score:31,52 %<span class="kw">)</span><span class="bu">:</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Group</span>  Cumulative Data Fraction  Lower Threshold      Lift  Cumulative Lift  Response Rate     Score  Cumulative Response Rate  Cumulative Score  Capture Rate  Cumulative Capture Rate         Gain  Cumulative Gain</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>      <span class="ex">1</span>                ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Para predecir sería tan sencillo como pasar de sparkdataframe a h2oframe como ya hemos visto antes y aplicar un método.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ya tengo un conjunto de datos en formato h2oframe, </span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> predicciones <span class="op">=</span> loadedModel<span class="op">.</span><span class="fu">score</span><span class="op">(</span>hold<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Convierto a sparkdataframe</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> predicciones_spark <span class="op">=</span> hc<span class="op">.</span><span class="fu">asDataFrame</span><span class="op">(</span>predicciones<span class="op">)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>predicciones_spark<span class="op">.</span><span class="fu">show</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="kw">false</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">+-------+------------------+-------------------+</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">predict</span><span class="kw">|</span><span class="ex">p0</span>                <span class="kw">|</span><span class="ex">p1</span>                 <span class="kw">|</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">+-------+------------------+-------------------+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">0</span>      <span class="kw">|</span><span class="ex">0.6386240026776301</span><span class="kw">|</span><span class="ex">0.3613759973223699</span> <span class="kw">|</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">1</span>      <span class="kw">|</span><span class="ex">0.3998245858574603</span><span class="kw">|</span><span class="ex">0.6001754141425397</span> <span class="kw">|</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="kw">|</span><span class="ex">0</span>      <span class="kw">|</span><span class="ex">0.849842626576839</span> <span class="kw">|</span><span class="ex">0.15015737342316104</span><span class="kw">|</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="ex">+-------+------------------+-------------------+</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Salvar a tabla hive</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>predicciones_spark<span class="op">.</span>write<span class="op">.</span><span class="fu">mode</span><span class="op">(</span>SaveMode<span class="op">.</span>Overwrite<span class="op">).</span><span class="fu">saveAsTable</span><span class="op">(</span><span class="st">"esquema.nombretabla"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Otra cosa interesante es que h2o incorpora explicatividad mediante shap values para los algoritmos de árboles.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// hay que crear una clave aleatoria con Key.make para que funcione</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> explain_frame <span class="op">=</span> loadedModel<span class="op">.</span><span class="fu">scoreContributions</span><span class="op">(</span>hold<span class="op">,</span> <span class="ex">Key</span><span class="op">.</span><span class="fu">make</span><span class="op">())</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> explain_spark <span class="op">=</span> hc<span class="op">.</span><span class="fu">asDataFrame</span><span class="op">(</span>explain_frame<span class="op">)</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>explain_spark<span class="op">.</span><span class="fu">show</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span><span class="kw">false</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>La suma de todos los términos de la explicatividad da el logit de la probabilidad de tener cyl == 4.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="op">+-------------------+-------------------+---+----+---+----+---+---+----+-------------------+-------------------+</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="op">|</span>mpg                <span class="op">|</span>disp               <span class="op">|</span>hp <span class="op">|</span>drat<span class="op">|</span>wt <span class="op">|</span>qsec<span class="op">|</span>vs <span class="op">|</span>am <span class="op">|</span>gear<span class="op">|</span>carb               <span class="op">|</span>BiasTerm           <span class="op">|</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">+-------------------+-------------------+---+----+---+----+---+---+----+-------------------+-------------------+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">|</span><span class="fl">0.06274261325597763</span><span class="op">|</span><span class="fl">0.7365164756774902</span> <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|-</span><span class="fl">0.4328688085079193</span><span class="op">|-</span><span class="fl">0.9357871413230896</span><span class="op">|</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="op">|</span><span class="fl">0.17428503930568695</span><span class="op">|</span><span class="fl">0.8345963358879089</span> <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="fl">0.33310189843177795</span><span class="op">|-</span><span class="fl">0.9357871413230896</span><span class="op">|</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="op">|-</span><span class="fl">0.2034180760383606</span><span class="op">|-</span><span class="fl">0.7214104533195496</span><span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>  <span class="op">|</span><span class="dv">0</span>   <span class="op">|</span><span class="fl">0.12724840641021729</span><span class="op">|-</span><span class="fl">0.9357871413230896</span><span class="op">|</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">+-------------------+-------------------+---+----+---+----+---+---+----+-------------------+-------------------+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>only showing top <span class="dv">3</span> rows</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lo único que faltaría para tener este en un entorno de producción sería meterlo en un jar ya sea mediante sbt o con gradle. En un proyecto en la empresa lo hemos probado, y gracias a mi compañero de trabajo y sin embargo amigo <a href="https://www.linkedin.com/in/sergiocalde94/">Sergio Calderón</a> y a mis queridos ingenazis lo hemos formalizado en un proyecto gradle.</p>
+<p>Huelga decir que con esta implementación hemos mejorado espectacularmente el tiempo de entrenamiento y predicción de nuestros modelos obteniendo AUC’s similares a los que se obtienen con xgboost y la ventaja de que pasar a producción es muchísimo más sencillo que con otras alternativas</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","descPosition":"bottom","loop":true,"selector":".lightbox"});</script>
+
+
+
+</body></html>
