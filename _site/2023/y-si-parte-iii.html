@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2023-09-10">
+
+<title>Muestrear no es pecado - ¿Y si … ? Parte III</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html" rel="" target="">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/joscani" rel="" target=""><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani" rel="" target=""><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/" rel="" target="">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/" rel="" target="">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/" rel="" target="">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../archive.html" rel="" target="">
+ <span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción">Introducción</a></li>
+  <li><a href="#datos" id="toc-datos" class="nav-link" data-scroll-target="#datos">Datos</a></li>
+  <li><a href="#estimando-cosas.." id="toc-estimando-cosas.." class="nav-link" data-scroll-target="#estimando-cosas..">Estimando cosas..</a>
+  <ul class="collapse">
+  <li><a href="#group-by" id="toc-group-by" class="nav-link" data-scroll-target="#group-by">Group by</a></li>
+  <li><a href="#modelo-lineal" id="toc-modelo-lineal" class="nav-link" data-scroll-target="#modelo-lineal">Modelo lineal</a></li>
+  </ul></li>
+  <li><a href="#t--learner" id="toc-t--learner" class="nav-link" data-scroll-target="#t--learner">T- learner</a></li>
+  <li><a href="#x-learner" id="toc-x-learner" class="nav-link" data-scroll-target="#x-learner">X-learner</a></li>
+  <li><a href="#doubly-robust-estimator" id="toc-doubly-robust-estimator" class="nav-link" data-scroll-target="#doubly-robust-estimator">Doubly robust estimator</a></li>
+  <li><a href="#resumiendo" id="toc-resumiendo" class="nav-link" data-scroll-target="#resumiendo">Resumiendo</a></li>
+  <li><a href="#coda" id="toc-coda" class="nav-link" data-scroll-target="#coda">Coda</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">¿Y si … ? Parte III</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">2023</div>
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">causal inference</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 10, 2023</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 9, 2023</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<section id="introducción" class="level2">
+<h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
+<p>Ya estuve hablando anteriormente de los Metalearners o como se diga <a href="../2020/11/15/y-si-parte-i/">aquí</a> y <a href="../2020/12/30/y-si-parte-ii/">aquí</a>. Pero ahora vamos a ver si lo utilizamos en unos datos reales.</p>
+<p>La <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&amp;cid=1254736177025&amp;menu=resultados&amp;idp=1254735976596#!tabs-1254736061996">encuestas de estructura salarial</a> se ha usado muchas veces para ver la brecha salarial entre hombre y mujeres. No obstante yo me hago la pregunta de si es posible y cómo estimar la brecha salarial entre sector público y sector privado.</p>
+<p>¿Cómo podríamos hacerlo? Está claro que son dos sectores muy distintos y que comparar las medias, tal y como hacen (mal) algunos para comparar brecha salarial de género, no es lo más adecuado.</p>
+<p>Mi idea aquí es contar un poco como lo haríamos <strong>estilo compadre</strong> usando un modelo lineal de toda la vida, luego ver como se haría utilizando <em>metalearners</em> y también usando <em>doubly robust estimator</em> .</p>
+</section>
+<section id="datos" class="level2">
+<h2 class="anchored" data-anchor-id="datos">Datos</h2>
+<p>Vamos a utilizar los microdatos de la <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&amp;cid=1254736177025&amp;menu=resultados&amp;idp=1254735976596#!tabs-1254736061996">encuestas de estructura salarial</a> del INE. A pesar de ser una encuesta anual, los últimos resultados publicados son de 2021 y los últimos microdatos disponibles los de 2018. La verdad es que me gustaría entender por qué el INE publica tan tarde los microdatos 😥. La <a href="https://www.ine.es/prensa/ees_2021.pdf">nota de prensa</a> con los resultados de 2021 es del 20 de junio de 2023. Y si ya tienen resultados de 2021, ¿por qué los últimos microdatos disponibles son los de hace 5 años?</p>
+<p>Sea como fuere vamos a lo nuestro.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven) <span class="co"># Para leer los datos de SPSS</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey) <span class="co"># para obtener estimadores correctos por ser una muestra</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjPlot) <span class="co"># plot de los modelos, </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># library(causact) # usar alguna cosa de numpyro desde R , quiero probar este paquete</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> <span class="fu">read_spss</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/INE/datos_2018/SPSS/EES_2018.sav"</span>))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(ess)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ess)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 56</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   idenccc  ordentra nuts1   cnace    estrato2 control mercado regulacion sexo   </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;    &lt;chr+l&gt; &lt;chr+lb&gt; &lt;chr+lb&gt; &lt;chr+l&gt; &lt;chr+l&gt; &lt;chr+lbl&gt;  &lt;chr+l&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 00000025 01       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 1 [HOM…</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 00000025 02       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 1 [HOM…</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 00000025 03       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 6 [MUJ…</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 00000025 04       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 1 [HOM…</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 00000025 05       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 1 [HOM…</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 00000025 06       1 [NOR… H1 [Tra… 1 [DE 1… 2 [PRI… 3 [UNI… 2 [SECTOR… 1 [HOM…</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 47 more variables: tipopais &lt;chr+lbl&gt;, cno1 &lt;chr+lbl&gt;, responsa &lt;chr+lbl&gt;,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   estu &lt;chr+lbl&gt;, anoanti &lt;dbl&gt;, mesanti &lt;dbl&gt;, tipojor &lt;chr+lbl&gt;,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   tipocon &lt;chr+lbl&gt;, fijodism &lt;dbl&gt;, fijodisd &lt;dbl&gt;, val &lt;dbl&gt;, van &lt;dbl&gt;,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   puentes &lt;dbl&gt;, jap &lt;dbl&gt;, jsp1 &lt;dbl&gt;, jsp2 &lt;dbl&gt;, hextra &lt;dbl&gt;,</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   drelabm &lt;dbl&gt;, siespm1 &lt;chr+lbl&gt;, dsiespm1 &lt;dbl&gt;, siespm2 &lt;chr+lbl&gt;,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   dsiespm2 &lt;dbl&gt;, salbase &lt;dbl&gt;, extraorm &lt;dbl&gt;, phextra &lt;dbl&gt;, comsal &lt;dbl&gt;,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   comsaltt &lt;dbl&gt;, irpfmes &lt;dbl&gt;, cotiza &lt;dbl&gt;, base &lt;dbl&gt;, drelabam &lt;dbl&gt;, …</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Dejo enlace al diseño del registro para ver qué es cada variable en los microdatos.</p>
+<p><a href="https://docs.google.com/spreadsheets/d/1H_wcDX_SfXQmpLyf0Kj9lKvwMhph7Gv7/edit?usp=sharing&amp;ouid=110673697043754248174&amp;rtpof=true&amp;sd=true"><i class="fa-solid fa-table" aria-label="table"></i> <code>dis_registro</code></a></p>
+<p>Lo que quiero comparar es el salario neto mensual, ¿por qué? porque me da la gana y porque en la docu del INE explican como se calcula el salario neto partiendo de los microdatos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> ess <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">diasmes    =</span> drelabm <span class="sc">-</span> dsiespm2,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">diasrelaba =</span> drelabam <span class="sc">*</span> <span class="fl">30.42</span> <span class="sc">+</span> drelabad,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">diasrelaba =</span> <span class="fu">ifelse</span>(diasrelaba <span class="sc">&gt;</span> <span class="dv">365</span>, <span class="dv">365</span>, diasrelaba),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">diasano    =</span> diasrelaba <span class="sc">-</span> dsiespa2 <span class="sc">-</span> dsiespa4,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">salbase    =</span> <span class="fu">ifelse</span>(siespm1 <span class="sc">==</span> <span class="st">"6"</span>, (<span class="dv">31</span> <span class="sc">/</span> diasmes) <span class="sc">*</span> salbase, salbase),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">comsal     =</span> <span class="fu">ifelse</span>(siespm1 <span class="sc">==</span> <span class="st">"6"</span>, (<span class="dv">31</span> <span class="sc">/</span> diasmes) <span class="sc">*</span> comsal, comsal),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">comsaltt   =</span> <span class="fu">ifelse</span>(siespm1 <span class="sc">==</span> <span class="st">"6"</span>, (<span class="dv">31</span> <span class="sc">/</span> diasmes) <span class="sc">*</span> comsaltt, comsaltt),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">salmes     =</span> salbase <span class="sc">+</span> comsal <span class="sc">+</span> extraorm <span class="sc">+</span> phextra,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">salmor     =</span> salbase <span class="sc">+</span> comsal <span class="sc">+</span> phextra,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">salneto    =</span> salmes <span class="sc">-</span> cotiza <span class="sc">-</span> irpfmes,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">salanual   =</span> (<span class="dv">365</span> <span class="sc">/</span> diasano) <span class="sc">*</span> (retrinoin <span class="sc">+</span> retriin <span class="sc">+</span> vespnoin <span class="sc">+</span> vespin),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">salaor     =</span> (<span class="dv">365</span> <span class="sc">/</span> diasano) <span class="sc">*</span> ((retrinoin <span class="sc">+</span> retriin) <span class="sc">-</span> gextra),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">vespnoin   =</span> (<span class="dv">365</span> <span class="sc">/</span> diasano) <span class="sc">*</span> vespnoin,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">jmp1       =</span> (jsp1 <span class="sc">+</span> jsp2 <span class="sc">/</span> <span class="dv">60</span>) <span class="sc">*</span> <span class="fl">4.35</span> <span class="sc">+</span> hextra,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">salhora    =</span> salmes <span class="sc">/</span> jmp1</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="estimando-cosas.." class="level2">
+<h2 class="anchored" data-anchor-id="estimando-cosas..">Estimando cosas..</h2>
+<p>La variable dónde se consigna si el sector es público o privado es <code>control</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(control) <span class="sc">|&gt;</span>    </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # Groups:   control [2]</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   control          n</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr+lbl&gt;    &lt;int&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 [PUBLICO]  35553</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 [PRIVADO] 181173</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Voy a crearme variable <code>treatment</code> <strong>que valga 1 cuando sea sector público y 0 para el sector privado</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> ess<span class="sc">$</span>control</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> <span class="fu">ifelse</span>(ess<span class="sc">$</span>control <span class="sc">==</span> <span class="st">"1"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># también llamo outcome al salario neto</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>outcome <span class="ot">=</span> ess<span class="sc">$</span>salneto</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="group-by" class="level3">
+<h3 class="anchored" data-anchor-id="group-by">Group by</h3>
+<p>Lo más simple , hacemos un group by y calculamos medias</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">mean =</span> <span class="fu">mean</span>(outcome),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">n =</span> <span class="fu">n</span>()</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    )   </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   treatment  mean      n</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1         0 1561. 181173</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2         1 1864.  35553</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Así de primeras, pues parece que se gana más en el sector público que en el privado, pero ¡ojo! que la encuesta tiene una variable de ponderación, que el INE ha calculado para que los resultados sean representativos de la población. En la nota metodológica el INE dice lo siguiente sobre el plan de muestreo</p>
+<p>El procedimiento de selección aleatoria de unidades corresponde a un muestreo bietápico estratificado, donde las unidades de primera etapa son las cuentas de cotización a la Seguridad Social (CC), mientras que las de segunda etapa son los trabajadores (asalariados). En la primera etapa tanto el diseño muestral como la muestra obtenida de CC coincide con la ETCL (para una mayor información consultar la metodología de la ETCL). Las unidades de primera etapa se estratifican según las siguientes variables:</p>
+<ul>
+<li>Comunidad autónoma</li>
+<li>Rama de actividad económica (división de la CNAE-09)</li>
+<li>Tamaño, medido por el número de asalariados en cada CC</li>
+</ul>
+<p>En los microdatos tenemos la variable <code>factotal</code> que es la ponderación que el INE dice que hay que usar a la hora de hacer estimaciones.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">media_ponderada =</span> <span class="fu">weighted.mean</span>(outcome, <span class="at">w =</span> factotal)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    )   </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   treatment media_ponderada</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;dbl&gt;           &lt;dbl&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1         0           1351.</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2         1           1799.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="modelo-lineal" class="level3">
+<h3 class="anchored" data-anchor-id="modelo-lineal">Modelo lineal</h3>
+<p>Pero sabemos que la media tal cual puede no ser un buen indicador, lo suyo sería <em>controlar</em> (condicionar) por otras variables, tales como el sexo, nivel de estudio, edad, años de antigüedad , tipo de jornada laboral, y cosas así.</p>
+<p>Hagámoslo, pero usando que tenemos pesos en la encuesta.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>disenno <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span><span class="dv">1</span>, <span class="at">weight =</span> <span class="sc">~</span>factotal, <span class="at">data =</span> ess)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Modelo simple dónde uso variables como edad, tipo contrato, área nuts, antigüedad, nivel de estudios, etc..</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mod_simple <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_simple)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; svyglm(formula = outcome ~ treatment + sexo + anos2 + estu + </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     cnace + cno1 + estrato2 + tipojor + anoanti + mesanti + tipocon + </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     nuts1, design = disenno)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Survey design:</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; svydesign(id = ~1, weight = ~factotal, data = ess)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Estimate Std. Error  t value Pr(&gt;|t|)    </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)  2267.4873    58.5408   38.733  &lt; 2e-16 ***</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment     112.7778     8.1697   13.804  &lt; 2e-16 ***</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sexo6        -158.0960     5.4276  -29.128  &lt; 2e-16 ***</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos202        21.0286    25.4780    0.825 0.409167    </span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos203       101.1315    25.4521    3.973 7.09e-05 ***</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos204       149.8967    25.3798    5.906 3.51e-09 ***</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos205       176.1458    25.6102    6.878 6.09e-12 ***</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos206        52.5466    27.0543    1.942 0.052106 .  </span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu2          29.6478    14.4793    2.048 0.040601 *  </span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu3          38.1183    14.3801    2.651 0.008031 ** </span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu4         142.3435    14.8437    9.590  &lt; 2e-16 ***</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu5         166.5131    15.9282   10.454  &lt; 2e-16 ***</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu6         265.4148    17.3323   15.313  &lt; 2e-16 ***</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu7         510.3787    18.1827   28.070  &lt; 2e-16 ***</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC1      -324.1132    25.8960  -12.516  &lt; 2e-16 ***</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC2      -278.7694    31.4639   -8.860  &lt; 2e-16 ***</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC3      -366.8802    28.5581  -12.847  &lt; 2e-16 ***</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC4      -107.0397    26.9400   -3.973 7.09e-05 ***</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC5      -252.2397    27.0669   -9.319  &lt; 2e-16 ***</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC6      -167.9342    26.4826   -6.341 2.28e-10 ***</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC7      -180.7201    28.5478   -6.330 2.45e-10 ***</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC8      -171.5305    25.6146   -6.697 2.14e-11 ***</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceD0       323.7104    36.5705    8.852  &lt; 2e-16 ***</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceE0      -282.7253    26.5709  -10.640  &lt; 2e-16 ***</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceF0      -222.3453    25.6119   -8.681  &lt; 2e-16 ***</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG1      -266.4662    27.1602   -9.811  &lt; 2e-16 ***</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG2      -409.9509    28.0075  -14.637  &lt; 2e-16 ***</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH1      -231.9251    27.2267   -8.518  &lt; 2e-16 ***</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH2      -288.5758    26.5848  -10.855  &lt; 2e-16 ***</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceI0      -314.6540    26.9575  -11.672  &lt; 2e-16 ***</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceJ0      -305.2619    27.9572  -10.919  &lt; 2e-16 ***</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceK0       -26.9416    29.4084   -0.916 0.359606    </span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceL0      -426.2992    31.8821  -13.371  &lt; 2e-16 ***</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceM0      -382.3510    26.5815  -14.384  &lt; 2e-16 ***</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceN0      -426.7819    26.7070  -15.980  &lt; 2e-16 ***</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceO0      -489.0672    26.5529  -18.419  &lt; 2e-16 ***</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceP0      -677.0378    28.3344  -23.895  &lt; 2e-16 ***</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceQ0      -417.2582    26.2085  -15.921  &lt; 2e-16 ***</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceR0      -446.4843    27.0788  -16.488  &lt; 2e-16 ***</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceS0      -441.9862    25.9167  -17.054  &lt; 2e-16 ***</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1B0       -564.2450    40.6680  -13.874  &lt; 2e-16 ***</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1C0       -581.5582    40.3270  -14.421  &lt; 2e-16 ***</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1D0       -772.4413    38.8858  -19.864  &lt; 2e-16 ***</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1E0       -964.0718    38.7102  -24.905  &lt; 2e-16 ***</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1F0       -963.2193    39.0883  -24.642  &lt; 2e-16 ***</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1G0       -944.6769    40.6941  -23.214  &lt; 2e-16 ***</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1H0      -1007.1839    39.2405  -25.667  &lt; 2e-16 ***</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1I0       -805.5218    41.4801  -19.419  &lt; 2e-16 ***</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1J0       -833.4489    50.5645  -16.483  &lt; 2e-16 ***</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1K0       -971.3301    39.7779  -24.419  &lt; 2e-16 ***</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1L0       -948.3725    38.9086  -24.374  &lt; 2e-16 ***</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1M0       -977.4409    38.9573  -25.090  &lt; 2e-16 ***</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1N0       -976.4017    40.1926  -24.293  &lt; 2e-16 ***</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1O0      -1009.1702    40.1926  -25.108  &lt; 2e-16 ***</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1P0      -1033.0883    39.0592  -26.449  &lt; 2e-16 ***</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1Q0       -981.9190    65.8301  -14.916  &lt; 2e-16 ***</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato21      25.7381    28.0871    0.916 0.359476    </span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato22     130.3521    28.3970    4.590 4.43e-06 ***</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato23     208.3260    28.3907    7.338 2.18e-13 ***</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato24     130.3223    29.7704    4.378 1.20e-05 ***</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipojor2     -593.8166     5.3784 -110.408  &lt; 2e-16 ***</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anoanti        12.3393     0.3434   35.929  &lt; 2e-16 ***</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; mesanti         2.0881     0.6091    3.428 0.000608 ***</span></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipocon2     -119.7352     5.0449  -23.734  &lt; 2e-16 ***</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts12        139.1728     8.4611   16.449  &lt; 2e-16 ***</span></span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts13         97.8708     9.3378   10.481  &lt; 2e-16 ***</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts14         -4.8016     7.8750   -0.610 0.542040    </span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts15        104.8487     7.5335   13.918  &lt; 2e-16 ***</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts16         48.8032     8.2790    5.895 3.76e-09 ***</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts17         17.5482    10.3777    1.691 0.090848 .  </span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 373331.4)</span></span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y el coeficiente asociaso al sector público indica que se gana en media unos 112 euros más que en el sector privado, según este modelo.</p>
+<p>¿Cuánto sería para alguien que trabaja a jornada completa, nivel de estudios superior o igual a licenciado?</p>
+<p>Para eso podemos hacer lo que se conoce como una “intervención”, que es crear dos conjuntos de datos copias del original, con la diferencia de que en uno todo el mundo es del sector privado y en el otro todos del sector público y comparamos las medias estimadas de salario neto que nos da el modelo para el subgrupo de población que queramos.</p>
+<p>A esto se le conoce por los modernos como un <strong>S-learner</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ess_fake_publico  <span class="ot">&lt;-</span> ess  </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>ess_fake_publico<span class="sc">$</span>treatment  <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>estim_publico <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_simple, <span class="at">newdata =</span> ess_fake_publico <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>  ) )</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>ess_fake_privado <span class="ot">&lt;-</span> ess </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>ess_fake_privado<span class="sc">$</span>treatment  <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>estim_privado <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_simple, <span class="at">newdata =</span> ess_fake_privado <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) )</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_publico)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2516.276</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_privado)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2403.498</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>(s_learner_with_pond <span class="ot">&lt;-</span> <span class="fu">mean</span>(estim_publico) <span class="sc">-</span> <span class="fu">mean</span>(estim_privado))</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 112.7778</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y coincide con el coeficiente que daba el modelo. Y eso es así porque no he metido interacciones en el modelo. Si metemos una simple interacción entre ser del sector público y privado con la zona Nuts1.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(nuts1) <span class="sc">|&gt;</span>  </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 2</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # Groups:   nuts1 [7]</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   nuts1                       n</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr+lbl&gt;               &lt;int&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 [NOROESTE]            24806</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 [NORESTE]             33624</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 3 [COMUNIDAD DE MADRID] 34269</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 4 [CENTRO]              26428</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 5 [ESTE]                58852</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 6 [SUR]                 29413</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 7 [CANARIAS]             9334</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mod_inter_con_nuts <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment<span class="sc">*</span> nuts1 <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon , <span class="at">design =</span> disenno)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_inter_con_nuts)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; svyglm(formula = outcome ~ treatment * nuts1 + sexo + anos2 + </span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     estu + cnace + cno1 + estrato2 + tipojor + anoanti + mesanti + </span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     tipocon, design = disenno)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Survey design:</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; svydesign(id = ~1, weight = ~factotal, data = ess)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Estimate Std. Error  t value Pr(&gt;|t|)    </span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)       2267.0375    58.7580   38.583  &lt; 2e-16 ***</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment          139.5808    16.4879    8.466  &lt; 2e-16 ***</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts12             136.3734     9.6420   14.144  &lt; 2e-16 ***</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts13             109.8222    10.5875   10.373  &lt; 2e-16 ***</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts14             -13.0969     8.7817   -1.491 0.135862    </span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts15             115.8699     8.4975   13.636  &lt; 2e-16 ***</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts16              50.2008     9.4214    5.328 9.92e-08 ***</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts17              11.3094    11.6282    0.973 0.330765    </span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sexo6             -157.8517     5.4260  -29.092  &lt; 2e-16 ***</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos202             22.9645    25.5775    0.898 0.369272    </span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos203            103.1094    25.5532    4.035 5.46e-05 ***</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos204            151.6792    25.4825    5.952 2.65e-09 ***</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos205            177.3203    25.7096    6.897 5.32e-12 ***</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos206             53.6148    27.1482    1.975 0.048282 *  </span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu2               29.8615    14.4816    2.062 0.039207 *  </span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu3               37.3601    14.3817    2.598 0.009384 ** </span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu4              142.6627    14.8458    9.610  &lt; 2e-16 ***</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu5              167.2457    15.9296   10.499  &lt; 2e-16 ***</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu6              264.4340    17.3311   15.258  &lt; 2e-16 ***</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu7              510.9210    18.1818   28.101  &lt; 2e-16 ***</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC1           -322.4719    25.8565  -12.472  &lt; 2e-16 ***</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC2           -277.8307    31.4386   -8.837  &lt; 2e-16 ***</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC3           -368.1116    28.5083  -12.912  &lt; 2e-16 ***</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC4           -107.5481    26.8992   -3.998 6.38e-05 ***</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC5           -251.5735    27.0238   -9.309  &lt; 2e-16 ***</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC6           -165.5994    26.4505   -6.261 3.84e-10 ***</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC7           -179.9980    28.5076   -6.314 2.72e-10 ***</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC8           -170.7310    25.5703   -6.677 2.45e-11 ***</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceD0            323.6055    36.5367    8.857  &lt; 2e-16 ***</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceE0           -281.1503    26.5217  -10.601  &lt; 2e-16 ***</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceF0           -221.8244    25.5641   -8.677  &lt; 2e-16 ***</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG1           -266.6874    27.1071   -9.838  &lt; 2e-16 ***</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG2           -410.0799    27.9517  -14.671  &lt; 2e-16 ***</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH1           -228.7886    27.1892   -8.415  &lt; 2e-16 ***</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH2           -287.2581    26.5307  -10.827  &lt; 2e-16 ***</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceI0           -314.4745    26.9273  -11.679  &lt; 2e-16 ***</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceJ0           -307.8448    27.9093  -11.030  &lt; 2e-16 ***</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceK0            -25.9796    29.3654   -0.885 0.376318    </span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceL0           -428.7358    31.8459  -13.463  &lt; 2e-16 ***</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceM0           -382.9944    26.5201  -14.442  &lt; 2e-16 ***</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceN0           -427.5663    26.6470  -16.046  &lt; 2e-16 ***</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceO0           -491.1736    26.4855  -18.545  &lt; 2e-16 ***</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceP0           -679.4070    28.3151  -23.995  &lt; 2e-16 ***</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceQ0           -418.4000    26.1469  -16.002  &lt; 2e-16 ***</span></span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceR0           -446.9767    27.0305  -16.536  &lt; 2e-16 ***</span></span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceS0           -441.7225    25.8682  -17.076  &lt; 2e-16 ***</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1B0            -563.9700    40.6603  -13.870  &lt; 2e-16 ***</span></span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1C0            -580.4722    40.3078  -14.401  &lt; 2e-16 ***</span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1D0            -771.5835    38.8634  -19.854  &lt; 2e-16 ***</span></span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1E0            -963.6523    38.6908  -24.907  &lt; 2e-16 ***</span></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1F0            -962.4620    39.0754  -24.631  &lt; 2e-16 ***</span></span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1G0            -943.1722    40.6791  -23.186  &lt; 2e-16 ***</span></span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1H0           -1006.9339    39.2172  -25.676  &lt; 2e-16 ***</span></span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1I0            -799.1017    41.4442  -19.281  &lt; 2e-16 ***</span></span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1J0            -833.4729    50.5531  -16.487  &lt; 2e-16 ***</span></span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1K0            -970.9199    39.7730  -24.412  &lt; 2e-16 ***</span></span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1L0            -946.7735    38.8851  -24.348  &lt; 2e-16 ***</span></span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1M0            -975.6476    38.9286  -25.062  &lt; 2e-16 ***</span></span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1N0            -974.9346    40.1732  -24.268  &lt; 2e-16 ***</span></span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1O0           -1008.8982    40.1716  -25.115  &lt; 2e-16 ***</span></span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1P0           -1032.8826    39.0379  -26.458  &lt; 2e-16 ***</span></span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1Q0            -941.5737    66.0825  -14.248  &lt; 2e-16 ***</span></span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato21           18.7235    28.1838    0.664 0.506476    </span></span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato22          122.1463    28.5034    4.285 1.83e-05 ***</span></span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato23          201.3305    28.4886    7.067 1.59e-12 ***</span></span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato24          126.1192    29.8559    4.224 2.40e-05 ***</span></span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipojor2          -593.1639     5.3768 -110.318  &lt; 2e-16 ***</span></span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anoanti             12.3334     0.3434   35.921  &lt; 2e-16 ***</span></span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; mesanti              2.0871     0.6094    3.425 0.000615 ***</span></span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipocon2          -119.0692     5.0451  -23.601  &lt; 2e-16 ***</span></span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts12    15.2013    19.3060    0.787 0.431056    </span></span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts13   -71.6951    20.4396   -3.508 0.000452 ***</span></span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts14    27.4429    19.1259    1.435 0.151329    </span></span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts15   -66.6916    17.9164   -3.722 0.000197 ***</span></span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts16    -8.9706    19.3186   -0.464 0.642398    </span></span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment:nuts17    39.0070    25.1314    1.552 0.120634    </span></span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 373097.8)</span></span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Estimamos diferencias entre sector público y privado para Madrid y Andalucía, para un hombre a jornada completa y con estudios de licenciatura o superior.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>estim_publico_madrid <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_publico <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span> , nuts1 <span class="sc">==</span> <span class="st">"3"</span> ) )</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>estim_privado_madrid <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_privado <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"3"</span>) )</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_publico_madrid)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2533.962</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_privado_madrid)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2466.076</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>(s_learner_with_pond_madrid <span class="ot">&lt;-</span> <span class="fu">mean</span>(estim_publico_madrid) <span class="sc">-</span> <span class="fu">mean</span>(estim_privado_madrid))</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 67.88572</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>estim_publico_sur <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_publico <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span> , nuts1 <span class="sc">==</span> <span class="st">"1"</span> ) )</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>estim_privado_sur <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_privado <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"1"</span>) )</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_publico_sur)</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2449.94</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(estim_privado_sur)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2310.359</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>(s_learner_with_pond_sur <span class="ot">&lt;-</span> <span class="fu">mean</span>(estim_publico_sur) <span class="sc">-</span> <span class="fu">mean</span>(estim_privado_sur))</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 139.5808</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Bueno, pues según esto, parece que para ese perfil, dónde se ha tenido en cuenta edad, años de antigüedad y demás, se gana un poco más en el sector público que en el privado, aunque esa diferencia es mayor en el Sur que en Madrid.</p>
+</section>
+</section>
+<section id="t--learner" class="level2">
+<h2 class="anchored" data-anchor-id="t--learner">T- learner</h2>
+<p>Otro de los metalearners empleados es el T-learner, ya explicado en post anteriores. Aquí vamos a usarlo sin tener en cuenta la ponderación de la encuesta.</p>
+<p>En el T-learner se ajusta un modelo para cuando sea sector público y otro para cuando sea sector privado y se ve la diferencia de las medias de sus estimaciones.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>modpublico <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo  <span class="sc">+</span> anos2  <span class="sc">+</span>  estu <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>modprivado <span class="ot">&lt;-</span>  <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo <span class="sc">+</span>  anos2  <span class="sc">+</span>  estu  <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>ess_sub <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># t-learner</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>(t_learner <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">predict</span>(modpublico, ess_sub)) <span class="sc">-</span> </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(modprivado, ess_sub)) )</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -175.951</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>ess_sub_madrid <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"3"</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co"># t-learner</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>(t_learner_madrid <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">predict</span>(modpublico, ess_sub_madrid)) <span class="sc">-</span> </span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(modprivado, ess_sub_madrid)) )</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -296.4373</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>ess_sub_sur <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"1"</span>)</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co"># t-learner</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>(t_learner_sur <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">predict</span>(modpublico, ess_sub_sur)) <span class="sc">-</span> </span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(modprivado, ess_sub_sur)) )</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -159.0581</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>En este caso, nos sale que se ganaría más en el sector público que en el privado. ¿Con qué nos quedamos?</p>
+</section>
+<section id="x-learner" class="level2">
+<h2 class="anchored" data-anchor-id="x-learner">X-learner</h2>
+<p>Ya expliqué en su día en que consiste un <a href="#x-learner">X-learner</a> (../2020/12/30/y-si-parte-ii/#x-learner)</p>
+<p>Básicamente, usas el modelo ajustado con treatment = 1 para predecir las observaciones con treatment = 0 y al revés en un intento de estimar el <em>potential outcome</em>. Luego haces dos modelos para modelar las diferencias entre el <em>outcome</em> y las predicciones anteriores y otro modelo de propensity score que se usará para ponderar esas dos predicciones.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu  <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Usamos modelo 1 para estimar cuando W=0 y el modelo 2 para estimar cuando W = 1</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Con el viejo R-base sería </span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>Difer[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>] <span class="ot">&lt;-</span> ess<span class="sc">$</span>outcome[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>] <span class="sc">-</span> <span class="fu">predict</span>(m1, ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, <span class="fu">c</span>(<span class="st">"outcome"</span>, <span class="st">"Difer"</span>)])</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   outcome Difer</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    302. -267.</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2   1181. -263.</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3   1314. -784.</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4   1210. -285.</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5   1152. -201.</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6   1184. -237.</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>Difer[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>] <span class="ot">&lt;-</span> ess<span class="sc">$</span>outcome[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>] <span class="sc">-</span> <span class="fu">predict</span>(m2, ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, <span class="fu">c</span>(<span class="st">"outcome"</span>, <span class="st">"Difer"</span>)])</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   outcome  Difer</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   2112.  288. </span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2   1989. -405. </span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3   2183.  -36.2</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4   1954. -212. </span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5   1779. -483. </span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6   1738. -447.</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Modelamos las diferencias</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Difer <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>m4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Difer <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Combinamos</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>glm1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(treatment <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess, <span class="at">family=</span> binomial)</span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>pesos <span class="ot">&lt;-</span> <span class="fu">predict</span>(glm1, ess, <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>combinado <span class="ot">&lt;-</span> ess<span class="sc">$</span>pesos <span class="sc">*</span> <span class="fu">predict</span>(m4, ess) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>ess<span class="sc">$</span>pesos) <span class="sc">*</span> <span class="fu">predict</span>(m3, ess) </span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ess[, <span class="fu">c</span>(<span class="st">"outcome"</span>, <span class="st">"treatment"</span>,<span class="st">"Difer"</span>, <span class="st">"pesos"</span>, <span class="st">"combinado"</span>)])</span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 5</span></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   outcome treatment Difer  pesos combinado</span></span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    302.         0 -267. 0.111     -254. </span></span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2   1181.         0 -263. 0.0238     125. </span></span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3   1314.         0 -784. 0.0591      93.2</span></span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4   1210.         0 -285. 0.0332      74.0</span></span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5   1152.         0 -201. 0.0107     -19.7</span></span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6   1184.         0 -237. 0.0201     -62.1</span></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>(x_learner <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -228.745</span></span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>(x_learner_madrid <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1<span class="sc">==</span><span class="st">"3"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
+<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
+<span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
+<span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -501.2355</span></span>
+<span id="cb16-82"><a href="#cb16-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-83"><a href="#cb16-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-84"><a href="#cb16-84" aria-hidden="true" tabindex="-1"></a>(x_learner_sur <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
+<span id="cb16-85"><a href="#cb16-85" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1<span class="sc">==</span><span class="st">"1"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-86"><a href="#cb16-86" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
+<span id="cb16-87"><a href="#cb16-87" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-88"><a href="#cb16-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-89"><a href="#cb16-89" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-90"><a href="#cb16-90" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
+<span id="cb16-91"><a href="#cb16-91" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
+<span id="cb16-92"><a href="#cb16-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -55.67715</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="doubly-robust-estimator" class="level2">
+<h2 class="anchored" data-anchor-id="doubly-robust-estimator">Doubly robust estimator</h2>
+<p>Con idea parecida al X-learner , en el sentido de mezclar las estrategias de usar Inverse probability weighting y el de hacer un modelo de la respuesta condicionando por los counfounders.</p>
+<p>De nuevo, al igual que con el T-Learner o el X-Learner no vamos a tener en cuenta la variable de ponderación de casos.</p>
+<p>El estimador sería algo así como</p>
+<p><span id="eq-dre"><span class="math display">\[\dfrac{1}{n} \sum_{i=1}^n \left[ \dfrac{Y_i \cdot A_i - \color{red}{ \left(A_i -\pi(X_i)\right) \mu(X_i, A_i)})} {\pi(X_i)}  - \dfrac{Y_i \cdot (1-A_i) - \color{red}{ \left(A_i -\pi(X_i)\right) \mu(X_i,A_i)})} {1-\pi(X_i)}  \right ] \tag{1}\]</span></span></p>
+<p>Dónde <span class="math inline">\(\mu\)</span> hace referencia al modelo para estimar el <em>outcome</em> y <span class="math inline">\(\pi\)</span> al modelo de propensity score.</p>
+<p>Este <em>Doubly robust estimator</em> es una combinación entre usar inverse probability weighting y el modelo de la media del outcome. Este estimador suele ser consistnete si al menos uno de los dos modelos es correcto. A la expresión coloreda en rojo se le denomina <em>augmented IPW estimator</em></p>
+<p>En código es bastante sencillo.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dr_estimator <span class="ot">&lt;-</span> <span class="cf">function</span>(data, prop_model, mean_model){</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">prob =</span> <span class="fu">predict</span>(prop_model, <span class="at">newdata =</span> data, <span class="at">type =</span> <span class="st">"response"</span>),</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">pred =</span> <span class="fu">predict</span>(mean_model, <span class="at">newdata =</span> data, <span class="at">type =</span> <span class="st">"response"</span>), </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">augm =</span> (treatment <span class="sc">-</span> prob) <span class="sc">*</span> pred </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summarise</span>(</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">EYpublico =</span> <span class="fu">mean</span>((outcome <span class="sc">*</span> treatment <span class="sc">-</span>augm) <span class="sc">/</span> prob),</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">EYprivado=</span> <span class="fu">mean</span>((outcome <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> treatment) <span class="sc">-</span> augm) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> prob))</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>)  <span class="sc">%&gt;%</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">dre =</span> EYpublico <span class="sc">-</span> EYprivado)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y si usamos ese estimador tenemos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>prop_model  <span class="ot">&lt;-</span> <span class="fu">glm</span>(treatment <span class="sc">~</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess, <span class="at">family =</span> binomial)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>mean_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1 , <span class="at">data =</span> ess, <span class="at">family =</span> gaussian)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(prop_model)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; glm(formula = treatment ~ sexo + anos2 + cnace + cno1 + estrato2 + </span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     estu + tipojor + anoanti + mesanti + tipocon + nuts1, family = binomial, </span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     data = ess)</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) -8.090e+00  5.934e-01 -13.634  &lt; 2e-16 ***</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sexo6        2.674e-01  2.116e-02  12.637  &lt; 2e-16 ***</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos202      8.244e-01  5.243e-01   1.572 0.115866    </span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos203      1.488e+00  5.233e-01   2.844 0.004459 ** </span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos204      1.817e+00  5.233e-01   3.473 0.000515 ***</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos205      1.981e+00  5.235e-01   3.785 0.000154 ***</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos206      2.064e+00  5.242e-01   3.937 8.24e-05 ***</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC1     -2.069e+00  1.909e-01 -10.835  &lt; 2e-16 ***</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC2     -2.340e+00  2.854e-01  -8.200 2.41e-16 ***</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC3      4.823e-01  1.773e-01   2.720 0.006533 ** </span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC4     -1.680e+01  1.053e+02  -0.160 0.873244    </span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC5     -1.634e+01  1.897e+02  -0.086 0.931349    </span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC6     -2.705e+00  2.597e-01 -10.416  &lt; 2e-16 ***</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC7     -1.649e+01  1.280e+02  -0.129 0.897495    </span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC8     -6.740e-01  1.545e-01  -4.363 1.28e-05 ***</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceD0     -5.031e+00  7.223e-01  -6.964 3.30e-12 ***</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceE0      1.948e+00  1.483e-01  13.139  &lt; 2e-16 ***</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceF0      2.271e-01  1.511e-01   1.503 0.132789    </span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG1     -1.622e+01  1.124e+02  -0.144 0.885252    </span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG2     -1.600e+01  9.413e+01  -0.170 0.865012    </span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH1      1.437e+00  1.507e-01   9.534  &lt; 2e-16 ***</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH2      2.936e+00  1.482e-01  19.808  &lt; 2e-16 ***</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceI0     -7.434e-01  1.783e-01  -4.170 3.04e-05 ***</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceJ0      3.013e-01  1.472e-01   2.047 0.040683 *  </span></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceK0      1.752e-02  1.484e-01   0.118 0.905995    </span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceL0      6.883e-01  1.787e-01   3.852 0.000117 ***</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceM0      1.066e+00  1.455e-01   7.326 2.38e-13 ***</span></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceN0     -7.697e-01  1.550e-01  -4.966 6.85e-07 ***</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceO0      2.246e+01  9.488e+01   0.237 0.812845    </span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceP0      2.748e+00  1.487e-01  18.482  &lt; 2e-16 ***</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceQ0      2.013e+00  1.464e-01  13.750  &lt; 2e-16 ***</span></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceR0      1.759e+00  1.487e-01  11.834  &lt; 2e-16 ***</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceS0      5.370e-01  1.554e-01   3.455 0.000550 ***</span></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1B0       1.487e+00  6.226e-02  23.887  &lt; 2e-16 ***</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1C0       8.397e-01  5.779e-02  14.529  &lt; 2e-16 ***</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1D0       4.886e-01  5.826e-02   8.386  &lt; 2e-16 ***</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1E0       3.641e-01  6.314e-02   5.767 8.08e-09 ***</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1F0       2.401e-02  6.783e-02   0.354 0.723379    </span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1G0      -2.950e-01  1.191e-01  -2.476 0.013269 *  </span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1H0       4.008e-01  6.743e-02   5.944 2.79e-09 ***</span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1I0       5.683e-01  1.077e-01   5.277 1.31e-07 ***</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1J0       1.599e+00  1.437e-01  11.121  &lt; 2e-16 ***</span></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1K0       4.359e-01  9.292e-02   4.691 2.72e-06 ***</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1L0       2.333e-01  7.777e-02   2.999 0.002705 ** </span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1M0      -8.548e-01  1.435e-01  -5.956 2.59e-09 ***</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1N0       2.546e-01  7.800e-02   3.264 0.001098 ** </span></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1O0       3.076e-01  7.608e-02   4.043 5.27e-05 ***</span></span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1P0      -8.458e-01  9.808e-02  -8.624  &lt; 2e-16 ***</span></span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1Q0       3.002e+00  1.482e+03   0.002 0.998384    </span></span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato21   -9.996e-01  2.206e-01  -4.531 5.87e-06 ***</span></span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato22    9.719e-02  2.202e-01   0.441 0.658908    </span></span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato23    9.132e-01  2.202e-01   4.147 3.37e-05 ***</span></span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato24    5.801e-01  2.244e-01   2.585 0.009724 ** </span></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu2        2.584e-01  1.589e-01   1.626 0.103944    </span></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu3        1.217e+00  1.575e-01   7.727 1.10e-14 ***</span></span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu4        1.253e+00  1.582e-01   7.917 2.43e-15 ***</span></span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu5        1.644e+00  1.600e-01  10.275  &lt; 2e-16 ***</span></span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu6        1.470e+00  1.607e-01   9.145  &lt; 2e-16 ***</span></span>
+<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu7        1.858e+00  1.603e-01  11.593  &lt; 2e-16 ***</span></span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipojor2    -1.526e+00  3.257e-02 -46.857  &lt; 2e-16 ***</span></span>
+<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anoanti      7.184e-02  1.209e-03  59.437  &lt; 2e-16 ***</span></span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; mesanti      3.078e-02  2.627e-03  11.718  &lt; 2e-16 ***</span></span>
+<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipocon2     1.800e+00  2.660e-02  67.697  &lt; 2e-16 ***</span></span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts12      -7.224e-02  3.819e-02  -1.891 0.058560 .  </span></span>
+<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts13      -5.637e-01  3.770e-02 -14.952  &lt; 2e-16 ***</span></span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts14       5.716e-01  3.905e-02  14.636  &lt; 2e-16 ***</span></span>
+<span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts15      -3.778e-01  3.500e-02 -10.795  &lt; 2e-16 ***</span></span>
+<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts16       3.272e-01  3.778e-02   8.660  &lt; 2e-16 ***</span></span>
+<span id="cb18-83"><a href="#cb18-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts17       1.661e-02  5.427e-02   0.306 0.759563    </span></span>
+<span id="cb18-84"><a href="#cb18-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb18-85"><a href="#cb18-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span id="cb18-86"><a href="#cb18-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-87"><a href="#cb18-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for binomial family taken to be 1)</span></span>
+<span id="cb18-88"><a href="#cb18-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-89"><a href="#cb18-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 193458  on 216725  degrees of freedom</span></span>
+<span id="cb18-90"><a href="#cb18-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual deviance:  76006  on 216657  degrees of freedom</span></span>
+<span id="cb18-91"><a href="#cb18-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AIC: 76144</span></span>
+<span id="cb18-92"><a href="#cb18-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-93"><a href="#cb18-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 18</span></span>
+<span id="cb18-94"><a href="#cb18-94" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mean_model)</span>
+<span id="cb18-95"><a href="#cb18-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-96"><a href="#cb18-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb18-97"><a href="#cb18-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; glm(formula = outcome ~ treatment + sexo + anos2 + cnace + cno1 + </span></span>
+<span id="cb18-98"><a href="#cb18-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     estrato2 + estu + tipojor + anoanti + mesanti + tipocon + </span></span>
+<span id="cb18-99"><a href="#cb18-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     nuts1, family = gaussian, data = ess)</span></span>
+<span id="cb18-100"><a href="#cb18-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-101"><a href="#cb18-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Estimate Std. Error  t value Pr(&gt;|t|)    </span></span>
+<span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)  2877.5791    61.1896   47.027  &lt; 2e-16 ***</span></span>
+<span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; treatment      17.9283     8.3590    2.145  0.03197 *  </span></span>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; sexo6        -240.4080     4.9123  -48.940  &lt; 2e-16 ***</span></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos202        22.1784    43.0544    0.515  0.60647    </span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos203        89.1187    42.8391    2.080  0.03750 *  </span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos204       178.3491    42.8356    4.164 3.13e-05 ***</span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos205       240.2115    42.9841    5.588 2.29e-08 ***</span></span>
+<span id="cb18-110"><a href="#cb18-110" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anos206        99.7613    43.5939    2.288  0.02211 *  </span></span>
+<span id="cb18-111"><a href="#cb18-111" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC1      -362.2154    26.7350  -13.548  &lt; 2e-16 ***</span></span>
+<span id="cb18-112"><a href="#cb18-112" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC2      -336.6893    29.3593  -11.468  &lt; 2e-16 ***</span></span>
+<span id="cb18-113"><a href="#cb18-113" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC3      -407.7262    33.1492  -12.300  &lt; 2e-16 ***</span></span>
+<span id="cb18-114"><a href="#cb18-114" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC4      -142.3327    26.9322   -5.285 1.26e-07 ***</span></span>
+<span id="cb18-115"><a href="#cb18-115" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC5      -320.6788    30.9230  -10.370  &lt; 2e-16 ***</span></span>
+<span id="cb18-116"><a href="#cb18-116" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC6      -214.7569    28.1272   -7.635 2.26e-14 ***</span></span>
+<span id="cb18-117"><a href="#cb18-117" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC7      -295.1496    27.9070  -10.576  &lt; 2e-16 ***</span></span>
+<span id="cb18-118"><a href="#cb18-118" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceC8      -304.6001    26.3723  -11.550  &lt; 2e-16 ***</span></span>
+<span id="cb18-119"><a href="#cb18-119" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceD0       315.2232    33.1870    9.498  &lt; 2e-16 ***</span></span>
+<span id="cb18-120"><a href="#cb18-120" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceE0      -368.5855    27.9188  -13.202  &lt; 2e-16 ***</span></span>
+<span id="cb18-121"><a href="#cb18-121" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceF0      -251.8171    26.4790   -9.510  &lt; 2e-16 ***</span></span>
+<span id="cb18-122"><a href="#cb18-122" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG1      -317.1349    27.2848  -11.623  &lt; 2e-16 ***</span></span>
+<span id="cb18-123"><a href="#cb18-123" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceG2      -443.6205    28.1035  -15.785  &lt; 2e-16 ***</span></span>
+<span id="cb18-124"><a href="#cb18-124" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH1       -24.2486    28.2536   -0.858  0.39076    </span></span>
+<span id="cb18-125"><a href="#cb18-125" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceH2      -252.9940    28.3037   -8.939  &lt; 2e-16 ***</span></span>
+<span id="cb18-126"><a href="#cb18-126" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceI0      -364.2829    27.7660  -13.120  &lt; 2e-16 ***</span></span>
+<span id="cb18-127"><a href="#cb18-127" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceJ0      -399.0452    26.5212  -15.046  &lt; 2e-16 ***</span></span>
+<span id="cb18-128"><a href="#cb18-128" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceK0      -184.2903    27.1146   -6.797 1.07e-11 ***</span></span>
+<span id="cb18-129"><a href="#cb18-129" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceL0      -376.1283    34.1175  -11.025  &lt; 2e-16 ***</span></span>
+<span id="cb18-130"><a href="#cb18-130" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceM0      -481.0621    26.1363  -18.406  &lt; 2e-16 ***</span></span>
+<span id="cb18-131"><a href="#cb18-131" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceN0      -465.0980    26.1408  -17.792  &lt; 2e-16 ***</span></span>
+<span id="cb18-132"><a href="#cb18-132" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceO0      -498.8197    27.9612  -17.840  &lt; 2e-16 ***</span></span>
+<span id="cb18-133"><a href="#cb18-133" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceP0      -785.3254    28.6574  -27.404  &lt; 2e-16 ***</span></span>
+<span id="cb18-134"><a href="#cb18-134" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceQ0      -448.4801    26.8000  -16.734  &lt; 2e-16 ***</span></span>
+<span id="cb18-135"><a href="#cb18-135" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceR0      -286.1541    27.6853  -10.336  &lt; 2e-16 ***</span></span>
+<span id="cb18-136"><a href="#cb18-136" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cnaceS0      -523.3793    28.0319  -18.671  &lt; 2e-16 ***</span></span>
+<span id="cb18-137"><a href="#cb18-137" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1B0      -1061.3503    16.4387  -64.564  &lt; 2e-16 ***</span></span>
+<span id="cb18-138"><a href="#cb18-138" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1C0      -1133.4003    13.6831  -82.832  &lt; 2e-16 ***</span></span>
+<span id="cb18-139"><a href="#cb18-139" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1D0      -1275.7747    13.3916  -95.267  &lt; 2e-16 ***</span></span>
+<span id="cb18-140"><a href="#cb18-140" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1E0      -1533.8695    14.7719 -103.837  &lt; 2e-16 ***</span></span>
+<span id="cb18-141"><a href="#cb18-141" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1F0      -1503.8142    15.1869  -99.020  &lt; 2e-16 ***</span></span>
+<span id="cb18-142"><a href="#cb18-142" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1G0      -1478.8524    17.2092  -85.934  &lt; 2e-16 ***</span></span>
+<span id="cb18-143"><a href="#cb18-143" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1H0      -1541.8639    16.5003  -93.444  &lt; 2e-16 ***</span></span>
+<span id="cb18-144"><a href="#cb18-144" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1I0      -1498.1010    20.0039  -74.890  &lt; 2e-16 ***</span></span>
+<span id="cb18-145"><a href="#cb18-145" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1J0      -1517.7995    36.9359  -41.093  &lt; 2e-16 ***</span></span>
+<span id="cb18-146"><a href="#cb18-146" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1K0      -1527.8727    18.7324  -81.563  &lt; 2e-16 ***</span></span>
+<span id="cb18-147"><a href="#cb18-147" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1L0      -1494.9651    15.1867  -98.439  &lt; 2e-16 ***</span></span>
+<span id="cb18-148"><a href="#cb18-148" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1M0      -1549.5391    16.7938  -92.269  &lt; 2e-16 ***</span></span>
+<span id="cb18-149"><a href="#cb18-149" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1N0      -1589.9336    17.9925  -88.367  &lt; 2e-16 ***</span></span>
+<span id="cb18-150"><a href="#cb18-150" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1O0      -1570.6894    16.5873  -94.692  &lt; 2e-16 ***</span></span>
+<span id="cb18-151"><a href="#cb18-151" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1P0      -1595.2569    16.1226  -98.945  &lt; 2e-16 ***</span></span>
+<span id="cb18-152"><a href="#cb18-152" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; cno1Q0      -1530.0462   138.3092  -11.063  &lt; 2e-16 ***</span></span>
+<span id="cb18-153"><a href="#cb18-153" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato21     -26.9047    30.6473   -0.878  0.38001    </span></span>
+<span id="cb18-154"><a href="#cb18-154" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato22      93.7567    30.8162    3.042  0.00235 ** </span></span>
+<span id="cb18-155"><a href="#cb18-155" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato23     189.6530    30.7961    6.158 7.36e-10 ***</span></span>
+<span id="cb18-156"><a href="#cb18-156" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estrato24      99.0138    33.0210    2.999  0.00271 ** </span></span>
+<span id="cb18-157"><a href="#cb18-157" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu2          17.6977    22.9002    0.773  0.43963    </span></span>
+<span id="cb18-158"><a href="#cb18-158" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu3          31.8206    22.8239    1.394  0.16326    </span></span>
+<span id="cb18-159"><a href="#cb18-159" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu4         146.0304    23.0680    6.330 2.45e-10 ***</span></span>
+<span id="cb18-160"><a href="#cb18-160" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu5         188.1811    23.7531    7.922 2.34e-15 ***</span></span>
+<span id="cb18-161"><a href="#cb18-161" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu6         340.0061    24.1380   14.086  &lt; 2e-16 ***</span></span>
+<span id="cb18-162"><a href="#cb18-162" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; estu7         629.4307    23.9967   26.230  &lt; 2e-16 ***</span></span>
+<span id="cb18-163"><a href="#cb18-163" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipojor2     -632.4750     6.1453 -102.921  &lt; 2e-16 ***</span></span>
+<span id="cb18-164"><a href="#cb18-164" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; anoanti        13.7806     0.2783   49.511  &lt; 2e-16 ***</span></span>
+<span id="cb18-165"><a href="#cb18-165" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; mesanti         1.9103     0.5911    3.232  0.00123 ** </span></span>
+<span id="cb18-166"><a href="#cb18-166" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tipocon2     -105.5518     5.9315  -17.795  &lt; 2e-16 ***</span></span>
+<span id="cb18-167"><a href="#cb18-167" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts12        112.1766     8.2021   13.677  &lt; 2e-16 ***</span></span>
+<span id="cb18-168"><a href="#cb18-168" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts13        159.6686     8.4096   18.986  &lt; 2e-16 ***</span></span>
+<span id="cb18-169"><a href="#cb18-169" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts14         -0.7868     8.6804   -0.091  0.92778    </span></span>
+<span id="cb18-170"><a href="#cb18-170" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts15        115.6430     7.5034   15.412  &lt; 2e-16 ***</span></span>
+<span id="cb18-171"><a href="#cb18-171" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts16         70.6160     8.4813    8.326  &lt; 2e-16 ***</span></span>
+<span id="cb18-172"><a href="#cb18-172" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; nuts17         13.0092    12.1986    1.066  0.28622    </span></span>
+<span id="cb18-173"><a href="#cb18-173" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb18-174"><a href="#cb18-174" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span id="cb18-175"><a href="#cb18-175" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-176"><a href="#cb18-176" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 955907.9)</span></span>
+<span id="cb18-177"><a href="#cb18-177" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-178"><a href="#cb18-178" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 3.0241e+11  on 216725  degrees of freedom</span></span>
+<span id="cb18-179"><a href="#cb18-179" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual deviance: 2.0710e+11  on 216656  degrees of freedom</span></span>
+<span id="cb18-180"><a href="#cb18-180" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AIC: 3599521</span></span>
+<span id="cb18-181"><a href="#cb18-181" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb18-182"><a href="#cb18-182" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span>
+<span id="cb18-183"><a href="#cb18-183" aria-hidden="true" tabindex="-1"></a>(dre_estimator <span class="ot">&lt;-</span>  ess  <span class="sc">%&gt;%</span></span>
+<span id="cb18-184"><a href="#cb18-184" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-185"><a href="#cb18-185" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dr_estimator</span>(prop_model, mean_model) <span class="sc">|&gt;</span> </span>
+<span id="cb18-186"><a href="#cb18-186" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(dre))</span>
+<span id="cb18-187"><a href="#cb18-187" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 153.843</span></span>
+<span id="cb18-188"><a href="#cb18-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-189"><a href="#cb18-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-190"><a href="#cb18-190" aria-hidden="true" tabindex="-1"></a>(dre_estimator_madrid <span class="ot">&lt;-</span>  ess  <span class="sc">%&gt;%</span></span>
+<span id="cb18-191"><a href="#cb18-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"3"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-192"><a href="#cb18-192" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dr_estimator</span>(prop_model, mean_model) <span class="sc">|&gt;</span> </span>
+<span id="cb18-193"><a href="#cb18-193" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(dre))</span>
+<span id="cb18-194"><a href="#cb18-194" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 168.0452</span></span>
+<span id="cb18-195"><a href="#cb18-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-196"><a href="#cb18-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-197"><a href="#cb18-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-198"><a href="#cb18-198" aria-hidden="true" tabindex="-1"></a>(dre_estimator_sur <span class="ot">&lt;-</span>  ess  <span class="sc">%&gt;%</span></span>
+<span id="cb18-199"><a href="#cb18-199" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dr_estimator</span>(prop_model, mean_model) <span class="sc">|&gt;</span> </span>
+<span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(dre))</span>
+<span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 183.358</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="resumiendo" class="level2">
+<h2 class="anchored" data-anchor-id="resumiendo">Resumiendo</h2>
+<p>El S-learner usando ponderación de observaciones y el doubly robust estimator (sin usar ponderaciones) nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner y el x-learner nos dicen lo contrario.</p>
+<p>Así que, no me queda claro la respueta a la pregunta inicial.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">s_learner_with_pond_madrid =</span> s_learner_with_pond_madrid,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">s_learner_with_pond_sur =</span> s_learner_with_pond_sur,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">t_learner_madrid=</span> t_learner_madrid, <span class="at">t_learner_sur =</span> t_learner_sur, </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">x_learner_madrid =</span> x_learner_madrid, <span class="at">x_learner_sur =</span> x_learner_sur, </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">dre_estimator_madrid =</span> dre_estimator_madrid, <span class="at">dre_estimator_sur =</span> dre_estimator_sur )</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>res <span class="sc">|&gt;</span> </span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"estimador"</span>, <span class="at">values_to =</span> <span class="st">"valor"</span>) </span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   estimador                   valor</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                       &lt;dbl&gt;</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 s_learner_with_pond_madrid   67.9</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 s_learner_with_pond_sur     140. </span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 t_learner_madrid           -296. </span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 t_learner_sur              -159. </span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 x_learner_madrid           -501. </span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 x_learner_sur               -55.7</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dre_estimator_madrid        168. </span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 dre_estimator_sur           183.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="coda" class="level2">
+<h2 class="anchored" data-anchor-id="coda">Coda</h2>
+<ul>
+<li>Es complicado dar una respuesta concluyente a la pregunta inicial.</li>
+<li>Mi objetivo era sólo contaros algunas formas de estimar “efectos causales”, o si es gusta más, diferencias entre grupos condicionando por variables</li>
+<li>La inferencia causal es complicada, ha de sustentarse en un análisis teórico previo. Yo he decidido que no había colliders por ejemplo</li>
+<li>He obviado variables que podrían influir tanto en la variable respuesta como en el tratamiento (sector público o privado), pero estos son datos reales, no una simulación ad hoc, y en el mundo real tienes que tomar decisiones y apechugar con ellas.</li>
+<li>Para escribir este post lo he hecho con Rstudio y con el github copilot activado y la verdad es que ayuda bastante, incluso a completar las fórmulas en latex.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
