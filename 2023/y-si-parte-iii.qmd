@@ -1,0 +1,449 @@
+---
+title:  ¿Y si ... ? Parte III 
+date: '2023-09-10'
+date-modified: last-modified
+categories:
+    - 2023
+    - estadística
+    - causal inference
+ 
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+editor_options:
+  markdown:
+    wrap: none
+---
+
+## Introducción
+
+Ya estuve hablando anteriormente de los Metalearners o como se diga [aquí](../2020/11/15/y-si-parte-i/) y [aquí](../2020/12/30/y-si-parte-ii/). Pero ahora vamos a ver si lo utilizamos en unos datos reales.
+
+La [encuestas de estructura salarial](https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736177025&menu=resultados&idp=1254735976596#!tabs-1254736061996) se ha usado muchas veces para ver la brecha salarial entre hombre y mujeres. No obstante yo me hago la pregunta de si es posible y cómo estimar la brecha salarial entre sector público y sector privado.
+
+¿Cómo podríamos hacerlo? Está claro que son dos sectores muy distintos y que comparar las medias, tal y como hacen (mal) algunos para comparar brecha salarial de género, no es lo más adecuado.
+
+Mi idea aquí es contar un poco como lo haríamos **estilo compadre** usando un modelo lineal de toda la vida, luego ver como se haría utilizando *metalearners* y también usando *doubly robust estimator* .
+
+## Datos
+
+Vamos a utilizar los microdatos de la [encuestas de estructura salarial](https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736177025&menu=resultados&idp=1254735976596#!tabs-1254736061996) del INE. A pesar de ser una encuesta anual, los últimos resultados publicados son de 2021 y los últimos microdatos disponibles los de 2018. La verdad es que me gustaría entender por qué el INE publica tan tarde los microdatos 😥. La [nota de prensa](https://www.ine.es/prensa/ees_2021.pdf) con los resultados de 2021 es del 20 de junio de 2023. Y si ya tienen resultados de 2021, ¿por qué los últimos microdatos disponibles son los de hace 5 años?
+
+Sea como fuere vamos a lo nuestro.
+
+```{r libraries}
+library(tidyverse)
+library(haven) # Para leer los datos de SPSS
+
+
+library(survey) # para obtener estimadores correctos por ser una muestra
+library(sjPlot) # plot de los modelos, 
+# library(causact) # usar alguna cosa de numpyro desde R , quiero probar este paquete
+```
+
+```{r read_data}
+
+ess <- read_spss(here::here("data/INE/datos_2018/SPSS/EES_2018.sav"))
+ess <- janitor::clean_names(ess)
+
+head(ess)
+
+```
+
+Dejo enlace al diseño del registro para ver qué es cada variable en los microdatos.
+
+[{{< fa table >}} `dis_registro`](https://docs.google.com/spreadsheets/d/1H_wcDX_SfXQmpLyf0Kj9lKvwMhph7Gv7/edit?usp=sharing&ouid=110673697043754248174&rtpof=true&sd=true)
+
+Lo que quiero comparar es el salario neto mensual, ¿por qué? porque me da la gana y porque en la docu del INE explican como se calcula el salario neto partiendo de los microdatos.
+
+```{r}
+
+ess <- ess |>
+  mutate(
+    diasmes    = drelabm - dsiespm2,
+    diasrelaba = drelabam * 30.42 + drelabad,
+    diasrelaba = ifelse(diasrelaba > 365, 365, diasrelaba),
+    diasano    = diasrelaba - dsiespa2 - dsiespa4,
+    salbase    = ifelse(siespm1 == "6", (31 / diasmes) * salbase, salbase),
+    comsal     = ifelse(siespm1 == "6", (31 / diasmes) * comsal, comsal),
+    comsaltt   = ifelse(siespm1 == "6", (31 / diasmes) * comsaltt, comsaltt),
+    salmes     = salbase + comsal + extraorm + phextra,
+    salmor     = salbase + comsal + phextra,
+    salneto    = salmes - cotiza - irpfmes,
+    salanual   = (365 / diasano) * (retrinoin + retriin + vespnoin + vespin),
+    salaor     = (365 / diasano) * ((retrinoin + retriin) - gextra),
+    vespnoin   = (365 / diasano) * vespnoin,
+    jmp1       = (jsp1 + jsp2 / 60) * 4.35 + hextra,
+    salhora    = salmes / jmp1
+  )
+
+```
+
+## Estimando cosas..
+
+La variable dónde se consigna si el sector es público o privado es `control`
+
+```{r}
+
+ess |> 
+    group_by(control) |>    
+    count()
+
+```
+
+Voy a crearme variable `treatment` **que valga 1 cuando sea sector público y 0 para el sector privado**
+
+```{r}
+ess$treatment = ess$control
+ess$treatment = ifelse(ess$control == "1", 1, 0)
+# también llamo outcome al salario neto
+ess$outcome = ess$salneto
+```
+
+### Group by
+
+Lo más simple , hacemos un group by y calculamos medias
+
+```{r}
+ess |> 
+    group_by(treatment) |>  
+    summarise(
+        mean = mean(outcome),
+        n = n()
+    )   
+```
+
+Así de primeras, pues parece que se gana más en el sector público que en el privado, pero ¡ojo! que la encuesta tiene una variable de ponderación, que el INE ha calculado para que los resultados sean representativos de la población. En la nota metodológica el INE dice lo siguiente sobre el plan de muestreo
+
+El procedimiento de selección aleatoria de unidades corresponde a un muestreo bietápico estratificado, donde las unidades de primera etapa son las cuentas de cotización a la Seguridad Social (CC), mientras que las de segunda etapa son los trabajadores (asalariados). En la primera etapa tanto el diseño muestral como la muestra obtenida de CC coincide con la ETCL (para una mayor información consultar la metodología de la ETCL). Las unidades de primera etapa se estratifican según las siguientes variables:
+
+-   Comunidad autónoma
+-   Rama de actividad económica (división de la CNAE-09)
+-   Tamaño, medido por el número de asalariados en cada CC
+
+En los microdatos tenemos la variable `factotal` que es la ponderación que el INE dice que hay que usar a la hora de hacer estimaciones.
+
+```{r}
+
+ess |> 
+    group_by(treatment) |>  
+    summarise(
+        media_ponderada = weighted.mean(outcome, w = factotal)
+    )   
+
+```
+
+### Modelo lineal
+
+Pero sabemos que la media tal cual puede no ser un buen indicador, lo suyo sería *controlar* (condicionar) por otras variables, tales como el sexo, nivel de estudio, edad, años de antigüedad , tipo de jornada laboral, y cosas así.
+
+Hagámoslo, pero usando que tenemos pesos en la encuesta.
+
+```{r}
+
+disenno <- svydesign(id = ~1, weight = ~factotal, data = ess)
+```
+
+Modelo simple dónde uso variables como edad, tipo contrato, área nuts, antigüedad, nivel de estudios, etc..
+
+```{r}
+mod_simple <- svyglm(outcome ~ treatment + sexo + anos2 +   estu + cnace + cno1 + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, design = disenno)
+```
+
+```{r}
+summary(mod_simple)
+
+
+```
+
+Y el coeficiente asociaso al sector público indica que se gana en media unos 112 euros más que en el sector privado, según este modelo.
+
+¿Cuánto sería para alguien que trabaja a jornada completa, nivel de estudios superior o igual a licenciado?
+
+Para eso podemos hacer lo que se conoce como una "intervención", que es crear dos conjuntos de datos copias del original, con la diferencia de que en uno todo el mundo es del sector privado y en el otro todos del sector público y comparamos las medias estimadas de salario neto que nos da el modelo para el subgrupo de población que queramos.
+
+A esto se le conoce por los modernos como un **S-learner**
+
+```{r}
+
+ess_fake_publico  <- ess  
+
+ess_fake_publico$treatment  <- 1
+
+estim_publico <- predict(mod_simple, newdata = ess_fake_publico |>  filter(tipojor == "1", estu == "7", sexo == "1"  ) )
+
+
+ess_fake_privado <- ess 
+
+ess_fake_privado$treatment  <- 0
+
+estim_privado <- predict(mod_simple, newdata = ess_fake_privado |>  filter(tipojor == "1", estu == "7", sexo == "1") )
+
+
+mean(estim_publico)
+mean(estim_privado)
+
+(s_learner_with_pond <- mean(estim_publico) - mean(estim_privado))
+
+```
+
+Y coincide con el coeficiente que daba el modelo. Y eso es así porque no he metido interacciones en el modelo. Si metemos una simple interacción entre ser del sector público y privado con la zona Nuts1.
+
+```{r}
+ess |> 
+    group_by(nuts1) |>  
+    count()
+```
+
+```{r}
+mod_inter_con_nuts <- svyglm(outcome ~ treatment* nuts1 + sexo + anos2 +   estu + cnace + cno1 + estrato2  + tipojor  + anoanti + mesanti + tipocon , design = disenno)
+
+summary(mod_inter_con_nuts)
+```
+
+Estimamos diferencias entre sector público y privado para Madrid y Andalucía, para un hombre a jornada completa y con estudios de licenciatura o superior.
+
+```{r}
+
+estim_publico_madrid <- predict(mod_inter_con_nuts, newdata = ess_fake_publico |>  filter(tipojor == "1", estu == "7", sexo == "1" , nuts1 == "3" ) )
+
+estim_privado_madrid <- predict(mod_inter_con_nuts, newdata = ess_fake_privado |>  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "3") )
+
+
+mean(estim_publico_madrid)
+mean(estim_privado_madrid)
+
+(s_learner_with_pond_madrid <- mean(estim_publico_madrid) - mean(estim_privado_madrid))
+
+
+
+estim_publico_sur <- predict(mod_inter_con_nuts, newdata = ess_fake_publico |>  filter(tipojor == "1", estu == "7", sexo == "1" , nuts1 == "1" ) )
+
+estim_privado_sur <- predict(mod_inter_con_nuts, newdata = ess_fake_privado |>  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "1") )
+
+
+mean(estim_publico_sur)
+mean(estim_privado_sur)
+
+(s_learner_with_pond_sur <- mean(estim_publico_sur) - mean(estim_privado_sur))
+
+```
+
+Bueno, pues según esto, parece que para ese perfil, dónde se ha tenido en cuenta edad, años de antigüedad y demás, se gana un poco más en el sector público que en el privado, aunque esa diferencia es mayor en el Sur que en Madrid.
+
+## T- learner
+
+Otro de los metalearners empleados es el T-learner, ya explicado en post anteriores. Aquí vamos a usarlo sin tener en cuenta la ponderación de la encuesta.
+
+En el T-learner se ajusta un modelo para cuando sea sector público y otro para cuando sea sector privado y se ve la diferencia de las medias de sus estimaciones.
+
+```{r}
+
+modpublico <- lm(outcome ~ sexo  + anos2  +  estu + cno1 + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==1, ])
+modprivado <-  lm(outcome ~ sexo +  anos2  +  estu  + cno1 + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==0, ])
+
+ess_sub <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1") 
+
+# t-learner
+(t_learner <- mean(predict(modpublico, ess_sub)) - 
+  mean(predict(modprivado, ess_sub)) )
+
+ess_sub_madrid <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "3")
+
+# t-learner
+(t_learner_madrid <- mean(predict(modpublico, ess_sub_madrid)) - 
+  mean(predict(modprivado, ess_sub_madrid)) )
+
+
+
+ess_sub_sur <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "1")
+
+# t-learner
+(t_learner_sur <- mean(predict(modpublico, ess_sub_sur)) - 
+  mean(predict(modprivado, ess_sub_sur)) )
+
+```
+
+En este caso, nos sale que se ganaría más en el sector público que en el privado. ¿Con qué nos quedamos?
+
+## X-learner
+
+Ya expliqué en su día en que consiste un [X-learner] (../2020/12/30/y-si-parte-ii/#x-learner)
+
+Básicamente, usas el modelo ajustado con treatment = 1 para predecir las observaciones con treatment = 0 y al revés en un intento de estimar el *potential outcome*. Luego haces dos modelos para modelar las diferencias entre el *outcome* y las predicciones anteriores y otro modelo de propensity score que se usará para ponderar esas dos predicciones.
+
+```{r}
+
+
+m1 <- lm(outcome ~ sexo   + anos2 +   estu + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==1, ])
+m2 <- lm(outcome ~ sexo   + anos2 +   estu  + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==0, ])
+
+
+# Usamos modelo 1 para estimar cuando W=0 y el modelo 2 para estimar cuando W = 1
+
+# Con el viejo R-base sería 
+ess$Difer[ess$treatment==0] <- ess$outcome[ess$treatment==0] - predict(m1, ess[ess$treatment==0, ])
+head(ess[ess$treatment==0, c("outcome", "Difer")])
+
+
+ess$Difer[ess$treatment==1] <- ess$outcome[ess$treatment==1] - predict(m2, ess[ess$treatment==1, ])
+head(ess[ess$treatment==1, c("outcome", "Difer")])
+
+# Modelamos las diferencias
+
+
+m3 <- lm(Difer ~ sexo   + anos2 +   estu + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==1, ])
+m4 <- lm(Difer ~ sexo   + anos2 +   estu + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess[ess$treatment==0, ])
+
+# Combinamos
+
+glm1 <- glm(treatment ~ sexo   + anos2 +   estu + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess, family= binomial)
+ess$pesos <- predict(glm1, ess, type = "response")
+
+
+
+ess$combinado <- ess$pesos * predict(m4, ess) + (1-ess$pesos) * predict(m3, ess) 
+
+head(ess[, c("outcome", "treatment","Difer", "pesos", "combinado")])
+
+(x_learner <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1") |> 
+  group_by(treatment)  %>%
+  summarise(mean = mean(outcome)) |> 
+  pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
+  mutate(
+    estim_xlearner = mean_1 - mean_0) |> 
+  pull(estim_xlearner))
+
+
+
+(x_learner_madrid <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1=="3") |> 
+  group_by(treatment)  %>%
+  summarise(mean = mean(outcome)) |> 
+  pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
+  mutate(
+    estim_xlearner = mean_1 - mean_0) |> 
+  pull(estim_xlearner))
+
+
+(x_learner_sur <- ess  %>% 
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1=="1") |> 
+  group_by(treatment)  %>%
+  summarise(mean = mean(outcome)) |> 
+  pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
+  mutate(
+    estim_xlearner = mean_1 - mean_0) |> 
+  pull(estim_xlearner))
+
+
+
+
+
+
+```
+
+## Doubly robust estimator
+
+Con idea parecida al X-learner , en el sentido de mezclar las estrategias de usar Inverse probability weighting y el de hacer un modelo de la respuesta condicionando por los counfounders.
+
+De nuevo, al igual que con el T-Learner o el X-Learner no vamos a tener en cuenta la variable de ponderación de casos.
+
+El estimador sería algo así como
+
+$$\dfrac{1}{n} \sum_{i=1}^n \left[ \dfrac{Y_i \cdot A_i - \color{red}{ \left(A_i -\pi(X_i)\right) \mu(X_i, A_i)})} {\pi(X_i)}  - \dfrac{Y_i \cdot (1-A_i) - \color{red}{ \left(A_i -\pi(X_i)\right) \mu(X_i,A_i)})} {1-\pi(X_i)}  \right ]$$ {#eq-dre}
+
+Dónde $\mu$ hace referencia al modelo para estimar el *outcome* y $\pi$ al modelo de propensity score.
+
+Este *Doubly robust estimator* es una combinación entre usar inverse probability weighting y el modelo de la media del outcome. Este estimador suele ser consistnete si al menos uno de los dos modelos es correcto. A la expresión coloreda en rojo se le denomina *augmented IPW estimator*
+
+En código es bastante sencillo.
+
+```{r}
+dr_estimator <- function(data, prop_model, mean_model){
+data %>% 
+mutate(
+  prob = predict(prop_model, newdata = data, type = "response"),
+  pred = predict(mean_model, newdata = data, type = "response"), 
+  augm = (treatment - prob) * pred 
+  ) %>%
+summarise(
+  EYpublico = mean((outcome * treatment -augm) / prob),
+  EYprivado= mean((outcome * (1 - treatment) - augm) / (1 - prob))
+)  %>%
+mutate(dre = EYpublico - EYprivado)
+}
+```
+
+Y si usamos ese estimador tenemos
+
+```{r}
+
+prop_model  <- glm(treatment ~  sexo + anos2+ cnace + cno1 + estrato2 +  estu + tipojor  + anoanti + mesanti + tipocon  + nuts1, data = ess, family = binomial)
+mean_model <- glm(outcome ~ treatment +  sexo + anos2+ cnace + cno1 + estrato2 +  estu + tipojor  + anoanti + mesanti + tipocon  + nuts1 , data = ess, family = gaussian)
+
+
+summary(prop_model)
+summary(mean_model)
+(dre_estimator <-  ess  %>%
+  filter(tipojor == "1", estu == "7", sexo == "1") %>%
+  dr_estimator(prop_model, mean_model) |> 
+  pull(dre))
+
+
+(dre_estimator_madrid <-  ess  %>%
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "3") %>%
+  dr_estimator(prop_model, mean_model) |> 
+  pull(dre))
+
+
+
+(dre_estimator_sur <-  ess  %>%
+  filter(tipojor == "1", estu == "7", sexo == "1", nuts1 == "1") %>%
+  dr_estimator(prop_model, mean_model) |> 
+  pull(dre))
+```
+
+## Resumiendo
+
+El S-learner usando ponderación de observaciones y el doubly robust estimator (sin usar ponderaciones) nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner y el x-learner nos dicen lo contrario.
+
+Así que, no me queda claro la respueta a la pregunta inicial.
+
+```{r}
+
+res <- data.frame(s_learner_with_pond_madrid = s_learner_with_pond_madrid,
+           s_learner_with_pond_sur = s_learner_with_pond_sur,
+           t_learner_madrid= t_learner_madrid, t_learner_sur = t_learner_sur, 
+           x_learner_madrid = x_learner_madrid, x_learner_sur = x_learner_sur, 
+           dre_estimator_madrid = dre_estimator_madrid, dre_estimator_sur = dre_estimator_sur )
+
+
+res |> 
+    pivot_longer(everything(), names_to = "estimador", values_to = "valor") 
+
+```
+
+## Coda
+
+-   Es complicado dar una respuesta concluyente a la pregunta inicial.
+-   Mi objetivo era sólo contaros algunas formas de estimar "efectos causales", o si es gusta más, diferencias entre grupos condicionando por variables
+-   La inferencia causal es complicada, ha de sustentarse en un análisis teórico previo. Yo he decidido que no había colliders por ejemplo
+-   He obviado variables que podrían influir tanto en la variable respuesta como en el tratamiento (sector público o privado), pero estos son datos reales, no una simulación ad hoc, y en el mundo real tienes que tomar decisiones y apechugar con ellas.
+-   Para escribir este post lo he hecho con Rstudio y con el github copilot activado y la verdad es que ayuda bastante, incluso a completar las fórmulas en latex.
