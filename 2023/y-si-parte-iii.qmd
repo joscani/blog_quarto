@@ -1,6 +1,6 @@
 ---
 title:  ¿Y si ... ? Parte III 
-date: '2023-09-10'
+date: '2023-09-09'
 date-modified: last-modified
 categories:
     - 2023
@@ -53,6 +53,9 @@ library(survey) # para obtener estimadores correctos por ser una muestra
 library(sjPlot) # plot de los modelos, 
 # library(causact) # usar alguna cosa de numpyro desde R , quiero probar este paquete
 ```
+
+
+Aunque en el fichero comprimido que te descargas del INE viene script para leer los datos con R, no me gusta ese script que instala XLConnect y no sé qué más. Así que lo que he hecho es leer el fichero en formato de spss con `haven::read_spss()` y luego limpiarlos un poco con `janitor::clean_names()`.
 
 ```{r read_data}
 
