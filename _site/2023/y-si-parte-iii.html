@@ -198,6 +198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#x-learner" id="toc-x-learner" class="nav-link" data-scroll-target="#x-learner">X-learner</a></li>
   <li><a href="#doubly-robust-estimator" id="toc-doubly-robust-estimator" class="nav-link" data-scroll-target="#doubly-robust-estimator">Doubly robust estimator</a></li>
   <li><a href="#resumiendo" id="toc-resumiendo" class="nav-link" data-scroll-target="#resumiendo">Resumiendo</a></li>
+  <li><a href="#actualización" id="toc-actualización" class="nav-link" data-scroll-target="#actualización">Actualización</a></li>
   <li><a href="#coda" id="toc-coda" class="nav-link" data-scroll-target="#coda">Coda</a></li>
   </ul>
 </nav>
@@ -236,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 9, 2023</p>
+      <p class="date-modified">September 10, 2023</p>
     </div>
   </div>
     
@@ -1046,6 +1047,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dre_estimator_madrid        168. </span></span>
 <span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 dre_estimator_sur           183.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="actualización" class="level2">
+<h2 class="anchored" data-anchor-id="actualización">Actualización</h2>
+<p>Me acabo de acordar de otra forma de estimar esto. Consiste en:</p>
+<ul>
+<li><p>Hago un modelo para estimar el salario neto pero sólo usando la población que trabaja en el sector privado.</p></li>
+<li><p>Aplico ese modelo para obtener estimaciones sobre la población que trabaja en el sector público.</p></li>
+<li><p>Comparo la estimación obtenida con el salario neto de esa subpoblación.</p></li>
+</ul>
+<p>Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado?</p>
+<p>Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de <code>cnace</code> y de <code>cno1</code> puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mod_sector_privado <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span>  sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu  <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno, <span class="at">subset =</span> treatment <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>estim_publico_con_mod_privado <span class="ot">=</span> <span class="fu">predict</span>(mod_sector_privado, ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>(media_estimada_sector_publico <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(estim_publico_con_mod_privado, ess<span class="sc">$</span>factotal[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>]))</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1794.68</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>(media_observada_sector_publico <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(ess<span class="sc">$</span>outcome[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>], ess<span class="sc">$</span>factotal[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>]) )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1799.459</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>(diferencia <span class="ot">&lt;-</span> media_observada_sector_publico <span class="sc">-</span> media_estimada_sector_publico)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4.778845</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y haciéndolo así se tendría que si los trabajadores del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media.</p>
+<p>Así que tengo varias preguntas</p>
+<ul>
+<li><p>¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?</p></li>
+<li><p>Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como “engañar con estadística de forma avanzada”, pero ya conozco a quien tiene esa idea en mente</p></li>
+<li><p>¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio “técnico”?</p></li>
+</ul>
 </section>
 <section id="coda" class="level2">
 <h2 class="anchored" data-anchor-id="coda">Coda</h2>

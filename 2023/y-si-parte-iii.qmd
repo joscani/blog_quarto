@@ -443,6 +443,55 @@ res |>
 
 ```
 
+## Actualización
+
+Me acabo de acordar de otra forma de estimar esto. Consiste en:
+
+* Hago un modelo para estimar el salario neto pero sólo usando la población que trabaja en el sector privado. 
+
+* Aplico ese modelo para obtener estimaciones sobre la población que trabaja en el sector público. 
+
+* Comparo la estimación obtenida con el salario neto de esa subpoblación. 
+
+
+Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado? 
+
+Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de `cnace` y de `cno1` puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso. 
+
+
+```{r}
+
+mod_sector_privado <- svyglm(outcome ~  sexo + anos2 +   estu  + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, design = disenno, subset = treatment == 0)
+
+
+estim_publico_con_mod_privado = predict(mod_sector_privado, ess[ess$treatment==1, ])
+
+(media_estimada_sector_publico <- weighted.mean(estim_publico_con_mod_privado, ess$factotal[ess$treatment == 1]))
+
+
+(media_observada_sector_publico <- weighted.mean(ess$outcome[ess$treatment == 1], ess$factotal[ess$treatment == 1]) )
+
+(diferencia <- media_observada_sector_publico - media_estimada_sector_publico)
+
+
+
+```
+
+Y haciéndolo así se tendría que si los trabajadores  del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media. 
+
+Así que tengo varias preguntas
+
+* ¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?
+
+* Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como "engañar con estadística de forma avanzada", pero ya conozco a quien tiene esa idea en mente
+
+* ¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio "técnico"? 
+
+
+
+
+
+
 ## Coda
 
 -   Es complicado dar una respuesta concluyente a la pregunta inicial.

@@ -3149,6 +3149,123 @@ background-color: null;
 font-style: inherit;">#&gt; 8 dre_estimator_sur           183.</span></span></code></pre></div>
 </div>
 </section>
+<section id="actualización" class="level2">
+<h2 class="anchored" data-anchor-id="actualización">Actualización</h2>
+<p>Me acabo de acordar de otra forma de estimar esto. Consiste en:</p>
+<ul>
+<li><p>Hago un modelo para estimar el salario neto pero sólo usando la población que trabaja en el sector privado.</p></li>
+<li><p>Aplico ese modelo para obtener estimaciones sobre la población que trabaja en el sector público.</p></li>
+<li><p>Comparo la estimación obtenida con el salario neto de esa subpoblación.</p></li>
+</ul>
+<p>Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado?</p>
+<p>Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de <code>cnace</code> y de <code>cno1</code> puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"></span>
+<span id="cb20-2">mod_sector_privado <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">svyglm</span>(outcome <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span>  sexo <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> anos2 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span>   estu  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> estrato2  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> tipojor  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> anoanti <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> mesanti <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> tipocon  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> nuts1, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">design =</span> disenno, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">subset =</span> treatment <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb20-3"></span>
+<span id="cb20-4"></span>
+<span id="cb20-5">estim_publico_con_mod_privado <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">predict</span>(mod_sector_privado, ess[ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>treatment<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, ])</span>
+<span id="cb20-6"></span>
+<span id="cb20-7">(media_estimada_sector_publico <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">weighted.mean</span>(estim_publico_con_mod_privado, ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>factotal[ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]))</span>
+<span id="cb20-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 1794.68</span></span>
+<span id="cb20-9"></span>
+<span id="cb20-10"></span>
+<span id="cb20-11">(media_observada_sector_publico <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">weighted.mean</span>(ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>outcome[ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>], ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>factotal[ess<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]) )</span>
+<span id="cb20-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 1799.459</span></span>
+<span id="cb20-13"></span>
+<span id="cb20-14">(diferencia <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> media_observada_sector_publico <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> media_estimada_sector_publico)</span>
+<span id="cb20-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 4.778845</span></span></code></pre></div>
+</div>
+<p>Y haciéndolo así se tendría que si los trabajadores del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media.</p>
+<p>Así que tengo varias preguntas</p>
+<ul>
+<li><p>¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?</p></li>
+<li><p>Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como “engañar con estadística de forma avanzada”, pero ya conozco a quien tiene esa idea en mente</p></li>
+<li><p>¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio “técnico”?</p></li>
+</ul>
+</section>
 <section id="coda" class="level2">
 <h2 class="anchored" data-anchor-id="coda">Coda</h2>
 <ul>
