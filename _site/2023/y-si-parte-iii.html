@@ -75,6 +75,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
 <link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -199,6 +202,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#doubly-robust-estimator" id="toc-doubly-robust-estimator" class="nav-link" data-scroll-target="#doubly-robust-estimator">Doubly robust estimator</a></li>
   <li><a href="#resumiendo" id="toc-resumiendo" class="nav-link" data-scroll-target="#resumiendo">Resumiendo</a></li>
   <li><a href="#actualización" id="toc-actualización" class="nav-link" data-scroll-target="#actualización">Actualización</a></li>
+  <li><a href="#otra-actualización" id="toc-otra-actualización" class="nav-link" data-scroll-target="#otra-actualización">Otra actualización</a></li>
   <li><a href="#coda" id="toc-coda" class="nav-link" data-scroll-target="#coda">Coda</a></li>
   </ul>
 </nav>
@@ -237,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 10, 2023</p>
+      <p class="date-modified">September 11, 2023</p>
     </div>
   </div>
     
@@ -269,7 +273,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Aunque en el fichero comprimido que te descargas del INE viene script para leer los datos con R, no me gusta ese script que instala XLConnect y no sé qué más. Así que lo que he hecho es leer el fichero en formato de spss con <code>haven::read_spss()</code> y luego limpiarlos un poco con <code>janitor::clean_names()</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> <span class="fu">read_spss</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/INE/datos_2018/SPSS/EES_2018.sav"</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> <span class="fu">read_sav</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/INE/datos_2018/SPSS/EES_2018.sav"</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(ess)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ess)</span>
@@ -1062,26 +1066,104 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mod_sector_privado <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span>  sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu  <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno, <span class="at">subset =</span> treatment <span class="sc">==</span> <span class="dv">0</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>estim_publico_con_mod_privado <span class="ot">=</span> <span class="fu">predict</span>(mod_sector_privado, ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>ess_sub_publico_madrid <span class="ot">&lt;-</span> ess <span class="sc">|&gt;</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="dv">1</span>,tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1 <span class="sc">==</span> <span class="st">"3"</span> ) </span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>(media_estimada_sector_publico <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(estim_publico_con_mod_privado, ess<span class="sc">$</span>factotal[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>]))</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1794.68</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>estim_publico_con_mod_privado_madrid <span class="ot">&lt;-</span>  <span class="fu">predict</span>(mod_sector_privado,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                                               ess_sub_publico_madrid)</span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>(media_observada_sector_publico <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(ess<span class="sc">$</span>outcome[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>], ess<span class="sc">$</span>factotal[ess<span class="sc">$</span>treatment <span class="sc">==</span> <span class="dv">1</span>]) )</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1799.459</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>(media_estimada_sector_publico_madrid <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(estim_publico_con_mod_privado_madrid, ess_sub_publico_madrid<span class="sc">$</span>factotal) )  </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2412.159</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>(diferencia <span class="ot">&lt;-</span> media_observada_sector_publico <span class="sc">-</span> media_estimada_sector_publico)</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 4.778845</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>(media_observada_sector_publico <span class="ot">&lt;-</span> <span class="fu">weighted.mean</span>(ess_sub_publico_madrid<span class="sc">$</span>outcome    , </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>                                                 ess_sub_publico_madrid<span class="sc">$</span>factotal) )</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2535.845</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>(diferencia <span class="ot">&lt;-</span> media_observada_sector_publico <span class="sc">-</span> media_estimada_sector_publico_madrid)</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 123.6857</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Y haciéndolo así se tendría que si los trabajadores del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media.</p>
+<p>Y haciéndolo así se tendría que si los trabajadores del sector público hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media.</p>
 <p>Así que tengo varias preguntas</p>
 <ul>
 <li><p>¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?</p></li>
 <li><p>Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como “engañar con estadística de forma avanzada”, pero ya conozco a quien tiene esa idea en mente</p></li>
 <li><p>¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio “técnico”?</p></li>
 </ul>
+</section>
+<section id="otra-actualización" class="level2">
+<h2 class="anchored" data-anchor-id="otra-actualización">Otra actualización</h2>
+<p>Una de las hipótesis es que en el sector privado la distribución es más dispersa.</p>
+<p>Todo esto debería haberse hecho antes que todos los modelos. <strong>EL EDA es lo primero</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En general parece que no </span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span>outcome,<span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Pero y si la vemos, para los licenciados, hombres y a jornada completa.</p>
+<p>En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span>outcome,<span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).</p>
+<p>Gerentes (A0) mejor en el privado, curritos de la enseñanza y la salud pues..</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, cno1 <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"A0"</span>, <span class="st">"B0"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> outcome, <span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10000</span>)) <span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y si usamos el primer modelo que vimos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">estim =</span> <span class="fu">predict</span>(mod_sector_privado, ess)) <span class="sc">|&gt;</span> </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, cno1 <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"A0"</span>, <span class="st">"B0"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> estim, <span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10000</span>)) <span class="sc">+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Pero claramente como lo que predice es la media condicionada queda todo muy “centrado”. Lo suyo sería un modelo bayesiano o hacer boostraping y tener la posterior predictive, para incorporar correctamente la variabilidad. A ver si lo hago en otro post, pero con numpyro, que stan no puede con estos datos</p>
 </section>
 <section id="coda" class="level2">
 <h2 class="anchored" data-anchor-id="coda">Coda</h2>
@@ -1333,6 +1415,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","closeEffect":"zoom","selector":".lightbox","descPosition":"bottom","loop":true});</script>
 
 
 

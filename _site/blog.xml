@@ -62,7 +62,7 @@ font-style: inherit;"># library(causact) # usar alguna cosa de numpyro desde R ,
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">read_spss</span>(here<span class="sc" style="color: #5E5E5E;
+font-style: inherit;">read_sav</span>(here<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3193,78 +3193,416 @@ font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>)</span>
 <span id="cb20-3"></span>
-<span id="cb20-4"></span>
-<span id="cb20-5">estim_publico_con_mod_privado <span class="ot" style="color: #003B4F;
+<span id="cb20-4">ess_sub_publico_madrid <span class="ot" style="color: #003B4F;
 background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+font-style: inherit;">&lt;-</span> ess <span class="sc" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">predict</span>(mod_sector_privado, ess[ess<span class="sc" style="color: #5E5E5E;
+font-style: inherit;">|&gt;</span> </span>
+<span id="cb20-5">  <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">$</span>treatment<span class="sc" style="color: #5E5E5E;
+font-style: inherit;">filter</span>(treatment <span class="sc" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">==</span><span class="dv" style="color: #AD0000;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">1</span>, ])</span>
+font-style: inherit;">1</span>,tipojor <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, estu <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"7"</span>, sexo <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, nuts1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"3"</span> ) </span>
 <span id="cb20-6"></span>
-<span id="cb20-7">(media_estimada_sector_publico <span class="ot" style="color: #003B4F;
+<span id="cb20-7">estim_publico_con_mod_privado_madrid <span class="ot" style="color: #003B4F;
 background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">weighted.mean</span>(estim_publico_con_mod_privado, ess<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>factotal[ess<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]))</span>
-<span id="cb20-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 1794.68</span></span>
+font-style: inherit;">predict</span>(mod_sector_privado,</span>
+<span id="cb20-8">                                               ess_sub_publico_madrid)</span>
 <span id="cb20-9"></span>
-<span id="cb20-10"></span>
-<span id="cb20-11">(media_observada_sector_publico <span class="ot" style="color: #003B4F;
+<span id="cb20-10">(media_estimada_sector_publico_madrid <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">weighted.mean</span>(ess<span class="sc" style="color: #5E5E5E;
+font-style: inherit;">weighted.mean</span>(estim_publico_con_mod_privado_madrid, ess_sub_publico_madrid<span class="sc" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">$</span>outcome[ess<span class="sc" style="color: #5E5E5E;
+font-style: inherit;">$</span>factotal) )  </span>
+<span id="cb20-11"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>], ess<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>factotal[ess<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>treatment <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]) )</span>
-<span id="cb20-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 1799.459</span></span>
+font-style: inherit;">#&gt; [1] 2412.159</span></span>
+<span id="cb20-12"></span>
 <span id="cb20-13"></span>
-<span id="cb20-14">(diferencia <span class="ot" style="color: #003B4F;
+<span id="cb20-14">(media_observada_sector_publico <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">weighted.mean</span>(ess_sub_publico_madrid<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>outcome    , </span>
+<span id="cb20-15">                                                 ess_sub_publico_madrid<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>factotal) )</span>
+<span id="cb20-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 2535.845</span></span>
+<span id="cb20-17"></span>
+<span id="cb20-18">(diferencia <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> media_observada_sector_publico <span class="sc" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">-</span> media_estimada_sector_publico)</span>
-<span id="cb20-15"><span class="co" style="color: #5E5E5E;
+font-style: inherit;">-</span> media_estimada_sector_publico_madrid)</span>
+<span id="cb20-19"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">#&gt; [1] 4.778845</span></span></code></pre></div>
+font-style: inherit;">#&gt; [1] 123.6857</span></span></code></pre></div>
 </div>
-<p>Y haciéndolo así se tendría que si los trabajadores del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media.</p>
+<p>Y haciéndolo así se tendría que si los trabajadores del sector público hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media.</p>
 <p>Así que tengo varias preguntas</p>
 <ul>
 <li><p>¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?</p></li>
 <li><p>Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como “engañar con estadística de forma avanzada”, pero ya conozco a quien tiene esa idea en mente</p></li>
 <li><p>¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio “técnico”?</p></li>
 </ul>
+</section>
+<section id="otra-actualización" class="level2">
+<h2 class="anchored" data-anchor-id="otra-actualización">Otra actualización</h2>
+<p>Una de las hipótesis es que en el sector privado la distribución es más dispersa.</p>
+<p>Todo esto debería haberse hecho antes que todos los modelos. <strong>EL EDA es lo primero</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># En general parece que no </span></span>
+<span id="cb21-2">ess <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span id="cb21-3">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nuts1 =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(nuts1)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb21-4">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span>outcome,<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(treatment))) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb21-5">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_density</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">alpha =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.5</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scale_x_continuous</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">limits =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8000</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb21-6">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">facet_wrap</span>( <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> nuts1)</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Pero y si la vemos, para los licenciados, hombres y a jornada completa.</p>
+<p>En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1">ess <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span id="cb22-2">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">filter</span>(tipojor <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, estu <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"7"</span>, sexo <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb22-3">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nuts1 =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(nuts1)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb22-4">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span>outcome,<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(treatment))) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb22-5">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_density</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">alpha =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.4</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scale_x_continuous</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">limits =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8000</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb22-6">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">facet_wrap</span>( <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> nuts1)</span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).</p>
+<p>Gerentes (A0) mejor en el privado, curritos de la enseñanza y la salud pues..</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"></span>
+<span id="cb23-2">ess <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb23-3">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">filter</span>(tipojor <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, estu <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"7"</span>, sexo <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, cno1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%in%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"A0"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"B0"</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb23-4">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nuts1 =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(nuts1)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb23-5">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> outcome, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(treatment))) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb23-6">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_density</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">alpha =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.4</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scale_x_continuous</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">limits =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb23-7">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">facet_grid</span>( nuts1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> cno1)  </span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Y si usamos el primer modelo que vimos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"></span>
+<span id="cb24-2">ess <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb24-3">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">estim =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">predict</span>(mod_sector_privado, ess)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span id="cb24-4">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">filter</span>(tipojor <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, estu <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"7"</span>, sexo <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span>, cno1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%in%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"A0"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"B0"</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb24-5">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nuts1 =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(nuts1)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span></span>
+<span id="cb24-6">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> estim, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as_factor</span>(treatment))) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb24-7">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_density</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">alpha =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.4</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scale_x_continuous</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">limits =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb24-8">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">facet_grid</span>( nuts1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> cno1)  </span></code></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Pero claramente como lo que predice es la media condicionada queda todo muy “centrado”. Lo suyo sería un modelo bayesiano o hacer boostraping y tener la posterior predictive, para incorporar correctamente la variabilidad. A ver si lo hago en otro post, pero con numpyro, que stan no puede con estos datos</p>
 </section>
 <section id="coda" class="level2">
 <h2 class="anchored" data-anchor-id="coda">Coda</h2>
