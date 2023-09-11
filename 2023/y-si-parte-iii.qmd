@@ -59,7 +59,7 @@ Aunque en el fichero comprimido que te descargas del INE viene script para leer 
 
 ```{r read_data}
 
-ess <- read_spss(here::here("data/INE/datos_2018/SPSS/EES_2018.sav"))
+ess <- read_sav(here::here("data/INE/datos_2018/SPSS/EES_2018.sav"))
 ess <- janitor::clean_names(ess)
 
 head(ess)
@@ -459,25 +459,30 @@ Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto 
 Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de `cnace` y de `cno1` puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso. 
 
 
+
 ```{r}
 
 mod_sector_privado <- svyglm(outcome ~  sexo + anos2 +   estu  + estrato2  + tipojor  + anoanti + mesanti + tipocon  + nuts1, design = disenno, subset = treatment == 0)
 
+ess_sub_publico_madrid <- ess |> 
+  filter(treatment == 1,tipojor == "1", estu == "7", sexo == "1", nuts1 == "3" ) 
 
-estim_publico_con_mod_privado = predict(mod_sector_privado, ess[ess$treatment==1, ])
+estim_publico_con_mod_privado_madrid <-  predict(mod_sector_privado,
+                                               ess_sub_publico_madrid)
 
-(media_estimada_sector_publico <- weighted.mean(estim_publico_con_mod_privado, ess$factotal[ess$treatment == 1]))
+(media_estimada_sector_publico_madrid <- weighted.mean(estim_publico_con_mod_privado_madrid, ess_sub_publico_madrid$factotal) )  
 
 
-(media_observada_sector_publico <- weighted.mean(ess$outcome[ess$treatment == 1], ess$factotal[ess$treatment == 1]) )
+(media_observada_sector_publico <- weighted.mean(ess_sub_publico_madrid$outcome    , 
+                                                 ess_sub_publico_madrid$factotal) )
 
-(diferencia <- media_observada_sector_publico - media_estimada_sector_publico)
+(diferencia <- media_observada_sector_publico - media_estimada_sector_publico_madrid)
 
 
 
 ```
 
-Y haciéndolo así se tendría que si los trabajadores  del sector público se cambiaran al privado, manteniendo el resto igual ganarían unos 5 euros menos al mes de media. 
+Y haciéndolo así se tendría que si los trabajadores  del sector público  hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media. 
 
 Así que tengo varias preguntas
 
@@ -489,8 +494,70 @@ Así que tengo varias preguntas
 
 
 
+## Otra actualización
+
+Una de las hipótesis es que en el sector privado la distribución es más dispersa.  
+
+Todo esto debería haberse hecho antes que todos los modelos. __EL EDA es lo primero__. 
+
+```{r}
+# En general parece que no 
+ess |> 
+    mutate(nuts1 = as_factor(nuts1)) |>
+    ggplot(aes(x =outcome,fill = as_factor(treatment))) +
+    geom_density(alpha = 0.5) + scale_x_continuous(limits = c(0,8000)) +
+    facet_wrap( ~ nuts1)
+
+```
+
+Pero y si la vemos, para los licenciados, hombres y a jornada completa. 
+
+En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado. 
 
 
+
+```{r}
+ess |> 
+    filter(tipojor == "1", estu == "7", sexo == "1") |>
+    mutate(nuts1 = as_factor(nuts1)) |>
+    ggplot(aes(x =outcome,fill = as_factor(treatment))) +
+    geom_density(alpha = 0.4) + scale_x_continuous(limits = c(0,8000)) +
+    facet_wrap( ~ nuts1)
+
+```
+
+
+Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).
+
+Gerentes (A0)  mejor en el privado, curritos de la enseñanza y la salud pues.. 
+
+```{r}
+
+ess |>
+    filter(tipojor == "1", estu == "7", sexo == "1", cno1 %in% c("A0", "B0")) |>
+    mutate(nuts1 = as_factor(nuts1)) |>
+    ggplot(aes(x = outcome, fill = as_factor(treatment))) +
+    geom_density(alpha = 0.4) + scale_x_continuous(limits = c(0, 10000)) +
+    facet_grid( nuts1 ~ cno1)  
+
+```
+
+
+Y si usamos el primer modelo que vimos
+
+```{r}
+
+ess |>
+    mutate(estim = predict(mod_sector_privado, ess)) |> 
+    filter(tipojor == "1", estu == "7", sexo == "1", cno1 %in% c("A0", "B0")) |>
+    mutate(nuts1 = as_factor(nuts1)) |>
+    ggplot(aes(x = estim, fill = as_factor(treatment))) +
+    geom_density(alpha = 0.4) + scale_x_continuous(limits = c(0, 10000)) +
+    facet_grid( nuts1 ~ cno1)  
+
+```
+
+Pero claramente como lo que predice es la media condicionada queda todo muy "centrado".  Lo suyo sería un modelo bayesiano o hacer boostraping y tener la posterior predictive, para incorporar correctamente la variabilidad.  A ver si lo hago en otro post, pero con numpyro, que stan no puede con estos datos
 
 ## Coda
 
