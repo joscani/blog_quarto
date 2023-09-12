@@ -241,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 11, 2023</p>
+      <p class="date-modified">September 12, 2023</p>
     </div>
   </div>
     
@@ -262,6 +262,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Vamos a utilizar los microdatos de la <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&amp;cid=1254736177025&amp;menu=resultados&amp;idp=1254735976596#!tabs-1254736061996">encuestas de estructura salarial</a> del INE. A pesar de ser una encuesta anual, los últimos resultados publicados son de 2021 y los últimos microdatos disponibles los de 2018. La verdad es que me gustaría entender por qué el INE publica tan tarde los microdatos 😥. La <a href="https://www.ine.es/prensa/ees_2021.pdf">nota de prensa</a> con los resultados de 2021 es del 20 de junio de 2023. Y si ya tienen resultados de 2021, ¿por qué los últimos microdatos disponibles son los de hace 5 años?</p>
 <p>Sea como fuere vamos a lo nuestro.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven) <span class="co"># Para leer los datos de SPSS</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -269,9 +271,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey) <span class="co"># para obtener estimadores correctos por ser una muestra</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjPlot) <span class="co"># plot de los modelos, </span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># library(causact) # usar alguna cosa de numpyro desde R , quiero probar este paquete</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Aunque en el fichero comprimido que te descargas del INE viene script para leer los datos con R, no me gusta ese script que instala XLConnect y no sé qué más. Así que lo que he hecho es leer el fichero en formato de spss con <code>haven::read_spss()</code> y luego limpiarlos un poco con <code>janitor::clean_names()</code>.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> <span class="fu">read_sav</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/INE/datos_2018/SPSS/EES_2018.sav"</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(ess)</span>
@@ -293,11 +298,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   drelabm &lt;dbl&gt;, siespm1 &lt;chr+lbl&gt;, dsiespm1 &lt;dbl&gt;, siespm2 &lt;chr+lbl&gt;,</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   dsiespm2 &lt;dbl&gt;, salbase &lt;dbl&gt;, extraorm &lt;dbl&gt;, phextra &lt;dbl&gt;, comsal &lt;dbl&gt;,</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   comsaltt &lt;dbl&gt;, irpfmes &lt;dbl&gt;, cotiza &lt;dbl&gt;, base &lt;dbl&gt;, drelabam &lt;dbl&gt;, …</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Dejo enlace al diseño del registro para ver qué es cada variable en los microdatos.</p>
 <p><a href="https://docs.google.com/spreadsheets/d/1H_wcDX_SfXQmpLyf0Kj9lKvwMhph7Gv7/edit?usp=sharing&amp;ouid=110673697043754248174&amp;rtpof=true&amp;sd=true"><i class="fa-solid fa-table" aria-label="table"></i> <code>dis_registro</code></a></p>
 <p>Lo que quiero comparar es el salario neto mensual, ¿por qué? porque me da la gana y porque en la docu del INE explican como se calcula el salario neto partiendo de los microdatos.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> ess <span class="sc">|&gt;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -317,12 +325,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">jmp1       =</span> (jsp1 <span class="sc">+</span> jsp2 <span class="sc">/</span> <span class="dv">60</span>) <span class="sc">*</span> <span class="fl">4.35</span> <span class="sc">+</span> hextra,</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">salhora    =</span> salmes <span class="sc">/</span> jmp1</span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="estimando-cosas.." class="level2">
 <h2 class="anchored" data-anchor-id="estimando-cosas..">Estimando cosas..</h2>
 <p>La variable dónde se consigna si el sector es público o privado es <code>control</code></p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(control) <span class="sc">|&gt;</span>    </span>
@@ -333,18 +344,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr+lbl&gt;    &lt;int&gt;</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 [PUBLICO]  35553</span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 [PRIVADO] 181173</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Voy a crearme variable <code>treatment</code> <strong>que valga 1 cuando sea sector público y 0 para el sector privado</strong></p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> ess<span class="sc">$</span>control</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> <span class="fu">ifelse</span>(ess<span class="sc">$</span>control <span class="sc">==</span> <span class="st">"1"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># también llamo outcome al salario neto</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>outcome <span class="ot">=</span> ess<span class="sc">$</span>salneto</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <section id="group-by" class="level3">
 <h3 class="anchored" data-anchor-id="group-by">Group by</h3>
 <p>Lo más simple , hacemos un group by y calculamos medias</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
@@ -356,6 +373,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt;</span></span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1         0 1561. 181173</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2         1 1864.  35553</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Así de primeras, pues parece que se gana más en el sector público que en el privado, pero ¡ojo! que la encuesta tiene una variable de ponderación, que el INE ha calculado para que los resultados sean representativos de la población. En la nota metodológica el INE dice lo siguiente sobre el plan de muestreo</p>
 <p>El procedimiento de selección aleatoria de unidades corresponde a un muestreo bietápico estratificado, donde las unidades de primera etapa son las cuentas de cotización a la Seguridad Social (CC), mientras que las de segunda etapa son los trabajadores (asalariados). En la primera etapa tanto el diseño muestral como la muestra obtenida de CC coincide con la ETCL (para una mayor información consultar la metodología de la ETCL). Las unidades de primera etapa se estratifican según las siguientes variables:</p>
@@ -366,6 +384,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>En los microdatos tenemos la variable <code>factotal</code> que es la ponderación que el INE dice que hay que usar a la hora de hacer estimaciones.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
@@ -377,6 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;dbl&gt;           &lt;dbl&gt;</span></span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1         0           1351.</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2         1           1799.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="modelo-lineal" class="level3">
@@ -384,14 +405,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Pero sabemos que la media tal cual puede no ser un buen indicador, lo suyo sería <em>controlar</em> (condicionar) por otras variables, tales como el sexo, nivel de estudio, edad, años de antigüedad , tipo de jornada laboral, y cosas así.</p>
 <p>Hagámoslo, pero usando que tenemos pesos en la encuesta.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>disenno <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span><span class="dv">1</span>, <span class="at">weight =</span> <span class="sc">~</span>factotal, <span class="at">data =</span> ess)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Modelo simple dónde uso variables como edad, tipo contrato, área nuts, antigüedad, nivel de estudios, etc..</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mod_simple <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_simple)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
@@ -480,12 +509,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 373331.4)</span></span>
 <span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y el coeficiente asociaso al sector público indica que se gana en media unos 112 euros más que en el sector privado, según este modelo.</p>
 <p>¿Cuánto sería para alguien que trabaja a jornada completa, nivel de estudios superior o igual a licenciado?</p>
 <p>Para eso podemos hacer lo que se conoce como una “intervención”, que es crear dos conjuntos de datos copias del original, con la diferencia de que en uno todo el mundo es del sector privado y en el otro todos del sector público y comparamos las medias estimadas de salario neto que nos da el modelo para el subgrupo de población que queramos.</p>
 <p>A esto se le conoce por los modernos como un <strong>S-learner</strong></p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ess_fake_publico  <span class="ot">&lt;-</span> ess  </span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -508,9 +540,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>(s_learner_with_pond <span class="ot">&lt;-</span> <span class="fu">mean</span>(estim_publico) <span class="sc">-</span> <span class="fu">mean</span>(estim_privado))</span>
 <span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 112.7778</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y coincide con el coeficiente que daba el modelo. Y eso es así porque no he metido interacciones en el modelo. Si metemos una simple interacción entre ser del sector público y privado con la zona Nuts1.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(nuts1) <span class="sc">|&gt;</span>  </span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>()</span>
@@ -525,8 +560,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 5 [ESTE]                58852</span></span>
 <span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 6 [SUR]                 29413</span></span>
 <span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 7 [CANARIAS]             9334</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mod_inter_con_nuts <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment<span class="sc">*</span> nuts1 <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon , <span class="at">design =</span> disenno)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_inter_con_nuts)</span>
@@ -623,9 +661,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for gaussian family taken to be 373097.8)</span></span>
 <span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Estimamos diferencias entre sector público y privado para Madrid y Andalucía, para un hombre a jornada completa y con estudios de licenciatura o superior.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>estim_publico_madrid <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_publico <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span> , nuts1 <span class="sc">==</span> <span class="st">"3"</span> ) )</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -654,6 +695,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>(s_learner_with_pond_sur <span class="ot">&lt;-</span> <span class="fu">mean</span>(estim_publico_sur) <span class="sc">-</span> <span class="fu">mean</span>(estim_privado_sur))</span>
 <span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 139.5808</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Bueno, pues según esto, parece que para ese perfil, dónde se ha tenido en cuenta edad, años de antigüedad y demás, se gana un poco más en el sector público que en el privado, aunque esa diferencia es mayor en el Sur que en Madrid.</p>
 </section>
@@ -663,6 +705,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Otro de los metalearners empleados es el T-learner, ya explicado en post anteriores. Aquí vamos a usarlo sin tener en cuenta la ponderación de la encuesta.</p>
 <p>En el T-learner se ajusta un modelo para cuando sea sector público y otro para cuando sea sector privado y se ve la diferencia de las medias de sus estimaciones.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>modpublico <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo  <span class="sc">+</span> anos2  <span class="sc">+</span>  estu <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>modprivado <span class="ot">&lt;-</span>  <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo <span class="sc">+</span>  anos2  <span class="sc">+</span>  estu  <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
@@ -692,6 +736,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>(t_learner_sur <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">predict</span>(modpublico, ess_sub_sur)) <span class="sc">-</span> </span>
 <span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(modprivado, ess_sub_sur)) )</span>
 <span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -159.0581</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>En este caso, nos sale que se ganaría más en el sector público que en el privado. ¿Con qué nos quedamos?</p>
 </section>
@@ -700,6 +745,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Ya expliqué en su día en que consiste un <a href="#x-learner">X-learner</a> (../2020/12/30/y-si-parte-ii/#x-learner)</p>
 <p>Básicamente, usas el modelo ajustado con treatment = 1 para predecir las observaciones con treatment = 0 y al revés en un intento de estimar el <em>potential outcome</em>. Luego haces dos modelos para modelar las diferencias entre el <em>outcome</em> y las predicciones anteriores y otro modelo de propensity score que se usará para ponderar esas dos predicciones.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
@@ -792,6 +839,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-90"><a href="#cb16-90" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
 <span id="cb16-91"><a href="#cb16-91" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
 <span id="cb16-92"><a href="#cb16-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -55.67715</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="doubly-robust-estimator" class="level2">
@@ -804,6 +852,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Este <em>Doubly robust estimator</em> es una combinación entre usar inverse probability weighting y el modelo de la media del outcome. Este estimador suele ser consistnete si al menos uno de los dos modelos es correcto. A la expresión coloreda en rojo se le denomina <em>augmented IPW estimator</em></p>
 <p>En código es bastante sencillo.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dr_estimator <span class="ot">&lt;-</span> <span class="cf">function</span>(data, prop_model, mean_model){</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
@@ -817,9 +867,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>)  <span class="sc">%&gt;%</span></span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">dre =</span> EYpublico <span class="sc">-</span> EYprivado)</span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y si usamos ese estimador tenemos</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>prop_model  <span class="ot">&lt;-</span> <span class="fu">glm</span>(treatment <span class="sc">~</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess, <span class="at">family =</span> binomial)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>mean_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1 , <span class="at">data =</span> ess, <span class="at">family =</span> gaussian)</span>
@@ -1022,6 +1075,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dr_estimator</span>(prop_model, mean_model) <span class="sc">|&gt;</span> </span>
 <span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(dre))</span>
 <span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 183.358</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="resumiendo" class="level2">
@@ -1029,6 +1083,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>El S-learner usando ponderación de observaciones y el doubly robust estimator (sin usar ponderaciones) nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner y el x-learner nos dicen lo contrario.</p>
 <p>Así que, no me queda claro la respueta a la pregunta inicial.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">s_learner_with_pond_madrid =</span> s_learner_with_pond_madrid,</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">s_learner_with_pond_sur =</span> s_learner_with_pond_sur,</span>
@@ -1050,6 +1106,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 x_learner_sur               -55.7</span></span>
 <span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dre_estimator_madrid        168. </span></span>
 <span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 dre_estimator_sur           183.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="actualización" class="level2">
@@ -1063,6 +1120,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado?</p>
 <p>Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de <code>cnace</code> y de <code>cno1</code> puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mod_sector_privado <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span>  sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu  <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno, <span class="at">subset =</span> treatment <span class="sc">==</span> <span class="dv">0</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1082,6 +1141,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>(diferencia <span class="ot">&lt;-</span> media_observada_sector_publico <span class="sc">-</span> media_estimada_sector_publico_madrid)</span>
 <span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 123.6857</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Y haciéndolo así se tendría que si los trabajadores del sector público hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media.</p>
 <p>Así que tengo varias preguntas</p>
@@ -1096,12 +1156,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Una de las hipótesis es que en el sector privado la distribución es más dispersa.</p>
 <p>Todo esto debería haberse hecho antes que todos los modelos. <strong>EL EDA es lo primero</strong>.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En general parece que no </span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span>outcome,<span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1113,12 +1176,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Pero y si la vemos, para los licenciados, hombres y a jornada completa.</p>
 <p>En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado.</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span>outcome,<span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1130,6 +1196,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).</p>
 <p>Gerentes (A0) mejor en el privado, curritos de la enseñanza y la salud pues..</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, cno1 <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"A0"</span>, <span class="st">"B0"</span>)) <span class="sc">|&gt;</span></span>
@@ -1137,6 +1205,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> outcome, <span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10000</span>)) <span class="sc">+</span></span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1147,6 +1216,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Y si usamos el primer modelo que vimos</p>
 <div class="cell">
+<details open="">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">estim =</span> <span class="fu">predict</span>(mod_sector_privado, ess)) <span class="sc">|&gt;</span> </span>
@@ -1155,6 +1226,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> estim, <span class="at">fill =</span> <span class="fu">as_factor</span>(treatment))) <span class="sc">+</span></span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10000</span>)) <span class="sc">+</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1415,7 +1487,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","closeEffect":"zoom","selector":".lightbox","descPosition":"bottom","loop":true});</script>
+<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","selector":".lightbox","closeEffect":"zoom","openEffect":"zoom","loop":true});</script>
 
 
 
