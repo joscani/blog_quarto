@@ -25,12 +25,26 @@ filters:
   - shinylive
 ---
 
-Ayer asistí a una charla de David Durey en el grupo de R-madrid. Era sobre como migraron de Tableau a Shiny y fue una charla excepcional, gracias David.
+Ayer asistí a una charla de David Durey en el grupo de R-madrid. Era
+sobre como migraron de Tableau a Shiny y fue una charla excepcional,
+gracias David.
 
+En shiny está habiendo avances, tales como shiny en python o la
+extensión `shinylive` para Quarto. Está extensión permite ejecutar
+código de python y de R (pero está más avanzado en python) en el
+navegador, gracias a `WebAssembly` que permite correr ese código en el
+navegador en vez de tener un servidor corriendo
 
-En shiny está habiendo avances, tales como shiny en python o la extensión `shinylive` para Quarto. Está extensión permite ejecutar código de python y de R (pero está más avanzado en python) en el navegador, gracias a `WebAssembly` que permite correr ese código en el navegador en vez de tener un servidor corriendo
+Así que ni corto ni perezoso, voy a probarlo, copiando un código de
+ejemplo y poniendo una aplicación shiny dentro de este documento. Si la
+ves y se ejecuta, que sepas que no hay un servidor detrás y que eres tú
+en tu navegador quién está ejecutando esta aplicación de shiny para
+python.
 
-Así que ni corto ni perezoso, voy a probarlo, copiando un código de ejemplo y poniendo una aplicación shiny dentro de este documento. Si la ves y se ejecuta, que sepas que no hay un servidor detrás y que eres tú en tu navegador quién está ejecutando esta aplicación de shiny para python. 
+::: callout-caution
+Después de desplegar en netlify parece que no funciona. Si a alguien le
+va que lo ponga en los comentarios
+:::
 
 ```{shinylive-python}
 #| standalone: true
@@ -64,7 +78,11 @@ app = App(app_ui, server, debug=True)
 
 ```
 
+Para R usaría `webr`y una versión en desarrollo de
+[shinylive](https://github.com/posit-dev/shinylive) que he sido incapaz
+de compilar correctamente, y mira que se me dan bien estas cosas.
 
-Para R usaría  `webr`y una versión en desarrollo de [shinylive](https://github.com/posit-dev/shinylive) que he sido incapaz de compilar correctamente, y mira que se me dan bien estas cosas. 
-
-Así que quizá toque esperar un poco y ver como avanzan este tipo de proyectos de ejecutar cosas de python y R e incluso shinyapps en el navegador y por tanto en la máquina del usuario sin necesidad de un servidor. 
+Así que quizá toque esperar un poco y ver como avanzan este tipo de
+proyectos de ejecutar cosas de python y R e incluso shinyapps en el
+navegador y por tanto en la máquina del usuario sin necesidad de un
+servidor.
