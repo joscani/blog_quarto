@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.3.450">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -17,7 +17,7 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
 </style>
@@ -57,7 +57,8 @@ ul.task-list li input[type="checkbox"] {
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 <script>
@@ -90,6 +91,7 @@ ul.task-list li input[type="checkbox"] {
   })
   </script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
@@ -105,64 +107,66 @@ ul.task-list li input[type="checkbox"] {
     <span class="navbar-title">Muestrear no es pecado</span>
     </a>
   </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./blog.html">
+    <a class="nav-link" href="./blog.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html">
+    <a class="nav-link" href="./about.html" rel="" target="">
  <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/joscani"><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/joscani" rel="" target=""><i class="bi bi-github" role="img">
 </i> 
  <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/joscani"><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/joscani" rel="" target=""><i class="bi bi-twitter" role="img">
 </i> 
  <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://fosstodon.org/@joscani"><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://fosstodon.org/@joscani" rel="" target=""><i class="bi bi-mastodon" role="img">
 </i> 
  <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="./blog.xml"><i class="bi bi-rss" role="img">
+    <a class="nav-link" href="./blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
 </i> 
  <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
  <span class="menu-text">Resources</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="https://rweekly.org/">
+    <a class="dropdown-item" href="https://rweekly.org/" rel="" target="">
  <span class="dropdown-text">R Weekly</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+    <a class="dropdown-item" href="https://www.r-bloggers.com/" rel="" target="">
  <span class="dropdown-text">R Bloggers</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://www.datanalytics.com/">
+    <a class="dropdown-item" href="https://www.datanalytics.com/" rel="" target="">
  <span class="dropdown-text">Datanalytics</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="./archive.html">
+    <a class="nav-link" href="./archive.html" rel="" target="">
  <span class="menu-text">Archivo</span></a>
   </li>  
 </ul>
-              <div id="quarto-search" class="" title="Search"></div>
+            <div class="quarto-navbar-tools">
+</div>
           </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
@@ -232,180 +236,180 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </thead>
 <tbody class="list">
-<tr data-index="0" data-categories="estadística,spark,modelos mixtos,2021" data-listing-date-sort="1639263600000" data-listing-file-modified-sort="1668456885481" data-listing-reading-time-sort="7.095" data-listing-title-sort="Modelos mixtos en spark. Intento 1" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Dec 12, 2021
+<tr data-index="0" data-categories="estadística,spark,modelos mixtos,2021" data-listing-date-sort="1639263600000" data-listing-file-modified-sort="1668456885481" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-title-sort="Modelos mixtos en spark. Intento 1" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Dec 12, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/12/12/Modelos-mixtos-spark/index.html" class="title">Modelos mixtos en spark. Intento 1</a>
-</td>
-</tr>
-<tr data-index="1" data-categories="estadística,análisis bayesiano,2021" data-listing-date-sort="1638313200000" data-listing-file-modified-sort="1668457034219" data-listing-reading-time-sort="0.24" data-listing-title-sort="Lecturas para el finde" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Dec 1, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/12/01/lectura-para-el-finde/index.html" class="title">Lecturas para el finde</a>
+<td>
+<a href="./2021/12/12/Modelos-mixtos-spark/index.html" class="title listing-title">Modelos mixtos en spark. Intento 1</a>
 </td>
 </tr>
-<tr data-index="2" data-categories="árboles,ciencia de datos,h2o,estadísticca,2021" data-listing-date-sort="1635721200000" data-listing-file-modified-sort="1668627598555" data-listing-reading-time-sort="5.24" data-listing-title-sort="¿A dónde va Vicente?" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Nov 1, 2021
+<tr data-index="1" data-categories="estadística,análisis bayesiano,2021" data-listing-date-sort="1638313200000" data-listing-file-modified-sort="1668457034219" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-title-sort="Lecturas para el finde" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Dec 1, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/11/01/a-dónde-va-vicente/index.html" class="title">¿A dónde va Vicente?</a>
-</td>
-</tr>
-<tr data-index="3" data-categories="ciencia de datos,estadística,R,correspondencias,factorización,factorial,2021" data-listing-date-sort="1634767200000" data-listing-file-modified-sort="1668628614752" data-listing-reading-time-sort="5.245" data-listing-title-sort="Análisis de correspondencias &quot;old_style&quot;" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Oct 21, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/10/21/análisis-de-correspondencias-old-style/index.html" class="title">Análisis de correspondencias “old_style”</a>
+<td>
+<a href="./2021/12/01/lectura-para-el-finde/index.html" class="title listing-title">Lecturas para el finde</a>
 </td>
 </tr>
-<tr data-index="4" data-categories="análisis bayesiano,R,2021" data-listing-date-sort="1632693600000" data-listing-file-modified-sort="1668936760290" data-listing-reading-time-sort="3.345" data-listing-title-sort="¿A/B qué?" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Sep 27, 2021
+<tr data-index="2" data-categories="árboles,ciencia de datos,h2o,estadísticca,2021" data-listing-date-sort="1635721200000" data-listing-file-modified-sort="1668627598555" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="¿A dónde va Vicente?" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Nov 1, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/09/27/a-b-que/index.html" class="title">¿A/B qué?</a>
-</td>
-</tr>
-<tr data-index="5" data-categories="R,python,causal inference,2021" data-listing-date-sort="1631224800000" data-listing-file-modified-sort="1668626300709" data-listing-reading-time-sort="6.755" data-listing-title-sort="Los viejos [R]ockeros. model.matrix" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Sep 10, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/09/10/los-viejos-rockeros-model-matrix/index.html" class="title">Los viejos [R]ockeros. model.matrix</a>
+<td>
+<a href="./2021/11/01/a-dónde-va-vicente/index.html" class="title listing-title">¿A dónde va Vicente?</a>
 </td>
 </tr>
-<tr data-index="6" data-categories="gráficos,2021" data-listing-date-sort="1630101600000" data-listing-file-modified-sort="1668937568336" data-listing-reading-time-sort="3.2" data-listing-title-sort="¿Dos ejes de ordenadas? (Parte 2/n)" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Aug 28, 2021
+<tr data-index="3" data-categories="ciencia de datos,estadística,R,correspondencias,factorización,factorial,2021" data-listing-date-sort="1634767200000" data-listing-file-modified-sort="1668628614752" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Análisis de correspondencias &quot;old_style&quot;" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Oct 21, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/08/28/dos-ejes-de-ordenadas-parte-2-n/index.html" class="title">¿Dos ejes de ordenadas? (Parte 2/n)</a>
-</td>
-</tr>
-<tr data-index="7" data-categories="gráficos,2021" data-listing-date-sort="1629237600000" data-listing-file-modified-sort="1668939184167" data-listing-reading-time-sort="1.65" data-listing-title-sort="¿Dos ejes de ordenadas? (Parte 1/n)" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Aug 18, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/08/18/eje-y-secundario-1-n/index.html" class="title">¿Dos ejes de ordenadas? (Parte 1/n)</a>
+<td>
+<a href="./2021/10/21/análisis-de-correspondencias-old-style/index.html" class="title listing-title">Análisis de correspondencias “old_style”</a>
 </td>
 </tr>
-<tr data-index="8" data-categories="Julia,ciencia de datos,2021" data-listing-date-sort="1629064800000" data-listing-file-modified-sort="1668939995992" data-listing-reading-time-sort="11.985" data-listing-title-sort="Palabras para Julia ( Parte 2/n)" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Aug 16, 2021
+<tr data-index="4" data-categories="análisis bayesiano,R,2021" data-listing-date-sort="1632693600000" data-listing-file-modified-sort="1668936760290" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="¿A/B qué?" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Sep 27, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/08/16/palabras-para-julia-parte-2-n/index.html" class="title">Palabras para Julia ( Parte 2/n)</a>
-</td>
-</tr>
-<tr data-index="9" data-categories="Julia,ciencia de datos,software,2021" data-listing-date-sort="1628287200000" data-listing-file-modified-sort="1670485322766" data-listing-reading-time-sort="7.3" data-listing-title-sort="Palabras para Julia ( Parte 1/n)" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Aug 7, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/08/07/palabras-para-julia-parte-1-n/index.html" class="title">Palabras para Julia ( Parte 1/n)</a>
+<td>
+<a href="./2021/09/27/a-b-que/index.html" class="title listing-title">¿A/B qué?</a>
 </td>
 </tr>
-<tr data-index="10" data-categories="estadística,imputación,2021" data-listing-date-sort="1623535200000" data-listing-file-modified-sort="1669278328642" data-listing-reading-time-sort="4.44" data-listing-title-sort="Imputando datos. La estructura importa" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jun 13, 2021
+<tr data-index="5" data-categories="R,python,causal inference,2021" data-listing-date-sort="1631224800000" data-listing-file-modified-sort="1668626300709" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-title-sort="Los viejos [R]ockeros. model.matrix" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Sep 10, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/06/13/imputando-datos-la-estructura-importa/index.html" class="title">Imputando datos. La estructura importa</a>
-</td>
-</tr>
-<tr data-index="11" data-categories="estadística,big data,análisis bayesiano,modelos mixtos,2021" data-listing-date-sort="1622757600000" data-listing-file-modified-sort="1675590821095" data-listing-reading-time-sort="9.515" data-listing-title-sort="Big data para pobres III. ¿Bayesiano?" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jun 4, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/06/04/big-data-para-pobres-iii-bayesiano/index.html" class="title">Big data para pobres III. ¿Bayesiano?</a>
+<td>
+<a href="./2021/09/10/los-viejos-rockeros-model-matrix/index.html" class="title listing-title">Los viejos [R]ockeros. model.matrix</a>
 </td>
 </tr>
-<tr data-index="12" data-categories="estadística,2021,big data,modelos mixtos" data-listing-date-sort="1621548000000" data-listing-file-modified-sort="1675586708397" data-listing-reading-time-sort="5.37" data-listing-title-sort="Big data para pobres II. ¿AUC?" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-May 21, 2021
+<tr data-index="6" data-categories="gráficos,2021" data-listing-date-sort="1630101600000" data-listing-file-modified-sort="1668937568336" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="¿Dos ejes de ordenadas? (Parte 2/n)" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Aug 28, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/05/21/big-data-pobres-ii-auc/index.html" class="title">Big data para pobres II. ¿AUC?</a>
-</td>
-</tr>
-<tr data-index="13" data-categories="estadística,2021,big data,modelos mixtos" data-listing-date-sort="1620943200000" data-listing-file-modified-sort="1675586895368" data-listing-reading-time-sort="5.21" data-listing-title-sort="Cosas viejunas.  O big data para pobres" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-May 14, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/05/14/cosas-viejunas-o-big-data-para-pobres/index.html" class="title">Cosas viejunas. O big data para pobres</a>
+<td>
+<a href="./2021/08/28/dos-ejes-de-ordenadas-parte-2-n/index.html" class="title listing-title">¿Dos ejes de ordenadas? (Parte 2/n)</a>
 </td>
 </tr>
-<tr data-index="14" data-categories="2021,R,análisis bayesiano" data-listing-date-sort="1616799600000" data-listing-file-modified-sort="1670660517131" data-listing-reading-time-sort="5.59" data-listing-title-sort="Estimación Bayesiana, estilo compadre" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Mar 27, 2021
+<tr data-index="7" data-categories="gráficos,2021" data-listing-date-sort="1629237600000" data-listing-file-modified-sort="1668939184167" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="¿Dos ejes de ordenadas? (Parte 1/n)" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Aug 18, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/03/27/estimación-bayesiana-estilo-compadre/index.html" class="title">Estimación Bayesiana, estilo compadre</a>
-</td>
-</tr>
-<tr data-index="15" data-categories="ciencia de datos,R,2021" data-listing-date-sort="1615590000000" data-listing-file-modified-sort="1670319378406" data-listing-reading-time-sort="4.535" data-listing-title-sort="Purrr, furrr, maps y future_maps" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Mar 13, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/03/13/purrr-furrr-o-cómo-se-diga/index.html" class="title">Purrr, furrr, maps y future_maps</a>
+<td>
+<a href="./2021/08/18/eje-y-secundario-1-n/index.html" class="title listing-title">¿Dos ejes de ordenadas? (Parte 1/n)</a>
 </td>
 </tr>
-<tr data-index="16" data-categories="estadística,2021" data-listing-date-sort="1615158000000" data-listing-file-modified-sort="1670322426009" data-listing-reading-time-sort="1.605" data-listing-title-sort="AUC = Wilcoxon , de nuevo" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Mar 8, 2021
+<tr data-index="8" data-categories="Julia,ciencia de datos,2021" data-listing-date-sort="1629064800000" data-listing-file-modified-sort="1668939995992" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-title-sort="Palabras para Julia ( Parte 2/n)" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Aug 16, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/03/08/auc-wilcoxon-de-nuevo/index.html" class="title">AUC = Wilcoxon , de nuevo</a>
-</td>
-</tr>
-<tr data-index="17" data-categories="ciencia de datos,estadística,2021" data-listing-date-sort="1613257200000" data-listing-file-modified-sort="1670488204553" data-listing-reading-time-sort="5.065" data-listing-title-sort="Una colina" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Feb 14, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/02/14/una-colina/index.html" class="title">Una colina</a>
+<td>
+<a href="./2021/08/16/palabras-para-julia-parte-2-n/index.html" class="title listing-title">Palabras para Julia ( Parte 2/n)</a>
 </td>
 </tr>
-<tr data-index="18" data-categories="estadística,polémica,2021" data-listing-date-sort="1611615600000" data-listing-file-modified-sort="1670488423302" data-listing-reading-time-sort="7.175" data-listing-title-sort="Cachitos. Tercera parte" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jan 26, 2021
+<tr data-index="9" data-categories="Julia,ciencia de datos,software,2021" data-listing-date-sort="1628287200000" data-listing-file-modified-sort="1670485322766" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-title-sort="Palabras para Julia ( Parte 1/n)" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Aug 7, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/01/26/cachitos-tercera-parte/index.html" class="title">Cachitos. Tercera parte</a>
-</td>
-</tr>
-<tr data-index="19" data-categories="estadística,polémica,2021" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1670488765553" data-listing-reading-time-sort="6.225" data-listing-title-sort="Cachitos. Segunda parte" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jan 13, 2021
-</td>
-<td class="listing-title">
-<a href="./2021/01/13/cachitos-segunda-parte/index.html" class="title">Cachitos. Segunda parte</a>
+<td>
+<a href="./2021/08/07/palabras-para-julia-parte-1-n/index.html" class="title listing-title">Palabras para Julia ( Parte 1/n)</a>
 </td>
 </tr>
-<tr data-index="20" data-categories="estadística,linux,polémica,ocr,2021" data-listing-date-sort="1610319600000" data-listing-file-modified-sort="1670489043489" data-listing-reading-time-sort="5.475" data-listing-title-sort="Cachitos. Primera parte" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jan 11, 2021
+<tr data-index="10" data-categories="estadística,imputación,2021" data-listing-date-sort="1623535200000" data-listing-file-modified-sort="1669278328642" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-title-sort="Imputando datos. La estructura importa" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 13, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/01/11/cachitos-primera-parte/index.html" class="title">Cachitos. Primera parte</a>
+<td>
+<a href="./2021/06/13/imputando-datos-la-estructura-importa/index.html" class="title listing-title">Imputando datos. La estructura importa</a>
 </td>
 </tr>
-<tr data-index="21" data-categories="ciencia de datos,estadística,causal inference,2021" data-listing-date-sort="1609974000000" data-listing-file-modified-sort="1670490017996" data-listing-reading-time-sort="2.125" data-listing-title-sort="Tendencias" data-listing-filename-sort="index.qmd">
-<td class="listing-date">
-Jan 7, 2021
+<tr data-index="11" data-categories="estadística,big data,análisis bayesiano,modelos mixtos,2021" data-listing-date-sort="1622757600000" data-listing-file-modified-sort="1675590821095" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-title-sort="Big data para pobres III. ¿Bayesiano?" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 4, 2021</span>
 </td>
-<td class="listing-title">
-<a href="./2021/01/07/tendencias/index.html" class="title">Tendencias</a>
+<td>
+<a href="./2021/06/04/big-data-para-pobres-iii-bayesiano/index.html" class="title listing-title">Big data para pobres III. ¿Bayesiano?</a>
+</td>
+</tr>
+<tr data-index="12" data-categories="estadística,2021,big data,modelos mixtos" data-listing-date-sort="1621548000000" data-listing-file-modified-sort="1675586708397" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Big data para pobres II. ¿AUC?" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">May 21, 2021</span>
+</td>
+<td>
+<a href="./2021/05/21/big-data-pobres-ii-auc/index.html" class="title listing-title">Big data para pobres II. ¿AUC?</a>
+</td>
+</tr>
+<tr data-index="13" data-categories="estadística,2021,big data,modelos mixtos" data-listing-date-sort="1620943200000" data-listing-file-modified-sort="1675586895368" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Cosas viejunas.  O big data para pobres" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">May 14, 2021</span>
+</td>
+<td>
+<a href="./2021/05/14/cosas-viejunas-o-big-data-para-pobres/index.html" class="title listing-title">Cosas viejunas. O big data para pobres</a>
+</td>
+</tr>
+<tr data-index="14" data-categories="2021,R,análisis bayesiano" data-listing-date-sort="1616799600000" data-listing-file-modified-sort="1670660517131" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Estimación Bayesiana, estilo compadre" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Mar 27, 2021</span>
+</td>
+<td>
+<a href="./2021/03/27/estimación-bayesiana-estilo-compadre/index.html" class="title listing-title">Estimación Bayesiana, estilo compadre</a>
+</td>
+</tr>
+<tr data-index="15" data-categories="ciencia de datos,R,2021" data-listing-date-sort="1615590000000" data-listing-file-modified-sort="1670319378406" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-title-sort="Purrr, furrr, maps y future_maps" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Mar 13, 2021</span>
+</td>
+<td>
+<a href="./2021/03/13/purrr-furrr-o-cómo-se-diga/index.html" class="title listing-title">Purrr, furrr, maps y future_maps</a>
+</td>
+</tr>
+<tr data-index="16" data-categories="estadística,2021" data-listing-date-sort="1615158000000" data-listing-file-modified-sort="1670322426009" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="AUC = Wilcoxon , de nuevo" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Mar 8, 2021</span>
+</td>
+<td>
+<a href="./2021/03/08/auc-wilcoxon-de-nuevo/index.html" class="title listing-title">AUC = Wilcoxon , de nuevo</a>
+</td>
+</tr>
+<tr data-index="17" data-categories="ciencia de datos,estadística,2021" data-listing-date-sort="1613257200000" data-listing-file-modified-sort="1670488204553" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Una colina" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Feb 14, 2021</span>
+</td>
+<td>
+<a href="./2021/02/14/una-colina/index.html" class="title listing-title">Una colina</a>
+</td>
+</tr>
+<tr data-index="18" data-categories="estadística,polémica,2021" data-listing-date-sort="1611615600000" data-listing-file-modified-sort="1670488423302" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-title-sort="Cachitos. Tercera parte" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jan 26, 2021</span>
+</td>
+<td>
+<a href="./2021/01/26/cachitos-tercera-parte/index.html" class="title listing-title">Cachitos. Tercera parte</a>
+</td>
+</tr>
+<tr data-index="19" data-categories="estadística,polémica,2021" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1670488765553" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-title-sort="Cachitos. Segunda parte" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jan 13, 2021</span>
+</td>
+<td>
+<a href="./2021/01/13/cachitos-segunda-parte/index.html" class="title listing-title">Cachitos. Segunda parte</a>
+</td>
+</tr>
+<tr data-index="20" data-categories="estadística,linux,polémica,ocr,2021" data-listing-date-sort="1610319600000" data-listing-file-modified-sort="1670489043489" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-title-sort="Cachitos. Primera parte" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jan 11, 2021</span>
+</td>
+<td>
+<a href="./2021/01/11/cachitos-primera-parte/index.html" class="title listing-title">Cachitos. Primera parte</a>
+</td>
+</tr>
+<tr data-index="21" data-categories="ciencia de datos,estadística,causal inference,2021" data-listing-date-sort="1609974000000" data-listing-file-modified-sort="1670490017996" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-title-sort="Tendencias" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jan 7, 2021</span>
+</td>
+<td>
+<a href="./2021/01/07/tendencias/index.html" class="title listing-title">Tendencias</a>
 </td>
 </tr>
 </tbody>
@@ -442,9 +446,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -509,6 +527,92 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       return note.innerHTML;
     });
   }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
   const findCites = (el) => {
     const parentEl = el.parentElement;
     if (parentEl) {
