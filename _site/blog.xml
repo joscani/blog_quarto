@@ -10,7 +10,640 @@
 <atom:link href="https://muestrear-no-es-pecado-rebranding.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Sat, 18 Nov 2023 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 02 Dec 2023 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Vuelta a la facultad. SVD</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/Vuelta_a_la_facultad_svd.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Unos compis del trabajo están haciendo cosas muy chulas utilizando SVD (Descomposición en valores singulares) y me ha recordado a los tiempos de la universidad.</p>
+<p>La SVD es una factorización de una matriz rectangular tal que así.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20%5Cmathbf%7BX%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20"></p>
+<p>Veamos un ejemplo, dónde tenemos una matriz de 5x4</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1">X <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">matrix</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>( <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb1-2">               <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>,</span>
+<span id="cb1-3">               <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>,</span>
+<span id="cb1-4">               <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">7</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb1-5">               <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> , <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span></span>
+<span id="cb1-6">               ),</span>
+<span id="cb1-7">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">byrow =</span> T, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nrow =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">ncol =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>,</span>
+<span id="cb1-8">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">dimnames =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">list</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P1"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P2"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P3"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P4"</span>,<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P5"</span>),</span>
+<span id="cb1-9">                            <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V1"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V2"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V3"</span>,<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V4"</span>)))</span>
+<span id="cb1-10">X</span>
+<span id="cb1-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;    V1 V2 V3 V4</span></span>
+<span id="cb1-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P1 10 -1 -2  2</span></span>
+<span id="cb1-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P2  4  8 -1  3</span></span>
+<span id="cb1-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P3 -2  5 -3  4</span></span>
+<span id="cb1-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P4 -7 -8  6 -2</span></span>
+<span id="cb1-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P5 -2  5  4 -4</span></span></code></pre></div>
+</div>
+<p>Hacemos la svd</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">dvs <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">svd</span>(X)</span>
+<span id="cb2-2">dvs</span>
+<span id="cb2-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $d</span></span>
+<span id="cb2-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 17.033392 10.982941  6.873957  2.997880</span></span>
+<span id="cb2-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb2-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $u</span></span>
+<span id="cb2-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;             [,1]        [,2]        [,3]        [,4]</span></span>
+<span id="cb2-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,] -0.41759401  0.66860794  0.28085132 -0.28960722</span></span>
+<span id="cb2-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,] -0.50584653 -0.30661800  0.13614448 -0.62790360</span></span>
+<span id="cb2-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,] -0.23820970 -0.40000698 -0.61431429 -0.21204097</span></span>
+<span id="cb2-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,]  0.71395758  0.08354597 -0.00214809 -0.68888308</span></span>
+<span id="cb2-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [5,]  0.05705485 -0.54033629  0.72470722  0.04840934</span></span>
+<span id="cb2-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb2-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $v</span></span>
+<span id="cb2-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;            [,1]        [,2]       [,3]        [,4]</span></span>
+<span id="cb2-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,] -0.6360870  0.61508773  0.4578647 -0.08614145</span></span>
+<span id="cb2-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,] -0.6015603 -0.77316598  0.2003873 -0.01358129</span></span>
+<span id="cb2-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,]  0.3855737 -0.13572378  0.5864215 -0.69930092</span></span>
+<span id="cb2-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,] -0.2912926  0.07389525 -0.6374282 -0.70948815</span></span></code></pre></div>
+</div>
+<p>Y vemos que efectivamente</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1">dvs<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">diag</span>(dvs<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>d) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">t</span>(dvs<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>v)</span>
+<span id="cb3-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;      [,1] [,2] [,3] [,4]</span></span>
+<span id="cb3-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,]   10   -1   -2    2</span></span>
+<span id="cb3-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,]    4    8   -1    3</span></span>
+<span id="cb3-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,]   -2    5   -3    4</span></span>
+<span id="cb3-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,]   -7   -8    6   -2</span></span>
+<span id="cb3-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [5,]   -2    5    4   -4</span></span></code></pre></div>
+</div>
+<p>Ahora, la proyección de las filas en el espacio vectorial definido por la descomposión en valores singulares sería</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20%20Proj%20=%20%5Cmathbf%7BX%7D%20%5Cmathbf%7BV%7D%20"></p>
+<p>De forma que si tenemos unos nuevos datos y queremos proyectarlos sobre la estructura definida por la DVS ya calculada se haría así.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1">nuevaX <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">matrix</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>( <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.1</span>,</span>
+<span id="cb4-2">               <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span></span>
+<span id="cb4-3">               ),</span>
+<span id="cb4-4">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">byrow =</span> T, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nrow =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">ncol =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>,</span>
+<span id="cb4-5">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">dimnames =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">list</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P6"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"P7"</span>),</span>
+<span id="cb4-6">                            <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V1"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V2"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V3"</span>,<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"V4"</span>)))</span>
+<span id="cb4-7"></span>
+<span id="cb4-8">nuevaX</span>
+<span id="cb4-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;    V1 V2 V3  V4</span></span>
+<span id="cb4-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P6 20 -2 -3 2.1</span></span>
+<span id="cb4-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P7  5  2 -1 3.0</span></span>
+<span id="cb4-12"></span>
+<span id="cb4-13">(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">proyeccion =</span> nuevaX <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> dvs<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>v)</span>
+<span id="cb4-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;          [,1]      [,2]      [,3]      [,4]</span></span>
+<span id="cb4-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P6 -13.287055 14.410438 5.6586547 -1.087689</span></span>
+<span id="cb4-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P7  -5.643007  1.886516 0.1913919 -1.887033</span></span></code></pre></div>
+</div>
+<p>Y para proyectar los valores de X originales, podemos hacer lo mismo o como sabemos que</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20%5Cmathbf%7BX%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20"></p>
+<p>entonces</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Proj%20=%20%5Cmathbf%7BX%7D%20%5Cmathbf%7BV%7D%20=%20%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20%5Cmathbf%7BV%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BI%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20"></p>
+<p>Es decir, la proyección de las filas son los vectores singulares izquierdos por la matriz diagonal de los valores singulares.</p>
+<p><strong>¿Y para qué sirve esto?</strong> Pues una cosa interesante de la SVD es que nos sirve para reducir la dimensión de los datos, quedándonos con los k primeros valores singulares y los respectivos k primeros vectores singulares.</p>
+<p>Supongamos que queremos quedarnos con k = 3</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">dvs_red <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">svd</span>(X, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nu =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nv =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>)</span>
+<span id="cb5-2">dvs_red</span>
+<span id="cb5-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $d</span></span>
+<span id="cb5-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 17.033392 10.982941  6.873957  2.997880</span></span>
+<span id="cb5-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $u</span></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;             [,1]        [,2]        [,3]</span></span>
+<span id="cb5-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,] -0.41759401  0.66860794  0.28085132</span></span>
+<span id="cb5-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,] -0.50584653 -0.30661800  0.13614448</span></span>
+<span id="cb5-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,] -0.23820970 -0.40000698 -0.61431429</span></span>
+<span id="cb5-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,]  0.71395758  0.08354597 -0.00214809</span></span>
+<span id="cb5-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [5,]  0.05705485 -0.54033629  0.72470722</span></span>
+<span id="cb5-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $v</span></span>
+<span id="cb5-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;            [,1]        [,2]       [,3]</span></span>
+<span id="cb5-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,] -0.6360870  0.61508773  0.4578647</span></span>
+<span id="cb5-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,] -0.6015603 -0.77316598  0.2003873</span></span>
+<span id="cb5-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,]  0.3855737 -0.13572378  0.5864215</span></span>
+<span id="cb5-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,] -0.2912926  0.07389525 -0.6374282</span></span></code></pre></div>
+</div>
+<p>Podemos reconstruir la matriz original tal que así</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># matriz original</span></span>
+<span id="cb6-2">X</span>
+<span id="cb6-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;    V1 V2 V3 V4</span></span>
+<span id="cb6-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P1 10 -1 -2  2</span></span>
+<span id="cb6-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P2  4  8 -1  3</span></span>
+<span id="cb6-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P3 -2  5 -3  4</span></span>
+<span id="cb6-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P4 -7 -8  6 -2</span></span>
+<span id="cb6-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P5 -2  5  4 -4</span></span>
+<span id="cb6-9"></span>
+<span id="cb6-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># reconstrucción </span></span>
+<span id="cb6-11"></span>
+<span id="cb6-12">dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">diag</span>(dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>d[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>]) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">t</span>(dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>v)</span>
+<span id="cb6-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;           [,1]      [,2]      [,3]      [,4]</span></span>
+<span id="cb6-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,]  9.925211 -1.011791 -2.607138  1.384017</span></span>
+<span id="cb6-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,]  3.837849  7.974435 -2.316350  1.664474</span></span>
+<span id="cb6-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,] -2.054758  4.991367 -3.444527  3.548997</span></span>
+<span id="cb6-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,] -7.177898 -8.028048  4.555812 -3.465227</span></span>
+<span id="cb6-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [5,] -1.987499  5.001971  4.101486 -3.897035</span></span></code></pre></div>
+</div>
+<p>Y así almacenando U, d y V podemos tener una aproximación de X ocupando menos espacio.</p>
+<p>Una utilidad de esto es que si pensamos en las filas como observaciones y las columnnas como variables, la SVD nos sirve para hacer una reducción de la dimensionalidad, de hecho los valores singulares al cuadrado son los autovalores de <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BX%5ET%7D%20%5Cmathbf%7BX%7D"></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1">Z <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">t</span>(X) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> X</span>
+<span id="cb7-2"></span>
+<span id="cb7-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">eigen</span>(Z)</span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; eigen() decomposition</span></span>
+<span id="cb7-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $values</span></span>
+<span id="cb7-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 290.136446 120.624987  47.251282   8.987284</span></span>
+<span id="cb7-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb7-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; $vectors</span></span>
+<span id="cb7-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;            [,1]        [,2]       [,3]       [,4]</span></span>
+<span id="cb7-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1,]  0.6360870  0.61508773 -0.4578647 0.08614145</span></span>
+<span id="cb7-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2,]  0.6015603 -0.77316598 -0.2003873 0.01358129</span></span>
+<span id="cb7-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3,] -0.3855737 -0.13572378 -0.5864215 0.69930092</span></span>
+<span id="cb7-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4,]  0.2912926  0.07389525  0.6374282 0.70948815</span></span>
+<span id="cb7-14"></span>
+<span id="cb7-15">dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>d<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span></span>
+<span id="cb7-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] 290.136446 120.624987  47.251282   8.987284</span></span></code></pre></div>
+</div>
+<p>Si nos quedamos con los k primeros singulares podríamos querer tener por ejemplo la proyección de las filas en ese subespacio, y usar esas coordenadas para ver distancias entre filas. Una propiedad deseable de ese subespacio es que las distancias entre los individuos sean parecidas o al menos ordenen de la misma forma que en el espacio original.</p>
+<p>Por ejemplo las distancias euclídeas entre las filas de X</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">dist</span>(X)</span>
+<span id="cb8-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;           P1        P2        P3        P4</span></span>
+<span id="cb8-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P2 10.908712                              </span></span>
+<span id="cb8-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P3 13.601471  7.071068                    </span></span>
+<span id="cb8-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P4 20.445048 21.236761 17.635192          </span></span>
+<span id="cb8-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; P5 15.874508 10.908712 10.630146 14.212670</span></span></code></pre></div>
+</div>
+<p>Vemos que P5 está más cerca de P3 que de P2.</p>
+<p>Si usamos sólo la matriz <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%20%5Ctimes%20k%7D%7D"> para ver distancias tenemos que no se mantiene esa relación entre las distancias</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">dist</span>(dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>u)</span>
+<span id="cb9-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;           1         2         3         4</span></span>
+<span id="cb9-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 2 0.9898455                              </span></span>
+<span id="cb9-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 3 1.4055028 0.8022090                    </span></span>
+<span id="cb9-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 4 1.3049119 1.2881284 1.2309319          </span></span>
+<span id="cb9-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 5 1.3725326 0.8472829 1.3783512 1.1614943</span></span></code></pre></div>
+</div>
+<p>En cambio si utilizamos la proyección tenemos que las distancias son del mismo orden que en los datos originales y que se mantiene la relación entre las diferentes filas.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
+<span id="cb10-2">proyeccion <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> (dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">diag</span>(dvs_red<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>d[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>]))</span>
+<span id="cb10-3"></span>
+<span id="cb10-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">dist</span>(proyeccion)</span>
+<span id="cb10-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;           1         2         3         4</span></span>
+<span id="cb10-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 2 10.861467                              </span></span>
+<span id="cb10-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 3 13.599483  6.960296                    </span></span>
+<span id="cb10-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 4 20.409979 21.235974 17.577158          </span></span>
+<span id="cb10-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 5 15.842132 10.718639 10.601432 14.039748</span></span></code></pre></div>
+</div>
+<p>Por eso, si queremos utilizar SVD para hacer una reducción de dimensionalidad y posteriormente utilizar técnicas que utilicen distancias puede tener más sentido utilizar la proyección <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%5Ctimes%20k%7D%7D%20%5Cmathbf%7B%5CSigma_%7Bk%20%5Ctimes%20k%7D%7D"> que sólo <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%5Ctimes%20k%7D%7D"></p>
+
+
+
+ ]]></description>
+  <category>2023</category>
+  <category>R</category>
+  <category>Álgebra</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/Vuelta_a_la_facultad_svd.html</guid>
+  <pubDate>Sat, 02 Dec 2023 23:00:00 GMT</pubDate>
+</item>
 <item>
   <title>XIII Jornadas de R. Barcelona</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -15354,7 +15987,7 @@ background-color: null;
 font-style: inherit;">library</span>(MASS)</span></code></pre></div>
 </details>
 </div>
-<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" title="Help housing" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
+<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Help housing"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
 <div class="cell">
 <details open="">
 <summary>Code</summary>
@@ -33325,687 +33958,6 @@ font-style: inherit;"># Print the map</span></span></code></pre></div>
   <category>news</category>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/welcome/index.html</guid>
   <pubDate>Wed, 26 Oct 2022 22:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Sigo trasteando con julia</title>
-  <dc:creator>jlcr </dc:creator>
-  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/10/26/sigo-trasteando-con-julia/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>Siguiendo con lo que contaba <a href="https://muestrear-no-es-pecado.netlify.app/2021/08/16/palabras-para-julia-parte-2-n/">aquí</a> me he construido un binario para predecir usando un modelo de xgboost con Julia. La ventaja es que tengo un tar.gz que puedo descomprimir en cualquier linux (por ejemplo un entorno de producción sin acceso a internet y que no tenga ni vaya a tener julia instalado, ni docker ni nada de nada), descomprimir y poder hacer un <code>miapp_para_predecir mi_modelo_entrenado.jls csv_to_predict.csv resultado.csv</code> y que funcione y vaya como un tiro.</p>
-<p>Pongo aquí los ficheros relevantes.</p>
-<p>Por ejemplo mi fichero para entrenar un modelo y salvarlo .</p>
-<p>Fichero <code>train_ boston.jl</code></p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Training model julia</span></span>
-<span id="cb1-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">using</span>  <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">CSV</span>,<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">CategoricalArrays</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">DataFrames</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJ</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJXGBoostInterface</span></span>
-<span id="cb1-3"></span>
-<span id="cb1-4"></span>
-<span id="cb1-5">df1 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> CSV.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">read</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"data/boston.csv"</span>, DataFrame)</span>
-<span id="cb1-6"></span>
-<span id="cb1-7">df1[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>target] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">ifelse</span>.(df1[!, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>medv_20]<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.==</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"NG20"</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-8"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">const</span> target <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">CategoricalArray</span>(df1[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>target])</span>
-<span id="cb1-9"></span>
-<span id="cb1-10"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">const</span> X <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df1[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>, <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">Not</span>([<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>medv_20, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>target])]</span>
-<span id="cb1-11"></span>
-<span id="cb1-12">Tree <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="pp" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">@load</span> XGBoostClassifier pkg<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>XGBoost</span>
-<span id="cb1-13">tree_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">Tree</span>(objective<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"binary:logistic"</span>, max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">6</span>, num_round <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">800</span>)</span>
-<span id="cb1-14">mach <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">machine</span>(tree_model, X, target)</span>
-<span id="cb1-15"></span>
-<span id="cb1-16"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">Threads</span>.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">nthreads</span>()</span>
-<span id="cb1-17"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">evaluate</span>(tree_model, X, target, resampling<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">CV</span>(shuffle<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span>),measure<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>log_loss, verbosity<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-18"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">evaluate</span>(tree_model, X, target,</span>
-<span id="cb1-19">                resampling<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">CV</span>(shuffle<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span>), measure<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>bac, operation<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>predict_mode, verbosity<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-20"></span>
-<span id="cb1-21"></span>
-<span id="cb1-22"></span>
-<span id="cb1-23">train, test <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">partition</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">eachindex</span>(target), <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.7</span>, shuffle<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span>)</span>
-<span id="cb1-24"></span>
-<span id="cb1-25"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">fit!</span>(mach, rows<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>train)</span>
-<span id="cb1-26"></span>
-<span id="cb1-27">yhat <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(mach, X[test,<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>])</span>
-<span id="cb1-28"></span>
-<span id="cb1-29"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">evaluate</span>(tree_model, X[test,<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>], target[test], measure<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>auc, operation<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>predict_mode, verbosity<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-30"></span>
-<span id="cb1-31">niveles <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">levels</span>.(yhat)[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb1-32">niveles[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb1-33"></span>
-<span id="cb1-34"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">log_loss</span>(yhat, target[test]) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> mean</span>
-<span id="cb1-35"></span>
-<span id="cb1-36">res <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">pdf</span>(yhat, niveles)</span>
-<span id="cb1-37">res_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">DataFrame</span>(res,<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>auto)</span>
-<span id="cb1-38"></span>
-<span id="cb1-39">MLJ.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">save</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"models/boston_xg.jls"</span>, mach)</span></code></pre></div>
-<p>Y luego los ficheros que uso para construirme la app binaria .. Recordemos del <a href="https://muestrear-no-es-pecado.netlify.app/2021/08/16/palabras-para-julia-parte-2-n/">post que mencionaba</a> que lo que necesito es el código del programa principal (el main) y un fichero de precompilación que sirve para que al crear la app se compilen las funciones que voy a usar.</p>
-<p>fichero <code>precomp.jl</code>,</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">using</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">CSV</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">DataFrames</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJ</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJBase</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJXGBoostInterface</span></span>
-<span id="cb2-2"></span>
-<span id="cb2-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># uso rutas absolutas</span></span>
-<span id="cb2-4">df1 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> CSV.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">read</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"data/iris.csv"</span>, DataFrame)</span>
-<span id="cb2-5">X <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df1[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>, <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">Not</span>(<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>Species)]</span>
-<span id="cb2-6"></span>
-<span id="cb2-7">predict_only_mach <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">machine</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"models/mimodelo_xg_binario.jls"</span>)</span>
-<span id="cb2-8"></span>
-<span id="cb2-9">ŷ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(predict_only_mach, X) </span>
-<span id="cb2-10"></span>
-<span id="cb2-11"></span>
-<span id="cb2-12"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict_mode</span>(predict_only_mach, X)</span>
-<span id="cb2-13"></span>
-<span id="cb2-14">niveles <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">levels</span>.(ŷ)[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb2-15"></span>
-<span id="cb2-16">res <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">pdf</span>(ŷ, niveles) <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># con pdf nos da la probabilidad de cada nivel</span></span>
-<span id="cb2-17">res_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">DataFrame</span>(res,<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>auto)</span>
-<span id="cb2-18"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">rename!</span>(res_df, [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"target_0"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"target_1"</span>])</span>
-<span id="cb2-19"></span>
-<span id="cb2-20">CSV.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">write</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"data/predicciones.csv"</span>, res_df)</span></code></pre></div>
-<p>fichero <code>xgboost_predict_binomial.jl</code> , aquí es dónde está el main</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">module</span> xgboost_predict_binomial</span>
-<span id="cb3-2"></span>
-<span id="cb3-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">using</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">CSV</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">DataFrames</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJ</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJBase</span>, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">MLJXGBoostInterface</span></span>
-<span id="cb3-4"></span>
-<span id="cb3-5"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">function</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">julia_main</span>()<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">::</span><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">Cint</span></span>
-<span id="cb3-6">    try</span>
-<span id="cb3-7">        <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">real_main</span>()</span>
-<span id="cb3-8">    catch</span>
-<span id="cb3-9">        <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">Base</span>.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">invokelatest</span>(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">Base</span>.display_error, <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">Base</span>.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">catch_stack</span>())</span>
-<span id="cb3-10">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span></span>
-<span id="cb3-11">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">end</span></span>
-<span id="cb3-12">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span></span>
-<span id="cb3-13"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">end</span></span>
-<span id="cb3-14"></span>
-<span id="cb3-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># ARGS son los argumentos pasados por consola </span></span>
-<span id="cb3-16"></span>
-<span id="cb3-17"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">function</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">real_main</span>()</span>
-<span id="cb3-18">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">length</span>(<span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">ARGS</span>) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span></span>
-<span id="cb3-19">        <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">error</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"pass arguments"</span>)</span>
-<span id="cb3-20">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">end</span></span>
-<span id="cb3-21"></span>
-<span id="cb3-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Read model</span></span>
-<span id="cb3-23">    modelo <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">machine</span>(<span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">ARGS</span>[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>])</span>
-<span id="cb3-24"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># read data. El fichero qeu pasemos tiene que tener solo las X.(con su nombre)</span></span>
-<span id="cb3-25">    X <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> CSV.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">read</span>(<span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">ARGS</span>[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>], DataFrame, ntasks<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">Sys</span>.<span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">CPU_THREADS</span>)</span>
-<span id="cb3-26"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Predict    </span></span>
-<span id="cb3-27">    ŷ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(modelo, X)            <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># predict</span></span>
-<span id="cb3-28">    niveles <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">levels</span>.(ŷ)[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]           <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># get levels of target</span></span>
-<span id="cb3-29">    res <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">pdf</span>(ŷ, niveles)             <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># predict probabilities for each level</span></span>
-<span id="cb3-30">    </span>
-<span id="cb3-31">    res_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">DataFrame</span>(res,<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>auto)     <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># convert to DataFrame</span></span>
-<span id="cb3-32">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">rename!</span>(res_df, [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"target_0"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"target_1"</span>])          <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Column rename</span></span>
-<span id="cb3-33">    CSV.<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">write</span>(<span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">ARGS</span>[<span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>], res_df)        <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Write in csv</span></span>
-<span id="cb3-34"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">end</span></span>
-<span id="cb3-35"></span>
-<span id="cb3-36"></span>
-<span id="cb3-37"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">end</span> <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># module</span></span></code></pre></div>
-<p>y si todo está correcto y siguiendo las instrucciones del post anterior, se compilaría haciendo por ejemplo esto</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">using</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">PackageCompiler</span></span>
-<span id="cb4-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">create_app</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"../xgboost_predict_binomial"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"../xg_binomial_inference"</span>,</span>
-<span id="cb4-3"> precompile_execution_file<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"../xgboost_predict_binomial/src/precomp_file.jl"</span>, force<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span>, filter_stdlibs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span>, cpu_target <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64"</span>)</span></code></pre></div>
-<p>Y esto me crea una estructura de directorios dónde está mi app y todo lo necesario para ejecutar julia en cualqueir linux.</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"></span>
-<span id="cb5-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">╰─</span> $ ▶ tree <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-L</span> 2 xg_binomial_inference</span>
-<span id="cb5-3"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">xg_binomial_inference</span></span>
-<span id="cb5-4"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">├──</span> bin</span>
-<span id="cb5-5"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> ├── julia</span>
-<span id="cb5-6"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> └── xgboost_predict_binomial</span>
-<span id="cb5-7"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">├──</span> lib</span>
-<span id="cb5-8"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> ├── julia</span>
-<span id="cb5-9"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> ├── libjulia.so <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> libjulia.so.1.8</span>
-<span id="cb5-10"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> ├── libjulia.so.1 <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> libjulia.so.1.8</span>
-<span id="cb5-11"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">│&nbsp;&nbsp;</span> └── libjulia.so.1.8</span>
-<span id="cb5-12"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">└──</span> share</span>
-<span id="cb5-13">    <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">└──</span> julia</span></code></pre></div>
-<p>y poner por ejemplo en el <code>.bashrc</code> el siguiente alias.</p>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">alias</span> motor_xgboost=/home/jose/Julia_projects/xgboost_model/xg_binomial_inference/bin/xgboost_predict_binomial</span></code></pre></div>
-<p>y ya está listo.</p>
-<p>Ahora tengo un dataset a predecir de 5 millones de filas</p>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"></span>
-<span id="cb7-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">╰─</span> $ ▶ wc <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-l</span> data/test.csv </span>
-<span id="cb7-3"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">5060001</span> data/test.csv</span></code></pre></div>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"></span>
-<span id="cb8-2"> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span> <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-n4</span> data/test.csv </span>
-<span id="cb8-3"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">crim,zn,indus,chas,nox,rm,age,dis,rad,tax,ptratio,lstat</span></span>
-<span id="cb8-4"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.00632,18,2.31,0,0.538,6.575,65.2,4.09,1,296,15.3,4.98</span></span>
-<span id="cb8-5"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.02731,0,7.07,0,0.469,6.421,78.9,4.9671,2,242,17.8,9.14</span></span>
-<span id="cb8-6"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.02729,0,7.07,0,0.469,7.185,61.1,4.9671,2,242,17.8,4.03</span></span></code></pre></div>
-<p>y bueno, tardo unos 11 segundos en obtener las predicciones y escribir el resultado</p>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">╰─</span> $ ▶ time motor_xgboost models/boston_xg.jls data/test.csv pred.csv</span>
-<span id="cb9-2"></span>
-<span id="cb9-3"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">real</span>    0m11,091s</span>
-<span id="cb9-4"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">user</span>    0m53,293s</span>
-<span id="cb9-5"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">sys</span> 0m2,321s</span>
-<span id="cb9-6"></span></code></pre></div>
-<p>y comprobamos que lo ha hecho bien</p>
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"></span>
-<span id="cb10-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">╰─</span> $ ▶ wc <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-l</span>  pred.csv </span>
-<span id="cb10-3"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">5060001</span> pred.csv</span>
-<span id="cb10-4"></span>
-<span id="cb10-5"></span>
-<span id="cb10-6"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">╰─</span> $ ▶ head <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-n</span> 5 pred.csv </span>
-<span id="cb10-7"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">target_0,target_1</span></span>
-<span id="cb10-8"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.9999237,7.63197e-5</span></span>
-<span id="cb10-9"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.99120975,0.008790266</span></span>
-<span id="cb10-10"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.99989164,0.00010834133</span></span>
-<span id="cb10-11"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">0.99970543,0.00029458306</span></span></code></pre></div>
-<p>Y nada, pues esto puede servir para subir modelos a producción en entornos poco amigables (sin python3, sin R, sin julia, sin spark, sin docker, sin internet). Es un poco <code>old style</code> que me diría mi arquenazi favorito Rubén, pero</p>
-<p>Os dejo el tar.gz para que probéis, también os dejo el <code>Project.toml</code>y el <code>Manifest.toml</code> y el fichero con el que he entrenado los datos. para que uséis el mismo entorno de julia que he usado yo.</p>
-<p><a href="https://drive.google.com/drive/folders/1jQW-QQNoABlMdUHhlwHvY9MQnZh1x_Yi?usp=sharing">enlace_drive</a></p>
-
-
-
- ]]></description>
-  <category>Julia</category>
-  <category>produccion</category>
-  <category>linux</category>
-  <category>2022</category>
-  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/10/26/sigo-trasteando-con-julia/index.html</guid>
-  <pubDate>Tue, 25 Oct 2022 22:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
