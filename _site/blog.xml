@@ -10,7 +10,134 @@
 <atom:link href="https://muestrear-no-es-pecado-rebranding.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Sat, 02 Dec 2023 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 15 Dec 2023 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Shinylive-r</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/shinylive-R.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Están saliendo cosas como <code>webr</code> que permiten ejecutar R en el navegador que junto con <a href="https://github.com/posit-dev/shinylive">shinylive</a> nos van a permitir hacer aplicaciones de Shiny (en R y en Python) que sean serverless. Es decir, el código se ejecuta en el navegador del usuario, no en un servidor.</p>
+<p>Un post dónde probé con shinylive en python. <a href="2023/shinylive-python.html"><strong>Shinylive en python </strong></a></p>
+<section id="cosas-que-hay-que-hacer-para-que-funcione-en-mi-documento-de-quarto-que-es-con-lo-que-hago-el-blog" class="level3">
+<h3 class="anchored" data-anchor-id="cosas-que-hay-que-hacer-para-que-funcione-en-mi-documento-de-quarto-que-es-con-lo-que-hago-el-blog">Cosas que hay que hacer para que funcione en mi documento de quarto, que es con lo que hago el blog</h3>
+<ul>
+<li>Instalar la librería de python shinylive <code>pip install shinylive</code></li>
+<li>Instalar las extensiones de quarto para shinylive <code>quarto add quarto-ext/shinylive</code></li>
+<li>Instalar la librería de shinylive de <a href="https://github.com/posit-dev/r-shinylive">https://github.com/posit-dev/r-shinylive</a></li>
+</ul>
+<p>El chunk se especifica poniendo <code>shinylive-r</code> y se ponen algunas opciones como estas</p>
+<pre><code>#| standalone: true
+#| viewerHeight: 600
+#| components: [editor, viewer]
+</code></pre>
+<p>Estas librerías aún están en fase temprana de desarrollo y por ejemplo no está resuelto como leer un fichero que tengas en local y que ese fichero se suba al sitio web estático y se pueda leer con <code>read.csv</code> . Pero podemos hacer una ñapa como he hecho en el ejemplo, que es subir el fichero de datos a github y leer de la url dónde lo he subido.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"></span>
+<span id="cb2-2">mpgData <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">read.csv</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://raw.githubusercontent.com/joscani/blog_quarto/master/mtcars.csv"</span>)</span></code></pre></div>
+</div>
+<p>Se abre el camino pues para tener pequeñas aplicaciones shiny que no necesiten de servidor.</p>
+<pre class="shinylive-r" data-engine="r"><code>#| standalone: true
+#| viewerHeight: 800
+#| components: [editor, viewer]
+
+library(shiny)
+library(datasets)
+
+# Data pre-processing ----
+# Tweak the "am" variable to have nicer factor labels -- since this
+# doesn't rely on any user inputs, we can do this once at startup
+# and then use the value throughout the lifetime of the app
+mpgData &lt;- read.csv("https://raw.githubusercontent.com/joscani/blog_quarto/master/mtcars.csv")
+mpgData$am &lt;- factor(mpgData$am, labels = c("Automatic", "Manual"))
+
+
+# Define UI for miles per gallon app ----
+ui &lt;- fluidPage(
+
+  # App title ----
+  titlePanel("Miles Per Gallon"),
+
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+
+      # Input: Selector for variable to plot against mpg ----
+      selectInput("variable", "Elige la variable:",
+                  c("Cylinders" = "cyl",
+                    "Transmission" = "am",
+                    "Gears" = "gear")),
+
+      # Input: Checkbox for whether outliers should be included ----
+      checkboxInput("outliers", "Show outliers", TRUE)
+
+    ),
+
+    # Main panel for displaying outputs ----
+    mainPanel(
+
+      # Output: Formatted text for caption ----
+      h3(textOutput("caption")),
+
+      # Output: Plot of the requested variable against mpg ----
+      plotOutput("mpgPlot")
+
+    )
+  )
+)
+
+# Define server logic to plot various variables against mpg ----
+server &lt;- function(input, output) {
+
+  # Compute the formula text ----
+  # This is in a reactive expression since it is shared by the
+  # output$caption and output$mpgPlot functions
+  formulaText &lt;- reactive({
+    paste("mpg ~", input$variable)
+  })
+
+  # Return the formula text for printing as a caption ----
+  output$caption &lt;- renderText({
+    formulaText()
+  })
+
+  # Generate a plot of the requested variable against mpg ----
+  # and only exclude outliers if requested
+  output$mpgPlot &lt;- renderPlot({
+    boxplot(as.formula(formulaText()),
+            data = mpgData,
+            outline = input$outliers,
+            col = "#75AADB", pch = 19)
+  })
+
+}
+
+# Create Shiny app ----
+shinyApp(ui, server)
+
+
+</code></pre>
+
+
+</section>
+
+ ]]></description>
+  <category>r</category>
+  <category>2023</category>
+  <category>shiny</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/shinylive-R.html</guid>
+  <pubDate>Fri, 15 Dec 2023 23:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Vuelta a la facultad. SVD</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -15987,7 +16114,7 @@ background-color: null;
 font-style: inherit;">library</span>(MASS)</span></code></pre></div>
 </details>
 </div>
-<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Help housing"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
+<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" title="Help housing" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
 <div class="cell">
 <details open="">
 <summary>Code</summary>
@@ -33936,28 +34063,6 @@ font-style: inherit;"># Print the map</span></span></code></pre></div>
  ]]></description>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/leaflet_ejemplo/index.html</guid>
   <pubDate>Fri, 28 Oct 2022 22:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Aquí estoy de nuevo</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/welcome/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>Estoy cambiando el blog de blogdown a quarto Welcome!</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><a href="thumbnail.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/posts/welcome/thumbnail.jpg" class="img-fluid figure-img"></a></p>
-</figure>
-</div>
-
-
-
- ]]></description>
-  <category>news</category>
-  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/welcome/index.html</guid>
-  <pubDate>Wed, 26 Oct 2022 22:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
