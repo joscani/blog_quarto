@@ -10,7 +10,273 @@
 <atom:link href="https://muestrear-no-es-pecado-rebranding.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Fri, 15 Dec 2023 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 16 Dec 2023 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Web-R</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/webr.html</link>
+  <description><![CDATA[ 
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/loader.js"></script>
+<script type="module" id="qwebr-monaco-editor-init">
+
+  // Configure the Monaco Editor's loader
+  require.config({
+    paths: {
+      'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
+    }
+  });
+</script>
+<script type="module">// Global dictionary to store Monaco Editor instances
+const qwebrEditorInstances = {};
+
+// Function that builds and registers a Monaco Editor instance    
+globalThis.qwebrCreateMonacoEditorInstance = function (
+    initialCode, 
+    qwebrCounter) {
+
+  // Retrieve the previously created document elements
+  let runButton = document.getElementById(`qwebr-button-run-${qwebrCounter}`);
+  let editorDiv = document.getElementById(`qwebr-editor-${qwebrCounter}`);
+  
+  // Load the Monaco Editor and create an instance
+  let editor;
+  require(['vs/editor/editor.main'], function () {
+    editor = monaco.editor.create(editorDiv, {
+      value: initialCode,
+      language: 'r',
+      theme: 'vs-light',
+      automaticLayout: true,           // Works wonderfully with RevealJS
+      scrollBeyondLastLine: false,
+      minimap: {
+        enabled: false
+      },
+      fontSize: '17.5pt',              // Bootstrap is 1 rem
+      renderLineHighlight: "none",     // Disable current line highlighting
+      hideCursorInOverviewRuler: true  // Remove cursor indictor in right hand side scroll bar
+    });
+
+    // Store the official counter ID to be used in keyboard shortcuts
+    editor.__qwebrCounter = qwebrCounter;
+
+    // Store the official div container ID
+    editor.__qwebrEditorId = `qwebr-editor-${qwebrCounter}`;
+
+    // Store the initial code value
+    editor.__qwebrinitialCode = initialCode;
+
+    // Dynamically modify the height of the editor window if new lines are added.
+    let ignoreEvent = false;
+    const updateHeight = () => {
+      const contentHeight = editor.getContentHeight();
+      // We're avoiding a width change
+      //editorDiv.style.width = `${width}px`;
+      editorDiv.style.height = `${contentHeight}px`;
+      try {
+        ignoreEvent = true;
+
+        // The key to resizing is this call
+        editor.layout();
+      } finally {
+        ignoreEvent = false;
+      }
+    };
+
+    // Helper function to check if selected text is empty
+    function isEmptyCodeText(selectedCodeText) {
+      return (selectedCodeText === null || selectedCodeText === undefined || selectedCodeText === "");
+    }
+
+    // Registry of keyboard shortcuts that should be re-added to each editor window
+    // when focus changes.
+    const addWebRKeyboardShortCutCommands = () => {
+      // Add a keydown event listener for Shift+Enter to run all code in cell
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+
+        // Retrieve all text inside the editor
+        qwebrExecuteCode(editor.getValue(), editor.__qwebrCounter);
+      });
+
+      // Add a keydown event listener for CMD/Ctrl+Enter to run selected code
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+
+        // Get the selected text from the editor
+        const selectedText = editor.getModel().getValueInRange(editor.getSelection());
+        // Check if no code is selected
+        if (isEmptyCodeText(selectedText)) {
+          // Obtain the current cursor position
+          let currentPosition = editor.getPosition();
+          // Retrieve the current line content
+          let currentLine = editor.getModel().getLineContent(currentPosition.lineNumber);
+
+          // Propose a new position to move the cursor to
+          let newPosition = new monaco.Position(currentPosition.lineNumber + 1, 1);
+
+          // Check if the new position is beyond the last line of the editor
+          if (newPosition.lineNumber > editor.getModel().getLineCount()) {
+            // Add a new line at the end of the editor
+            editor.executeEdits("addNewLine", [{
+            range: new monaco.Range(newPosition.lineNumber, 1, newPosition.lineNumber, 1),
+            text: "\n", 
+            forceMoveMarkers: true,
+            }]);
+          }
+          
+          // Run the entire line of code.
+          qwebrExecuteCode(currentLine, editor.__qwebrCounter,
+            EvalTypes.Interactive);
+
+          // Move cursor to new position
+          editor.setPosition(newPosition);
+        } else {
+          // Code to run when Ctrl+Enter is pressed with selected code
+          qwebrExecuteCode(selectedText, editor.__qwebrCounter, EvalTypes.Interactive);
+        }
+      });
+    }
+
+    // Register an on focus event handler for when a code cell is selected to update
+    // what keyboard shortcut commands should work.
+    // This is a workaround to fix a regression that happened with multiple
+    // editor windows since Monaco 0.32.0 
+    // https://github.com/microsoft/monaco-editor/issues/2947
+    editor.onDidFocusEditorText(addWebRKeyboardShortCutCommands);
+
+    // Register an on change event for when new code is added to the editor window
+    editor.onDidContentSizeChange(updateHeight);
+
+    // Manually re-update height to account for the content we inserted into the call
+    updateHeight();
+
+    // Store the editor instance in the global dictionary
+    qwebrEditorInstances[editor.__qwebrCounter] = editor;
+
+  });
+
+  // Add a click event listener to the run button
+  runButton.onclick = function () {
+    qwebrExecuteCode(editor.getValue(), editor.__qwebrCounter, EvalTypes.Interactive);
+  };
+
+}</script>
+
+
+
+<p>Hay nueva tecnología, usar R dentro de la web. ¡Dale a Run Code!</p>
+<div id="qwebr-insertion-location-1"></div>
+<script type="module">
+// Retrieve the insertion point
+const currentDocumentLocation = document.getElementById("qwebr-insertion-location-1");
+
+// Initalize an interactive element
+const initializedElement =   qwebrCreateInteractiveElement(
+    1
+  );
+
+// Add the interactive element into the document scope
+currentDocumentLocation.appendChild(initializedElement);
+
+// Initialize a Monaco Editor Instance
+qwebrCreateMonacoEditorInstance(
+  `fit = lm(mpg ~ am, data = mtcars)
+
+summary(fit)`, 
+  1);
+</script>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<p>Pero es que puedes modificar el código que hay puesto. Por ejemplo, prueba a cambiar el fit de arrib, simplemente pon el cursor en dónde está el código y empieza a escribir. por ejemplo cambia la fórmula a <code>lm(mpg ~ am + disp, data = mtcars)</code> y dale a run</p>
+<p>WebR se ejecuta en el navegador, es decir es en el ordenador de ti lector dónde se ejecuta, aunque no tengas R instalado. Es como cuando el navegador ejecuta código de JavaScript, de hecho webR es librería de JavaScript pero que tiene R compilado en Web Assembly.</p>
+<p>Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible</p>
+<div id="qwebr-insertion-location-2"></div>
+<script type="module">
+// Retrieve the insertion point
+const currentDocumentLocation = document.getElementById("qwebr-insertion-location-2");
+
+// Initalize an interactive element
+const initializedElement =   qwebrCreateInteractiveElement(
+    2
+  );
+
+// Add the interactive element into the document scope
+currentDocumentLocation.appendChild(initializedElement);
+
+// Initialize a Monaco Editor Instance
+qwebrCreateMonacoEditorInstance(
+  `download.file(
+  'https://raw.githubusercontent.com/eteitelbaum/dataviz-summer-2023/main/modules/data/dem_women.csv',
+  'dem_women.csv'
+)`, 
+  2);
+</script>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<p>También puedo instalar librerías, no todas están disponibles, pero hay más de 20 mil ya compiladas en webR</p>
+<div id="qwebr-insertion-location-3"></div>
+<script type="module">
+// Retrieve the insertion point
+const currentDocumentLocation = document.getElementById("qwebr-insertion-location-3");
+
+// Initalize an interactive element
+const initializedElement =   qwebrCreateInteractiveElement(
+    3
+  );
+
+// Add the interactive element into the document scope
+currentDocumentLocation.appendChild(initializedElement);
+
+// Initialize a Monaco Editor Instance
+qwebrCreateMonacoEditorInstance(
+  `
+webr::install(c("dplyr", "readr", "ggplot2"))
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+dem_women <- read_csv("dem_women.csv")`, 
+  3);
+</script>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<p>Podemos pintar , y como antes, modificar el código para hacer lo que queramos. Os animo a modificar el plot de abajo, por ejemplo poniendo lo siguiente, o cualquier otra cosa que se os ocurra, como hacer group bys y summarises o lo que queráis, Lo dicho, se ejecuta en vuestro ordenador y en ningún otro sitio más.</p>
+<pre><code>
+dem_women %&gt;% 
+filter(country %in% c("Mexico","Algeria")) %&gt;% 
+ggplot(aes(x = year, y = flfp)) +
+geom_smooth() +
+facet_wrap(~ country)</code></pre>
+<div class="cell">
+<div id="qwebr-insertion-location-4"></div>
+<script type="module">
+// Retrieve the insertion point
+const currentDocumentLocation = document.getElementById("qwebr-insertion-location-4");
+
+// Initalize an interactive element
+const initializedElement =   qwebrCreateInteractiveElement(
+    4
+  );
+
+// Add the interactive element into the document scope
+currentDocumentLocation.appendChild(initializedElement);
+
+// Initialize a Monaco Editor Instance
+qwebrCreateMonacoEditorInstance(
+  `# probad a cambiar lo escrito en esta celda por ejemplo co nlo que aparece arriba
+
+dem_women %>% 
+    filter(country == "Mexico") %>%  
+    ggplot(aes(x = year, y = flfp)) + 
+    geom_point()`, 
+  4);
+</script>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+
+
+
+ ]]></description>
+  <category>r</category>
+  <category>2023</category>
+  <category>webr</category>
+  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2023/webr.html</guid>
+  <pubDate>Sat, 16 Dec 2023 23:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Shinylive-r</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -34004,65 +34270,6 @@ font-style: inherit;">-t</span> mi_modelo_brms_rminimal_renv .</span></code></pr
   <category>2022</category>
   <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/2022/10/30/api-y-docker-con-r-parte-2.html</guid>
   <pubDate>Sat, 29 Oct 2022 22:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Leaflet example</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/leaflet_ejemplo/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">library</span>(leaflet)</span>
-<span id="cb1-2"></span>
-<span id="cb1-3">m <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">leaflet</span>() <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%&gt;%</span></span>
-<span id="cb1-4">  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">addTiles</span>() <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%&gt;%</span>  <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Add default OpenStreetMap map tiles</span></span>
-<span id="cb1-5">  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">addMarkers</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">lng=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">174.768</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">lat=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">36.852</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">popup=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"The birthplace of R"</span>)</span>
-<span id="cb1-6">m  <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Print the map</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-fa2db32acb8c0b5b229d" style="width:100%;height:464px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-fa2db32acb8c0b5b229d">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[-36.852,174.768,null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},"The birthplace of R",null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[-36.852,-36.852],"lng":[174.768,174.768]}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-
-
-
- ]]></description>
-  <guid>https://muestrear-no-es-pecado-rebranding.netlify.app/posts/leaflet_ejemplo/index.html</guid>
-  <pubDate>Fri, 28 Oct 2022 22:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

@@ -1,0 +1,89 @@
+---
+title: Web-R
+date: '2023-12-17'
+date-modified: last-modified
+categories:
+  - r
+  - 2023
+  - webr
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 12
+    fig-dpi: 300
+    fig-width: 10
+    fig-align: center
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+filters:
+  - webr
+---
+
+Hay nueva tecnología, usar R dentro de la web. ¡Dale a Run Code!
+
+```{webr-r}
+fit = lm(mpg ~ am, data = mtcars)
+
+summary(fit)
+```
+
+
+Pero es que puedes modificar el código que hay puesto. Por ejemplo, prueba a  cambiar el fit de arrib, simplemente pon el cursor en dónde está el código y empieza a escribir. por ejemplo cambia la fórmula a `lm(mpg ~ am + disp, data = mtcars)` y dale a run
+
+
+WebR se ejecuta en el navegador, es decir es en el ordenador de ti lector dónde se ejecuta, aunque no tengas R instalado. Es como cuando el navegador ejecuta código de JavaScript, de hecho webR es librería de JavaScript pero que tiene R compilado en Web Assembly.
+
+
+Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible
+
+```{webr-r}
+download.file(
+  'https://raw.githubusercontent.com/eteitelbaum/dataviz-summer-2023/main/modules/data/dem_women.csv',
+  'dem_women.csv'
+)
+```
+
+
+También puedo instalar librerías, no todas están disponibles, pero hay más de 20 mil ya compiladas en webR
+
+```{webr-r}
+
+webr::install(c("dplyr", "readr", "ggplot2"))
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+dem_women <- read_csv("dem_women.csv")
+
+```
+
+Podemos pintar , y como antes, modificar el código para hacer lo que queramos. Os animo a modificar el plot de abajo, por ejemplo  poniendo lo siguiente, o cualquier otra cosa que se os ocurra, como hacer group bys y summarises o lo que queráis, Lo dicho, se ejecuta en vuestro ordenador y en ningún otro sitio más. 
+
+```
+
+dem_women %>% 
+filter(country %in% c("Mexico","Algeria")) %>% 
+ggplot(aes(x = year, y = flfp)) +
+geom_smooth() +
+facet_wrap(~ country)
+```
+
+
+```{webr}
+# probad a cambiar lo escrito en esta celda por ejemplo co nlo que aparece arriba
+
+dem_women %>% 
+    filter(country == "Mexico") %>%  
+    ggplot(aes(x = year, y = flfp)) + 
+    geom_point()
+
+```
+
+
