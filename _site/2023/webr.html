@@ -950,7 +950,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">December 16, 2023</p>
+      <p class="date-modified">December 28, 2023</p>
     </div>
   </div>
     
@@ -983,7 +983,7 @@ summary(fit)`,
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <p>Pero es que puedes modificar el código que hay puesto. Por ejemplo, prueba a cambiar el fit de arrib, simplemente pon el cursor en dónde está el código y empieza a escribir. por ejemplo cambia la fórmula a <code>lm(mpg ~ am + disp, data = mtcars)</code> y dale a run</p>
 <p>WebR se ejecuta en el navegador, es decir es en el ordenador de ti lector dónde se ejecuta, aunque no tengas R instalado. Es como cuando el navegador ejecuta código de JavaScript, de hecho webR es librería de JavaScript pero que tiene R compilado en Web Assembly.</p>
-<p>Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible</p>
+<p>Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible. Nota: Esto ya no funciona</p>
 <div id="qwebr-insertion-location-2"></div>
 <script type="module">
 // Retrieve the insertion point
@@ -1000,7 +1000,7 @@ currentDocumentLocation.appendChild(initializedElement);
 // Initialize a Monaco Editor Instance
 qwebrCreateMonacoEditorInstance(
   `download.file(
-  'https://raw.githubusercontent.com/eteitelbaum/dataviz-summer-2023/main/modules/data/dem_women.csv',
+  'https://raw.githubusercontent.com/joscani/blog_quarto/master/dem_women.csv',
   'dem_women.csv'
 )`, 
   2);
@@ -1028,7 +1028,7 @@ webr::install(c("dplyr", "readr", "ggplot2"))
 library(dplyr)
 library(readr)
 library(ggplot2)
-dem_women <- read_csv("dem_women.csv")`, 
+`, 
   3);
 </script>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -1056,7 +1056,7 @@ currentDocumentLocation.appendChild(initializedElement);
 // Initialize a Monaco Editor Instance
 qwebrCreateMonacoEditorInstance(
   `# probad a cambiar lo escrito en esta celda por ejemplo co nlo que aparece arriba
-
+dem_women <- read.csv("https://raw.githubusercontent.com/joscani/blog_quarto/master/dem_women.csv")
 dem_women %>% 
     filter(country == "Mexico") %>%  
     ggplot(aes(x = year, y = flfp)) + 

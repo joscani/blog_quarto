@@ -41,11 +41,11 @@ Pero es que puedes modificar el código que hay puesto. Por ejemplo, prueba a  c
 WebR se ejecuta en el navegador, es decir es en el ordenador de ti lector dónde se ejecuta, aunque no tengas R instalado. Es como cuando el navegador ejecuta código de JavaScript, de hecho webR es librería de JavaScript pero que tiene R compilado en Web Assembly.
 
 
-Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible
+Si queremos leer un fichero que yo tenga en local es más complicado, pero puedo subirlo a un github y hacer download.file dentro de webR y así ya es accesible. Nota: Esto ya no funciona
 
 ```{webr-r}
 download.file(
-  'https://raw.githubusercontent.com/eteitelbaum/dataviz-summer-2023/main/modules/data/dem_women.csv',
+  'https://raw.githubusercontent.com/joscani/blog_quarto/master/dem_women.csv',
   'dem_women.csv'
 )
 ```
@@ -60,7 +60,7 @@ webr::install(c("dplyr", "readr", "ggplot2"))
 library(dplyr)
 library(readr)
 library(ggplot2)
-dem_women <- read_csv("dem_women.csv")
+
 
 ```
 
@@ -78,7 +78,7 @@ facet_wrap(~ country)
 
 ```{webr}
 # probad a cambiar lo escrito en esta celda por ejemplo co nlo que aparece arriba
-
+dem_women <- read.csv("https://raw.githubusercontent.com/joscani/blog_quarto/master/dem_women.csv")
 dem_women %>% 
     filter(country == "Mexico") %>%  
     ggplot(aes(x = year, y = flfp)) + 
