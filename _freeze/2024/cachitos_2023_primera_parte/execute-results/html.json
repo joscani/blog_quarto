@@ -1,0 +1,14 @@
+{
+  "hash": "9a0dfa6afce2317df23b527f465035e2",
+  "result": {
+    "markdown": "---\ntitle: Cachitos 2023. Primera parte\ndate: '2024-01-02'\ncategories: \n  - estadística\n  - polémica\n  - 2024\n  - textmining\n  - ocr\n  - linux\n  - cachitos\ndescription: ''\nexecute: \n  message: false\n  warning: false\n  echo: true\nformat: \n  html: \n    fig-height: 5\n    fig-dpi: 300\n    fig-width: 9\n    fig-align: center\nknitr:\n  opts_chunk:\n    out.width: 80%\n    fig.showtext: TRUE\n    collapse: true\n    comment: \"#>\"\nimage: \"00001031.jpg\"\n---\n\n\n\nComo todos los años toca hacer el análisis de de los subtítulos de _Nochevieja a Cachitos_\n\nEste año resulta que la gente de RTVE ha capado el poder bajarse los videos desde rtve usando `curl` o `wget` , pero gracias a [Javi Fdez](https://twitter.com/jfcrz) he podido bajarme el video tirando de la url del streaming . \n\n\n## Requisitos\n\n* Un plugin en el navegador que pueda identificar el `m3u` asociado al archivo `mp4` del video de Cachitos que está en rtve play. Yo he usado [live Stream Downloader](https://chromewebstore.google.com/detail/live-stream-downloader/looepbdllpjgdmkpdcdffhdbmpbcfekj) , pero seguro que hay alguno mejor\n* Usar un sistema operativo GNU/Linux, en mi caso Linux Mint 21.2 basada en Ubuntu Jammy\n* `ffmpeg`  `sudo apt install ffmpeg` . ffmpeg nos va a servir para poder bajar el video \n* `mplayer` `sudo apt install mplayer`. `mplayer` con `mplayer` vamos a extraer 1 de cada 200 fotogramas del video\n*  `imagemagick` con `sudo apt install imagemagick`. Con `imagemagick` vamos a cambiar el tamaño de los fotogramas, recortar el área dónde están los subtítulos, convertir a formato `tif` e invertir los colores para que el texto se vea mejor. \n* `parallel` `sudo apt install parallel` . Con `parallel` vamos a poder utilizar varios núcleos e hilos del ordenador en paralelo y poder hacer la modificación de los fotogramas y el reconocimiento óptico de caracteres más rápido. \n* `tesseract` `sudo apt install tesseract-ocr` y `sudo apt install tesseract-ocr-spa` . Con `tesseract` se va a hacer el reconocimiento óptico del texto y guardar en ficheros de texto. \n\n\n## Script de bash\n\nEl script es [`extract_subtitles.sh`](extract_subtitles.sh)\n\n\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

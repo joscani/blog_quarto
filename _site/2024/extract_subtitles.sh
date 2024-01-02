@@ -19,31 +19,16 @@ video_file=$ANNO$suffix_video
 echo $video_file
 
 
+if [ "$ANNO" == "2023" ] ;
+then
+    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&hls_client_manifest_version=3&idasset=7047821" -c copy $video_file
+fi
+
 if [ "$ANNO" == "2022" ] ;
 then
-   # wget https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4
-    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&hls_client_manifest_version=3&idasset=6767615" -c copy 2022.mp4
-    mv 2022.mp4 $video_file
-fi
-
-
-if [ "$ANNO" == "2021" ] ;
-then
-    wget https://lote5-vod-hls-geoblockurl.akamaized.net/resources/TE_GLUCA/mp4/4/0/1641020001504.mp4
-    mv 1641020001504.mp4 $video_file
-fi
+    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&hls_client_manifest_version=3&idasset=6767615" -c copy $video_file
+fi 
  
-if [ "$ANNO" == "2020" ] ;
-then
-    wget http://mediavod-lvlt.rtve.es/resources/TE_GLUCA/mp4/2/4/1609487028742.mp4
-    mv 1609487028742.mp4 $video_file
-fi
-
-if [ "$ANNO" == "2019" ] ;
-then
-    wget https://rtvehlsvod2020a-fsly.vod-rtve.cross-media.es/resources/TE_GLUCA/mp4/0/9/1577860099590.mp4
-    mv 1577860099590.mp4 $video_file
-fi
 
 # Pasar a jpg uno de cada 200 fotogramas
 
@@ -55,7 +40,7 @@ cd $ANNO$suffix_jpg_dir
 find . -name '*.jpg' |  parallel -j 8 mogrify -resize 642x480 {}
 
 # Seleccionar cacho dond están subtitulos
-find . -name '*.jpg' |  parallel -j 8 convert {} -crop 460x50+90+295 +repage -compress none -depth 8 {}.subtitulo.tif
+find . -name '*.jpg' |  parallel -j 8 convert {} -crop 460x50+90+285 +repage -compress none -depth 8 {}.subtitulo.tif
 
 # Poner en negativo para que el ocr funcione mejor
 find . -name '*.tif' |  parallel -j 8 convert {} -negate -fx '.8*r+.8*g+0*b' -compress none -depth 8 {}
@@ -67,5 +52,10 @@ find . -name '*.tif' |  parallel -j 8 tesseract -l spa {} {}
 mkdir -p $root_directory/$ANNO$suffix_txt_dir
 
 mv *.txt $root_directory/$ANNO$suffix_txt_dir
+
+cd $root_directory/$ANNO$suffix_txt_dir
+
+# Borrar archivos de 10 bytes , subtítulos vacíos
+find . -size -10c -exec rm -f {} \;
 
 cd $root_directory
