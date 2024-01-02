@@ -959,113 +959,745 @@ font-style: inherit;">"{root_directory}{anno}_txt_unido.csv"</span>))</span></co
 <li>Elimina ficheros de texto de menos de 10 bytes, puesto que ahí no hay texto .</li>
 </ul>
 </section>
+<section id="plugin" class="level2">
+<h2 class="anchored" data-anchor-id="plugin">Plugin</h2>
+<p>Con el plugin de Live Stream instalado en el navegador, lo primero que hacemos es ir a la web de rtveplay, buscar Nochevieja a Cachitos y darle al play. Estando en esa pestaña, le damos al plugin y nos abrirá una ventana emergente dónde se nos ha copiado la info del streaming. Esta info será útil porque es lo que nos va a permitir poder bajar el video usando <code>ffmpeg</code></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="plugin.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="plugin"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/plugin.png" class="img-fluid figure-img"></a></p>
+<figcaption class="figure-caption">plugin</figcaption>
+</figure>
+</div>
+<p>La info que nos da es algo como esto</p>
+<p><code>https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/1704096565613-audio=192755-video=2752986-3331.ts?idasset=7047821</code></p>
+<p>En años anteriores me podía bajar directamente el archivo mp4 usando wget, pero este año nuestros amigos de rtve han decidido que no se puede.</p>
+<p>Esto es lo que me sale al intentarlo</p>
+<pre><code> wget https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4
+--2024-01-02 13:15:27--  https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4
+Resolviendo rtvehlsvodlote7.rtve.es (rtvehlsvodlote7.rtve.es)... 151.101.134.137, 2a04:4e42:1f::649
+Conectando con rtvehlsvodlote7.rtve.es (rtvehlsvodlote7.rtve.es)[151.101.134.137]:443... conectado.
+Petición HTTP enviada, esperando respuesta... 403 Forbidden
+2024-01-02 13:15:27 ERROR 403: Forbidden.</code></pre>
+<p>Volviendo a la info que hemos obtenido usando el plugin, es importante identificar el idasset, en este caso el 7047821. Una vez sabemos eso, justo después de la parte dónde viene indicado el mp4, la cambiamos por esto</p>
+<p><code>video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821</code> y ya podemos usar <code>ffmpeg</code> para guardar el archivo.</p>
+<p>Son casi unos 4gb de video.</p>
+<p><code>ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821" -c copy video.mp4</code></p>
+</section>
 <section id="script-de-bash" class="level2">
 <h2 class="anchored" data-anchor-id="script-de-bash">Script de bash</h2>
 <p>El script es <a href="../extract_subtitles.sh"><code>extract_subtitles.sh</code></a> , se ejecutaría con <code>extract_subtitles.sh 2023</code> .</p>
-<p>Este script básicamente hace:</p>
-<ul>
-<li>Se baja el video del sitio de rtve play</li>
-<li>Extrae 1 de cada 200 fotogramas con mplayer</li>
-<li>Reduce el tamaño de las imágenes con mogrify de imagemagick</li>
-<li>Convierte a tif y recorta el área dónde está el texto con convert y crop de imagemagick</li>
-<li>Obtiene el negativo de ese tif con convert y negate</li>
-<li>Obtiene el texto usando tesseract y guarda un archivo de texto por cada subtítulo</li>
-</ul>
-<pre><code>#!/bin/bash
-
-root_directory=/home/jose/proyecto_cachitos
-mkdir -p $root_directory
-cd $root_directory
-
-echo "First arg: $1"
-mkdir -p video
-
-cd video
-
-ANNO=$1
-echo $ANNO
-suffix_video="_cachitos.mp4"
-suffix_jpg_dir="_jpg"
-suffix_txt_dir="_txt"
-
-video_file=$ANNO$suffix_video
-echo $video_file
-
-
-if [ "$ANNO" == "2023" ] ;
-then
-    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821" -c copy $video_file
-fi
-
-if [ "$ANNO" == "2022" ] ;
-then
-    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=6767615" -c copy $video_file
-fi 
- 
-
-# Pasar a jpg uno de cada 200 fotogramas
-
-mplayer -vf framestep=200 -framedrop -nosound $video_file -speed 100 -vo jpeg:outdir=$ANNO$suffix_jpg_dir 
- 
-cd $ANNO$suffix_jpg_dir 
- 
-# Convertir a formato más pequño
-find . -name '*.jpg' |  parallel -j 8 mogrify -resize 642x480 {}
-
-# Seleccionar cacho dond están subtitulos
-find . -name '*.jpg' |  parallel -j 8 convert {} -crop 460x50+90+285 +repage -compress none -depth 8 {}.subtitulo.tif
-
-# Poner en negativo para que el ocr funcione mejor
-find . -name '*.tif' |  parallel -j 8 convert {} -negate -fx '.8*r+.8*g+0*b' -compress none -depth 8 {}
-
-# Pasar el ocr con idioma en español
-find . -name '*.tif' |  parallel -j 8 tesseract -l spa {} {}
-
-# mover a directorio texto
-mkdir -p $root_directory/$ANNO$suffix_txt_dir
-
-mv *.txt $root_directory/$ANNO$suffix_txt_dir
-
-cd $root_directory/$ANNO$suffix_txt_dir
-
-# Borrar archivos de 10 bytes , subtítulos vacíos
-find . -size -10c -exec rm -f {} \;
-
-cd $root_directory
-</code></pre>
+<p>Vamos a ir comentando el script poco a poco</p>
+<section id="bajar-video" class="level3">
+<h3 class="anchored" data-anchor-id="bajar-video">Bajar video</h3>
+<p>Indicamos el nombre del directorio donde queremos trabajar, lo creamos y también creamos un subdirectorio llamado <code>video</code> , nos situamos en él y creamos algunas variables como el nombre del video cuando nos lo bajemos o como se van a llamar los directorios dónde vamos a ir guardando los fotogramas o el texto, típicamente <code>2023_jpg</code> y <code>2023_txt</code>. El script está puesto para que se le pase el año y se construya el</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">root_directory</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/home/jose/proyecto_cachitos</span>
+<span id="cb2-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span></span>
+<span id="cb2-3"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span></span>
+<span id="cb2-4"></span>
+<span id="cb2-5"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"First arg: </span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$1</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span></span>
+<span id="cb2-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> video</span>
+<span id="cb2-7"></span>
+<span id="cb2-8"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> video</span>
+<span id="cb2-9"></span>
+<span id="cb2-10"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">ANNO</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$1</span></span>
+<span id="cb2-11"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO</span></span>
+<span id="cb2-12"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_video</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_cachitos.mp4"</span></span>
+<span id="cb2-13"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_jpg_dir</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_jpg"</span></span>
+<span id="cb2-14"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_txt_dir</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_txt"</span></span>
+<span id="cb2-15"></span>
+<span id="cb2-16"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">video_file</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_video</span></span>
+<span id="cb2-17"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span></span>
+<span id="cb2-18"></span>
+<span id="cb2-19"></span>
+<span id="cb2-20"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">[</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2023"</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">]</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb2-21"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">then</span></span>
+<span id="cb2-22">    <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">ffmpeg</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-i</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> copy <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span></span>
+<span id="cb2-23"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">fi</span></span></code></pre></div>
+</section>
+<section id="extracción-de-fotogramas" class="level3">
+<h3 class="anchored" data-anchor-id="extracción-de-fotogramas">Extracción de fotogramas</h3>
+<p>Usando mplayer que sirve para reproducir el vídeo, podemos indicar además que nos extraiga una imagen cada 200 fotogramas <code>framestep=200</code>, también le decimos que lo reproduzca sin sonido y a velocidad alta y que guarde esos fotogramas como archivos jpeg en la ruta relativa `2023_jpg dentro de nuestro directorio principal.</p>
+<p>Este es el comando que hace todo eso</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">mplayer</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-vf</span> framestep=200 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-framedrop</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-nosound</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-speed</span> 100 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-vo</span> jpeg:outdir=<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_jpg_dir</span> </span></code></pre></div>
+</section>
+<section id="recorte-de-la-zona-de-dónde-está-el-rótulo" class="level3">
+<h3 class="anchored" data-anchor-id="recorte-de-la-zona-de-dónde-está-el-rótulo">Recorte de la zona de dónde está el rótulo</h3>
+<p>De años anteriores sé que si “achico” cada imagen anterior me vale de igual forma y por prueba y error vi en que parte de la imagen suelen colocar los rótulos. Así que con herramientas de <code>imagemagick</code> puedo manipular esas imágenes y extraer solo la zona del rótulo.</p>
+<section id="reducción-de-la-imagen" class="level4">
+<h4 class="anchored" data-anchor-id="reducción-de-la-imagen">Reducción de la imagen</h4>
+<p>Cambiamos al directorio dónde hemos dejado las imágenes, y usando el comando <code>find</code> seleccionamos todos los archivos con extensión <code>jpg</code> y los reducimos a formato de 642x480.</p>
+<p>Para eso usamos <code>mogrify</code> que forma parte de <code>imagemagick</code> y la parte de usar <code>parallel</code> es para que se ejecute en paralelo usando 8 hilos de cpu.</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"> </span>
+<span id="cb4-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb4-3"> </span>
+<span id="cb4-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Convertir a formato más pequño</span></span>
+<span id="cb4-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.jpg'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 mogrify <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-resize</span> 642x480 {}</span></code></pre></div>
+</section>
+<section id="seleccionar-la-zona-dónde-están-los-rótulos" class="level4">
+<h4 class="anchored" data-anchor-id="seleccionar-la-zona-dónde-están-los-rótulos">Seleccionar la zona dónde están los rótulos</h4>
+<p>Ahora usamos otras funciones de <code>imagemagick</code> que son <code>convert</code> y <code>crop</code> . Lo que hacemos es convertir a formato tif y recortamos justo la zona dónde están los rótulos.<br>
+Así, para cada imagen jpg creamos un archivo con nombre <code>nombre_imagen.jpg.subtitulo.tif</code></p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"></span>
+<span id="cb5-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Seleccionar cacho dond están subtitulos</span></span>
+<span id="cb5-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.jpg'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 convert {} <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-crop</span> 460x50+90+285 +repage <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-compress</span> none <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-depth</span> 8 {}.subtitulo.tif</span></code></pre></div>
+</section>
+<section id="hacer-el-negativo-de-las-imágenes" class="level4">
+<h4 class="anchored" data-anchor-id="hacer-el-negativo-de-las-imágenes">Hacer el negativo de las imágenes</h4>
+<p>Para ayudar al software de reconocimiento óptico de caractereres obtenemos el negativo de cada tif. Para eso usamos de nuevo convert pero con la opción <code>negate</code></p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"></span>
+<span id="cb6-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Poner en negativo para que el ocr funcione mejor</span></span>
+<span id="cb6-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.tif'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 convert {} <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-negate</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-fx</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'.8*r+.8*g+0*b'</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-compress</span> none <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-depth</span> 8 {}</span></code></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="00000035.jpg.subtitulo.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="subtitulo_negativo"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/00000035.jpg.subtitulo.jpg" class="img-fluid figure-img"></a></p>
+<figcaption class="figure-caption">subtitulo_negativo</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="reconocimiento-óptico-de-caracteres" class="level3">
+<h3 class="anchored" data-anchor-id="reconocimiento-óptico-de-caracteres">Reconocimiento óptico de caracteres</h3>
+<p>Nosotros lo que queremos es tener el texto, no una imagen. Para eso utilizamos <a href="https://es.wikipedia.org/wiki/Tesseract_OCR"><code>tesseract</code></a>. Le pasamos cada una de las imágenes anteriores en formato tif y nos devolverá el texto que contienen. No siempre lo hará bien, pero el resultado es aceptable. También creamos directorio dónde vamos a mover todos los ficheros de texto creados y eliminamos los ficheros con menos de 10 bytes.</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Pasar el ocr con idioma en español</span></span>
+<span id="cb7-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.tif'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 tesseract <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-l</span> spa {} {}</span>
+<span id="cb7-3"></span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># mover a directorio texto</span></span>
+<span id="cb7-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb7-6"></span>
+<span id="cb7-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mv</span> <span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">*</span>.txt <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb7-8"></span>
+<span id="cb7-9"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb7-10"></span>
+<span id="cb7-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Borrar archivos de 10 bytes , subtítulos vacíos, bytes se indican con la letra c, cosas de linux</span></span>
+<span id="cb7-12"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-size</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-10c</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-exec</span> rm <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> {} <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\;</span></span></code></pre></div>
+<p>Y podemos ver cómo ha convertido por ejemplo el rótulo asociado al fotograma 35.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1">cmd <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"cat ~/proyecto_cachitos/2023_txt/00000035.jpg.subtitulo.tif.txt"</span></span>
+<span id="cb8-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">system</span>(cmd, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">intern =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">TRUE</span>)</span>
+<span id="cb8-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [1] "ste tema se escribió con cartas de mujeres con cáncer de mama"    </span></span>
+<span id="cb8-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [2] ""                                                                 </span></span>
+<span id="cb8-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [3] "Si te ha tocado este año, lo de la amnistía igual lo relativizas."</span></span>
+<span id="cb8-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; [4] "\f"</span></span></code></pre></div>
+</div>
+<p>Como vemos, la lógica de la creación de los ficheros de texto ha sido la de ir guardando el nombre original del fotograma e ir añadiendo extensiones, (.jpg, .subtitulo.tif, .txt).</p>
+<p>Y sin más, os dejo también aquí el script entero</p>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#!/bin/bash</span></span>
+<span id="cb9-2"></span>
+<span id="cb9-3"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">root_directory</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/home/jose/proyecto_cachitos</span>
+<span id="cb9-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span></span>
+<span id="cb9-5"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span></span>
+<span id="cb9-6"></span>
+<span id="cb9-7"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"First arg: </span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$1</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span></span>
+<span id="cb9-8"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> video</span>
+<span id="cb9-9"></span>
+<span id="cb9-10"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> video</span>
+<span id="cb9-11"></span>
+<span id="cb9-12"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">ANNO</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$1</span></span>
+<span id="cb9-13"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO</span></span>
+<span id="cb9-14"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_video</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_cachitos.mp4"</span></span>
+<span id="cb9-15"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_jpg_dir</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_jpg"</span></span>
+<span id="cb9-16"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">suffix_txt_dir</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_txt"</span></span>
+<span id="cb9-17"></span>
+<span id="cb9-18"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">video_file</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_video</span></span>
+<span id="cb9-19"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span></span>
+<span id="cb9-20"></span>
+<span id="cb9-21"></span>
+<span id="cb9-22"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">[</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2023"</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">]</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb9-23"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">then</span></span>
+<span id="cb9-24">    <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">ffmpeg</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-i</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> copy <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span></span>
+<span id="cb9-25"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">fi</span></span>
+<span id="cb9-26"></span>
+<span id="cb9-27"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">[</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2022"</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">]</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb9-28"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">then</span></span>
+<span id="cb9-29">    <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">ffmpeg</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-i</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=6767615"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> copy <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span></span>
+<span id="cb9-30"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">fi</span> </span>
+<span id="cb9-31"> </span>
+<span id="cb9-32"></span>
+<span id="cb9-33"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Pasar a jpg uno de cada 200 fotogramas</span></span>
+<span id="cb9-34"></span>
+<span id="cb9-35"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">mplayer</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-vf</span> framestep=200 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-framedrop</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-nosound</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$video_file</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-speed</span> 100 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-vo</span> jpeg:outdir=<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb9-36"> </span>
+<span id="cb9-37"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb9-38"> </span>
+<span id="cb9-39"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Convertir a formato más pequño</span></span>
+<span id="cb9-40"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.jpg'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 mogrify <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-resize</span> 642x480 {}</span>
+<span id="cb9-41"></span>
+<span id="cb9-42"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Seleccionar cacho dond están subtitulos</span></span>
+<span id="cb9-43"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.jpg'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 convert {} <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-crop</span> 460x50+90+285 +repage <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-compress</span> none <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-depth</span> 8 {}.subtitulo.tif</span>
+<span id="cb9-44"></span>
+<span id="cb9-45"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Poner en negativo para que el ocr funcione mejor</span></span>
+<span id="cb9-46"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.tif'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 convert {} <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-negate</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-fx</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'.8*r+.8*g+0*b'</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-compress</span> none <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-depth</span> 8 {}</span>
+<span id="cb9-47"></span>
+<span id="cb9-48"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Pasar el ocr con idioma en español</span></span>
+<span id="cb9-49"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'*.tif'</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">parallel</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-j</span> 8 tesseract <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-l</span> spa {} {}</span>
+<span id="cb9-50"></span>
+<span id="cb9-51"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># mover a directorio texto</span></span>
+<span id="cb9-52"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb9-53"></span>
+<span id="cb9-54"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mv</span> <span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">*</span>.txt <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb9-55"></span>
+<span id="cb9-56"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span>/<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$ANNO$suffix_txt_dir</span></span>
+<span id="cb9-57"></span>
+<span id="cb9-58"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Borrar archivos de 10 bytes , subtítulos vacíos</span></span>
+<span id="cb9-59"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">find</span> . <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-size</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-10c</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-exec</span> rm <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> {} <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\;</span></span>
+<span id="cb9-60"></span>
+<span id="cb9-61"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$root_directory</span></span></code></pre></div>
+</section>
 </section>
 <section id="algún-ejemplo" class="level2">
 <h2 class="anchored" data-anchor-id="algún-ejemplo">Algún ejemplo</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">library</span>(tidyverse)</span>
-<span id="cb2-2"></span>
-<span id="cb2-3">root_directory <span class="ot" style="color: #003B4F;
+<span id="cb10-2"></span>
+<span id="cb10-3">root_directory <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"~/proyecto_cachitos/"</span></span>
-<span id="cb2-4">anno <span class="ot" style="color: #003B4F;
+<span id="cb10-4">anno <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"2023"</span></span>
-<span id="cb2-5"><span class="fu" style="color: #4758AB;
+<span id="cb10-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">library</span>(magick)</span>
-<span id="cb2-6">(directorio_imagenes <span class="ot" style="color: #003B4F;
+<span id="cb10-6">(directorio_imagenes <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">str_glue</span>(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{root_directory}video/{anno}_jpg/"</span>))</span>
-<span id="cb2-7"><span class="co" style="color: #5E5E5E;
+<span id="cb10-7"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#&gt; ~/proyecto_cachitos/video/2023_jpg/</span></span>
-<span id="cb2-8"></span>
-<span id="cb2-9"><span class="fu" style="color: #4758AB;
+<span id="cb10-8"></span>
+<span id="cb10-9"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">image_read</span>(<span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1075,13 +1707,13 @@ font-style: inherit;">"{directorio_imagenes}00001297.jpg"</span>))</span></code>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">image_read</span>(<span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1091,25 +1723,25 @@ font-style: inherit;">"{directorio_imagenes}00001297.jpg.subtitulo.tif"</span>))
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-3-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2024/01/cachitos_2023/cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"></span>
-<span id="cb4-2">(directorio_texto <span class="ot" style="color: #003B4F;
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"></span>
+<span id="cb12-2">(directorio_texto <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">str_glue</span>(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{root_directory}{anno}_txt/"</span>))</span>
-<span id="cb4-3"><span class="co" style="color: #5E5E5E;
+<span id="cb12-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#&gt; ~/proyecto_cachitos/2023_txt/</span></span>
-<span id="cb4-4"></span>
-<span id="cb4-5"><span class="fu" style="color: #4758AB;
+<span id="cb12-4"></span>
+<span id="cb12-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">system</span>(<span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1120,17 +1752,17 @@ background-color: null;
 font-style: inherit;">intern =</span> <span class="cn" style="color: #8f5902;
 background-color: null;
 font-style: inherit;">TRUE</span>)</span>
-<span id="cb4-6"><span class="co" style="color: #5E5E5E;
+<span id="cb12-6"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#&gt; [1] "Con el tiempo descubrimos que todas las letras de este"</span></span>
-<span id="cb4-7"><span class="co" style="color: #5E5E5E;
+<span id="cb12-7"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#&gt; [2] "exprofesor de Primaria tenian referencias sexuales."   </span></span>
-<span id="cb4-8"><span class="co" style="color: #5E5E5E;
+<span id="cb12-8"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#&gt; [3] "\f"</span></span></code></pre></div>
 </div>
-<p>Y poco más, mañana intentaré tener el<a href="../../2023/01/03/cachitos-2022-segunda-parte/index.qmd">post similar al del año pasado</a> dónde veíamos distancias de texto entre rótulos y demás.</p>
+<p>Y poco más, mañana intentaré tener el<a href="../../../2023/01/03/cachitos-2022-segunda-parte/index.html">post similar al del año pasado</a> dónde veíamos distancias de texto entre rótulos y demás.</p>
 
 
 </section>
@@ -13932,7 +14564,7 @@ font-style: inherit;">#&gt; target_point   7.433332e-06 0.003551183 -0.007202358
 <p>En el segundo <a href="https://towardsdatascience.com/how-catboost-encodes-categorical-variables-3866fb2ae640">post</a> podemos ver la siguiente figura.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="coches_cod_catboost.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figura"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/coches_cod_catboost.png" class="img-fluid figure-img" width="1224"></a></p>
+<p><a href="coches_cod_catboost.png" class="lightbox" title="Figura" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/coches_cod_catboost.png" class="img-fluid figure-img" width="1224"></a></p>
 <figcaption class="figure-caption">Figura</figcaption>
 </figure>
 </div>
@@ -13958,11 +14590,11 @@ font-style: inherit;">#&gt; target_point   7.433332e-06 0.003551183 -0.007202358
 <p>El ejemplo que viene en la <a href="https://catboost.ai/en/docs/concepts/algorithm-main-stages_cat-to-numberic">docu</a>, dónde se ejemplifica con un pequeño dataset de 7 filas y muestran una de las permutaciones generadas.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="ejemplo_docu.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="permutation1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/ejemplo_docu.png" class="img-fluid figure-img"></a></p>
+<p><a href="ejemplo_docu.png" class="lightbox" title="permutation1" data-gallery="quarto-lightbox-gallery-2"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/ejemplo_docu.png" class="img-fluid figure-img"></a></p>
 <figcaption class="figure-caption">permutation1</figcaption>
 </figure>
 </div>
-<p>Que tras aplicar el algoritmo quedaría para esta permutación queda como <a href="ejemplo_docu_processed.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="permutation_process"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/ejemplo_docu_processed.png" class="img-fluid" alt="permutation_process"></a></p>
+<p>Que tras aplicar el algoritmo quedaría para esta permutación queda como <a href="ejemplo_docu_processed.png" class="lightbox" title="permutation_process" data-gallery="quarto-lightbox-gallery-3"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/06/09/categoricas_a_lo_catboost_pensamientos/ejemplo_docu_processed.png" class="img-fluid" alt="permutation_process"></a></p>
 <p>Replicamos en código</p>
 <div class="cell">
 <details open="">
@@ -17516,7 +18148,7 @@ background-color: null;
 font-style: inherit;">library</span>(MASS)</span></code></pre></div>
 </details>
 </div>
-<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" title="Help housing" data-gallery="quarto-lightbox-gallery-1"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
+<p>Vamos a usar el conjunto de datos <code>housing</code> <a href="housing_help.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Help housing"><img src="https://muestrear-no-es-pecado-rebranding.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></a></p>
 <div class="cell">
 <details open="">
 <summary>Code</summary>
