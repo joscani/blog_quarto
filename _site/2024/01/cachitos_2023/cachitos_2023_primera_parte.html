@@ -22,25 +22,62 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -72,7 +109,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Muestrear no es pecado</span>
     </a>
   </div>
@@ -83,11 +120,11 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../blog.html" rel="" target="">
+    <a class="nav-link" href="../../../blog.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
+    <a class="nav-link" href="../../../about.html" rel="" target="">
  <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -106,7 +143,7 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="../blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
 </i> 
  <span class="menu-text"></span></a>
   </li>  
@@ -130,7 +167,7 @@ ul.task-list li input[type="checkbox"] {
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="../archive.html" rel="" target="">
+    <a class="nav-link" href="../../../archive.html" rel="" target="">
  <span class="menu-text">Archivo</span></a>
   </li>  
 </ul>
@@ -151,6 +188,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#requisitos" id="toc-requisitos" class="nav-link active" data-scroll-target="#requisitos">Requisitos</a></li>
   <li><a href="#script-de-bash" id="toc-script-de-bash" class="nav-link" data-scroll-target="#script-de-bash">Script de bash</a></li>
+  <li><a href="#algún-ejemplo" id="toc-algún-ejemplo" class="nav-link" data-scroll-target="#algún-ejemplo">Algún ejemplo</a></li>
   </ul>
 </nav>
     </div>
@@ -207,11 +245,125 @@ ul.task-list li input[type="checkbox"] {
 <li><code>imagemagick</code> con <code>sudo apt install imagemagick</code>. Con <code>imagemagick</code> vamos a cambiar el tamaño de los fotogramas, recortar el área dónde están los subtítulos, convertir a formato <code>tif</code> e invertir los colores para que el texto se vea mejor.</li>
 <li><code>parallel</code> <code>sudo apt install parallel</code> . Con <code>parallel</code> vamos a poder utilizar varios núcleos e hilos del ordenador en paralelo y poder hacer la modificación de los fotogramas y el reconocimiento óptico de caracteres más rápido.</li>
 <li><code>tesseract</code> <code>sudo apt install tesseract-ocr</code> y <code>sudo apt install tesseract-ocr-spa</code> . Con <code>tesseract</code> se va a hacer el reconocimiento óptico del texto y guardar en ficheros de texto.</li>
+<li>Elimina ficheros de texto de menos de 10 bytes, puesto que ahí no hay texto .</li>
 </ul>
 </section>
 <section id="script-de-bash" class="level2">
 <h2 class="anchored" data-anchor-id="script-de-bash">Script de bash</h2>
-<p>El script es <a href="extract_subtitles.sh"><code>extract_subtitles.sh</code></a></p>
+<p>El script es <a href="../extract_subtitles.sh"><code>extract_subtitles.sh</code></a> , se ejecutaría con <code>extract_subtitles.sh 2023</code> .</p>
+<p>Este script básicamente hace:</p>
+<ul>
+<li>Se baja el video del sitio de rtve play</li>
+<li>Extrae 1 de cada 200 fotogramas con mplayer</li>
+<li>Reduce el tamaño de las imágenes con mogrify de imagemagick</li>
+<li>Convierte a tif y recorta el área dónde está el texto con convert y crop de imagemagick</li>
+<li>Obtiene el negativo de ese tif con convert y negate</li>
+<li>Obtiene el texto usando tesseract y guarda un archivo de texto por cada subtítulo</li>
+</ul>
+<pre><code>#!/bin/bash
+
+root_directory=/home/jose/proyecto_cachitos
+mkdir -p $root_directory
+cd $root_directory
+
+echo "First arg: $1"
+mkdir -p video
+
+cd video
+
+ANNO=$1
+echo $ANNO
+suffix_video="_cachitos.mp4"
+suffix_jpg_dir="_jpg"
+suffix_txt_dir="_txt"
+
+video_file=$ANNO$suffix_video
+echo $video_file
+
+
+if [ "$ANNO" == "2023" ] ;
+then
+    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821" -c copy $video_file
+fi
+
+if [ "$ANNO" == "2022" ] ;
+then
+    ffmpeg -i "https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=6767615" -c copy $video_file
+fi 
+ 
+
+# Pasar a jpg uno de cada 200 fotogramas
+
+mplayer -vf framestep=200 -framedrop -nosound $video_file -speed 100 -vo jpeg:outdir=$ANNO$suffix_jpg_dir 
+ 
+cd $ANNO$suffix_jpg_dir 
+ 
+# Convertir a formato más pequño
+find . -name '*.jpg' |  parallel -j 8 mogrify -resize 642x480 {}
+
+# Seleccionar cacho dond están subtitulos
+find . -name '*.jpg' |  parallel -j 8 convert {} -crop 460x50+90+285 +repage -compress none -depth 8 {}.subtitulo.tif
+
+# Poner en negativo para que el ocr funcione mejor
+find . -name '*.tif' |  parallel -j 8 convert {} -negate -fx '.8*r+.8*g+0*b' -compress none -depth 8 {}
+
+# Pasar el ocr con idioma en español
+find . -name '*.tif' |  parallel -j 8 tesseract -l spa {} {}
+
+# mover a directorio texto
+mkdir -p $root_directory/$ANNO$suffix_txt_dir
+
+mv *.txt $root_directory/$ANNO$suffix_txt_dir
+
+cd $root_directory/$ANNO$suffix_txt_dir
+
+# Borrar archivos de 10 bytes , subtítulos vacíos
+find . -size -10c -exec rm -f {} \;
+
+cd $root_directory
+</code></pre>
+</section>
+<section id="algún-ejemplo" class="level2">
+<h2 class="anchored" data-anchor-id="algún-ejemplo">Algún ejemplo</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>root_directory <span class="ot">=</span> <span class="st">"~/proyecto_cachitos/"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>anno <span class="ot">&lt;-</span> <span class="st">"2023"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magick)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>(directorio_imagenes <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{root_directory}video/{anno}_jpg/"</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ~/proyecto_cachitos/video/2023_jpg/</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">image_read</span>(<span class="fu">str_glue</span>(<span class="st">"{directorio_imagenes}00001297.jpg"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">image_read</span>(<span class="fu">str_glue</span>(<span class="st">"{directorio_imagenes}00001297.jpg.subtitulo.tif"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="cachitos_2023_primera_parte_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(directorio_texto <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{root_directory}{anno}_txt/"</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ~/proyecto_cachitos/2023_txt/</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="fu">str_glue</span>(<span class="st">"cat {directorio_texto}00001297.jpg.subtitulo.tif.txt"</span>), <span class="at">intern =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "Con el tiempo descubrimos que todas las letras de este"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2] "exprofesor de Primaria tenian referencias sexuales."   </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3] "\f"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y poco más, mañana intentaré tener el<a href="../../2023/01/03/cachitos-2022-segunda-parte/index.qmd">post similar al del año pasado</a> dónde veíamos distancias de texto entre rótulos y demás.</p>
 
 
 </section>
@@ -453,6 +605,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","loop":true,"openEffect":"zoom","selector":".lightbox","descPosition":"bottom"});</script>
 
 
 
