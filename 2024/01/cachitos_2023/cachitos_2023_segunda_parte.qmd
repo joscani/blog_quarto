@@ -1,10 +1,10 @@
 ---
 title: Cachitos 2023. Segunda parte
-date: '2024-01-03'
+date: '2024-01-04'
 categories: 
   - estadística
   - polémica
-  - 2023
+  - 2024
   - textmining
   - ocr
   - linux
@@ -18,7 +18,7 @@ format:
   html: 
     fig-height: 5
     fig-dpi: 300
-    fig-width: 8.88
+    fig-width: 9
     fig-align: center
 knitr:
   opts_chunk:
@@ -26,17 +26,17 @@ knitr:
     fig.showtext: TRUE
     collapse: true
     comment: "#>"
-image: "eldrogas.jpg"
+image: "00001347.jpg"
 ---
 
 Una vez que ya hemos visto en la [entrada
-anterior](https://muestrear-no-es-pecado.netlify.app/2023/01/02/cachitos-2022-primera-parte/)
+anterior](https://muestrear-no-es-pecado.netlify.app/2024/01/cachitos_2023/cachitos_2023_primera_parte)
 como extraer los rótulos, vamos a juntarlos todos en un sólo csv y hacer
 algo de limpieza.
 
 Dejo el enlace a los ficheros de texto construidos por `tesseract`
 [enlace
-directorio](https://drive.google.com/drive/folders/1Ds00KlAU7FfqNKEOYVjo3t50xjOuOuN-?usp=share_link)
+directorio](https://drive.google.com/drive/folders/1XFO5S-vAhHeE-ogYAjB1wD_gEZcx3lq4?usp=sharing)
 
 
 ## Lectura rótulos
@@ -74,7 +74,7 @@ subtitulos
 
 ```
 
-Tenemos 1302 rótulos de los cuales la mayoría estarán vacíos
+Tenemos 687 rótulos de los cuales la mayoría estarán vacíos
 
 
 ## Contando letras
@@ -86,11 +86,11 @@ los subtítulos.
 
 subtitulos %>%
     pull(value) %>%
-    pluck(200)
+    pluck(239)
 
 ```
 
-Muchos de los ficheros no tienen texto (son fotogramas sin rótulos).
+
 Contemos letras.
 
 
@@ -136,7 +136,7 @@ Usando la librería `magick` en R que permite usar `imagemagick` en R, ver **[po
 library(magick)
 (directorio_imagenes <- str_glue("{root_directory}video/{anno}_jpg/"))
 
-image_read(str_glue("{directorio_imagenes}00000680.jpg"))
+image_read(str_glue("{directorio_imagenes}00000383.jpg"))
 
 ```
 
@@ -194,15 +194,15 @@ subtitulos_proces %>%
     filter(!is.na(distancia)) %>% 
     select(name,texto,distancia, texto_anterior, everything()) %>% 
     arrange(distancia) %>% 
-    DT::datatable()
+    DT::datatable(options = list(scrollX=TRUE))
 
 ```
 
-Decidimos eliminar texto cuya distancia sea menor de 36 
+Decidimos eliminar texto cuya distancia sea menor de 30
 
 ```{r}
 subtitulos_proces <-  subtitulos_proces %>% 
-    filter(distancia > 36) %>% 
+    filter(distancia >= 30) %>% 
     select(-texto_anterior)
 
 subtitulos_proces %>% 
@@ -218,7 +218,7 @@ No nos hemos quitado todos los duplicados pero sí algunos de ellos.
 dim(subtitulos_proces)
 ```
 
-
+Y ya solo tenemos 583 rótulos
 
 Guardamos el fichero unido
 
@@ -226,7 +226,15 @@ Guardamos el fichero unido
 
 write_csv(subtitulos_proces,
           file = str_glue("{root_directory}{anno}_txt_unido.csv"))
+
+
+DT::datatable(
+    subtitulos_proces %>%
+        select(-distancia) %>% 
+        arrange(n_fichero))
+
+
 ```
 
-Y [aquí](https://drive.google.com/file/d/1S2Qm_Xv0UGshbwUpAWeF-nGX2JbZp7RV/view?usp=share_link) os dejo el enlace con los rótulos definitivos
+Y [aquí](https://drive.google.com/file/d/1pv5GUCp-6IteiplpCL9LWmA20sfd7kHy/view?usp=sharing) os dejo el enlace con los rótulos definitivos
 
