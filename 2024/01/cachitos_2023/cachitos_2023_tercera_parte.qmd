@@ -1,5 +1,5 @@
 ---
-title: Cachitos 2022. Tercera parte
+title: Cachitos 2023. Tercera parte
 date: '2024-01-08'
 categories: 
   - estadística
@@ -20,13 +20,15 @@ format:
     fig-dpi: 300
     fig-width: 8
     fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
 knitr:
   opts_chunk:
     out.width: 80%
     fig.showtext: TRUE
     collapse: true
     comment: "#>"
-image: "imagen_post.png"
+image: "topic_modelling_IA.jpeg"
 ---
 
 Vamos ya con la última entrada del cachitos de este año. Las anteriores,
@@ -72,7 +74,7 @@ anno <- "2023"
 ```
 
 Leemos el csv. Uso DT y así podéis ver todos los datos o buscar cosas,
-por ejemplo `emérito` o `Ayuso`
+por ejemplo `amnistía` o `crispación`
 
 ```{r}
 subtitulos_proces <-  read_csv(str_glue("{root_directory}{anno}_txt_unido.csv"))
@@ -107,7 +109,6 @@ subtitulos_proces_one_word <- subtitulos_proces %>%
     filter(! word %in% to_remove) %>% 
     filter(nchar(word) > 1)
 
-# Se nos quedan 3766 filas/palabras de los 488 rótulos
 dim(subtitulos_proces_one_word)
 
 ```
@@ -136,7 +137,7 @@ palabras_ordenadas_1 %>%
 
 ```
 
-Y como el año pasado la palabra más común es "canción" . ¿Y si añadimos
+Y como el año pasado una de las palabras más comunes es "canción" . ¿Y si añadimos
 las 20 palabras como stopword, junto con algunas como \["tan",
 "sólo","así", "aquí", "hoy"\] . La tarea de añadir palabras como
 stopwords requiere trabajo, tampoco nos vamos a parar tanto.
@@ -192,31 +193,83 @@ pal <- brewer.pal(8,"Dark2")
 subtitulos_proces_one_word %>% 
     group_by(word) %>% 
     count() %>% 
-    with(wordcloud(word, n, random.order = FALSE, max.words = 80, colors=pal))    
+    with(wordcloud(word, n, random.order = FALSE, max.words = 110, colors=pal))    
 
 ```
 
 ## ¿Polémicos?
 
 Creamos lista de palabras polémicas (se aceptan otras, podéis poner en
-los comentarios)
+los comentarios). 
+
 
 ```{r}
 
-palabras_polem <- c("abascal","amnistía", "feijóo", "guerra", "sánchez", "puigdemont" ,"almeida", "ayuso", "belarra", "bloqueo","montero", "polarización", "polarizados", "crispación", 
-                "ciudada", "comunidad", "conde", "constitucional", "coron",
-                "democr", "democracia", "derech", "díaz", "dioni",
-                "errejon", "extremadura", "fach", "falcon", "feij",
-                "gobierno", "guardia", "iglesias", "illa", "ivan",
-                "izquier", "ley", "madrid","manipulador", "marlaska", 
-                "marruecos","melilla", "militares", "minist", "monarca",
-                "montero","negacion", "negacionismo", "olona", "oposición",
-                "page", "pandem", "pp", "principe", "prisión", "psoe",
-                "redondo", "republic", "rey", "rufian", "rufián", 
-                "sabina", "sanchez", "sánchez", "sanz","tezanos", 
-                "toled", "trans", "transición", "tren", "ultra",
-                "vicepre", "vox", "yolanda", "zarzu", "zarzuela")
-
+palabras_polem <-
+    c(
+        "abascal",
+        "almeida",
+        "amnistía",
+        "ayuso",
+        "belarra",
+        "bloqueo",
+        "brusel",
+        "catal",
+        "ciudada",
+        "comunidad",
+        "constitucional",
+        "coron",
+        "crispación",
+        "democr",
+        "democracia",
+        "derech",
+        "díaz",
+        "dioni",
+        "errejon",
+        "extremadura",
+        "fach",
+        "falcon",
+        "fasc",
+        "feij",
+        "feijóo",
+        "gobierno",
+        "guardia",
+        "guerra",
+        "iglesias",
+        "izquier",
+        "ley",
+        "madrid",
+        "manipulador",
+        "militares",
+        "minist",
+        "monarca",
+        "montero",
+        "oposición",
+        "page",
+        "pandem",
+        "polarización",
+        "polarizados",
+        "pp",
+        "principe",
+        "prisión",
+        "psoe",
+        "sumar",
+        "puigdemont",
+        "republic",
+        "rey",
+        "rufián",
+        "sánchez",
+        "sanz",
+        "tezanos",
+        "toled",
+        "transición",
+        "ultra",
+        "vicepre",
+        "vox",
+        "yolanda",
+        "zarzu",
+        "zarzuela"
+    )
 
 ```
 
@@ -254,16 +307,27 @@ subtitulos_proces %>%
     unique()
 ```
 
+Escribimos en un fichero los subtítulos polémicos , por si hago lo que estoy pensando hacer . 
+
+```{r}
+subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    write_csv(file = "~/proyecto_cachitos/2023_solo_polem.csv")
+
+```
+
+
 Y podemos ver los fotogramas.
 
 ```{r}
 # identificamos nombre del archivo jpg con los rótulos polémicos
-polemica_1_fotogramas <- unique(substr(subtitulos_polemicos, 1,12))
+polemica_1_fotogramas <- unique(substr(subtitulos_polemicos, 1,9))
 
 head(polemica_1_fotogramas)
 
 # creamos la ruta completa donde están
-polemica_1_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_1_fotogramas)
+polemica_1_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_1_fotogramas, "jpg")
 
 
 # añadimos sufijo subtitulo.tif para tenr localizado la imagen que tiene solo los rótulos
@@ -282,22 +346,21 @@ subtitulos_polemicos_img <- map(subtitulos_polemicos_1_full, image_read)
 
 ```{r}
 
-subtitulos_polemicos_img[[25]]
+subtitulos_polemicos_img[[24]]
 
 ```
 
 ```{r}
-fotogramas_polemicos_img[[25]]
+fotogramas_polemicos_img[[24]]
 ```
 
 Podemos ver una muestra de algunos de ellos.
 
-No es perfecto ( al meter ley o tren como palabras polémticas) pero
-bueno, nos vale.
+No es perfecto, esto requiere más trabajo pero por el momento nos podria valer. Vemos una muestra de los rótulos polémicos
 
-```{r, fig.width= 20}
-set.seed(2023)
-indices <- sort(sample(1:length(fotogramas_polemicos_img), 12))
+```{r}
+set.seed(42)
+indices <- sort(sample(1:length(fotogramas_polemicos_img), 9))
 
 lista_fotogram_polemicos <- lapply(fotogramas_polemicos_img[indices], grid::rasterGrob)
 gridExtra::grid.arrange(grobs=lista_fotogram_polemicos )
@@ -316,7 +379,7 @@ gridExtra::grid.arrange(grobs=lista_subtitulos)
 Aquí no me refiero a los tópicos de este país nuestro, sino a
 identificar si hay temas comunes a varios documentos.
 
-Ya aviso que con tan pocos "documentos", unos 488 y siendo tan cortos
+Ya aviso que con tan pocos "documentos",  y siendo tan cortos
 cada rótulo, es muy probable que no salga mucho..
 
 ### Tópicos usando conteo de palabras.
@@ -364,7 +427,7 @@ word_counts  %>%
 
 Vamos a ver si sale algo haciendo un LDA (Latent Dirichlet Allocation)
 
-Considero 7 tópicos porque me gusta el número 7. El que quiera elegir
+Considero 20 tópicos porque sí.  El que quiera elegir
 con algo más de criterio que se mire
 [esto](https://cran.r-project.org/web/packages/ldatuning/vignettes/topics.html)
 
@@ -372,7 +435,7 @@ con algo más de criterio que se mire
 
 # Cons
 
-rotulos_lda <- LDA(rotulos_dtm, k = 7, control = list(seed = 1234))
+rotulos_lda <- LDA(rotulos_dtm, k = 20, control = list(seed = 1234))
 rotulos_lda
 
 rotulos_lda_td <- tidy(rotulos_lda)
@@ -443,7 +506,7 @@ dtm_long <- tf_idf_data %>%
 ```
 
 ```{r}
-lda_model_long_1 <- LDA(dtm_long, k = 7, control = list(seed = 1234))
+lda_model_long_1 <- LDA(dtm_long, k = 20, control = list(seed = 1234))
 ```
 
 ```{r}
@@ -517,8 +580,8 @@ result_polem %>%
     coord_flip()
 ```
 
-Y bueno parece que en el tópico 3 se meten juntos rótulos que hablan de
-pandemia y de negacionistas, ha podido ser casualidad, quién sabe.
+Y bueno parece que en el tópico 1 vemos palabras como amnistía, puigdemont, rey o sánchez. 
+O en el 2 iglesias, amnistía, catalana. 
 
 Si vemos en qué tópico cae cada documento.
 
@@ -528,7 +591,7 @@ result_documento_polem <-  tidy(lda_model_long_polem, 'gamma')
 
 result_documento_polem %>%
     group_by(topic) %>%
-    top_n(5, gamma) %>%
+    top_n(7, gamma) %>%
     ungroup() %>%
     arrange(topic, -gamma) %>% 
     mutate(document = reorder(document, gamma)) %>%
@@ -539,19 +602,22 @@ result_documento_polem %>%
 
 ```
 
-Veamos algunos subtítulos del tópico 3
+Veamos algunos subtítulos del tópico 1
 
 ```{r}
 subtitulos_proces %>% 
-    filter(name %in% c(385, 408, 143, 175, 13, 334)) %>% 
+    filter(name %in% c(175, 385, 334, 598, 321, 13, 408)) %>% 
     pull(texto)
 ```
 
+Veamos más documentos relacionados con este tópico
+
 ```{r}
+
 top_10_topic3 <-  result_documento_polem %>%
     group_by(topic) %>% 
-    top_n(10, gamma) %>% 
-    filter(topic==3) %>% 
+    top_n(12, gamma) %>% 
+    filter(topic==1) %>% 
     pull(document)
 
 subtitulos_proces %>% 
@@ -589,7 +655,7 @@ result_polem_tf_idf %>%
     coord_flip()
 ```
 
-Y bueno no lo veo tan poco muy claro.
+Y bueno más o menos igual. 
 
 ### Otras pruebas realizadas
 
@@ -600,7 +666,7 @@ Y bueno no lo veo tan poco muy claro.
 Y bueno aquí acaba el análisis del cachitos de este año, salvo que
 alguien tenga interés en que haga alguna prueba o mejore algo.
 
-### IAS
+### IA's
 
 Probando que me decía ChatGPT 3.5, (no tengo versión de pago). le he
 pasado la mitad de los rótulos de este año y le digo que me saque los 7
@@ -644,7 +710,122 @@ Bellosta](https://www.datanalytics.com/2024/01/02/stealthflation/) y le
 he podido pasar todos los rótulos y el resultado de ChatGpt 4 y demás,
 me ha decepcionado bastante. Os animo a probarlo
 
+
 Si hago una próxima entrada exploraré a ver si puedo conectarme a algún
 modelo de huggin face y ver qué tal lo hace.
 
-**Feliz 2024 a todos**
+### Transformers
+
+Voy a probar a hacer topic modelling usando [`BERTopic`](https://maartengr.github.io/BERTopic/index.html) que utiliza cosas como reducción de dimensionalidad con embeddings, `hdbscan` y los conocidos `transformers` 
+
+Para eso, he instalado lo necesario en un entorno de miniconda. El script en python es este 
+
+```{python}
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+from bertopic import BERTopic
+from bertopic.vectorizers import ClassTfidfTransformer
+import pandas as pd
+from matplotlib import pyplot as plt
+import plotly.express as px
+from sklearn.feature_extraction.text import CountVectorizer
+from spacy.lang.es.stop_words import STOP_WORDS
+```
+
+
+```{python}
+## rotulos 
+rotulos = pd.read_csv("/home/jose/proyecto_cachitos/2023_txt_unido.csv")
+polemicos = pd.read_csv("/home/jose/proyecto_cachitos/2023_solo_polem.csv")
+```
+
+
+Stop words en español y ajustar modelo de Bert
+
+```{python}
+
+lista_stop = list(STOP_WORDS) 
+
+vectorizer_model = CountVectorizer(stop_words= lista_stop)
+
+topic_model = BERTopic(verbose=True, 
+    vectorizer_model = vectorizer_model, 
+    embedding_model='paraphrase-multilingual-MiniLM-L12-v2',
+    min_topic_size= 5)
+
+## ajustr modelo con el texto de los rotulos
+topicos, _ = topic_model.fit_transform(rotulos.texto)
+
+```
+
+Y no consigo ver este plotly correctamente. Otros plotly desde python si me deja. 
+
+``` {python}
+
+import plotly.express as px
+fig = topic_model.visualize_barchart(top_n_topics=20)
+##fig.show() # el show no me funciona
+
+
+```
+
+
+
+```{r, echo=FALSE, fig.width=16}
+htmltools::includeHTML("topic1.html")
+```
+
+
+
+
+Ahora solo con los rótulos polémicos 
+
+
+```{python}
+## solo polémicos
+
+
+model_polem =  BERTopic(verbose=True, 
+    vectorizer_model = vectorizer_model,
+    embedding_model='paraphrase-multilingual-MiniLM-L12-v2',
+    min_topic_size= 2)
+
+topicos_polem, _ = model_polem.fit_transform(polemicos.texto)
+
+
+freq = model_polem.get_topic_info()
+print("Number of topics: {}".format( len(freq)))
+freq.head()
+```
+
+
+```{python, eval = FALSE}
+
+fig_polem = model_polem.visualize_barchart(top_n_topics=20)
+# fig_polem.show() no funciona incrusto el html con el plotly
+```
+
+
+```{r, echo=FALSE, fig.width=16}
+htmltools::includeHTML("topic2.html")
+```
+
+
+Para ver los rótulos del topic 0 
+ 
+```{python}
+df = pd.DataFrame({'topic': topicos_polem, 'document': polemicos.texto})
+
+df.loc[df.topic == 0, 'document']
+```
+
+
+Y vemos que BERtopic es una buena herramienta para este tipo de cosas, y que seguramente en análisis de texto más complejos sea muy útil. 
+
+
+## Coda
+
+En esta serie de post he dejado reflejado como bajar el video, extraer fotogramas, recortar rótulos, hacer ocrs y un pequeño análisis de los rótulos. Queda para cada cual discernir si los rótulos de este año se meten más con el gobierno, la oposición , los nacionalistas o con otros personajes.  Sea como fuere en la serie de post se dan herramientas para que el que quiera realice su propio análisis y se forme una opinión propia.
+
+Sin más, os deseo un  **Feliz 2024 a todos** y espero el año que viene seguir cumpliendo con la ya casi tradición del análisis de **Nochevieja a Cachitos**
