@@ -31,7 +31,7 @@ knitr:
 image: "topic_modelling_IA.jpeg"
 ---
 
-Vamos ya con la última entrada del cachitos de este año. Las anteriores,
+Vamos ya con la penúltima entrada del cachitos de este año. Las anteriores,
 las tenemos en
 [esta](/2024/01/cachitos_2023/cachitos_2023_primera_parte.html) y [esta
 otra](/2024/01/cachitos_2023/cachitos_2023_segunda_parte.html)
@@ -713,115 +713,6 @@ me ha decepcionado bastante. Os animo a probarlo
 
 Si hago una próxima entrada exploraré a ver si puedo conectarme a algún
 modelo de huggin face y ver qué tal lo hace.
-
-### Transformers
-
-Voy a probar a hacer topic modelling usando [`BERTopic`](https://maartengr.github.io/BERTopic/index.html) que utiliza cosas como reducción de dimensionalidad con embeddings, `hdbscan` y los conocidos `transformers` 
-
-Para eso, he instalado lo necesario en un entorno de miniconda. El script en python es este 
-
-```{python}
-import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-from bertopic import BERTopic
-from bertopic.vectorizers import ClassTfidfTransformer
-import pandas as pd
-from matplotlib import pyplot as plt
-import plotly.express as px
-from sklearn.feature_extraction.text import CountVectorizer
-from spacy.lang.es.stop_words import STOP_WORDS
-```
-
-
-```{python}
-## rotulos 
-rotulos = pd.read_csv("/home/jose/proyecto_cachitos/2023_txt_unido.csv")
-polemicos = pd.read_csv("/home/jose/proyecto_cachitos/2023_solo_polem.csv")
-```
-
-
-Stop words en español y ajustar modelo de Bert
-
-```{python}
-
-lista_stop = list(STOP_WORDS) 
-
-vectorizer_model = CountVectorizer(stop_words= lista_stop)
-
-topic_model = BERTopic(verbose=True, 
-    vectorizer_model = vectorizer_model, 
-    embedding_model='paraphrase-multilingual-MiniLM-L12-v2',
-    min_topic_size= 5)
-
-## ajustr modelo con el texto de los rotulos
-topicos, _ = topic_model.fit_transform(rotulos.texto)
-
-```
-
-Y no consigo ver este plotly correctamente. Otros plotly desde python si me deja. 
-
-``` {python}
-
-import plotly.express as px
-fig = topic_model.visualize_barchart(top_n_topics=20)
-##fig.show() # el show no me funciona
-
-
-```
-
-
-
-```{r, echo=FALSE, fig.width=16}
-htmltools::includeHTML("topic1.html")
-```
-
-
-
-
-Ahora solo con los rótulos polémicos 
-
-
-```{python}
-## solo polémicos
-
-
-model_polem =  BERTopic(verbose=True, 
-    vectorizer_model = vectorizer_model,
-    embedding_model='paraphrase-multilingual-MiniLM-L12-v2',
-    min_topic_size= 2)
-
-topicos_polem, _ = model_polem.fit_transform(polemicos.texto)
-
-
-freq = model_polem.get_topic_info()
-print("Number of topics: {}".format( len(freq)))
-freq.head()
-```
-
-
-```{python, eval = FALSE}
-
-fig_polem = model_polem.visualize_barchart(top_n_topics=20)
-# fig_polem.show() no funciona incrusto el html con el plotly
-```
-
-
-```{r, echo=FALSE, fig.width=16}
-htmltools::includeHTML("topic2.html")
-```
-
-
-Para ver los rótulos del topic 0 
- 
-```{python}
-df = pd.DataFrame({'topic': topicos_polem, 'document': polemicos.texto})
-
-df.loc[df.topic == 0, 'document']
-```
-
-
-Y vemos que BERtopic es una buena herramienta para este tipo de cosas, y que seguramente en análisis de texto más complejos sea muy útil. 
 
 
 ## Coda
