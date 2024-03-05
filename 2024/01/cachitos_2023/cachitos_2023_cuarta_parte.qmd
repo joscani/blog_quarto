@@ -91,7 +91,7 @@ topicos, _ = topic_model.fit_transform(rotulos.texto)
 
 Y no consigo ver este plotly correctamente. Otros plotly desde python si me deja. 
 
-``` {python}
+``` {python, eval = FALSE}
 
 import plotly.express as px
 fig = topic_model.visualize_barchart(top_n_topics=20)
@@ -100,13 +100,7 @@ fig = topic_model.visualize_barchart(top_n_topics=20)
 
 ```
 
-
-
-```{r, echo=FALSE, fig.width=16}
-htmltools::includeHTML("topic1.html")
-```
-
-
+![topic1](plotly_python.png)
 
 
 Ahora solo con los rótulos polémicos, los cuales identificamos en el post anterior. 
@@ -136,11 +130,7 @@ fig_polem = model_polem.visualize_barchart(top_n_topics=20)
 # fig_polem.show() no funciona incrusto el html con el plotly
 ```
 
-
-```{r, echo=FALSE, fig.width=16}
-htmltools::includeHTML("topic2.html")
-```
-
+![topci2](plotly_python2.png)
 
 Para ver los rótulos del topic 0 
  
