@@ -1,0 +1,287 @@
+---
+title: "Lujuria e intervención"  
+date: '2024-03-31'
+categories: 
+  - 2024
+  - estadística
+  - full luxury bayes
+  - análisis bayesiano
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+## Introducción 
+
+Cuenta Richard McElreath en sus vídeos de Statistical Rethinking que la inferencia causal no es más
+que predecir la intervención. Una de las cosas que más me llamó la atención es lo que él llama
+"full luxury bayes". El "full luxury" permite ajustar todo el DAG de un modelo causal, permitiéndonos cosas 
+que los seguidores de Pearl dicen que no se puede hacer, cosas como condicionar por un collider o cosas así.
+
+Una vez tenemos el DAG entero ajustado conjuntamente, podemos hacer cosas como simular la intervención. 
+Esto no es más que - oye, ¿qué hubiera pasado si todo los individuos hubieran recibido el tratamiento?,
+¿y si todos hubieran estado en control?-  y de esta forma  podemos estimar lo que queremos, que unos lo 
+llaman el efecto causal, o ATE (average treatmen effect) y cosas así. 
+
+
+
+## Ejemplo simulado
+
+Supongamos que tenemos un DAG. Y que el DAG es correcto.  Esto que acabo de escribir, de que el 
+DAG es correcto es la principal asunción de toda la inferencia causal.  No hay inferencia causal sin
+una descripción explícita de tu modelo causal (__Ciencia antes que estadística__). Las técnicas de 
+inferencia causal son sólo herramientas técnicas que nos ayudarán a estimar el efecto. Pero si nuestras
+asunciones son incorrectas, no hay técnica que nos salve.
+
+
+### DAG
+
+```{r}
+
+library(tidyverse)
+library(dagitty)
+library(ggdag)
+
+egypt <- MetBrewer::met.brewer("Egypt")
+
+theme_nice <- function() {
+  theme_minimal(base_family = "Archivo Narrow") +
+    theme(panel.grid.minor = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          plot.title = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold", size = rel(0.8), hjust = 0),
+          strip.background = element_rect(fill = "grey80", color = NA),
+          legend.title = element_text(face = "bold"))
+}
+
+theme_set(
+  theme_nice()
+)
+
+```
+
+```{r}
+
+dag_coords <-
+  tibble(name = c("S",  "M", "D"),
+         x = c(0,  1,  2),
+         y = c(0,  0.2,  0))
+
+dag_simple <- dagify(
+       M ~ S,
+       D ~ M,
+       coords = dag_coords
+       )
+dag_simple %>%
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_text(color = "black", size = 10) +
+  geom_dag_point(data = . %>%  filter(name %in% c("U")),
+               shape = 1, stroke = 2, color = "black") +
+  geom_dag_edges(edge_color = "black", edge_width = 2,
+                 arrow_directed = grid::arrow(length = grid::unit(15, "pt"),
+                                              type = "closed")) +
+  theme_void()
+
+```
+
+### Simulamos los datos. 
+
+Vamos a simular los datos, de forma que sabremos cuál es el verdadero efecto causal. 
+
+
+```{r}
+
+S <- rbinom(100,1, 0.3)
+
+M <- 2 * S + rnorm(100, 0, 1)
+
+D <-  5 + 5 * M + rnorm(100, 0, 1)
+
+```
+
+Sabemos que el efecto total de _S_ sobre _D_ es de 10. Por ser M una variable mediadora, y tal
+como hemos generado los datos se multiplican los coeficientes. 
+
+### Usando dagitty
+
+`dagitty` nos permite saber por qué variabbles hemos de condicionar, según los criterios de Pearl, para obtener 
+diferentes efectos. 
+
+
+```{r}
+
+dagitty::adjustmentSets(dag_simple, exposure = "S", outcome = "D")
+
+
+```
+
+Y vemos que no hay que "controlar" por ninguna variable para obtener el efecto de _S_ sobre _D_
+
+```{r}
+df <- data.frame(S = S , D = D, M = M)
+
+mod_simple_correcto <- lm(D ~ S, data = df)
+summary(mod_simple_correcto)
+
+```
+
+Y obtenemos el coeficiente correcto. 
+
+## Full luxury bayes
+
+En modelos sencillos usar `dagitty` nos permite encontrar el mínimo conjunto de variables  por las 
+que controlar, para encontrar el efecto que buscamos. Pero pueden darse situaciones en las que sea 
+necesario condicionar por una variable que en un "path" sea una variable de confusión, mientras que
+en otro sea un "collider". En esos casos hay que recurrir al "front door criterio" y a veces ni aún
+así basta. 
+
+Pero tal y como empezaba el post. La inferencia causal no es más que predecir el efecto de la intervención. 
+Y eso vamos a hacer. 
+
+En análisis bayesiano podemos ajustar el DAG entero y aún así estimar los efectos incluso condicionando
+por variable que los criterior de Pearl nos dicen que no se pueden. Esto lleva un coste computacional
+no despreciable si el DAG es complejo, de ahí lo de "luxury".
+
+
+Con las librerías `brms` es relativamente sencillo ajustar este tipo de modelos
+
+```{r}
+
+library(brms)
+library(ggdist) # pa pintar 
+
+bf1 <- bf(M  ~  S)
+bf2 <- bf(D  ~  M )
+bf_full <- bf1 + bf2
+
+mod_full_luxury <- brm(
+                       bf_full, 
+                       chains = 4,
+                       cores = 4, 
+                       iter = 2000, 
+                       data = df, 
+                       seed = 123)
+
+
+```
+
+En el summary del modelo vemos que este modelo ha recuperado los coeficientes correctos. 
+
+```{r}
+
+summary(mod_full_luxury)
+
+```
+
+Una vez tenemos esto , podemos usar las posterior de dos forma. Una sería multiplicando las posteriors 
+del coeficiente de M y el de S, y otra haciendo una "intervención"
+
+
+### Multiplicando posteriors
+
+
+```{r}
+
+posteriors  <- as.data.frame(mod_full_luxury)
+
+head(posteriors)
+
+```
+
+```{r}
+
+efecto_global_S  <- posteriors$b_M_S * posteriors$b_D_M
+
+quantile(efecto_global_S, c(0.025, 0.5, 0.975))
+
+```
+
+Pintando la posterior
+
+```{r}
+
+efecto_global_S  %>% 
+  enframe()  %>%
+  ggplot(aes(x = value)) +
+  stat_halfeye(.width = c(0.67, 0.89, 0.97)) +
+  labs(x = expression(beta[S1]), y = "Density")
+
+```
+
+### Simulando la intervención
+
+Una vez tenemos el Dag estimado, podemos recorrerlo haciendo una intervención.
+Esto no es más que ver como sería el efecto cuando S= 0 y cuando S=1
+
+El "truco" es que hay que recorrer el DAG y obteniendo las posteriors tras hacer la intervención. 
+
+Por ejemplo, la posterior del coeficiente de M no vale la que ha sacado el modelo, sino que hay que 
+calcularla utilizando el primer modelo el de `M ~ S`, pero poniendo que S = 0, y usar esa posterior 
+obtenida en el modelo `D ~ M`.  
+
+
+
+```{r}
+
+# S == 0
+
+M_post0  <- with(posteriors,  b_M_Intercept + b_M_S * 0 )
+D_post0  <- with(posteriors,  b_D_Intercept + b_D_M * M_post0 )
+
+# S == 1
+
+M_post1  <- with(posteriors,  b_M_Intercept + b_M_S * 1 )
+D_post1  <- with(posteriors,  b_D_Intercept + b_D_M * M_post1 )
+
+
+efecto_global_S_intervencion <- D_post1 - D_post0
+
+efecto_global_S_intervencion  %>% 
+  enframe()  %>%
+  ggplot(aes(x = value)) +
+  stat_halfeye(.width = c(0.67, 0.89, 0.97)) +
+  labs(x = expression(beta[S1]), y = "Density")
+
+
+```
+
+El efecto correcto se recupera ajustando el DAG completo y luego simulando una intervención. Tal 
+y como dice Richard McElreath, la inferencia causal es predecir el efecto de la intervención. 
+
+
+
+## Conclusión
+
+La inferencia bayesiana nos permite ajustar un DAG completo e incluso ajustar por "colliders" o por 
+variables no observadas. Esto puede ser útil cuando tenemos DAGs en los que no se puede obtener correctamente
+el efecto buscado , ya sea porque implica condicionar por variables que tengan el doble rol de 
+"confounder" y de "colliders" en diferentes "paths" o por otros motivos. 
+El "full luxury bayes" conlleva coste computacional elevado por lo que la estrategia debería ser la 
+de usarlo sólo en caso necesario. Pero la verdad es que encuentro cierta belleza en ajustar todo el 
+diagrama causal y luego simular la intervención.
+
+
+
+
+
+
+
