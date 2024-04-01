@@ -1,4 +1,4 @@
----
+q--
 title: "Lujuria e intervención"  
 date: '2024-03-31'
 categories: 
@@ -28,6 +28,14 @@ knitr:
     comment: "#>"
 ---
 
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/6BxCmy6vGbuOckxg6YfQOW?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+
+:::
 
 ## Introducción 
 
@@ -162,24 +170,24 @@ por variable que los criterior de Pearl nos dicen que no se pueden. Esto lleva u
 no despreciable si el DAG es complejo, de ahí lo de "luxury".
 
 
-Con las librerías `brms` es relativamente sencillo ajustar este tipo de modelos
+Con las librerías `brms` y `cmdstanr` es relativamente sencillo ajustar este tipo de modelos
 
 ```{r}
-
+# library(cmdstanr)  # No me funciona cmdstanr al renderizar en quarto
+#set_cmdstan_path(path = "~/.cmdstan/cmdstan-2.34.1/")
 library(brms)
 library(ggdist) # pa pintar 
-
 bf1 <- bf(M  ~  S)
 bf2 <- bf(D  ~  M )
-bf_full <- bf1 + bf2
+bf_full <- bf1 + bf2 + set_rescor(rescor = FALSE)
 
 mod_full_luxury <- brm(
                        bf_full, 
                        chains = 4,
                        cores = 4, 
                        iter = 2000, 
-                       data = df, 
-                       seed = 123)
+                       data = df) 
+                       #backend = "cmdstanr")
 
 
 ```
