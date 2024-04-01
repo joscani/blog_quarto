@@ -10,7 +10,959 @@
 <atom:link href="https://muestrear-no-es-pecado.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.4.552</generator>
-<lastBuildDate>Sun, 17 Mar 2024 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 30 Mar 2024 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Lujuria e intervención</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado.netlify.app/2024/03/lujuria_e_intervencion.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Listening
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/6BxCmy6vGbuOckxg6YfQOW?utm_source=generator" width="100%" height="352" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<section id="introducción" class="level2">
+<h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
+<p>Cuenta Richard McElreath en sus vídeos de Statistical Rethinking que la inferencia causal no es más que predecir la intervención. Una de las cosas que más me llamó la atención es lo que él llama “full luxury bayes”. El “full luxury” permite ajustar todo el DAG de un modelo causal, permitiéndonos cosas que los seguidores de Pearl dicen que no se puede hacer, cosas como condicionar por un collider o cosas así.</p>
+<p>Una vez tenemos el DAG entero ajustado conjuntamente, podemos hacer cosas como simular la intervención. Esto no es más que - oye, ¿qué hubiera pasado si todo los individuos hubieran recibido el tratamiento?, ¿y si todos hubieran estado en control?- y de esta forma podemos estimar lo que queremos, que unos lo llaman el efecto causal, o ATE (average treatmen effect) y cosas así.</p>
+</section>
+<section id="ejemplo-simulado" class="level2">
+<h2 class="anchored" data-anchor-id="ejemplo-simulado">Ejemplo simulado</h2>
+<p>Supongamos que tenemos un DAG. Y que el DAG es correcto. Esto que acabo de escribir, de que el DAG es correcto es la principal asunción de toda la inferencia causal. No hay inferencia causal sin una descripción explícita de tu modelo causal (<strong>Ciencia antes que estadística</strong>). Las técnicas de inferencia causal son sólo herramientas técnicas que nos ayudarán a estimar el efecto. Pero si nuestras asunciones son incorrectas, no hay técnica que nos salve.</p>
+<section id="dag" class="level3">
+<h3 class="anchored" data-anchor-id="dag">DAG</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"></span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">library</span>(tidyverse)</span>
+<span id="cb1-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">library</span>(dagitty)</span>
+<span id="cb1-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">library</span>(ggdag)</span>
+<span id="cb1-5"></span>
+<span id="cb1-6">egypt <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> MetBrewer<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">met.brewer</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Egypt"</span>)</span>
+<span id="cb1-7"></span>
+<span id="cb1-8">theme_nice <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">function</span>() {</span>
+<span id="cb1-9">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">theme_minimal</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">base_family =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Archivo Narrow"</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb1-10">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">theme</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">panel.grid.minor =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_blank</span>(),</span>
+<span id="cb1-11">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">plot.background =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_rect</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"white"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">color =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">NA</span>),</span>
+<span id="cb1-12">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">plot.title =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_text</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">face =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bold"</span>),</span>
+<span id="cb1-13">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">axis.title =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_text</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">face =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bold"</span>),</span>
+<span id="cb1-14">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">strip.text =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_text</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">face =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bold"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">size =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rel</span>(<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.8</span>), <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">hjust =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>),</span>
+<span id="cb1-15">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">strip.background =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_rect</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fill =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"grey80"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">color =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">NA</span>),</span>
+<span id="cb1-16">          <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">legend.title =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">element_text</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">face =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bold"</span>))</span>
+<span id="cb1-17">}</span>
+<span id="cb1-18"></span>
+<span id="cb1-19"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">theme_set</span>(</span>
+<span id="cb1-20">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">theme_nice</span>()</span>
+<span id="cb1-21">)</span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"></span>
+<span id="cb2-2">dag_coords <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span></span>
+<span id="cb2-3">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tibble</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">name =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"S"</span>,  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"M"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"D"</span>),</span>
+<span id="cb2-4">         <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>),</span>
+<span id="cb2-5">         <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">y =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,  <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.2</span>,  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>))</span>
+<span id="cb2-6"></span>
+<span id="cb2-7">dag_simple <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">dagify</span>(</span>
+<span id="cb2-8">       M <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> S,</span>
+<span id="cb2-9">       D <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> M,</span>
+<span id="cb2-10">       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">coords =</span> dag_coords</span>
+<span id="cb2-11">       )</span>
+<span id="cb2-12">dag_simple <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span></span>
+<span id="cb2-13">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> x, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">y =</span> y, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">xend =</span> xend, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">yend =</span> yend)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb2-14">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_dag_text</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">color =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"black"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">size =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb2-15">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_dag_point</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">data =</span> . <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">filter</span>(name <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%in%</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"U"</span>)),</span>
+<span id="cb2-16">               <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">shape =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">stroke =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">color =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"black"</span>) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb2-17">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">geom_dag_edges</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">edge_color =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"black"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">edge_width =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb2-18">                 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">arrow_directed =</span> grid<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">arrow</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">length =</span> grid<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">unit</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">15</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pt"</span>),</span>
+<span id="cb2-19">                                              <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">type =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"closed"</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb2-20">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">theme_void</span>()</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="https://muestrear-no-es-pecado.netlify.app/2024/03/lujuria_e_intervencion_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="simulamos-los-datos." class="level3">
+<h3 class="anchored" data-anchor-id="simulamos-los-datos.">Simulamos los datos.</h3>
+<p>Vamos a simular los datos, de forma que sabremos cuál es el verdadero efecto causal.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"></span>
+<span id="cb3-2">S <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rbinom</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>,<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.3</span>)</span>
+<span id="cb3-3"></span>
+<span id="cb3-4">M <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> S <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rnorm</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb3-5"></span>
+<span id="cb3-6">D <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> M <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rnorm</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span></code></pre></div>
+</details>
+</div>
+<p>Sabemos que el efecto total de <em>S</em> sobre <em>D</em> es de 10. Por ser M una variable mediadora, y tal como hemos generado los datos se multiplican los coeficientes.</p>
+</section>
+<section id="usando-dagitty" class="level3">
+<h3 class="anchored" data-anchor-id="usando-dagitty">Usando dagitty</h3>
+<p><code>dagitty</code> nos permite saber por qué variabbles hemos de condicionar, según los criterios de Pearl, para obtener diferentes efectos.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"></span>
+<span id="cb4-2">dagitty<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">adjustmentSets</span>(dag_simple, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">exposure =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"S"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">outcome =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"D"</span>)</span>
+<span id="cb4-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;  {}</span></span></code></pre></div>
+</details>
+</div>
+<p>Y vemos que no hay que “controlar” por ninguna variable para obtener el efecto de <em>S</em> sobre <em>D</em></p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">df <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">data.frame</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">S =</span> S , <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">D =</span> D, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">M =</span> M)</span>
+<span id="cb5-2"></span>
+<span id="cb5-3">mod_simple_correcto <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">lm</span>(D <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> S, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">data =</span> df)</span>
+<span id="cb5-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">summary</span>(mod_simple_correcto)</span>
+<span id="cb5-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Call:</span></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; lm(formula = D ~ S, data = df)</span></span>
+<span id="cb5-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Residuals:</span></span>
+<span id="cb5-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;      Min       1Q   Median       3Q      Max </span></span>
+<span id="cb5-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; -12.7691  -3.8648  -0.5862   3.6303  14.5658 </span></span>
+<span id="cb5-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Coefficients:</span></span>
+<span id="cb5-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
+<span id="cb5-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; (Intercept)   4.6562     0.7031   6.622 1.91e-09 ***</span></span>
+<span id="cb5-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; S            11.4955     1.1559   9.945  &lt; 2e-16 ***</span></span>
+<span id="cb5-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; ---</span></span>
+<span id="cb5-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span id="cb5-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb5-20"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Residual standard error: 5.581 on 98 degrees of freedom</span></span>
+<span id="cb5-21"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Multiple R-squared:  0.5023, Adjusted R-squared:  0.4972 </span></span>
+<span id="cb5-22"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; F-statistic:  98.9 on 1 and 98 DF,  p-value: &lt; 2.2e-16</span></span></code></pre></div>
+</details>
+</div>
+<p>Y obtenemos el coeficiente correcto.</p>
+</section>
+</section>
+<section id="full-luxury-bayes" class="level2">
+<h2 class="anchored" data-anchor-id="full-luxury-bayes">Full luxury bayes</h2>
+<p>En modelos sencillos usar <code>dagitty</code> nos permite encontrar el mínimo conjunto de variables por las que controlar, para encontrar el efecto que buscamos. Pero pueden darse situaciones en las que sea necesario condicionar por una variable que en un “path” sea una variable de confusión, mientras que en otro sea un “collider”. En esos casos hay que recurrir al “front door criterio” y a veces ni aún así basta.</p>
+<p>Pero tal y como empezaba el post. La inferencia causal no es más que predecir el efecto de la intervención. Y eso vamos a hacer.</p>
+<p>En análisis bayesiano podemos ajustar el DAG entero y aún así estimar los efectos incluso condicionando por variable que los criterior de Pearl nos dicen que no se pueden. Esto lleva un coste computacional no despreciable si el DAG es complejo, de ahí lo de “luxury”.</p>
+<p>Con las librerías <code>brms</code> y <code>cmdstanr</code> es relativamente sencillo ajustar este tipo de modelos</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># library(cmdstanr)  # No me funciona cmdstanr al renderizar en quarto</span></span>
+<span id="cb6-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#set_cmdstan_path(path = "~/.cmdstan/cmdstan-2.34.1/")</span></span>
+<span id="cb6-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">library</span>(brms)</span>
+<span id="cb6-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">library</span>(ggdist) <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pa pintar </span></span>
+<span id="cb6-5">bf1 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">bf</span>(M  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span>  S)</span>
+<span id="cb6-6">bf2 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">bf</span>(D  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span>  M )</span>
+<span id="cb6-7">bf_full <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> bf1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> bf2 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">set_rescor</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">rescor =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">FALSE</span>)</span>
+<span id="cb6-8"></span>
+<span id="cb6-9">mod_full_luxury <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">brm</span>(</span>
+<span id="cb6-10">                       bf_full, </span>
+<span id="cb6-11">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">chains =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>,</span>
+<span id="cb6-12">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">cores =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>, </span>
+<span id="cb6-13">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">iter =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2000</span>, </span>
+<span id="cb6-14">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">data =</span> df) </span>
+<span id="cb6-15">                       <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#backend = "cmdstanr")</span></span></code></pre></div>
+</details>
+</div>
+<p>En el summary del modelo vemos que este modelo ha recuperado los coeficientes correctos.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"></span>
+<span id="cb7-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">summary</span>(mod_full_luxury)</span>
+<span id="cb7-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;  Family: MV(gaussian, gaussian) </span></span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;   Links: mu = identity; sigma = identity</span></span>
+<span id="cb7-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;          mu = identity; sigma = identity </span></span>
+<span id="cb7-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Formula: M ~ S </span></span>
+<span id="cb7-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;          D ~ M </span></span>
+<span id="cb7-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;    Data: df (Number of observations: 100) </span></span>
+<span id="cb7-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;   Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;</span></span>
+<span id="cb7-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;          total post-warmup draws = 4000</span></span>
+<span id="cb7-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb7-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Regression Coefficients:</span></span>
+<span id="cb7-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS</span></span>
+<span id="cb7-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; M_Intercept    -0.09      0.14    -0.35     0.18 1.00     6248     3076</span></span>
+<span id="cb7-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; D_Intercept     5.05      0.11     4.84     5.25 1.00     6264     2969</span></span>
+<span id="cb7-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; M_S             2.31      0.22     1.88     2.75 1.00     6005     3074</span></span>
+<span id="cb7-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; D_M             5.02      0.06     4.90     5.15 1.00     5702     2801</span></span>
+<span id="cb7-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb7-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Further Distributional Parameters:</span></span>
+<span id="cb7-20"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;         Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS</span></span>
+<span id="cb7-21"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; sigma_M     1.09      0.08     0.95     1.26 1.00     5204     3058</span></span>
+<span id="cb7-22"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; sigma_D     0.97      0.07     0.85     1.11 1.00     5868     3185</span></span>
+<span id="cb7-23"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span id="cb7-24"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS</span></span>
+<span id="cb7-25"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; and Tail_ESS are effective sample size measures, and Rhat is the potential</span></span>
+<span id="cb7-26"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; scale reduction factor on split chains (at convergence, Rhat = 1).</span></span></code></pre></div>
+</details>
+</div>
+<p>Una vez tenemos esto , podemos usar las posterior de dos forma. Una sería multiplicando las posteriors del coeficiente de M y el de S, y otra haciendo una “intervención”</p>
+<section id="multiplicando-posteriors" class="level3">
+<h3 class="anchored" data-anchor-id="multiplicando-posteriors">Multiplicando posteriors</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"></span>
+<span id="cb8-2">posteriors  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">as.data.frame</span>(mod_full_luxury)</span>
+<span id="cb8-3"></span>
+<span id="cb8-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">head</span>(posteriors)</span>
+<span id="cb8-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;   b_M_Intercept b_D_Intercept    b_M_S    b_D_M  sigma_M   sigma_D Intercept_M</span></span>
+<span id="cb8-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 1 -0.2078611456      5.080026 2.369867 4.952089 1.187319 0.9102176   0.6689897</span></span>
+<span id="cb8-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 2 -0.0006802141      5.046711 2.296216 5.092021 1.054625 1.0270438   0.8489196</span></span>
+<span id="cb8-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 3 -0.1377945778      5.036534 2.246501 5.007023 1.132313 0.9869086   0.6934108</span></span>
+<span id="cb8-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 4 -0.0438541017      4.999751 2.367703 4.909060 1.145089 0.9267522   0.8321959</span></span>
+<span id="cb8-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 5 -0.0092326616      4.999116 2.125023 5.206066 1.023490 1.0684353   0.7770260</span></span>
+<span id="cb8-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 6 -0.2239945163      5.021916 2.550931 5.053909 1.017421 1.0031544   0.7198501</span></span>
+<span id="cb8-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;   Intercept_D    lprior      lp__</span></span>
+<span id="cb8-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 1    8.884465 -8.663475 -295.7457</span></span>
+<span id="cb8-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 2    8.958653 -8.639493 -294.9437</span></span>
+<span id="cb8-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 3    8.883175 -8.652335 -294.1798</span></span>
+<span id="cb8-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 4    8.771132 -8.654670 -297.0658</span></span>
+<span id="cb8-17"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 5    8.998672 -8.632764 -299.1002</span></span>
+<span id="cb8-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 6    8.904578 -8.628174 -294.8313</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"></span>
+<span id="cb9-2">efecto_global_S  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> posteriors<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>b_M_S <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> posteriors<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>b_D_M</span>
+<span id="cb9-3"></span>
+<span id="cb9-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">quantile</span>(efecto_global_S, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.025</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.5</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.975</span>))</span>
+<span id="cb9-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;      2.5%       50%     97.5% </span></span>
+<span id="cb9-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;  9.458785 11.638945 13.835363</span></span></code></pre></div>
+</details>
+</div>
+<p>Pintando la posterior</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
+<span id="cb10-2">efecto_global_S  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span> </span>
+<span id="cb10-3">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enframe</span>()  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span></span>
+<span id="cb10-4">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> value)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb10-5">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stat_halfeye</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">.width =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.67</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.89</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.97</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb10-6">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">labs</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">expression</span>(beta[S1]), <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">y =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Density"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="https://muestrear-no-es-pecado.netlify.app/2024/03/lujuria_e_intervencion_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="simulando-la-intervención" class="level3">
+<h3 class="anchored" data-anchor-id="simulando-la-intervención">Simulando la intervención</h3>
+<p>Una vez tenemos el Dag estimado, podemos recorrerlo haciendo una intervención. Esto no es más que ver como sería el efecto cuando S= 0 y cuando S=1</p>
+<p>El “truco” es que hay que recorrer el DAG y obteniendo las posteriors tras hacer la intervención.</p>
+<p>Por ejemplo, la posterior del coeficiente de M no vale la que ha sacado el modelo, sino que hay que calcularla utilizando el primer modelo el de <code>M ~ S</code>, pero poniendo que S = 0, y usar esa posterior obtenida en el modelo <code>D ~ M</code>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"></span>
+<span id="cb11-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># S == 0</span></span>
+<span id="cb11-3"></span>
+<span id="cb11-4">M_post0  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">with</span>(posteriors,  b_M_Intercept <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> b_M_S <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> )</span>
+<span id="cb11-5">D_post0  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">with</span>(posteriors,  b_D_Intercept <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> b_D_M <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> M_post0 )</span>
+<span id="cb11-6"></span>
+<span id="cb11-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># S == 1</span></span>
+<span id="cb11-8"></span>
+<span id="cb11-9">M_post1  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">with</span>(posteriors,  b_M_Intercept <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> b_M_S <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> )</span>
+<span id="cb11-10">D_post1  <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">with</span>(posteriors,  b_D_Intercept <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> b_D_M <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> M_post1 )</span>
+<span id="cb11-11"></span>
+<span id="cb11-12"></span>
+<span id="cb11-13">efecto_global_S_intervencion <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> D_post1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> D_post0</span>
+<span id="cb11-14"></span>
+<span id="cb11-15">efecto_global_S_intervencion  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span> </span>
+<span id="cb11-16">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enframe</span>()  <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%&gt;%</span></span>
+<span id="cb11-17">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> value)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb11-18">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stat_halfeye</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">.width =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.67</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.89</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.97</span>)) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span></span>
+<span id="cb11-19">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">labs</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">x =</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">expression</span>(beta[S1]), <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">y =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Density"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="https://muestrear-no-es-pecado.netlify.app/2024/03/lujuria_e_intervencion_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>El efecto correcto se recupera ajustando el DAG completo y luego simulando una intervención. Tal y como dice Richard McElreath, la inferencia causal es predecir el efecto de la intervención.</p>
+</section>
+</section>
+<section id="conclusión" class="level2">
+<h2 class="anchored" data-anchor-id="conclusión">Conclusión</h2>
+<p>La inferencia bayesiana nos permite ajustar un DAG completo e incluso ajustar por “colliders” o por variables no observadas. Esto puede ser útil cuando tenemos DAGs en los que no se puede obtener correctamente el efecto buscado , ya sea porque implica condicionar por variables que tengan el doble rol de “confounder” y de “colliders” en diferentes “paths” o por otros motivos. El “full luxury bayes” conlleva coste computacional elevado por lo que la estrategia debería ser la de usarlo sólo en caso necesario. Pero la verdad es que encuentro cierta belleza en ajustar todo el diagrama causal y luego simular la intervención.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>2024</category>
+  <category>estadística</category>
+  <category>full luxury bayes</category>
+  <category>análisis bayesiano</category>
+  <category>R</category>
+  <guid>https://muestrear-no-es-pecado.netlify.app/2024/03/lujuria_e_intervencion.html</guid>
+  <pubDate>Sat, 30 Mar 2024 23:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Jornadas Hispalenses</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -21592,1461 +22544,6 @@ font-style: inherit;">#&gt; [6,]   3.858433   3.961821   4.084200</span></span><
   <guid>https://muestrear-no-es-pecado.netlify.app/2023/04/23/quantile-catboost/</guid>
   <pubDate>Sat, 22 Apr 2023 22:00:00 GMT</pubDate>
   <media:content url="https://muestrear-no-es-pecado.netlify.app/2023/04/23/quantile-catboost" medium="image"/>
-</item>
-<item>
-  <title>Conformal prediction. Estilo compadre</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado.netlify.app/2023/03/26/Conformal_estilo_compadre/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="intro" class="level2">
-<h2 class="anchored" data-anchor-id="intro">Intro</h2>
-<p>El jueves pasado asistí al más que recomendable meetup de <a href="https://www.meetup.com/es-ES/pydata-madrid/events/292228851/">PyData Madrid</a>, que cuenta entre sus organizadores con el gran <a href="https://www.meetup.com/es-ES/pydata-madrid/?_locale=es-ES">Juan Luis Cano Rodríguez</a>, antiguo compañero mío de curro y tocayo de iniciales.</p>
-<p>El caso es que en una de las charlas, <a href="https://www.linkedin.com/in/ignacio-peletier/">Ignacio Peletier</a>, mencionó de pasada lo del “Conformal Prediction”. Y siendo que Ignacio es un gran científico de datos, y que hacía unos meses que había tenido varias charlas con <a href="https://www.datanalytics.com/">Carlos</a> sobre el particular, pues he decidido ver un poco más en detalle de qué iba el asunto .</p>
-</section>
-<section id="recursos" class="level2">
-<h2 class="anchored" data-anchor-id="recursos">Recursos</h2>
-<p>Un excelente sitio para empezar a bichear con este tema es el Readme de este <a href="https://github.com/valeman/awesome-conformal-prediction">repo</a>, dónde han ido recopilando enlaces a libros, posts, papers y código relativo a lo de conformal prediction.</p>
-<p>En particular, uno de los recursos que me ha gustado es este <a href="https://mindfulmodeler.substack.com/p/e-mail-course-on-conformal-prediction">minicurso</a> de Christoph Molnar.</p>
-<p>Otro recurso útil es este <a href="https://www.datanalytics.com/2023/03/02/prediccion-conforme/">post</a> de Carlos, dónde se esboza un poco en qué consiste esto de la predicción conforme y en por qué no es algo tan novedoso como se cree.</p>
-</section>
-<section id="experimentando" class="level2">
-<h2 class="anchored" data-anchor-id="experimentando">Experimentando</h2>
-<p>La predicción conforme se puede aplicar tanto a modelos de regresión de clasificación. Su objetivo es <em>simplemente</em> medir la incertidumbre de una predicción dada.</p>
-<p>En el caso de regresión no tiene mucho misterio:</p>
-<ul>
-<li><p>Se entrena un modelo usando un conjunto de datos de <em>entrenamiento</em>.</p></li>
-<li><p>Se mide el error en un conjunto de datos de <em>validación</em>, <em>calibración</em>, utilizando la norma L1, es decir <img src="https://latex.codecogs.com/png.latex?%5Cmid%20y%20-%20%5Chat%7By%7D%5Cmid"></p></li>
-<li><p>Se elige una medida de dispersión del error, por ejemplo el cuantil <img src="https://latex.codecogs.com/png.latex?(1-%20%5Calpha)%20=%200.95"> de los errores anteriores.</p></li>
-<li><p>Para una nueva predicción se da su intervalo como <img src="https://latex.codecogs.com/png.latex?(%5Chat%7By%7D%20-%20q_%7B1-%5Calpha%7D,%20%5Chat%7By%7D%20+%20q_%7B1-%5Calpha%7D)"></p></li>
-</ul>
-<p>En el caso de clasificación la cosa es más divertida. Puesto que lo que se quiere obtener es un conjunto de etiquetas probables. Tipo {A} {A, B} {B, C}</p>
-<p>En este caso según he leído <a href="https://mindfulmodeler.substack.com/p/week-1-getting-started-with-conformal">aquí</a> el algoritmo sería</p>
-<ul>
-<li><p>Se entrena un modelo usando un conjunto de datos de <em>entrenamiento</em>.</p></li>
-<li><p>Se mide el error en un conjunto de datos de <em>validación</em>, <em>calibración</em>, viendo para cada observación el valor que el modelo le ha dado para la predicción de la clase verdadera. Es un conjunto de validación , sabemos cuál es la verdad. Y se calcula el error como <img src="https://latex.codecogs.com/png.latex?1-%20p_%7Bi%7D"> siendo <img src="https://latex.codecogs.com/png.latex?p_i">, la probabilidad predicha para la clase verdadera</p></li>
-<li><p>Se calcula el cuantil de orden <img src="https://latex.codecogs.com/png.latex?1-%5Calpha"> de esos <em>errores</em> y se guarda. Se entiende que el modelo está bien calibrado y que el conjunto de validación y que los <em>scores</em> que da el modelo se pueden asumir como probabilidades</p></li>
-<li><p>Para una nueva predicción se tendrá una <img src="https://latex.codecogs.com/png.latex?p_i"> para cada clase. Se calcula <img src="https://latex.codecogs.com/png.latex?1-p_i"> para cada clase y se considera que esa clase forma parte del <em>prediction set</em> si ese valor es menor o igual que el valor del cuantil anterior.</p></li>
-</ul>
-<p>Pues vamos a ver como se haría con R en estilo compadre, y puede que con alguna pequeña modificación por mi parte.</p>
-<section id="ejemplo" class="level3">
-<h3 class="anchored" data-anchor-id="ejemplo">Ejemplo</h3>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">library</span>(tidyverse)</span>
-<span id="cb1-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">library</span>(MASS)</span></code></pre></div>
-</details>
-</div>
-<p>Vamos a usar el conjunto de datos <code>housing</code> <img src="https://muestrear-no-es-pecado.netlify.app/2023/03/26/Conformal_estilo_compadre/housing_help.png" class="img-fluid" alt="Help housing"></p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"></span>
-<span id="cb2-2">skimr<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">skim</span>(housing)</span></code></pre></div>
-</details>
-<div class="cell-output-display">
-<table class="table table-sm table-striped small">
-<caption>Data summary</caption>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Name</td>
-<td style="text-align: left;">housing</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Number of rows</td>
-<td style="text-align: left;">72</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Number of columns</td>
-<td style="text-align: left;">5</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">_______________________</td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Column type frequency:</td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">factor</td>
-<td style="text-align: left;">4</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">numeric</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">________________________</td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Group variables</td>
-<td style="text-align: left;">None</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Variable type: factor</strong></p>
-<table class="table table-sm table-striped small">
-<colgroup>
-<col style="width: 15%">
-<col style="width: 11%">
-<col style="width: 15%">
-<col style="width: 8%">
-<col style="width: 10%">
-<col style="width: 38%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">skim_variable</th>
-<th style="text-align: right;">n_missing</th>
-<th style="text-align: right;">complete_rate</th>
-<th style="text-align: left;">ordered</th>
-<th style="text-align: right;">n_unique</th>
-<th style="text-align: left;">top_counts</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Sat</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: left;">Low: 24, Med: 24, Hig: 24</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Infl</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: left;">Low: 24, Med: 24, Hig: 24</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Type</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: left;">Tow: 18, Apa: 18, Atr: 18, Ter: 18</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Cont</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: left;">Low: 36, Hig: 36</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Variable type: numeric</strong></p>
-<table class="table table-sm table-striped small">
-<colgroup>
-<col style="width: 17%">
-<col style="width: 12%">
-<col style="width: 17%">
-<col style="width: 7%">
-<col style="width: 7%">
-<col style="width: 3%">
-<col style="width: 5%">
-<col style="width: 6%">
-<col style="width: 7%">
-<col style="width: 6%">
-<col style="width: 7%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">skim_variable</th>
-<th style="text-align: right;">n_missing</th>
-<th style="text-align: right;">complete_rate</th>
-<th style="text-align: right;">mean</th>
-<th style="text-align: right;">sd</th>
-<th style="text-align: right;">p0</th>
-<th style="text-align: right;">p25</th>
-<th style="text-align: right;">p50</th>
-<th style="text-align: right;">p75</th>
-<th style="text-align: right;">p100</th>
-<th style="text-align: left;">hist</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Freq</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">23.35</td>
-<td style="text-align: right;">17.67</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">19.5</td>
-<td style="text-align: right;">31.75</td>
-<td style="text-align: right;">86</td>
-<td style="text-align: left;">▇▅▂▁▁</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Y vamos a justar un modelito tonto usando regresión logística ordinal, sobre los 40 primeros datos</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"></span>
-<span id="cb3-2">house.plr <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">polr</span>(Sat <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">~</span> Infl <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> Type <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> Cont, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">weights =</span> Freq, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">data =</span> housing[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">40</span>,])</span>
-<span id="cb3-3"></span>
-<span id="cb3-4"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(house.plr, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">type =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"probs"</span>))</span>
-<span id="cb3-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;         Low    Medium      High</span></span>
-<span id="cb3-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 1 0.3639420 0.2575531 0.3785049</span></span>
-<span id="cb3-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 2 0.3639420 0.2575531 0.3785049</span></span>
-<span id="cb3-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 3 0.3639420 0.2575531 0.3785049</span></span>
-<span id="cb3-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 4 0.3263764 0.2552793 0.4183443</span></span>
-<span id="cb3-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 5 0.3263764 0.2552793 0.4183443</span></span>
-<span id="cb3-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 6 0.3263764 0.2552793 0.4183443</span></span></code></pre></div>
-</details>
-</div>
-<p>Guardamos las predicciones para el conjunto de validación , que va a ser las filas de la 41 a la 55, junto con el valor de <code>Sat</code> verdadero</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"></span>
-<span id="cb4-2">predictions <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">as.data.frame</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(house.plr, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">type =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"probs"</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">newdata =</span> housing[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">41</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">55</span>,]))</span>
-<span id="cb4-3"></span>
-<span id="cb4-4">tt <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">cbind</span>(predictions, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">True_class=</span>housing<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>Sat[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">41</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">55</span>])</span>
-<span id="cb4-5"></span>
-<span id="cb4-6">tt</span>
-<span id="cb4-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High True_class</span></span>
-<span id="cb4-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium</span></span>
-<span id="cb4-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 42 0.3055662 0.2524868 0.4419471       High</span></span>
-<span id="cb4-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low</span></span>
-<span id="cb4-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium</span></span>
-<span id="cb4-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 45 0.1595073 0.1930758 0.6474169       High</span></span>
-<span id="cb4-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low</span></span>
-<span id="cb4-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 47 0.4671694 0.2484190 0.2844116     Medium</span></span>
-<span id="cb4-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 48 0.4671694 0.2484190 0.2844116       High</span></span>
-<span id="cb4-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 49 0.4260865 0.2544760 0.3194375        Low</span></span>
-<span id="cb4-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 50 0.4260865 0.2544760 0.3194375     Medium</span></span>
-<span id="cb4-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51 0.4260865 0.2544760 0.3194375       High</span></span>
-<span id="cb4-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 0.2425400 0.2363201 0.5211399        Low</span></span>
-<span id="cb4-20"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 0.2425400 0.2363201 0.5211399     Medium</span></span>
-<span id="cb4-21"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 0.2425400 0.2363201 0.5211399       High</span></span>
-<span id="cb4-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55 0.4014928 0.2566312 0.3418760        Low</span></span></code></pre></div>
-</details>
-</div>
-<p>Ahora, para la primera fila sería hacer (1-0.2524), puesto que la clase real es “Medium” y para la segunda sería (1-0.44), puesto que la clase real es “High”. No estoy muy inspirado hoy y no he conseguido una forma elegante de hacerlo en R, y ChatGpt no me ha servido de mucha ayuda, seguramente porque aún no soy muy ducho preguntándole.</p>
-<p>Así que he tirado iterando para cada fila con un map y quedándode con el valor predicho de la columna cuyo nombre coincida con el valor en <code>True_class</code></p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"></span>
-<span id="cb5-2">tt<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>prob_true_class <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">map_dbl</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">nrow</span>(tt), <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.f =</span> <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">function</span>(i) </span>
-<span id="cb5-3">    tt[i, <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">colnames</span>(tt) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> tt<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>True_class[i]])</span>
-<span id="cb5-4"></span>
-<span id="cb5-5">tt<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>resid <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>tt<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>prob_true_class</span>
-<span id="cb5-6"></span>
-<span id="cb5-7"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(tt)</span>
-<span id="cb5-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High True_class prob_true_class     resid</span></span>
-<span id="cb5-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium       0.2524868 0.7475132</span></span>
-<span id="cb5-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 42 0.3055662 0.2524868 0.4419471       High       0.4419471 0.5580529</span></span>
-<span id="cb5-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low       0.1595073 0.8404927</span></span>
-<span id="cb5-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium       0.1930758 0.8069242</span></span>
-<span id="cb5-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 45 0.1595073 0.1930758 0.6474169       High       0.6474169 0.3525831</span></span>
-<span id="cb5-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low       0.4671694 0.5328306</span></span></code></pre></div>
-</details>
-</div>
-<p>Definimos un <img src="https://latex.codecogs.com/png.latex?%5Calpha%20=%200.3"> y calculamos el cuantil 70 .</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1">(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">qhat =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">quantile</span>(tt<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>resid, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.7</span>))</span>
-<span id="cb6-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;       70% </span></span>
-<span id="cb6-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 0.7507675</span></span></code></pre></div>
-</details>
-</div>
-<p>Y ya estamos listos para hacer la <em>predicción conforme</em> para nuevos datos.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># predecimos de la fila 51 a la 70 </span></span>
-<span id="cb7-2">predicciones <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(house.plr, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">newdata =</span> housing[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">51</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">70</span>,], <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">type  =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"probs"</span>)</span>
-<span id="cb7-3"></span>
-<span id="cb7-4"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(predicciones)</span>
-<span id="cb7-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High</span></span>
-<span id="cb7-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51 0.4260865 0.2544760 0.3194375</span></span>
-<span id="cb7-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb7-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb7-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb7-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55 0.4014928 0.2566312 0.3418760</span></span>
-<span id="cb7-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56 0.4014928 0.2566312 0.3418760</span></span></code></pre></div>
-</details>
-</div>
-<p>Nos creamos un data.frame que indique si el valor de 1 - predicciones es menor o igual que el cuantil elegido</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1">set <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">as.data.frame</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> predicciones <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> qhat)</span>
-<span id="cb8-2"></span>
-<span id="cb8-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set)</span>
-<span id="cb8-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;      Low Medium High</span></span>
-<span id="cb8-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51  TRUE   TRUE TRUE</span></span>
-<span id="cb8-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 FALSE  FALSE TRUE</span></span>
-<span id="cb8-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 FALSE  FALSE TRUE</span></span>
-<span id="cb8-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 FALSE  FALSE TRUE</span></span>
-<span id="cb8-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55  TRUE   TRUE TRUE</span></span>
-<span id="cb8-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56  TRUE   TRUE TRUE</span></span></code></pre></div>
-</details>
-</div>
-<p>Al igual que antes, utilizo un map para obtener el conjunto de etiquetas, para la primera fila serían todas, para la segunda sería {“Medium”, “High”}</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"></span>
-<span id="cb9-2">set<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>conformal <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">map_chr</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">nrow</span>(set), <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.f=</span> <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">function</span>(i) {</span>
-<span id="cb9-3">     set_list <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">colnames</span>(set)[<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">unlist</span>(set[i,])]</span>
-<span id="cb9-4">     <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">paste0</span>(set_list, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">collapse =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">","</span>)</span>
-<span id="cb9-5">     })</span>
-<span id="cb9-6"></span>
-<span id="cb9-7"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set)</span>
-<span id="cb9-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;      Low Medium High       conformal</span></span>
-<span id="cb9-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51  TRUE   TRUE TRUE Low,Medium,High</span></span>
-<span id="cb9-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 FALSE  FALSE TRUE            High</span></span>
-<span id="cb9-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 FALSE  FALSE TRUE            High</span></span>
-<span id="cb9-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 FALSE  FALSE TRUE            High</span></span>
-<span id="cb9-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55  TRUE   TRUE TRUE Low,Medium,High</span></span>
-<span id="cb9-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56  TRUE   TRUE TRUE Low,Medium,High</span></span></code></pre></div>
-</details>
-</div>
-<p>Se lo pego al dataset original de test (filas 51 a 70), junto con las predicciones y la clase verdadera.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
-<span id="cb10-2">set_fin <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">cbind</span>( <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">True_class =</span> housing<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>Sat[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">51</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">70</span>], <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">as.data.frame</span>(predicciones),</span>
-<span id="cb10-3">                  <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">set_conformal =</span>set<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>conformal)</span>
-<span id="cb10-4"></span>
-<span id="cb10-5"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set_fin)</span>
-<span id="cb10-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    True_class       Low    Medium      High   set_conformal</span></span>
-<span id="cb10-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51       High 0.4260865 0.2544760 0.3194375 Low,Medium,High</span></span>
-<span id="cb10-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High</span></span>
-<span id="cb10-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High</span></span>
-<span id="cb10-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High</span></span>
-<span id="cb10-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760 Low,Medium,High</span></span>
-<span id="cb10-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760 Low,Medium,High</span></span></code></pre></div>
-</details>
-</div>
-<p>Y ya estaría.</p>
-<p>Una cosa que se suele calcular es la cobertura de cada clase, es decir, la proporción de veces que cada clase está dentro del conjunto.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">set_fin <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> set_fin <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb11-2">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mutate</span>(</span>
-<span id="cb11-3">        <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">class_in_set =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">map2_lgl</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.x =</span> True_class,</span>
-<span id="cb11-4">                               <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.y =</span> set_conformal , </span>
-<span id="cb11-5">                               <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">~</span> .x <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%in%</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">unlist</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">str_split</span>(.y,<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">","</span>)))</span>
-<span id="cb11-6">    )</span>
-<span id="cb11-7"></span>
-<span id="cb11-8"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set_fin)</span>
-<span id="cb11-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    True_class       Low    Medium      High   set_conformal class_in_set</span></span>
-<span id="cb11-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51       High 0.4260865 0.2544760 0.3194375 Low,Medium,High         TRUE</span></span>
-<span id="cb11-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
-<span id="cb11-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
-<span id="cb11-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High         TRUE</span></span>
-<span id="cb11-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760 Low,Medium,High         TRUE</span></span>
-<span id="cb11-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760 Low,Medium,High         TRUE</span></span></code></pre></div>
-</details>
-</div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1">set_fin <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb12-2">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb12-3">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">summarise</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">cov =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mean</span>(class_in_set))</span>
-<span id="cb12-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb12-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   True_class   cov</span></span>
-<span id="cb12-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   &lt;ord&gt;      &lt;dbl&gt;</span></span>
-<span id="cb12-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 1 Low        0.571</span></span>
-<span id="cb12-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 2 Medium     0.5  </span></span>
-<span id="cb12-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 3 High       1</span></span></code></pre></div>
-</details>
-</div>
-</section>
-<section id="modificación-1." class="level3">
-<h3 class="anchored" data-anchor-id="modificación-1.">Modificación 1.</h3>
-<p>No me convence lo de tener un sólo cuantil, común a todas las clases, ¿no sería mejor tener una medida de cómo se distribuyen los errores para cada una de las clases?</p>
-<p>Usamos el conjunto de <em>validación</em> dónde tenemos el <img src="https://latex.codecogs.com/png.latex?1-p_i"> que nos dice en cuánto se ha equivocado el modelo en predecir la clase real</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(tt)</span>
-<span id="cb13-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High True_class prob_true_class     resid</span></span>
-<span id="cb13-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 41 0.3055662 0.2524868 0.4419471     Medium       0.2524868 0.7475132</span></span>
-<span id="cb13-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 42 0.3055662 0.2524868 0.4419471       High       0.4419471 0.5580529</span></span>
-<span id="cb13-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 43 0.1595073 0.1930758 0.6474169        Low       0.1595073 0.8404927</span></span>
-<span id="cb13-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 44 0.1595073 0.1930758 0.6474169     Medium       0.1930758 0.8069242</span></span>
-<span id="cb13-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 45 0.1595073 0.1930758 0.6474169       High       0.6474169 0.3525831</span></span>
-<span id="cb13-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 46 0.4671694 0.2484190 0.2844116        Low       0.4671694 0.5328306</span></span></code></pre></div>
-</details>
-</div>
-<p>Calculamos el quantil 70 para cada clase, y así vemos que varía por clase</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1">(qhat_by_class <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> tt <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb14-2">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb14-3">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">summarise</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">qhat =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">quantile</span>(resid, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.7</span>)) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb14-4">        <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">pivot_wider</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">names_from =</span> True_class, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">values_from =</span> qhat))</span>
-<span id="cb14-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb14-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;     Low Medium  High</span></span>
-<span id="cb14-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb14-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 1 0.726  0.761 0.656</span></span></code></pre></div>
-</details>
-</div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1">predicciones <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(house.plr, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">newdata =</span> housing[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">51</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">70</span>,], <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">type  =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"probs"</span>)</span>
-<span id="cb15-2">complementarios <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>predicciones</span>
-<span id="cb15-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(complementarios)</span>
-<span id="cb15-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High</span></span>
-<span id="cb15-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51 0.5739135 0.7455240 0.6805625</span></span>
-<span id="cb15-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 0.7574600 0.7636799 0.4788601</span></span>
-<span id="cb15-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 0.7574600 0.7636799 0.4788601</span></span>
-<span id="cb15-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 0.7574600 0.7636799 0.4788601</span></span>
-<span id="cb15-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55 0.5985072 0.7433688 0.6581240</span></span>
-<span id="cb15-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56 0.5985072 0.7433688 0.6581240</span></span></code></pre></div>
-</details>
-</div>
-<p>Y vemos si cada <img src="https://latex.codecogs.com/png.latex?1-p_i"> es menor o igual que el cuantil correspondiente de cada clase</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1">set_adjust <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">data.frame</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">Low =</span> complementarios[,<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>] <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>Low,</span>
-<span id="cb16-2">                        <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">Medium =</span> complementarios[,<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>] <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>Medium,</span>
-<span id="cb16-3">                         <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">High =</span> complementarios[,<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>] <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> qhat_by_class<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>High )</span>
-<span id="cb16-4"></span>
-<span id="cb16-5"></span>
-<span id="cb16-6"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set_adjust)</span>
-<span id="cb16-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;      Low Medium  High</span></span>
-<span id="cb16-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51  TRUE   TRUE FALSE</span></span>
-<span id="cb16-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 FALSE  FALSE  TRUE</span></span>
-<span id="cb16-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 FALSE  FALSE  TRUE</span></span>
-<span id="cb16-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 FALSE  FALSE  TRUE</span></span>
-<span id="cb16-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55  TRUE   TRUE FALSE</span></span>
-<span id="cb16-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56  TRUE   TRUE FALSE</span></span></code></pre></div>
-</details>
-</div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1">set_adjust<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>conformal <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">map_chr</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">nrow</span>(set_adjust), <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.f=</span> <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">function</span>(i) {</span>
-<span id="cb17-2">    set_list <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">colnames</span>(set_adjust)[<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">unlist</span>(set_adjust[i,])]</span>
-<span id="cb17-3">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">paste0</span>(set_list, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">collapse =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">","</span>)</span>
-<span id="cb17-4">})</span>
-<span id="cb17-5"></span>
-<span id="cb17-6"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set_adjust)</span>
-<span id="cb17-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;      Low Medium  High  conformal</span></span>
-<span id="cb17-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51  TRUE   TRUE FALSE Low,Medium</span></span>
-<span id="cb17-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 FALSE  FALSE  TRUE       High</span></span>
-<span id="cb17-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 FALSE  FALSE  TRUE       High</span></span>
-<span id="cb17-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 FALSE  FALSE  TRUE       High</span></span>
-<span id="cb17-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55  TRUE   TRUE FALSE Low,Medium</span></span>
-<span id="cb17-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56  TRUE   TRUE FALSE Low,Medium</span></span></code></pre></div>
-</details>
-</div>
-<p>Como antes, nos quedamos con la clase de verdad, la predicción en probabilidad de cada clase y la predicción conforme</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1">set_adjust_fin <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">cbind</span>( <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">True_class =</span> housing<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>Sat[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">51</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">70</span>], <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">as.data.frame</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">predict</span>(house.plr, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">newdata =</span> housing[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">51</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">70</span>,],<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">type=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"probs"</span>)),</span>
-<span id="cb18-2">                   <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">set_conformal =</span>set_adjust<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>conformal)</span>
-<span id="cb18-3"></span>
-<span id="cb18-4"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(set_adjust_fin)</span>
-<span id="cb18-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    True_class       Low    Medium      High set_conformal</span></span>
-<span id="cb18-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51       High 0.4260865 0.2544760 0.3194375    Low,Medium</span></span>
-<span id="cb18-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399          High</span></span>
-<span id="cb18-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399          High</span></span>
-<span id="cb18-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54       High 0.2425400 0.2363201 0.5211399          High</span></span>
-<span id="cb18-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760    Low,Medium</span></span>
-<span id="cb18-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760    Low,Medium</span></span></code></pre></div>
-</details>
-</div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1">set_adjust_fin <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> set_adjust_fin <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb19-2">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mutate</span>(</span>
-<span id="cb19-3">        <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">class_in_set =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">map2_lgl</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.x =</span> True_class,</span>
-<span id="cb19-4">                                <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">.y =</span> set_conformal , </span>
-<span id="cb19-5">                                <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">~</span> .x <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%in%</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">unlist</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">str_split</span>(.y,<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">","</span>)))</span>
-<span id="cb19-6">    )</span>
-<span id="cb19-7"></span>
-<span id="cb19-8">set_adjust_fin</span>
-<span id="cb19-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    True_class       Low    Medium      High   set_conformal class_in_set</span></span>
-<span id="cb19-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51       High 0.4260865 0.2544760 0.3194375      Low,Medium        FALSE</span></span>
-<span id="cb19-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52        Low 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
-<span id="cb19-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53     Medium 0.2425400 0.2363201 0.5211399            High        FALSE</span></span>
-<span id="cb19-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54       High 0.2425400 0.2363201 0.5211399            High         TRUE</span></span>
-<span id="cb19-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55        Low 0.4014928 0.2566312 0.3418760      Low,Medium         TRUE</span></span>
-<span id="cb19-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56     Medium 0.4014928 0.2566312 0.3418760      Low,Medium         TRUE</span></span>
-<span id="cb19-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 57       High 0.4014928 0.2566312 0.3418760      Low,Medium        FALSE</span></span>
-<span id="cb19-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 58        Low 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
-<span id="cb19-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 59     Medium 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
-<span id="cb19-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 60       High 0.3622588 0.2575226 0.3802186 Low,Medium,High         TRUE</span></span>
-<span id="cb19-20"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 61        Low 0.1967801 0.2160332 0.5871868            High        FALSE</span></span>
-<span id="cb19-21"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 62     Medium 0.1967801 0.2160332 0.5871868            High        FALSE</span></span>
-<span id="cb19-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 63       High 0.1967801 0.2160332 0.5871868            High         TRUE</span></span>
-<span id="cb19-23"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 64        Low 0.4732214 0.2472855 0.2794931      Low,Medium         TRUE</span></span>
-<span id="cb19-24"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 65     Medium 0.4732214 0.2472855 0.2794931      Low,Medium         TRUE</span></span>
-<span id="cb19-25"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 66       High 0.4732214 0.2472855 0.2794931      Low,Medium        FALSE</span></span>
-<span id="cb19-26"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 67        Low 0.4320378 0.2537829 0.3141793      Low,Medium         TRUE</span></span>
-<span id="cb19-27"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 68     Medium 0.4320378 0.2537829 0.3141793      Low,Medium         TRUE</span></span>
-<span id="cb19-28"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 69       High 0.4320378 0.2537829 0.3141793      Low,Medium        FALSE</span></span>
-<span id="cb19-29"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 70        Low 0.2470311 0.2378946 0.5150743            High        FALSE</span></span></code></pre></div>
-</details>
-</div>
-<p>Y aquí ya vemos que la cobertura es distinta y que la clase “High” ya no está en el 100% de los <em>prediction sets</em></p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1">set_adjust_fin <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb20-2">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">group_by</span>(True_class) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb20-3">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">summarise</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">cov =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mean</span>(class_in_set))</span>
-<span id="cb20-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb20-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   True_class   cov</span></span>
-<span id="cb20-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   &lt;ord&gt;      &lt;dbl&gt;</span></span>
-<span id="cb20-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 1 Low        0.571</span></span>
-<span id="cb20-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 2 Medium     0.667</span></span>
-<span id="cb20-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 3 High       0.429</span></span></code></pre></div>
-</details>
-</div>
-<p>De hecho si tabulamos ambas predicciones conformes , vemos que de las 10 predicciones que el primer método ponía como {Low, Medium, High} , el segundo pone 7 como {Low, Medium } y 3 como {Low, Medium, High}</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"></span>
-<span id="cb21-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">table</span>(set_fin<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>set_conformal, set_adjust_fin<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>set_conformal)</span>
-<span id="cb21-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;                  </span></span>
-<span id="cb21-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;                   High Low,Medium Low,Medium,High</span></span>
-<span id="cb21-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   High               7          0               0</span></span>
-<span id="cb21-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   Low,High           0          3               0</span></span>
-<span id="cb21-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;   Low,Medium,High    0          7               3</span></span></code></pre></div>
-</details>
-</div>
-</section>
-<section id="modificación-2." class="level3">
-<h3 class="anchored" data-anchor-id="modificación-2.">Modificación 2.</h3>
-<p>Vale, todo esto está muy bien, pero ¿y si simplemente para cada observación ordeno de forma decreciente su probabilidad predicha y me quedo con las clases que lleguen al 60% de probabilidad, por ejemplo?</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"></span>
-<span id="cb22-2">(predicciones_df <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">as.data.frame</span>(predicciones ))</span>
-<span id="cb22-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          Low    Medium      High</span></span>
-<span id="cb22-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 51 0.4260865 0.2544760 0.3194375</span></span>
-<span id="cb22-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 52 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb22-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 53 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb22-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 54 0.2425400 0.2363201 0.5211399</span></span>
-<span id="cb22-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 55 0.4014928 0.2566312 0.3418760</span></span>
-<span id="cb22-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 56 0.4014928 0.2566312 0.3418760</span></span>
-<span id="cb22-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 57 0.4014928 0.2566312 0.3418760</span></span>
-<span id="cb22-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 58 0.3622588 0.2575226 0.3802186</span></span>
-<span id="cb22-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 59 0.3622588 0.2575226 0.3802186</span></span>
-<span id="cb22-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 60 0.3622588 0.2575226 0.3802186</span></span>
-<span id="cb22-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 61 0.1967801 0.2160332 0.5871868</span></span>
-<span id="cb22-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 62 0.1967801 0.2160332 0.5871868</span></span>
-<span id="cb22-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 63 0.1967801 0.2160332 0.5871868</span></span>
-<span id="cb22-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 64 0.4732214 0.2472855 0.2794931</span></span>
-<span id="cb22-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 65 0.4732214 0.2472855 0.2794931</span></span>
-<span id="cb22-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 66 0.4732214 0.2472855 0.2794931</span></span>
-<span id="cb22-20"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 67 0.4320378 0.2537829 0.3141793</span></span>
-<span id="cb22-21"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 68 0.4320378 0.2537829 0.3141793</span></span>
-<span id="cb22-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 69 0.4320378 0.2537829 0.3141793</span></span>
-<span id="cb22-23"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 70 0.2470311 0.2378946 0.5150743</span></span></code></pre></div>
-</details>
-</div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Mostrar / ocultar código</summary>
-<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1">modificacion_2 <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> predicciones_df <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-2">     <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">rownames_to_column</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">var =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"individuo"</span>) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-3">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">pivot_longer</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">cols =</span> Low<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>High) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-4">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">group_by</span>(individuo) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-5">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">arrange</span>( <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">desc</span>(value)) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-6">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mutate</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">suma_acumulada =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">cumsum</span>(value)) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">|&gt;</span> </span>
-<span id="cb23-7">    <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">arrange</span>(individuo)</span>
-<span id="cb23-8"></span>
-<span id="cb23-9"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">head</span>(modificacion_2, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>)</span>
-<span id="cb23-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; # A tibble: 10 × 4</span></span>
-<span id="cb23-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; # Groups:   individuo [4]</span></span>
-<span id="cb23-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    individuo name   value suma_acumulada</span></span>
-<span id="cb23-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    &lt;chr&gt;     &lt;chr&gt;  &lt;dbl&gt;          &lt;dbl&gt;</span></span>
-<span id="cb23-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  1 51        Low    0.426          0.426</span></span>
-<span id="cb23-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  2 51        High   0.319          0.746</span></span>
-<span id="cb23-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  3 51        Medium 0.254          1    </span></span>
-<span id="cb23-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  4 52        High   0.521          0.521</span></span>
-<span id="cb23-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  5 52        Low    0.243          0.764</span></span>
-<span id="cb23-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  6 52        Medium 0.236          1    </span></span>
-<span id="cb23-20"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  7 53        High   0.521          0.521</span></span>
-<span id="cb23-21"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  8 53        Low    0.243          0.764</span></span>
-<span id="cb23-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;  9 53        Medium 0.236          1    </span></span>
-<span id="cb23-23"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 10 54        High   0.521          0.521</span></span></code></pre></div>
-</details>
-</div>
-<p>Uhmm, pero no me acaba de convencer ordenar de forma descendente por la probabilidad predicha de cada clase. Por ejemplo para el individuo 51, si tomo Low +High llegaría a 0.74, pero si tomo Low + Medium llego al 67% . Si quisiera el menor conjunto de etiquetas que lleguen como mínimo al 60% la opción buena sería Low + Medium para ese individuo.</p>
-<p>No me veo con ganas de implementar todas las posibles sumas de probabilidades estimadas y elegir el conjunto que cumpla la restricción de llegar al menos al 60% y si hay varios para mismo individuos que se quede con el conjunto más pequeño.</p>
-</section>
-</section>
-<section id="conclusión." class="level2">
-<h2 class="anchored" data-anchor-id="conclusión.">Conclusión.</h2>
-<ul>
-<li><p>Lo de la predicción conforme para el caso de regresión me parece bastante sencillo, no es más que sumar y restar una medida de dispersión de los residuos a la predicción para nuevos datos.</p></li>
-<li><p>Para clasificación es un poco más interesante, sobre todo para casos en los que el usuario quiere una etiqueta o etiquetas y no se conforma con las probabilidades predichas de cada clase.</p></li>
-<li><p>Subyace la hipótesis de que los scores del modelo están bien calibrados y reflejan la verdadera probabilidad.</p></li>
-</ul>
-<p>Pues nada más, tengan un feliz día.</p>
-
-
-</section>
-
- ]]></description>
-  <category>Estadística</category>
-  <category>R</category>
-  <category>2023</category>
-  <guid>https://muestrear-no-es-pecado.netlify.app/2023/03/26/Conformal_estilo_compadre/</guid>
-  <pubDate>Sat, 25 Mar 2023 23:00:00 GMT</pubDate>
-  <media:content url="https://muestrear-no-es-pecado.netlify.app/2023/03/26/Conformal_estilo_compadre" medium="image"/>
 </item>
 </channel>
 </rss>
