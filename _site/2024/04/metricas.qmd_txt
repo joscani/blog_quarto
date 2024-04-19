@@ -1,0 +1,197 @@
+---
+title: Métricas modelo Churn
+author: Squad B2C
+format: 
+  dashboard:
+    orientation: columns
+    theme: yeti
+params:
+  fichero_json: 
+    value: x
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(jsonlite)
+library(tidyverse)
+```
+
+
+```{r load_data}
+## '/home/jose/canadasreche@gmail.com/h2o_production/epa_glm/experimental/modelDetails.json'
+## '/home/jose/canadasreche@gmail.com/h2o_production/xgboost_model_target_jazztel_20191120_stable/experimental/modelDetails.json'
+df <- fromJSON(params$fichero_json)
+# df <- fromJSON("churn_iter13mojo/experimental/modelDetails.json")
+
+metricas_training <- df$output$training_metrics$thresholds_and_metric_scores$data %>% t() %>% as.data.frame()
+
+
+if(!is.null(df$output$validation_metrics)){
+ metricas_validation <- df$output$validation_metrics$thresholds_and_metric_scores$data %>% t() %>% as.data.frame()
+ colnames(metricas_validation) <- df$output$validation_metrics$thresholds_and_metric_scores$columns$name
+
+}
+
+
+colnames(metricas_training) <- df$output$training_metrics$thresholds_and_metric_scores$columns$name
+
+
+colnames(metricas_training) <- df$output$training_metrics$thresholds_and_metric_scores$columns$name
+
+```
+
+# Training Metrics
+
+## Column {width=10%}
+
+### Row 1
+
+
+```{r}
+#| title: AUC
+gauge(df$output$training_metrics$AUC, min = 0.5, max=1, abbreviateDecimals = 2)
+```
+
+### Row 2
+
+```{r}
+#| component: valuebox
+#| title: F1
+list(
+  icon = "stopwatch",
+  color = "primary",
+  value = round(metricas_training[which.max(metricas_training$f1), c("f1")], 2)
+)
+```
+
+
+## Column {width=40%}
+
+
+### ROC
+
+```{r}
+plotly::ggplotly(ggplot(metricas_training, aes(x = fpr, y = tpr)) +
+  geom_line(color="darkorange") + geom_abline(intercept = 0, slope = 1, size = rel(0.1)))
+```
+
+
+## Column {width=50%}
+
+::: {.panel-tabset}
+
+### Gain Lift
+
+```{r}
+t_gain_lift_data <- as.data.frame(t(df$output$training_metrics$gains_lift_table$data))
+colnames(t_gain_lift_data) <- df$output$training_metrics$gains_lift_table$columns$name
+
+t_gain_lift_data[,] <- sapply(t_gain_lift_data[,], function(x) as.numeric(as.character(x)))
+
+DT::datatable(round(t_gain_lift_data,2), rownames = FALSE)
+```
+
+
+### Lift Plot
+```{r}
+ggplot(t_gain_lift_data, aes(x=cumulative_data_fraction, y = lift)) +
+  geom_line(color="darkorange")
+```
+
+:::
+
+# Validation Metrics
+## Column {width=10%}
+
+### Row 1
+
+
+```{r}
+#| title: AUC
+gauge(df$output$validation_metrics$AUC, min = 0.5, max=1, abbreviateDecimals = 2)
+```
+
+### Row 2
+
+```{r}
+#| component: valuebox
+#| title: F1
+list(
+  icon = "stopwatch",
+  color = "primary",
+  value = round(metricas_validation[which.max(metricas_validation$f1), c("f1")], 2)
+)
+```
+
+
+## Column {width=40%}
+
+
+### ROC
+
+```{r}
+plotly::ggplotly(ggplot(metricas_validation, aes(x = fpr, y = tpr)) +
+  geom_line(color="darkorange") + geom_abline(intercept = 0, slope = 1, size = rel(0.1)))
+```
+
+
+## Column {width=50%}
+
+::: {.panel-tabset}
+
+### Gain Lift
+
+```{r}
+t_gain_lift_data <- as.data.frame(t(df$output$validation_metrics$gains_lift_table$data))
+colnames(t_gain_lift_data) <- df$output$validation_metrics$gains_lift_table$columns$name
+
+t_gain_lift_data[,] <- sapply(t_gain_lift_data[,], function(x) as.numeric(as.character(x)))
+
+DT::datatable(round(t_gain_lift_data,2), rownames = FALSE)
+```
+
+
+### Lift Plot
+```{r}
+ggplot(t_gain_lift_data, aes(x=cumulative_data_fraction, y = lift)) +
+  geom_line(color="darkorange")
+```
+
+:::
+
+
+# Variable importance
+
+## Column
+
+
+### **Variable Importance**
+
+```{r}
+var_importance <- df$output$variable_importances$data %>% t() %>% as.data.frame()
+colnames(var_importance) <- c("variable", "importance","rel_importance", "otra")
+var_importance <- var_importance %>% 
+  transmute(
+     variable = variable,
+     importance = importance %>% as.character() %>% as.numeric,
+     rel_importance = rel_importance%>% as.character() %>% as.numeric)
+# var_importance$variable <-  as.character(var_importance$variable)
+
+p <- var_importance %>% 
+  mutate(variable = fct_reorder(variable, rel_importance)) %>%
+  top_n(25, rel_importance)  %>% 
+  ggplot(
+    aes( 
+    x = variable,
+    y = rel_importance 
+    )) +
+  geom_col(fill = "darkorange") +
+  coord_flip()
+
+plotly::ggplotly(p)
+
+write_csv(var_importance, file = "variables_importantes.csv")
+
+
+```

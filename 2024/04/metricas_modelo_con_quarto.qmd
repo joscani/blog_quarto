@@ -1,0 +1,179 @@
+---
+title: "Métricas modelo con quarto y h2o"  
+date: '2024-04-20'
+categories: 
+  - 2024
+  - quarto
+  - h2o
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+image: mqdefault.jpg
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/15Trb1S2FDZSMLDzWfnlbg?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+:::
+
+Como muchos sabréis soy bastante fan de usar h2o en modelización. H2O se
+integra muy bien con R, Python o con Spark. De hecho , gracias a mi
+insistencia y conocimiento de como usar esta librería he conseguido
+cambiar la forma de hacer las cosas en más de una empresa, -si, no tengo
+abuela, pero ya va siendo hora de contar las cosas como han sido-.
+
+Una vez tienes entrenado un modelo con h2o se puede guardar como un MOJO
+(Model Object Java Optimization), y este mojo lo puedes usar para
+predecir usando R, python, java o spark, y es muy fácil de
+productivizar.
+
+En el fichero mojo (una vez lo descomprimes) aparte del modelo también
+se crea un fichero json en la ruta `experimental/modelDetails.json`
+dónde se guarda información sobre el modelo utilizado, métricas de
+desempeño en train y validación, y un montón de cosas.
+
+Pues parseando ese fichero y tratándolo podemos crearnos un dashboard.
+
+Yo me he creado un fichero quarto que toma como parámetro ese fichero
+json y genera un dashboard.
+
+### Fichero qmd 
+
+Al bajar, renombrar quitando el _txt
+
+[Descargar Archivo](metricas.qmd_txt)
+
+
+El contenido es. 
+
+
+```{r, echo = FALSE}
+
+cat(readLines("metricas.qmd_txt"), sep="\n")
+
+```
+
+### Script para generar el dashboard
+
+Tengo un script en R , pero podría ser en bash que descomprime el modelo (fichero mojo) en una carpeta
+temporal y llama al fichero qmd para generar el dashboard
+
+[Descargar generar_metricas_quarto.R](generar_metricas_quarto.R)
+
+
+```{r, echo = FALSE}
+
+cat(readLines("generar_metricas_quarto.R"), sep="\n")
+
+```
+
+
+Y ya sólo quedaría ejecutar esto 
+
+```
+Rscript --vanilla generar_metricas_quarto.R modelo_mojo.zip output_file
+```
+
+
+### Entrenar un modelo de ejemplo 
+
+Tengo unos datos bajados de kaggle
+
+[datos kaggle](WA_Fn-UseC_-Telco-Customer-Churn.csv)
+
+
+Entrenamos el modelo con h2o y guardamos el mojo
+
+
+```{r}
+library(tidyverse)
+library(h2o)
+
+h2o.init()
+
+# Load data
+
+churn_df <- read_csv("./WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+# Split data
+
+churn_hex <-  as.h2o(churn_df)
+
+churn_hex$Churn  <-  as.factor(churn_hex$Churn)
+
+splits <- h2o.splitFrame(data = churn_hex, ratios = 0.8, seed = 1234)
+train <- h2o.assign(splits[[1]], "train")
+test <- h2o.assign(splits[[2]], "test")
+
+
+# Train model
+
+x  <-  colnames(churn_hex)[!colnames(churn_hex) %in% c("customerID", "Churn")]
+x
+y  <- "Churn"
+y
+
+model <-  h2o.xgboost(
+  model_id = "Churn_model", 
+  x = x,
+  y = y,
+  training_frame = train,
+  validation_frame = test,
+  distribution = "bernoulli",
+  nthread = -1,
+  ntrees = 20,
+  max_depth = 3,
+)
+
+
+h2o.save_mojo(model, path = ".", force = TRUE)
+
+
+h2o.shutdown(prompt = FALSE)
+
+```
+
+Y ejecutando en la misma carpeta dónde están el modelo y el fichero qmd. 
+
+Evidentemente hay que tener instalado  `quarto` y demás cosas. 
+
+### Comando que hay que ejecutar en consola
+
+```bash
+Rscript --vanilla generar_metricas_quarto.R Churn_model.zip Churn_model_metrics
+```
+
+
+### Informe
+
+Y nos genera este bonito informe (descomrpimir el zip)
+
+[Informe generado](dashboard.zip)
+
+![captura pantalla](dashboard.png)
+
+Y esto es todo, de esta forma es como yo en mi día a día guardo un pequeño dashboard de cada modelo, simplemente
+leyendo la info que h2o ha guardado en el _mojo_  y así estoy seguro de que esas métricas son justo las que corresponden con los datos usados por el modelo. 
+
+
+
+
