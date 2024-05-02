@@ -1,0 +1,174 @@
+---
+title: "Ensalada no saludable"  
+date: '2024-05-02'
+categories: 
+  - 2024
+  - inferencia causal
+  - full luxury bayes
+  - análisis bayesiano
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+image: causal_salad.png
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/58m5an212Vp9B7mmXcnGtm?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+
+:::
+
+
+
+## Introducción
+
+Este es el primero de varios posts que más que contenido propio es simplemente comentar lo leído
+en el blog de Richard McElreath, y en particular los 3 posts que me abrieron la mente sobre la 
+inferencia causal. 
+
+La serie de post son los siguientes: 
+
+* [Regression, Fire, and Dangerous Things (1/3)](https://elevanth.org/blog/2021/06/15/regression-fire-and-dangerous-things-1-3/)
+* [Regression, Fire, and Dangerous Things (2/3)](https://elevanth.org/blog/2021/06/21/regression-fire-and-dangerous-things-2-3/)
+* [Regression, Fire, and Dangerous Things (3/3)](https://elevanth.org/blog/2021/06/29/regression-fire-and-dangerous-things-3-3/)
+
+
+En el primero cuenta sobre lo que denomina "Causal Salad", que no es más que la equivocada 
+costumbre de meter en un modelo todas las variables que se te ocurren y el error de interpretar 
+los coeficientes(en caso de que sea lineal) como efectos causales. Las revistas científicas están 
+llenas de esta perjudicial ensalada. 
+
+En el segundo explica cómo si pensamos en el modelo causal, ya sea utilizando un DAG, o en otras formas
+se ha de razonar para a partir de ahí encontrar la forma de contestar a la pregunta de 
+¿Cuál es el efecto "causal" de X en Y? 
+
+
+En el tercero, explica como utilizando modelos bayesianos podemos ajustar un DAG completo, y utilizar
+ese modelo ajustado para responder diferentes cuestiones causales, haciendo simulaciones. 
+En este último post es cuando utiliza el término "full luxury bayes". También explica la diferencia entre
+tener un modelo para cada pregunta causal (a lo Pearl), y tener todo el DAG estimado , así como ambas perspectivas 
+pueden combinarse. De hecho, se puede utilizar el enfoque de Pearl para detectar sobre qué variables no hay que "condicionar" 
+y la perspectiva de full luxury para poder hacer cosas que el enfoque de Pearl no llega, tales como condicionar por un *collider*
+
+
+## Ensalada causal
+
+En los posts parte de una muestra hipótetica de pares de madres e hijas, y se trata de estudiar si el número de hijos 
+de la madre influye en el número de hijos de la hija. Y considera que hay variables de confusión no medidas, 
+tales como entorno social común, cultura del país, etcétera. Otra variable que se cree que puede influir en el número 
+de hijos tanto de la madre como de la hija es el orden de nacimiento ( si fueron primogénitas  o no). 
+
+
+Para ilustrar la situación simula unos datos, pego su código
+Si no os gustan las asunciones, cambiad la simulación  y los efectos y punto. 
+
+```{r}
+set.seed(1908)
+N <- 200 # number of pairs
+U <- rnorm(N) # simulate confounds
+# birth order and family sizes
+B1 <- rbinom(N, size=1, prob=0.5) # 50% first borns
+M <- rnorm( N , 2*B1 + U )
+B2 <- rbinom(N,size=1,prob=0.5)
+D <- rnorm( N , 2*B2 + U + 0*M ) # change the 0 to turn on causal influence of mom
+
+```
+
+En estos datos simulados ha supuesto que hay una variable de confusión no observada, y que afecta por igual manera
+(coeficiente 1) tanto al número de hijos de la madre como de la hija. Ha simulado también que la mitad de las madres 
+y de las hijas son primogénitas. Ha considerado que ser primogénita afecta de igual manera(coeficiente 2) 
+al número de hijos de madres e hijas.  
+
+Y por último ha puesto que el efecto del número de hijos de la madre (M) sobre el número de hijos de la hija(D) es 0. 
+
+Es decir, al simular los datos sabemos cuál es el verdadero efecto causal , que en este caso es nulo. Esto va a permitir que 
+podamos comparar si la técnica o técnicas propuestas son adecuadas. 
+
+
+::: {.callout-tip}
+
+## Ojo
+
+Ciencia antes que estadística. En este caso sabemos cuál es la verdad y la relación entre las variables. 
+En la vida real tendremos que crear hipótesis y modelos "causales "  de cómo se relacionan las variables, y podrían ser erróneos
+:::
+
+
+Lo primero que se nos ocurre para estimar el efecto de M sobre D, sería tan sencillo como una regresión simple. 
+
+
+```{r}
+
+mod_simple <- lm(D ~ M)
+summary(mod_simple)
+```
+
+Y vemos que el coeficiente estimado está muy lejos de la verdad. En este caso se ha estimado como positivo y con un 
+error estándard bastante pequeño. 
+
+¿Por qué se ha alejado tanto?  Pues por la asociación que induce la variable U tanto en M como D, de hecho para poder
+estimar el efecto correcto habría que *condicionar* por U, es decir, en este caso incluir U en el modelo. Pero U es 
+una variable que no tenemos medida y por tanto no podemos usarla. 
+
+
+En este momento es cuando alguien dice - ey, pues metamos todas las variables que tenemos medidas en el modelo, eso 
+debería ayudar, ya sabéis, todo el rollo del ceteris paribus y demás-  .  Pues venga, vamos a hacer la ensalada causal
+
+
+Y usamos todas  las variables observadas en nuestro modelo de regresión lineal superchachi
+
+```{r}
+
+mod_salad <- lm(D ~ M + B1 + B2)
+summary(mod_salad)
+
+```
+
+Oh vaya, no sólo no nos acercamos al  verdadero valor del coeficiente buscado, sino que ha habido una amplificación del sesgo. 
+
+
+Pero, ¿acaso al incluir más variables no hemos mejorado la forma en que modelamos D?. Pues en principio si, tanto viendo
+los Adjusted R-squared como los AIC , el modelo con más variables predice mejor D.  Pero esto es lo que pasa, porque
+el añadir más variables se está teniendo en cuenta la asociación estadística entre las variables, pero la asociación estadística
+es muy diferente de la pregunta que nos estamos haciendo. Si nuestro objetivo es hacer buenas predicciones, la "ensalada causal"
+puede ser útil, pero si el objetivo es entender cómo afecta el número de hijos de la madre sobre el número de hijos de su hija, 
+se está antes un problema muy distinto. 
+
+
+
+```{r}
+
+AIC(mod_simple)
+AIC(mod_salad)
+```
+
+
+El problema de la aproximación como "ensalada causal" es que se ha usado y se sigue usando en muchos estudios, 
+de econometría, de sociología, etcétera, dónde el objetivo no era predecir mejor una variable, sino entender como 
+afecta el cambio de una variable sobre otra. 
+
+Para intentar (y ojo que digo intentar) estimar el efecto causal correctamente hay que pensar de otra manera, hay que 
+hacer hipótesis, plantear modelos causales etcétera. Las técnicas estadísticas en muchos casos serán las mismas, pero 
+hay que usarlas de forma correcta. De hecho, la parte técnica es la sencilla, lo díficil es plantear el modelo causal
+y que sea correcto, y hay que dar triples saltos mortales haciendo asunciones que pueden no ser comprobables. Pero 
+es lo que hay, no nos podemos quedar en la frase de "asociación no implica causalidad"
