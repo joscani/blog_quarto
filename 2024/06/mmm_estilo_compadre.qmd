@@ -682,7 +682,7 @@ datos usando `MCMC`
 # como no me deja poner splines meto un coeficiente al tiempo. 
 
 hill_adstock_formula <- bf(
-  log(sales) ~ bfb * ads_fb ^ hfb  / (Sfb^hfb + ads_fb ^ hfb)  +
+  log(sales) ~ bintercept + bfb * ads_fb ^ hfb  / (Sfb^hfb + ads_fb ^ hfb)  +
     byoutube * ads_youtube ^ hyou / (Syoutube^hyou + ads_youtube ^ hyou) +
     bnews * ads_news ^ hnews / (Snews^hnews + ads_news ^ hnews) + btime * time, 
   bfb + Sfb + byoutube + Syoutube + bnews + Snews + btime + hfb + hyou + hnews ~ 1,
@@ -691,6 +691,7 @@ hill_adstock_formula <- bf(
 # Define los priors para los parámetros del modelo
 
 priors <- c(
+  prior(normal(0, 10), nlpar = "bintercept"),
   prior(normal(0, 10), nlpar = "bfb", lb = 0),
   prior(normal(0, 10), nlpar = "Sfb"),
   prior(normal(0, 10), nlpar = "byoutube", lb = 0 ),
@@ -895,18 +896,27 @@ bayes_opt_nueva$scoreSummary %>%
   arrange(Score) 
 ```
 
-Comprobamos que se cumple la restricciónd de presupuesto
+Comprobamos que se cumple la restricción de presupuesto
 
 ```{r}
 (result_bayes_nueva <- bayes_opt_nueva$scoreSummary %>% 
  arrange(Score) %>% 
  head(1) %>% 
- select(facebook_new, youtube_new, news_new, Score) )
+ select(facebook_new, youtube_new, news_new) )
 ```
-Comprobamos que no se ha pasdo del presupuesto
+
+Vemos que la optimización es diferente, el modelo simple no tenía modelada la saturación
+da mucho más inversión en facebook que el modelo con saturación.
 
 
 ```{r}
+result_bayes %>% select(facebook_new, youtube_new, news_new)
+```
+
+Comprobamos que no se ha pasado del presupuesto
+
+```{r}
+
 with(result_bayes_nueva, sum(facebook_new, youtube_new, news_new))
 
 ```
@@ -916,6 +926,7 @@ Simulamos las ventas que se esperan con esta optimización.
 
 
 ```{r}
+
 simulaciones_optim_nueva <- simular_ventas_siguiente_periodo(result_bayes_nueva$facebook_new, result_bayes_nueva$youtube_new, result_bayes$news_new,
                                                        modelo = modelo_hill_adstock)
 exp(quantile(simulaciones_optim_nueva, c(0.2, 0.5, 0.8)))
@@ -935,8 +946,13 @@ exp(quantile(simulaciones_optim_nueva, c(0.2, 0.5, 0.8)))
 
 ```
 
+A nivel de ventas estimadas, me resulta más creíble la que devuelve el modelo con saturación. El modelo más 
+simple extrapola demasiado. Al fin y al cabo modelar la saturación es "equivalente" a restringir los coeficientes.
+
 ```{r}
+
 p_optimizacion_mod_spline  + p_optim_hill
+
 ```
 
 
