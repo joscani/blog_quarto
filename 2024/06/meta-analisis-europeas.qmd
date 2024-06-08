@@ -1,0 +1,348 @@
+---
+title:  Meta-análisis. Agregando encuestas II
+date: '2024-06-08'
+categories: 
+  - 2024
+  - muestreo
+  - encuestas electorales
+  - análisis bayesiano
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+image: curva_saturacion.png
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/3RarI3aibhHVM8CgOGE1Ou?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+
+
+:::
+
+
+
+## Introducción
+
+Supongo que se trata de reminiscencias de los tiempos en que curraba en Córdoba, con mi jefe y amigo "el Truji", 
+pero de vez en cuando me gusta asomarme a las encuestas de estimación de voto. 
+
+
+Ya en algunos post anteriores como en este de [cocinando](https://muestrear-no-es-pecado.netlify.app/2022/01/01/cocinando/) contaba de manera simple algunas de 
+las _recetas_ que se usan para la estimación de voto, básicamente contaba temas de post-estratificación utilizando información auxiliar. 
+
+Más recientemente en [Meta-análisis. Agregando encuestas](https://muestrear-no-es-pecado.netlify.app/2023/metanalisis) hacía un ejercicio de como agregar diferentes encuestas para las elecciones generales de Julio. Y como este finde ando un poco febril por vete tú a saber qué bicho, pues he decidido repetir el ejercicio de meta-análisis para las elecciones europeas de mañana. 
+
+
+Así que se aplica toda la literatura que puse en el post de julio de 2023 y por lo tanto voy a poner más código que otra cosa.
+
+
+## Datos
+
+Los datos que necesito para este ejercicio son simples. A saber.
+
+* Nombre de la empresa encuestadora: Será un efecto aleatorio
+* Tamaño de muestra de la encuesta: No todas lo dan
+* Estimación porcentual a cada partido que dan.
+* Fecha de publicación de la encuesta: Lo usaré para tener en cuenta la tendencia temporal
+
+A partir del n de cada encuesta y de la estimación porcentual a cada partido obtengo grosso modo el número de 
+encuestados que dice que va a votar a cada partido en cada encuesta.  Con estos datos ya puedo hacer un modelo multinomial bayesiano que me sirva como agregador de encuestas. Vamos al lío
+
+Los datos los he sacado de la wikipedia, [aqui](https://en.wikipedia.org/wiki/Opinion_polling_and_seat_projections_for_the_2024_European_Parliament_election) tal y como amablemente me sugirió Kiko Llaneras. 
+
+
+```{r}
+library(tidyverse)
+# no sé pq lo tenia separado por ; y con , como decimal
+df <-  read_csv2(here::here("2024/06/european_polls_spain.csv")) |> 
+    select(empresa, fecha, everything())
+```
+
+Lo vemos en forma de tabla html, son unas 31 encuestas
+
+```{r}
+DT::datatable(df)
+```
+
+Para quien no lo sepa hay algunas coaliciones curiosas. 
+* AR: Ahora república. Están ERC y el BNG por ejemplo
+* Europa Solidaria: Dónde está el pnv
+* Salf: Se acabó la fiesta, el partido de Alvise que  las encuestas más recientes lo están teniendo en cuenta
+
+
+
+Vamos a tratar un poco los datos. 
+
+Al pacma  lo voy a meter junto con "resto". Este es mi blog y aquí no impera la democracia, se siente. 
+
+También calculo una columna `time` que indica los días que faltaban para las elecciones desde la fecha de publicación.
+
+```{r}
+
+df_new <- df |> 
+  mutate(resto = resto + pacma) |> 
+  select(-pacma, - Tot_pct) |> 
+  pivot_longer(c(psoe, pp, ciudadanos, podemos, vox, ar, junts, europa_solidaria, 
+                 sumar, salf, resto)) |> 
+  mutate(votos = n * value / 100) |> 
+  rename(partido = name, 
+         estim = value) |> 
+  mutate( 
+    time = fecha - ymd("2024-06-09")
+        ) 
+
+DT::datatable(df_new)
+```
+
+
+Podemos pintar algo, dónde se ve que la distancia entre PSOE y PP ha disminuido conforme se acercaba el día 9 
+
+```{r}
+
+colores <-  c(
+    "psoe" = "#FF0126", 
+    "pp" = "#005999",
+    "ciudadanos" = "#FF5824",
+    "podemos" = "#8C66F1",
+    "vox" = "#51962A", 
+    "ar" = "#A06464",
+    "junts" = "#00C3B2",
+    "europa_solidaria" = "#00309A",
+    "sumar" = "#E51C55", 
+    "salf" = "#ECC29E",
+    "resto" = "grey"
+    )
+
+df_new |> 
+    ggplot(aes(x = time, y = estim,color = partido )) +
+    geom_point() +
+    scale_color_manual(values = colores) +
+    geom_smooth(se = FALSE)
+
+```
+
+
+Para hacer el modelo multinomial necesito que la columna votos tenga valores enteros y que el n sea la suma, así que voy a pivotar y poner todo en orden
+
+```{r}
+df_wider <- df_new |>  
+    select(-estim) |>  
+    pivot_wider( id_cols = c(empresa, n, time),
+                 names_from = partido, 
+                 values_from = votos) |> 
+     mutate(across(c(psoe, pp, ciudadanos,podemos,
+                  vox, ar, junts, europa_solidaria,
+                  sumar, salf, resto), round)) |> 
+  mutate(
+    n = psoe + pp + ciudadanos + podemos +
+      vox + ar + junts + europa_solidaria + 
+      sumar + salf + resto
+  )
+
+DT::datatable(df_wider)
+```
+
+El modelo lo voy a ajustar usando `brms` y necesito tener una columna que sea la concatenación de los diferentes votos a cada partido. 
+
+
+```{r}
+
+df_wider$cell_counts <- with(df_wider, cbind(psoe, pp, ciudadanos,podemos,
+                                             vox, ar, junts, europa_solidaria,
+                                             sumar, salf, resto))
+
+
+DT::datatable(df_wider |> select(empresa, time, n, cell_counts))
+
+```
+
+Y con esto ya puedo
+
+
+## Modelo meta análisis
+
+```{r}
+
+library(cmdstanr)
+library(brms)
+library(tidybayes)
+
+options(brms.backend="cmdstanr")
+
+```
+
+En la especificación del modelo pongo la empresa como efecto aleatorio y añado también un término general que recoja la tendencia temporal global y por empresa encuestadora.
+
+
+```{r}
+formula <- brmsformula(
+    cell_counts | trials(n) ~  (time |empresa) + time)
+```
+
+
+Vemos las priors por defecto que usa brms. Lo suyo sería estudiar con cuidado todo este tema para elegir unas priors informativas si se pudiera. 
+
+
+```{r}
+# vemos las priors por defecto qeu h
+(priors <- get_prior(formula, df_wider, family = multinomial()))
+```
+
+### Ajuste con brms
+
+
+```{r}
+
+model_multinomial <-
+    brm(
+        formula,
+        df_wider,
+        multinomial(),
+        prior = priors,
+        iter = 4000,
+        warmup = 1000,
+        cores = 4,
+        chains = 4, 
+        file = here::here("2024/06/mod_meta_europeas"),
+    )
+
+summary(model_multinomial)
+```
+
+## Estimación para el día de las elecciones
+
+Ante todo mucha calma, como diría Siniestro Total. La info que tenemos sólo tiene en cuenta lo publicado por  las empresas, no sabemos nada de cómo lo han cocinado cada una y tampoco de la muestra efectiva. Esto es sólo un ejercicio para mi propia diversión personal. 
+
+¿Cómo obtendríamos la predicción para el día de las elecciones? El modelo multinomial devuelve el número de votos a repartir dado un _n_ , si considro n = 1 me devuelve las proporciones estimadas.  Lo que voy a hacer es considerar que las elecciones es "una nueva encuesta" con 
+`n = 1`  y con `time = 0`  y que tenemos un nuevo nivel en la empresa encuestadora.  
+
+
+
+```{r}
+newdata <- tibble(
+    empresa = "votaciones_dia_9", 
+    time = 0,
+    n= 1)
+
+newdata
+```
+
+
+```{r}
+estimaciones <-  newdata |> 
+    add_epred_draws(model_multinomial, allow_new_levels = TRUE) |> 
+    mutate(partido = as_factor(.category)) |> 
+    select(-.category)
+
+dim(estimaciones )
+
+DT::datatable(head(estimaciones, 100))
+```
+
+Y ya que tengo las posterioris, puedo obtener resúmenes de la distribución . como calcular un intervalo de credibilidad para cada partido, al 90% por ejemplo 
+
+```{r}
+estimaciones |> 
+    group_by(partido) |> 
+    summarise(
+        media = mean(.epred), 
+        mediana= median(.epred), 
+        low = quantile(.epred, 0.05), 
+        high= quantile(.epred, 0.95)
+    ) |> 
+mutate(across(media:high, \(x){100* round(x,3)})) # sintaxis nueva y rara para funciones anónimas
+
+```
+
+Como vemos, yo diría que empate técnico entre psoe y pp. y para algunos partidos como _salf_ 
+mejor no dar ni el dato dado el intervalo de credibilidad tan ancho. 
+
+
+Pintamos 
+
+```{r}
+#| fig-width: 10
+estimaciones %>% 
+    ggplot(aes(x=.epred, fill = partido)) +
+    geom_density(alpha = 0.5 ) +
+    scale_x_continuous(labels = scales::percent, limits = c(0, 0.45)) +
+    scale_fill_manual(values = colores) +
+    labs(title="Agregando encuestas por diversión. Resultado",
+        x = "Porcentaje estimado", 
+        y = "Density") 
+
+
+```
+
+
+Un detalle curioso, y si "la nueva encuesta a día 0"  la hiciera el cis. Aunque eso si, gracias al modelo bayesiano matizando un poco sus ansias de victoria socialista. 
+
+
+```{r}
+cis <- tibble(
+    empresa = "cis", 
+    time = 0,
+    n= 1)
+
+cis
+```
+
+
+```{r}
+    
+estimaciones_cis <-  cis |> 
+    add_epred_draws(model_multinomial, allow_new_levels = TRUE) |> 
+    mutate(partido = as_factor(.category)) |> 
+    select(-.category)
+
+estimaciones_cis |> 
+    group_by(partido) |> 
+    summarise(
+        media = mean(.epred), 
+        mediana= median(.epred), 
+        low = quantile(.epred, 0.05), 
+        high= quantile(.epred, 0.95)
+    ) |> 
+mutate(across(media:high, \(x){100* round(x,3)}))   
+    
+```
+
+
+
+```{r}
+#| fig-width: 10
+estimaciones_cis %>% 
+    ggplot(aes(x=.epred, fill = partido)) +
+    geom_density(alpha = 0.5 ) +
+    scale_x_continuous(labels = scales::percent, limits = c(0, 0.45)) +
+    scale_fill_manual(values = colores) +
+    labs(title="Si yo fuera Tezanos",
+        x = "Porcentaje estimado", 
+        y = "Density") 
+
+
+```
+
+## Finalizando
+
+Sea como fuere, esto es sólo por diversión con el objetivo de mostrar un poco como se pueden agregar encuestas de forma bayesiana. Otra forma es hacer simulaciones como hace Kiko Llaneras. A mi me gusta más al modo bayesiano, y creo que debería salir algo parecido. 
+Pues nada más, vayan a votar  o no, no es una obligación sino un derecho. Feliz sábado
