@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2024-08-29">
 
-<title>Muestrear no es pecado - 2024</title>
+<title>Muestrear no es pecado - Predictores a nivel de grupo e inferencia causal</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,26 +25,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -70,65 +70,7 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -139,7 +81,7 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Muestrear no es pecado</span>
     </a>
   </div>
@@ -150,11 +92,11 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./blog.html"> 
+    <a class="nav-link" href="../../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -173,7 +115,7 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="./blog.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../blog.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -197,7 +139,7 @@ window.Quarto = {
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="./archive.html"> 
+    <a class="nav-link" href="../../archive.html"> 
 <span class="menu-text">Archivo</span></a>
   </li>  
 </ul>
@@ -209,25 +151,50 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(16)</span></div><div class="category" data-category="2024">2024 <span class="quarto-category-count">(16)</span></div><div class="category" data-category="Inferencia causal">Inferencia causal <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Marketing">Marketing <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Neovim">Neovim <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R">R <span class="quarto-category-count">(6)</span></div><div class="category" data-category="amistad">amistad <span class="quarto-category-count">(1)</span></div><div class="category" data-category="análisis bayesiano">análisis bayesiano <span class="quarto-category-count">(6)</span></div><div class="category" data-category="cachitos">cachitos <span class="quarto-category-count">(4)</span></div><div class="category" data-category="curro">curro <span class="quarto-category-count">(1)</span></div><div class="category" data-category="encuestas electorales">encuestas electorales <span class="quarto-category-count">(1)</span></div><div class="category" data-category="estadística">estadística <span class="quarto-category-count">(7)</span></div><div class="category" data-category="full luxury bayes">full luxury bayes <span class="quarto-category-count">(2)</span></div><div class="category" data-category="h2o">h2o <span class="quarto-category-count">(1)</span></div><div class="category" data-category="inferencia causal">inferencia causal <span class="quarto-category-count">(1)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(5)</span></div><div class="category" data-category="muestreo">muestreo <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ocr">ocr <span class="quarto-category-count">(4)</span></div><div class="category" data-category="polémica">polémica <span class="quarto-category-count">(4)</span></div><div class="category" data-category="python">python <span class="quarto-category-count">(1)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="rock">rock <span class="quarto-category-count">(1)</span></div><div class="category" data-category="textmining">textmining <span class="quarto-category-count">(4)</span></div><div class="category" data-category="tiempos modernos">tiempos modernos <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción">Introducción</a></li>
+  <li><a href="#y-qué-tiene-que-ver-esto-con-la-inferencia-causal" id="toc-y-qué-tiene-que-ver-esto-con-la-inferencia-causal" class="nav-link" data-scroll-target="#y-qué-tiene-que-ver-esto-con-la-inferencia-causal">¿Y qué tiene que ver esto con la inferencia causal?</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">2024</h1>
-</div>
+<h1 class="title">Predictores a nivel de grupo e inferencia causal</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">2024</div>
+    <div class="quarto-category">Inferencia causal</div>
+    <div class="quarto-category">análisis bayesiano</div>
+    <div class="quarto-category">R</div>
+  </div>
+  </div>
 
 
 
-<div class="quarto-title-meta column-page-left">
+<div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 29, 2024</p>
+    </div>
+  </div>
   
     
   </div>
@@ -237,179 +204,43 @@ window.Quarto = {
 </header>
 
 
-
-
-
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<div class="listing-actions-group">
-   <div class="input-group input-group-sm quarto-listing-sort">
-     <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
-     <select id="listing-listing-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-listing'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
-       <option value="" disabled="" selected="" hidden="">Order By</option>
-       <option value="index" data-direction="asc">Default</option>
-         <option value="listing-date-sort" data-direction="asc">
-          Date - Oldest
-        </option>
-         <option value="listing-date-sort" data-direction="desc">
-          Date - Newest
-        </option>
-         <option value="listing-title-sort" data-direction="asc">
-          Title
-        </option>
-     </select>
-  </div>
-    <div class="input-group input-group-sm quarto-listing-filter">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" class="search form-control" placeholder="Filter">
-    </div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-<a class="sort" data-sort="listing-date-sort" onclick="if (this.classList.contains('sort-asc')) { this.classList.add('sort-desc'); this.classList.remove('sort-asc') } else { this.classList.add('sort-asc'); this.classList.remove('sort-desc')} return false;">Date</a>
-</th>
-<th>
-<a class="sort" data-sort="listing-title-sort" onclick="if (this.classList.contains('sort-asc')) { this.classList.add('sort-desc'); this.classList.remove('sort-asc') } else { this.classList.add('sort-asc'); this.classList.remove('sort-desc')} return false;">Title</a>
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="2024,Inferencia causal,análisis bayesiano,R" data-listing-date-sort="1724882400000" data-listing-file-modified-sort="1723999886262" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="587" data-listing-title-sort="Predictores a nivel de grupo e inferencia causal" data-listing-filename-sort="predictores_nivel_grupo_inf_causal.qmd">
-<td>
-<span class="listing-date">Aug 29, 2024</span>
-</td>
-<td>
-<a href="./2024/08/predictores_nivel_grupo_inf_causal.html" class="title listing-title">Predictores a nivel de grupo e inferencia causal</a>
-</td>
-</tr>
-<tr data-index="1" data-categories="2024,muestreo,encuestas electorales,análisis bayesiano" data-listing-date-sort="1717797600000" data-listing-file-modified-sort="1719745884399" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1786" data-listing-title-sort="Meta-análisis. Agregando encuestas II" data-listing-filename-sort="meta-analisis-europeas.qmd">
-<td>
-<span class="listing-date">Jun 8, 2024</span>
-</td>
-<td>
-<a href="./2024/06/meta-analisis-europeas.html" class="title listing-title">Meta-análisis. Agregando encuestas II</a>
-</td>
-</tr>
-<tr data-index="2" data-categories="2024,Marketing,análisis bayesiano,R" data-listing-date-sort="1717192800000" data-listing-file-modified-sort="1719746051211" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="21" data-listing-word-count-sort="4009" data-listing-title-sort="MMM. Estilo compadre" data-listing-filename-sort="mmm_estilo_compadre.qmd">
-<td>
-<span class="listing-date">Jun 1, 2024</span>
-</td>
-<td>
-<a href="./2024/06/mmm_estilo_compadre.html" class="title listing-title">MMM. Estilo compadre</a>
-</td>
-</tr>
-<tr data-index="3" data-categories="2024,Marketing,análisis bayesiano,R" data-listing-date-sort="1717192800000" data-listing-file-modified-sort="1719682477581" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="21" data-listing-word-count-sort="4009" data-listing-title-sort="MMM. Estilo compadre" data-listing-filename-sort="mmm_estilo_compadre.rmarkdown">
-<td>
-<span class="listing-date">Jun 1, 2024</span>
-</td>
-<td>
-<a href="./2024/06/mmm_estilo_compadre.html" class="title listing-title">MMM. Estilo compadre</a>
-</td>
-</tr>
-<tr data-index="4" data-categories="2024,inferencia causal,full luxury bayes,análisis bayesiano,R" data-listing-date-sort="1714600800000" data-listing-file-modified-sort="1714673213547" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1061" data-listing-title-sort="Ensalada no saludable" data-listing-filename-sort="Ensalada_no_saludable.qmd">
-<td>
-<span class="listing-date">May 2, 2024</span>
-</td>
-<td>
-<a href="./2024/05/Ensalada_no_saludable.html" class="title listing-title">Ensalada no saludable</a>
-</td>
-</tr>
-<tr data-index="5" data-categories="2024,quarto,h2o" data-listing-date-sort="1713564000000" data-listing-file-modified-sort="1713547167765" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="443" data-listing-title-sort="Métricas modelo con quarto y h2o" data-listing-filename-sort="metricas_modelo_con_quarto.qmd">
-<td>
-<span class="listing-date">Apr 20, 2024</span>
-</td>
-<td>
-<a href="./2024/04/metricas_modelo_con_quarto.html" class="title listing-title">Métricas modelo con quarto y h2o</a>
-</td>
-</tr>
-<tr data-index="6" data-categories="2024,amistad,rock" data-listing-date-sort="1712872800000" data-listing-file-modified-sort="1712905222042" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="204" data-listing-title-sort="Ya vendrán tiempos mejores" data-listing-filename-sort="tiempos_mejores.qmd">
-<td>
-<span class="listing-date">Apr 12, 2024</span>
-</td>
-<td>
-<a href="./2024/04/tiempos_mejores.html" class="title listing-title">Ya vendrán tiempos mejores</a>
-</td>
-</tr>
-<tr data-index="7" data-categories="2024,estadística,full luxury bayes,análisis bayesiano,R" data-listing-date-sort="1711839600000" data-listing-file-modified-sort="1711984699650" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1417" data-listing-title-sort="Lujuria e intervención" data-listing-filename-sort="lujuria_e_intervencion.qmd">
-<td>
-<span class="listing-date">Mar 31, 2024</span>
-</td>
-<td>
-<a href="./2024/03/lujuria_e_intervencion.html" class="title listing-title">Lujuria e intervención</a>
-</td>
-</tr>
-<tr data-index="8" data-categories="2024,estadística,R" data-listing-date-sort="1710716400000" data-listing-file-modified-sort="1710674415529" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="213" data-listing-title-sort="Jornadas Hispalenses" data-listing-filename-sort="jornadas2024.qmd">
-<td>
-<span class="listing-date">Mar 18, 2024</span>
-</td>
-<td>
-<a href="./2024/03/jornadas2024.html" class="title listing-title">Jornadas Hispalenses</a>
-</td>
-</tr>
-<tr data-index="9" data-categories="2024,estadística,tiempos modernos" data-listing-date-sort="1708729200000" data-listing-file-modified-sort="1708771203614" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="194" data-listing-title-sort="Nomenclatura" data-listing-filename-sort="nomenclatura.qmd">
-<td>
-<span class="listing-date">Feb 24, 2024</span>
-</td>
-<td>
-<a href="./2024/02/nomenclatura.html" class="title listing-title">Nomenclatura</a>
-</td>
-</tr>
-<tr data-index="10" data-categories="2024,curro" data-listing-date-sort="1708038000000" data-listing-file-modified-sort="1708097149993" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="527" data-listing-title-sort="Guarnición de guerra" data-listing-filename-sort="guarnicion_de_guerra.qmd">
-<td>
-<span class="listing-date">Feb 16, 2024</span>
-</td>
-<td>
-<a href="./2024/02/guarnicion_de_guerra.html" class="title listing-title">Guarnición de guerra</a>
-</td>
-</tr>
-<tr data-index="11" data-categories="2024,linux,Neovim" data-listing-date-sort="1705100400000" data-listing-file-modified-sort="1708095907366" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="218" data-listing-title-sort="Neovim" data-listing-filename-sort="nvim_quarto.qmd">
-<td>
-<span class="listing-date">Jan 13, 2024</span>
-</td>
-<td>
-<a href="./2024/01/nvim_quarto.html" class="title listing-title">Neovim</a>
-</td>
-</tr>
-<tr data-index="12" data-categories="estadística,polémica,2024,textmining,ocr,linux,python,cachitos" data-listing-date-sort="1704754800000" data-listing-file-modified-sort="1709314758231" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="364" data-listing-title-sort="Cachitos 2024. Cuarta parte. The python way" data-listing-filename-sort="cachitos_2023_cuarta_parte.qmd">
-<td>
-<span class="listing-date">Jan 9, 2024</span>
-</td>
-<td>
-<a href="./2024/01/cachitos_2023/cachitos_2023_cuarta_parte.html" class="title listing-title">Cachitos 2024. Cuarta parte. The python way</a>
-</td>
-</tr>
-<tr data-index="13" data-categories="estadística,polémica,2024,textmining,ocr,linux,cachitos" data-listing-date-sort="1704668400000" data-listing-file-modified-sort="1704617595269" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="16" data-listing-word-count-sort="3106" data-listing-title-sort="Cachitos 2023. Tercera parte" data-listing-filename-sort="cachitos_2023_tercera_parte.qmd">
-<td>
-<span class="listing-date">Jan 8, 2024</span>
-</td>
-<td>
-<a href="./2024/01/cachitos_2023/cachitos_2023_tercera_parte.html" class="title listing-title">Cachitos 2023. Tercera parte</a>
-</td>
-</tr>
-<tr data-index="14" data-categories="estadística,polémica,2024,textmining,ocr,linux,cachitos" data-listing-date-sort="1704322800000" data-listing-file-modified-sort="1704357496750" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="611" data-listing-title-sort="Cachitos 2023. Segunda parte" data-listing-filename-sort="cachitos_2023_segunda_parte.qmd">
-<td>
-<span class="listing-date">Jan 4, 2024</span>
-</td>
-<td>
-<a href="./2024/01/cachitos_2023/cachitos_2023_segunda_parte.html" class="title listing-title">Cachitos 2023. Segunda parte</a>
-</td>
-</tr>
-<tr data-index="15" data-categories="estadística,polémica,2024,textmining,ocr,linux,cachitos" data-listing-date-sort="1704150000000" data-listing-file-modified-sort="1704199720392" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1315" data-listing-title-sort="Cachitos 2023. Primera parte" data-listing-filename-sort="cachitos_2023_primera_parte.qmd">
-<td>
-<span class="listing-date">Jan 2, 2024</span>
-</td>
-<td>
-<a href="./2024/01/cachitos_2023/cachitos_2023_primera_parte.html" class="title listing-title">Cachitos 2023. Primera parte</a>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="listing-no-matching d-none">
-No matching items
+<div class="callout-title-container flex-fill">
+Listening
 </div>
-</div></main> <!-- /main -->
+</div>
+<div class="callout-body-container callout-body">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/0X7BwjJPco2VMoZnMrIPp6?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<section id="introducción" class="level2">
+<h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
+<p>En una <a href="https://muestrear-no-es-pecado-old.netlify.app/2019/02/04/predictores-a-nivel-de-grupo/">entrada de mi blog anterior</a> comentaba una de las fortalezas de los modelos mixtos vs los clásicos, y es la posibilidad de incluir predictores a nivel de grupo.</p>
+<p>Imaginemos que tenemos datos de los clientes de una empresa a nivel nacional, y entre esos datos tenemos la provincia dónde vive cada cliente. Además pensamos que a nivel provincial la propensión a la compra de de nuestro producto varía, y también pensamos que esa propensión puede variar por ejemplo por el poder adquisitivo que tienen nuestros clientes. Pero el caso es que no tenemos los ingresos a nivel de cada cliente, pero si que tenemos información agregada a nivel de provincia, por ejemplo cosas como tasa de paro provincial o renta media provincial. ¿No sería útil usar esa información (provincia, tasa paro provincial, renta media provincial) en un posible modelo que explique esas propensiones?</p>
+<p>Simplificando sería algo como <code>Propension_i= f(variables_cliente, provincia_cliente, tasa_paro_provincial, ingresos_medios_provinciales)</code> que si consideramos modelo glm simple en sintaxis de R, dónde modelamos la variable dicótomica, venta/no_venta sería <code>glm(venta_si ~ variables_cliente + provincia_cliente + tasa_paro_provincial + ingresos_medios_provinciales, family = binomial)</code></p>
+<p>Pues como contaba en el post de 2019, en un modelo lineal no podemos meter a la vez la variable categórica provincia y variables cuyo valor sea el mismo para todos los clientes de esa provincia.</p>
+<p>En cambio, si consideramos un modelo mixto (bayesiano o no), podemos considerar la provincia como efecto aleatorio y la tasa de paro provincial y los ingresos medios provinciales como predictores a nivel de grupo.</p>
+<p>La inclusión de estos predictores incrementan la eficiencia de la estimación de la proporción de ventas a nivel de grupo , especialmente en los grupos de menor tamaño muestral. Piénsese en tener pocos clientes de Ceuta o Melilla, si no se tiene en cuentan predictores a nivel de grupo, el modelo mixto daría estimaciones de proporción de ventas similares a las que se dan a nivel nacional (lo cual sería una estimación mejor que si consideramos la proporción muestral en los datos ), pero si tenemos datos agregados a nivel de provincia, usarlos en el modelo hará que la estimación de la proporción de ventas para esa provincia con pocos datos se parezca más a provincias similares.</p>
+</section>
+<section id="y-qué-tiene-que-ver-esto-con-la-inferencia-causal" class="level2">
+<h2 class="anchored" data-anchor-id="y-qué-tiene-que-ver-esto-con-la-inferencia-causal">¿Y qué tiene que ver esto con la inferencia causal?</h2>
+<p>Pues apunto algunas cosillas.</p>
+<ol type="1">
+<li><p>Usar un modelo mixto (o multinivel o jerárquico o por otro de sus muchos nombres) puede ser muy útil para mejorar la estimación del efecto causal cuando tenemos subgrupos de pequeño tamaño</p></li>
+<li><p>Si usamos un modelo de <strong>varying intercept</strong> (en terminología de lme4 sería <code>outcome ~ (1 | grupo) + Treatment +    Confounders)</code>) se asume implícitamente que los <em>Intercepts</em> son independientes de las otras variables, incluido el tratamiento, pero esta asunción no es realista. Gelman y Hill comentan que se puede solventar añadiendo como predictor a nivel de grupo la proporción de <em>tratados</em> en cada nivel de la variable <em>grupo</em>. Sería algo así como <code>outcome ~ (1 | grupo ) + Treatment  + Treatment_prop_j + Confounders</code>. También comentan que añadir otras variables <em>Confounders</em> como predictores a nivel de grupo puede ayudar.</p></li>
+<li><p>Una alternativa es considerar un modelo de <strong>varying slopes</strong> dónde se permita que el efecto del tratamiento sea distinto en cada nivel de la variable <code>grupo</code>. Esto sería algo así como <code>outcome ~ (1 + Treatment | grupo) +    Confounders</code>.</p></li>
+</ol>
+<p>A ver si encuentro un ejemplo dónde explicar esto mismo con datos. Buen verano.</p>
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -963,6 +794,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
 </div> <!-- /content -->
 
 
