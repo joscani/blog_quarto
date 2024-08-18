@@ -1,0 +1,95 @@
+---
+title: "Predictores a nivel de grupo e inferencia causal "  
+date: '2024-08-29'
+categories: 
+  - 2024
+  - Inferencia causal 
+  - análisis bayesiano
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/0X7BwjJPco2VMoZnMrIPp6?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+
+:::
+
+
+## Introducción
+
+En una [entrada de mi blog
+anterior](https://muestrear-no-es-pecado-old.netlify.app/2019/02/04/predictores-a-nivel-de-grupo/) comentaba una de las
+fortalezas de los modelos mixtos vs los clásicos, y es la posibilidad de incluir predictores a nivel de grupo. 
+
+Imaginemos que tenemos datos de los clientes de una empresa a nivel nacional, y entre esos datos tenemos la provincia
+dónde vive cada cliente. Además pensamos que a nivel provincial la propensión a la compra de de nuestro producto varía,
+y también pensamos que esa propensión puede variar por ejemplo por el poder adquisitivo que tienen nuestros clientes.
+Pero el caso es que no tenemos los ingresos a nivel de cada cliente, pero si que tenemos información agregada a nivel de
+provincia, por ejemplo cosas como tasa de paro provincial o renta media provincial. ¿No sería útil usar esa información
+(provincia, tasa paro provincial, renta media provincial) en un posible modelo que explique esas propensiones? 
+
+
+Simplificando sería algo como `Propension_i= f(variables_cliente, provincia_cliente, tasa_paro_provincial,
+ingresos_medios_provinciales)` que si consideramos modelo glm simple en sintaxis de R, dónde modelamos la variable
+dicótomica, venta/no_venta sería `glm(venta_si ~ variables_cliente + provincia_cliente + tasa_paro_provincial +
+ingresos_medios_provinciales, family = binomial)`
+
+Pues como contaba en el post de 2019, en un modelo lineal no podemos meter a la vez la variable categórica provincia y
+variables cuyo valor sea el mismo para todos los clientes de esa provincia. 
+
+
+En cambio, si consideramos un modelo mixto (bayesiano o no), podemos considerar la provincia como efecto aleatorio y la
+tasa de paro provincial y los ingresos medios provinciales como predictores a nivel de grupo. 
+
+La inclusión de estos predictores incrementan la eficiencia de la estimación de la proporción de ventas a nivel de grupo
+, especialmente en los grupos de menor tamaño muestral. Piénsese en tener pocos clientes de Ceuta o Melilla, si no se
+tiene en cuentan predictores a nivel de grupo, el modelo mixto daría estimaciones de proporción de  ventas similares a
+las que se dan a nivel nacional (lo cual sería una estimación mejor que si consideramos la proporción muestral en los
+datos ), pero si tenemos datos agregados a nivel de provincia, usarlos en el modelo hará que la estimación de la
+proporción de ventas para esa provincia con pocos datos se parezca más a provincias similares.
+
+
+## ¿Y qué tiene que ver esto con la inferencia causal? 
+
+Pues apunto algunas cosillas.
+
+1. Usar un modelo mixto (o multinivel o jerárquico o por otro de sus muchos nombres) puede ser muy útil para mejorar la
+   estimación del efecto causal cuando tenemos subgrupos de pequeño tamaño 
+
+2. Si usamos un modelo de __varying intercept__ (en terminología de lme4 sería  `outcome ~ (1 | grupo) + Treatment +
+   Confounders)`) se asume implícitamente que los _Intercepts_ son independientes de las otras variables, incluido el
+   tratamiento, pero esta asunción no es realista. Gelman y Hill comentan que se puede solventar añadiendo como
+   predictor a nivel de grupo la proporción de _tratados_ en cada nivel de la variable _grupo_.  Sería algo así como
+   `outcome ~ (1 | grupo ) + Treatment  + Treatment_prop_j + Confounders`. También comentan que añadir otras variables
+   _Confounders_ como predictores a nivel de grupo puede ayudar.
+
+3. Una alternativa es considerar un modelo de __varying slopes__  dónde se permita que el efecto del tratamiento sea
+   distinto en cada nivel de la variable `grupo`. Esto sería algo así como `outcome ~ (1 + Treatment | grupo) +
+   Confounders`. 
+
+
+A ver si encuentro un ejemplo dónde explicar esto mismo con datos. Buen verano.
+
+
