@@ -26,7 +26,6 @@ knitr:
   opts_chunk:
     out.width: 80%
     fig.showtext: TRUE
-    collapse: false
     comment: "#>"
 ---
 
@@ -591,7 +590,7 @@ data_with_cate |>
     cate_medio = rvar_mean(cate_ind_posterior_predict)) |>
   ggplot() +
   ggdist::stat_halfeye(aes( xdist = cate_medio), fill ="lightblue") +
-    labs ( "Efecto total usando modelo bayesiano")
+    labs (title= "Efecto total usando modelo bayesiano")
 ```
 
 
