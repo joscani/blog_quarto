@@ -56,7 +56,6 @@ library(sjPlot) # plot de los modelos,
 # library(causact) # usar alguna cosa de numpyro desde R , quiero probar este paquete
 ```
 
-
 Aunque en el fichero comprimido que te descargas del INE viene script para leer los datos con R, no me gusta ese script que instala XLConnect y no sé qué más. Así que lo que he hecho es leer el fichero en formato de spss con `haven::read_spss()` y luego limpiarlos un poco con `janitor::clean_names()`.
 
 ```{r read_data}
@@ -330,7 +329,7 @@ head(ess[, c("outcome", "treatment","Difer", "pesos", "combinado")])
 (x_learner <- ess  %>% 
   filter(tipojor == "1", estu == "7", sexo == "1") |> 
   group_by(treatment)  %>%
-  summarise(mean = mean(outcome)) |> 
+  summarise(mean = mean(combinado)) |> 
   pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
   mutate(
     estim_xlearner = mean_1 - mean_0) |> 
@@ -341,7 +340,7 @@ head(ess[, c("outcome", "treatment","Difer", "pesos", "combinado")])
 (x_learner_madrid <- ess  %>% 
   filter(tipojor == "1", estu == "7", sexo == "1", nuts1=="3") |> 
   group_by(treatment)  %>%
-  summarise(mean = mean(outcome)) |> 
+  summarise(mean = mean(combinado)) |> 
   pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
   mutate(
     estim_xlearner = mean_1 - mean_0) |> 
@@ -351,7 +350,7 @@ head(ess[, c("outcome", "treatment","Difer", "pesos", "combinado")])
 (x_learner_sur <- ess  %>% 
   filter(tipojor == "1", estu == "7", sexo == "1", nuts1=="1") |> 
   group_by(treatment)  %>%
-  summarise(mean = mean(outcome)) |> 
+  summarise(mean = mean(combinado)) |> 
   pivot_wider(names_from = treatment, values_from = mean, names_prefix = "mean_") |> 
   mutate(
     estim_xlearner = mean_1 - mean_0) |> 
@@ -427,7 +426,7 @@ summary(mean_model)
 
 ## Resumiendo
 
-El S-learner usando ponderación de observaciones y el doubly robust estimator (sin usar ponderaciones) nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner y el x-learner nos dicen lo contrario.
+El S-learner usando ponderación de observaciones, el doubly robust y estimator (sin usar ponderaciones) y el x-learner nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner nos dice lo contrario.
 
 Así que, no me queda claro la respueta a la pregunta inicial.
 
@@ -449,18 +448,15 @@ res |>
 
 Me acabo de acordar de otra forma de estimar esto. Consiste en:
 
-* Hago un modelo para estimar el salario neto pero sólo usando la población que trabaja en el sector privado. 
+-   Hago un modelo para estimar el salario neto pero sólo usando la población que trabaja en el sector privado.
 
-* Aplico ese modelo para obtener estimaciones sobre la población que trabaja en el sector público. 
+-   Aplico ese modelo para obtener estimaciones sobre la población que trabaja en el sector público.
 
-* Comparo la estimación obtenida con el salario neto de esa subpoblación. 
+-   Comparo la estimación obtenida con el salario neto de esa subpoblación.
 
+Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado?
 
-Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado? 
-
-Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de `cnace` y de `cno1` puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso. 
-
-
+Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de `cnace` y de `cno1` puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso.
 
 ```{r}
 
@@ -484,23 +480,21 @@ estim_publico_con_mod_privado_madrid <-  predict(mod_sector_privado,
 
 ```
 
-Y haciéndolo así se tendría que si los trabajadores  del sector público  hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media. 
+Y haciéndolo así se tendría que si los trabajadores del sector público hombres a jornada completa y con estudios de licenciados o superiores lse cambiaran al privado, manteniendo el resto igual ganarían unos 124 euros menos al mes de media.
 
 Así que tengo varias preguntas
 
-* ¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?
+-   ¿Qué piensan mis escasos lectores a la vista de estas estimaciones? ¿Hay brecha salarial?
 
-* Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como "engañar con estadística de forma avanzada", pero ya conozco a quien tiene esa idea en mente
+-   Sea cual sea la respuesta, ¿no os parece que podría utilizar un método u otro según lo que me interese contar? Dan ganas de escribir un manual sobre como "engañar con estadística de forma avanzada", pero ya conozco a quien tiene esa idea en mente
 
-* ¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio "técnico"? 
-
-
+-   ¿Cuál sería la metodología correcta si es que existe? ¿Quizá adentrándonos en el mundo bayesiano? ¿o es todo un artificio "técnico"?
 
 ## Otra actualización
 
-Una de las hipótesis es que en el sector privado la distribución es más dispersa.  
+Una de las hipótesis es que en el sector privado la distribución es más dispersa.
 
-Todo esto debería haberse hecho antes que todos los modelos. __EL EDA es lo primero__. 
+Todo esto debería haberse hecho antes que todos los modelos. **EL EDA es lo primero**.
 
 ```{r}
 # En general parece que no 
@@ -512,11 +506,9 @@ ess |>
 
 ```
 
-Pero y si la vemos, para los licenciados, hombres y a jornada completa. 
+Pero y si la vemos, para los licenciados, hombres y a jornada completa.
 
-En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado. 
-
-
+En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado.
 
 ```{r}
 ess |> 
@@ -528,10 +520,9 @@ ess |>
 
 ```
 
-
 Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).
 
-Gerentes (A0)  mejor en el privado, curritos de la enseñanza y la salud pues.. 
+Gerentes (A0) mejor en el privado, curritos de la enseñanza y la salud pues..
 
 ```{r}
 
@@ -543,7 +534,6 @@ ess |>
     facet_grid( nuts1 ~ cno1)  
 
 ```
-
 
 Y si usamos el primer modelo que vimos
 
@@ -559,7 +549,7 @@ ess |>
 
 ```
 
-Pero claramente como lo que predice es la media condicionada queda todo muy "centrado".  Lo suyo sería un modelo bayesiano o hacer boostraping y tener la posterior predictive, para incorporar correctamente la variabilidad.  A ver si lo hago en otro post, pero con numpyro, que stan no puede con estos datos
+Pero claramente como lo que predice es la media condicionada queda todo muy "centrado". Lo suyo sería un modelo bayesiano o hacer boostraping y tener la posterior predictive, para incorporar correctamente la variabilidad. A ver si lo hago en otro post, pero con numpyro, que stan no puede con estos datos
 
 ## Coda
 
@@ -568,3 +558,11 @@ Pero claramente como lo que predice es la media condicionada queda todo muy "cen
 -   La inferencia causal es complicada, ha de sustentarse en un análisis teórico previo. Yo he decidido que no había colliders por ejemplo
 -   He obviado variables que podrían influir tanto en la variable respuesta como en el tratamiento (sector público o privado), pero estos son datos reales, no una simulación ad hoc, y en el mundo real tienes que tomar decisiones y apechugar con ellas.
 -   Para escribir este post lo he hecho con Rstudio y con el github copilot activado y la verdad es que ayuda bastante, incluso a completar las fórmulas en latex.
+
+## Corrección
+
+::: callout-important
+## corrección 2024-10-12
+
+Preparando taller de inferencia causal estaba repasando este post y he visto que tenía un error en el x-learner. Corregido.
+:::

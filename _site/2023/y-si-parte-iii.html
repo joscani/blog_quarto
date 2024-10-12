@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.4.552">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -24,7 +24,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -71,13 +71,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
-<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
-<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
-<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
 <link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -86,7 +85,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -95,6 +100,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -104,15 +110,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Muestrear no es pecado</span>
     </a>
@@ -124,60 +157,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../blog.html" rel="" target="">
- <span class="menu-text">Blog</span></a>
+    <a class="nav-link" href="../blog.html"> 
+<span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
- <span class="menu-text">About</span></a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/joscani" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/joscani"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text"></span></a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/joscani" rel="" target=""><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/joscani"> <i class="bi bi-twitter" role="img">
 </i> 
- <span class="menu-text"></span></a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://fosstodon.org/@joscani" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text"></span></a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="../blog.xml" rel="" target=""><i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../blog.xml"> <i class="bi bi-rss" role="img">
 </i> 
- <span class="menu-text"></span></a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Resources</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="https://rweekly.org/" rel="" target="">
+    <a class="dropdown-item" href="https://rweekly.org/">
  <span class="dropdown-text">R Weekly</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://www.r-bloggers.com/" rel="" target="">
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
  <span class="dropdown-text">R Bloggers</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://www.datanalytics.com/" rel="" target="">
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
  <span class="dropdown-text">Datanalytics</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="../archive.html" rel="" target="">
- <span class="menu-text">Archivo</span></a>
+    <a class="nav-link" href="../archive.html"> 
+<span class="menu-text">Archivo</span></a>
   </li>  
 </ul>
-            <div class="quarto-navbar-tools">
-</div>
           </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -204,6 +238,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#actualización" id="toc-actualización" class="nav-link" data-scroll-target="#actualización">Actualización</a></li>
   <li><a href="#otra-actualización" id="toc-otra-actualización" class="nav-link" data-scroll-target="#otra-actualización">Otra actualización</a></li>
   <li><a href="#coda" id="toc-coda" class="nav-link" data-scroll-target="#coda">Coda</a></li>
+  <li><a href="#corrección" id="toc-corrección" class="nav-link" data-scroll-target="#corrección">Corrección</a></li>
   </ul>
 </nav>
     </div>
@@ -241,14 +276,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 12, 2023</p>
+      <p class="date-modified">October 12, 2024</p>
     </div>
   </div>
     
   </div>
   
 
+
 </header>
+
 
 <section id="introducción" class="level2">
 <h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
@@ -262,8 +299,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Vamos a utilizar los microdatos de la <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&amp;cid=1254736177025&amp;menu=resultados&amp;idp=1254735976596#!tabs-1254736061996">encuestas de estructura salarial</a> del INE. A pesar de ser una encuesta anual, los últimos resultados publicados son de 2021 y los últimos microdatos disponibles los de 2018. La verdad es que me gustaría entender por qué el INE publica tan tarde los microdatos 😥. La <a href="https://www.ine.es/prensa/ees_2021.pdf">nota de prensa</a> con los resultados de 2021 es del 20 de junio de 2023. Y si ya tienen resultados de 2021, ¿por qué los últimos microdatos disponibles son los de hace 5 años?</p>
 <p>Sea como fuere vamos a lo nuestro.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven) <span class="co"># Para leer los datos de SPSS</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -275,8 +312,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Aunque en el fichero comprimido que te descargas del INE viene script para leer los datos con R, no me gusta ese script que instala XLConnect y no sé qué más. Así que lo que he hecho es leer el fichero en formato de spss con <code>haven::read_spss()</code> y luego limpiarlos un poco con <code>janitor::clean_names()</code>.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> <span class="fu">read_sav</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/INE/datos_2018/SPSS/EES_2018.sav"</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(ess)</span>
@@ -304,8 +341,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><a href="https://docs.google.com/spreadsheets/d/1H_wcDX_SfXQmpLyf0Kj9lKvwMhph7Gv7/edit?usp=sharing&amp;ouid=110673697043754248174&amp;rtpof=true&amp;sd=true"><i class="fa-solid fa-table" aria-label="table"></i> <code>dis_registro</code></a></p>
 <p>Lo que quiero comparar es el salario neto mensual, ¿por qué? porque me da la gana y porque en la docu del INE explican como se calcula el salario neto partiendo de los microdatos.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ess <span class="ot">&lt;-</span> ess <span class="sc">|&gt;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -332,8 +369,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="estimando-cosas..">Estimando cosas..</h2>
 <p>La variable dónde se consigna si el sector es público o privado es <code>control</code></p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(control) <span class="sc">|&gt;</span>    </span>
@@ -348,8 +385,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Voy a crearme variable <code>treatment</code> <strong>que valga 1 cuando sea sector público y 0 para el sector privado</strong></p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> ess<span class="sc">$</span>control</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ess<span class="sc">$</span>treatment <span class="ot">=</span> <span class="fu">ifelse</span>(ess<span class="sc">$</span>control <span class="sc">==</span> <span class="st">"1"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># también llamo outcome al salario neto</span></span>
@@ -360,8 +397,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="group-by">Group by</h3>
 <p>Lo más simple , hacemos un group by y calculamos medias</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
@@ -384,8 +421,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>En los microdatos tenemos la variable <code>factotal</code> que es la ponderación que el INE dice que hay que usar a la hora de hacer estimaciones.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treatment) <span class="sc">|&gt;</span>  </span>
@@ -405,22 +442,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Pero sabemos que la media tal cual puede no ser un buen indicador, lo suyo sería <em>controlar</em> (condicionar) por otras variables, tales como el sexo, nivel de estudio, edad, años de antigüedad , tipo de jornada laboral, y cosas así.</p>
 <p>Hagámoslo, pero usando que tenemos pesos en la encuesta.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>disenno <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span><span class="dv">1</span>, <span class="at">weight =</span> <span class="sc">~</span>factotal, <span class="at">data =</span> ess)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Modelo simple dónde uso variables como edad, tipo contrato, área nuts, antigüedad, nivel de estudios, etc..</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mod_simple <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_simple)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
@@ -516,8 +553,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Para eso podemos hacer lo que se conoce como una “intervención”, que es crear dos conjuntos de datos copias del original, con la diferencia de que en uno todo el mundo es del sector privado y en el otro todos del sector público y comparamos las medias estimadas de salario neto que nos da el modelo para el subgrupo de población que queramos.</p>
 <p>A esto se le conoce por los modernos como un <strong>S-learner</strong></p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ess_fake_publico  <span class="ot">&lt;-</span> ess  </span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -544,8 +581,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Y coincide con el coeficiente que daba el modelo. Y eso es así porque no he metido interacciones en el modelo. Si metemos una simple interacción entre ser del sector público y privado con la zona Nuts1.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(nuts1) <span class="sc">|&gt;</span>  </span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>()</span>
@@ -563,8 +600,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mod_inter_con_nuts <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span> treatment<span class="sc">*</span> nuts1 <span class="sc">+</span> sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon , <span class="at">design =</span> disenno)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_inter_con_nuts)</span>
@@ -665,8 +702,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Estimamos diferencias entre sector público y privado para Madrid y Andalucía, para un hombre a jornada completa y con estudios de licenciatura o superior.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>estim_publico_madrid <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_inter_con_nuts, <span class="at">newdata =</span> ess_fake_publico <span class="sc">|&gt;</span>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span> , nuts1 <span class="sc">==</span> <span class="st">"3"</span> ) )</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -705,8 +742,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Otro de los metalearners empleados es el T-learner, ya explicado en post anteriores. Aquí vamos a usarlo sin tener en cuenta la ponderación de la encuesta.</p>
 <p>En el T-learner se ajusta un modelo para cuando sea sector público y otro para cuando sea sector privado y se ve la diferencia de las medias de sus estimaciones.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>modpublico <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo  <span class="sc">+</span> anos2  <span class="sc">+</span>  estu <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>modprivado <span class="ot">&lt;-</span>  <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo <span class="sc">+</span>  anos2  <span class="sc">+</span>  estu  <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">0</span>, ])</span>
@@ -745,8 +782,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Ya expliqué en su día en que consiste un <a href="#x-learner">X-learner</a> (../2020/12/30/y-si-parte-ii/#x-learner)</p>
 <p>Básicamente, usas el modelo ajustado con treatment = 1 para predecir las observaciones con treatment = 0 y al revés en un intento de estimar el <em>potential outcome</em>. Luego haces dos modelos para modelar las diferencias entre el <em>outcome</em> y las predicciones anteriores y otro modelo de propensity score que se usará para ponderar esas dos predicciones.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(outcome <span class="sc">~</span> sexo   <span class="sc">+</span> anos2 <span class="sc">+</span>   estu <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess[ess<span class="sc">$</span>treatment<span class="sc">==</span><span class="dv">1</span>, ])</span>
@@ -810,35 +847,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>(x_learner <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
 <span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
-<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(combinado)) <span class="sc">|&gt;</span> </span>
 <span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
 <span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
-<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -228.745</span></span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 60.48103</span></span>
 <span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>(x_learner_madrid <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
 <span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1<span class="sc">==</span><span class="st">"3"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
-<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(combinado)) <span class="sc">|&gt;</span> </span>
 <span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
 <span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
-<span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -501.2355</span></span>
+<span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 67.52796</span></span>
 <span id="cb16-82"><a href="#cb16-82" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-83"><a href="#cb16-83" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-84"><a href="#cb16-84" aria-hidden="true" tabindex="-1"></a>(x_learner_sur <span class="ot">&lt;-</span> ess  <span class="sc">%&gt;%</span> </span>
 <span id="cb16-85"><a href="#cb16-85" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, nuts1<span class="sc">==</span><span class="st">"1"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-86"><a href="#cb16-86" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treatment)  <span class="sc">%&gt;%</span></span>
-<span id="cb16-87"><a href="#cb16-87" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(outcome)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-87"><a href="#cb16-87" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(combinado)) <span class="sc">|&gt;</span> </span>
 <span id="cb16-88"><a href="#cb16-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> treatment, <span class="at">values_from =</span> mean, <span class="at">names_prefix =</span> <span class="st">"mean_"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb16-89"><a href="#cb16-89" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb16-90"><a href="#cb16-90" aria-hidden="true" tabindex="-1"></a>    <span class="at">estim_xlearner =</span> mean_1 <span class="sc">-</span> mean_0) <span class="sc">|&gt;</span> </span>
 <span id="cb16-91"><a href="#cb16-91" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(estim_xlearner))</span>
-<span id="cb16-92"><a href="#cb16-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -55.67715</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-92"><a href="#cb16-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 42.39775</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -852,8 +889,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Este <em>Doubly robust estimator</em> es una combinación entre usar inverse probability weighting y el modelo de la media del outcome. Este estimador suele ser consistnete si al menos uno de los dos modelos es correcto. A la expresión coloreda en rojo se le denomina <em>augmented IPW estimator</em></p>
 <p>En código es bastante sencillo.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dr_estimator <span class="ot">&lt;-</span> <span class="cf">function</span>(data, prop_model, mean_model){</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(</span>
@@ -871,8 +908,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Y si usamos ese estimador tenemos</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>prop_model  <span class="ot">&lt;-</span> <span class="fu">glm</span>(treatment <span class="sc">~</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">data =</span> ess, <span class="at">family =</span> binomial)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>mean_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(outcome <span class="sc">~</span> treatment <span class="sc">+</span>  sexo <span class="sc">+</span> anos2<span class="sc">+</span> cnace <span class="sc">+</span> cno1 <span class="sc">+</span> estrato2 <span class="sc">+</span>  estu <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1 , <span class="at">data =</span> ess, <span class="at">family =</span> gaussian)</span>
@@ -1080,11 +1117,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="resumiendo" class="level2">
 <h2 class="anchored" data-anchor-id="resumiendo">Resumiendo</h2>
-<p>El S-learner usando ponderación de observaciones y el doubly robust estimator (sin usar ponderaciones) nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner y el x-learner nos dicen lo contrario.</p>
+<p>El S-learner usando ponderación de observaciones, el doubly robust y estimator (sin usar ponderaciones) y el x-learner nos dan estimaciones diciendo que se gana más en el sector público que en el privado, mientras que el t-learner nos dice lo contrario.</p>
 <p>Así que, no me queda claro la respueta a la pregunta inicial.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">s_learner_with_pond_madrid =</span> s_learner_with_pond_madrid,</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">s_learner_with_pond_sur =</span> s_learner_with_pond_sur,</span>
@@ -1102,8 +1139,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 s_learner_with_pond_sur     140. </span></span>
 <span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 t_learner_madrid           -296. </span></span>
 <span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 t_learner_sur              -159. </span></span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 x_learner_madrid           -501. </span></span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 x_learner_sur               -55.7</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 x_learner_madrid             67.5</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 x_learner_sur                42.4</span></span>
 <span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dre_estimator_madrid        168. </span></span>
 <span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 dre_estimator_sur           183.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -1120,8 +1157,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Es parecido al X-learner, pero sin tanta complicación. Es como decir ¿cuánto ganarían los que están en el sector público si estuvieran en el privado?</p>
 <p>Al hacerlo así hay que obviar en el modelo en la subpoblación para el sector privado, las variables de <code>cnace</code> y de <code>cno1</code> puesto que tienen niveles en el sector público que no están en el privado y el modelo daría error por niveles nuevos. Un modelo mixto si podría hacer eso.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mod_sector_privado <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(outcome <span class="sc">~</span>  sexo <span class="sc">+</span> anos2 <span class="sc">+</span>   estu  <span class="sc">+</span> estrato2  <span class="sc">+</span> tipojor  <span class="sc">+</span> anoanti <span class="sc">+</span> mesanti <span class="sc">+</span> tipocon  <span class="sc">+</span> nuts1, <span class="at">design =</span> disenno, <span class="at">subset =</span> treatment <span class="sc">==</span> <span class="dv">0</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1156,8 +1193,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Una de las hipótesis es que en el sector privado la distribución es más dispersa.</p>
 <p>Todo esto debería haberse hecho antes que todos los modelos. <strong>EL EDA es lo primero</strong>.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En general parece que no </span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
@@ -1166,9 +1203,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
+<div>
 <figure class="figure">
-<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
@@ -1176,8 +1213,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Pero y si la vemos, para los licenciados, hombres y a jornada completa.</p>
 <p>En la comunidad de Madrid y en Canarias si se aprecia que en la cola de la derecha es superior la función de densidad en el sector privado.</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span> </span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>) <span class="sc">|&gt;</span></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">nuts1 =</span> <span class="fu">as_factor</span>(nuts1)) <span class="sc">|&gt;</span></span>
@@ -1186,9 +1223,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> nuts1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
+<div>
 <figure class="figure">
-<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
@@ -1196,8 +1233,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Y si lo vemos para un par de ocupaciones, tales como Directores y gerentes (A0) y para técnicos y profesionales científicos e intelectuales de la salud y la enseñanza(B0).</p>
 <p>Gerentes (A0) mejor en el privado, curritos de la enseñanza y la salud pues..</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(tipojor <span class="sc">==</span> <span class="st">"1"</span>, estu <span class="sc">==</span> <span class="st">"7"</span>, sexo <span class="sc">==</span> <span class="st">"1"</span>, cno1 <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"A0"</span>, <span class="st">"B0"</span>)) <span class="sc">|&gt;</span></span>
@@ -1207,17 +1244,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
+<div>
 <figure class="figure">
-<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Y si usamos el primer modelo que vimos</p>
 <div class="cell">
-<details open="">
-<summary>Code</summary>
+<details open="" class="code-fold">
+<summary>Mostrar / ocultar código</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ess <span class="sc">|&gt;</span></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">estim =</span> <span class="fu">predict</span>(mod_sector_privado, ess)) <span class="sc">|&gt;</span> </span>
@@ -1228,9 +1265,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>( nuts1 <span class="sc">~</span> cno1)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
+<div>
 <figure class="figure">
-<p><a href="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" style="width:80.0%"></a></p>
+<p><img src="y-si-parte-iii_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
@@ -1246,6 +1283,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>He obviado variables que podrían influir tanto en la variable respuesta como en el tratamiento (sector público o privado), pero estos son datos reales, no una simulación ad hoc, y en el mundo real tienes que tomar decisiones y apechugar con ellas.</li>
 <li>Para escribir este post lo he hecho con Rstudio y con el github copilot activado y la verdad es que ayuda bastante, incluso a completar las fórmulas en latex.</li>
 </ul>
+</section>
+<section id="corrección" class="level2">
+<h2 class="anchored" data-anchor-id="corrección">Corrección</h2>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+corrección 2024-10-12
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Preparando taller de inferencia causal estaba repasando este post y he visto que tenía un error en el x-learner. Corregido.</p>
+</div>
+</div>
 
 
 </section>
@@ -1271,6 +1324,150 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
   const icon = "";
   const anchorJS = new window.AnchorJS();
   anchorJS.options = {
@@ -1330,10 +1527,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     // clear code selection
     e.clearSelection();
   });
-  function tippyHover(el, contentFn) {
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/muestrear-no-es-pecado\.netlify\.app\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -1343,8 +1557,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -1356,7 +1579,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -1400,6 +1746,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -1425,6 +1772,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1486,8 +1859,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
 </script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","selector":".lightbox","closeEffect":"zoom","openEffect":"zoom","loop":true});</script>
+
 
 
 
