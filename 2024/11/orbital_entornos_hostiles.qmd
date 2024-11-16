@@ -1,0 +1,321 @@
+---
+title: "Orbital.¿Ayuda en entornos hostiles?"  
+date: '2024-11-16'
+categories: 
+  - 2024
+  - tidymodels
+  - sql
+  - machine learning
+  - R
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    comment: "#>"
+image: 'pendiente.png'
+---
+
+::: callout-note
+## Listening
+
+'TODO
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1ZLtE9tSJdaUiIJ9YoKHQe?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+
+:::
+
+
+## Introducción
+
+No es raro encontrarse en entornos hostiles. Los que usamos R lo sabemos bien, es una batalla
+constante, que en gran parte tiene que ver con esl desconocimiento y otras con la maldad. 
+
+
+## Hacer cosas en la BD. 
+
+Desde los tiempos de PL/SQL anda por ahi el runrun de hacer cosas en la BD.  El caso típico es hacer
+las transformaciones de filtrado, selección, creación de columnas y joins que hacemos en lenguajes
+como R, pero en la base de datos. Esto hace ya tiempo qu está solucionando gracias a cosas como
+`dbplyr` y similar. De hecho, la filosofía de hazlo con una sintaxis sencilla en el frontend pero
+que el backend pueda cambiar se ha exportado de R a otras tecnologías, esa eRgonomía se ve por
+ejemplo en `ibis` o `polars`. 
+
+Otro caso más complicado es el de tener un modelo que se ha ajustado previamente y queremos usarlo
+para obtener predicciones. En estos casos salvo que estemos en cosas como spark y similar lo que se
+suele hacer es bajar los datos de la BD, usar el modelo, obtener predicciones y subir los resultados 
+a la BD. A veces es un proceso batch o un docker o similar, pero básicamente es eso. 
+
+Se me olvidaba que en caso de ser un modelo simple de regresión o regresión logística siempre puede
+uno escribir la función obtenida en forma de `sql` y tirar millas. Pero en otro tipo de modelos es
+un poco más complejo. 
+
+En las [jornadas de R en Sevilla](https://www.imus.us.es/congresos/IIIRqueR/) que acaban de
+terminar, Hannah Frick de Posit nos contó lo [nuevo de tidymodels](https://hfrick.github.io/2024-3RqueR/#/title-slide) 
+y aquí es dónde entran un par de librerías, `tidypredict` y `orbital`, la primera permite "traducir"
+la función de predict de  un modelo a `sql`  y la segunda traduce todo el `workflow`
+
+
+## Hagamos la prueba
+
+Vamos a usar el ejemplo que tienen en la docu con `mtcars`
+
+```{r}
+library(tidymodels)
+library(vip)
+library(bigrquery)
+library(DBI)
+library(dbplyr)
+# remotes::install_github("tidymodels/orbital")
+library(orbital)
+
+
+
+```
+
+Como BD voy a usar `bigquery`, utilizo 
+
+```{r}
+# tengo variables de entorno con mi mail y el proyecto de bq personal
+bq_auth(email = Sys.getenv("MIGMAIL")) 
+mi_proyecto <- Sys.getenv("BQ_PROJECT_JLCR")
+sc <- src_bigquery(mi_proyecto, dataset = NULL,  max_pages = 10)
+
+
+```
+
+Comprobamos que ha ido bien y que puedo ver una tabla que tengo ahí de prueba
+
+```{r}
+tabla1  <-  sc  %>% tbl(I("churn2.tabla_churn"))
+tabla1  %>% head()
+```
+
+Ahora subo una parte de mtcars a bigquery
+
+
+```{r}
+test <- mtcars[25:32, ]
+```
+
+```{r, eval=FALSE}
+
+# creamos la tabla en bigquery en miproyecto.dataset.tbname
+
+# # borro si ya existia 
+# mtcars_test_db_prev <- bq_table(mi_proyecto, "churn2", "test")
+# bq_table_delete(mtcars_test_db_prev)
+
+# creo la tabla de nuevo
+mtcars_test_db <- bq_table(mi_proyecto, "churn2", "test")
+
+# subo datos a esa tabla
+bq_table_upload(mtcars_test_db, test)
+```
+
+
+```{r}
+# compruebo qeue se ha subido
+mtcars_bq  <- sc  |> tbl(I("churn2.test"))
+
+mtcars_bq
+
+```
+
+## Entrenamos un modelo con tidymodels
+
+Entreno un modelo simple con tidymodels, el entrenamiento se hace sobre data.frame normal de R
+
+
+```{r}
+train <- mtcars[1:24,]
+
+# preproceso
+rec_spec <- recipe(mpg ~ ., data = train) |> 
+  step_normalize(all_numeric_predictors())
+
+# instancio un modelo linear simple
+
+lm_spec <- linear_reg(mode = "regression", engine = "lm")
+# flujo que uno prepdocesamiento y modelo
+wf_linear <- workflow() |> 
+  add_recipe(rec_spec)  |> 
+  add_model(lm_spec)
+
+
+
+
+# Ajusto el workflow sobre datos de train
+wf_fit <- fit(wf_linear, train)
+
+wf_fit
+
+wf_fit %>% 
+  extract_fit_parsnip() %>% 
+  vip(num_features = 3)
+
+```
+
+vemos predicciones sobre test 
+
+```{r}
+
+prediciones <-  predict(wf_fit, test)
+test_with_pred <-  test |> 
+    mutate(
+        pred = prediciones$.pred
+    )
+test_with_pred |> 
+    select(mpg, pred, everything())
+```
+
+## Uso de orbital
+
+Con orbital podemos utilizar el  `workflow` de tidymodels y que el preprocesamiento y la predicción se haga en la base de datos, gracias al uso de la librería `tidypredict`
+
+
+```{r}
+# Nota. no se puede usar ccomo nombre de columna en bigquery algo
+# que empiece por "." Les puse un issue  alos de orbital y lo arreglaron, 
+# pero el fix es en la versión latest, instalr con 
+#  remotes::install_github("tidymodels/orbital")
+
+orbital_lm_wf  <- orbital(wf_fit, prefix = "prediction")
+
+# lo aplicamos a la tabla en bigquery
+
+predict(orbital_lm_wf, mtcars_bq)
+
+
+```
+Podemos ver el código `sql` por si queremos utilizarlo en un entorno hostil dónde sólo podamos ejecutar cosas con sql
+
+
+```{r}
+# Este sería el código en dplyr que se manda a bigquery 
+pred_query  <- mtcars_bq  |> 
+    mutate(!!!orbital_inline(orbital_lm_wf)) |> 
+    select(mpg, prediction, everything())
+
+# vemos el código sql 
+sql_render(pred_query)
+```
+
+
+Podemos escribir la query en un fichero 
+
+```{r}
+write(sql_render(pred_query), "mpg_lm.sql")
+
+```
+
+
+```{r}
+
+cat(readLines("mpg_lm.sql"), sep = "\n")
+
+```
+
+
+## Un modelo un poco más complejo
+
+Lo típico es que se usen modelo algo más complejos. 
+
+```{r}
+rec_spec <- recipe(mpg ~ ., data = train) %>%
+  step_normalize(all_numeric_predictors())
+
+xgb_spec <- boost_tree(
+  trees = 10,
+  tree_depth = 3, min_n = 2,
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+
+
+
+xgb_wf <- workflow() %>%
+  add_recipe(rec_spec)  |> 
+  add_model(xgb_spec)
+
+
+
+xgb_fit <- fit(xgb_wf, mtcars)
+```
+
+
+
+
+
+```{r}
+orbital_xgb  <- orbital(xgb_fit, prefix = "prediction")
+
+```
+
+podemos predecir en la bd
+
+investigar a ver como lo ha convertido a sql
+
+```{r}
+# Este sería el código en dplyr que se manda a bigquery 
+pred_query_xgb  <- mtcars_bq  |> 
+    mutate(!!!orbital_inline(orbital_xgb)) |> 
+    select(mpg, prediction, everything()) |> 
+    arrange(mpg)
+
+pred_query_xgb
+```
+
+
+Y vemos que concuerda con la predicción en en local
+
+
+```{r}
+pred_xgb_local <-  predict(xgb_fit, test)
+test |> 
+    mutate(pred_xgb = pred_xgb_local$.pred) |> 
+    arrange(mpg) |> 
+    select(mpg, pred_xgb)
+
+```
+
+
+Podemos escribir la query en un fichero, que sería la query que iría a producción
+
+```{r}
+write(sql_render(pred_query_xgb), "mpg_xgb.sql")
+
+```
+
+
+```{r}
+
+cat(readLines("mpg_xgb.sql"), sep = "\n")
+
+```
+
+## Conclusión
+
+La librería orbital permite pasar un preprocesamiento y  modelos complejos de tidymodels a sentencias sql que se pueden usar en entornos hostiles y productivizar sin necesidad de tener instalado R, ni docker, ni nada. 
+Evidentemente esto va a generar unas queries que pueden llegar a ser infernales, pero cuando no tienes otra opción 
+esta puede ser tan buena como otra. 
+
+
+

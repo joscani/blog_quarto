@@ -10,7 +10,1296 @@
 <atom:link href="https://muestrear-no-es-pecado.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.4.552</generator>
-<lastBuildDate>Wed, 18 Sep 2024 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 15 Nov 2024 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Orbital.¿Ayuda en entornos hostiles?</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado.netlify.app/2024/11/orbital_entornos_hostiles.html</link>
+  <description><![CDATA[ <div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Listening
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>’TODO</p>
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1ZLtE9tSJdaUiIJ9YoKHQe?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<section id="introducción" class="level2"><h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
+<p>No es raro encontrarse en entornos hostiles. Los que usamos R lo sabemos bien, es una batalla constante, que en gran parte tiene que ver con esl desconocimiento y otras con la maldad.</p>
+</section><section id="hacer-cosas-en-la-bd." class="level2"><h2 class="anchored" data-anchor-id="hacer-cosas-en-la-bd.">Hacer cosas en la BD.</h2>
+<p>Desde los tiempos de PL/SQL anda por ahi el runrun de hacer cosas en la BD. El caso típico es hacer las transformaciones de filtrado, selección, creación de columnas y joins que hacemos en lenguajes como R, pero en la base de datos. Esto hace ya tiempo qu está solucionando gracias a cosas como <code>dbplyr</code> y similar. De hecho, la filosofía de hazlo con una sintaxis sencilla en el frontend pero que el backend pueda cambiar se ha exportado de R a otras tecnologías, esa eRgonomía se ve por ejemplo en <code>ibis</code> o <code>polars</code>.</p>
+<p>Otro caso más complicado es el de tener un modelo que se ha ajustado previamente y queremos usarlo para obtener predicciones. En estos casos salvo que estemos en cosas como spark y similar lo que se suele hacer es bajar los datos de la BD, usar el modelo, obtener predicciones y subir los resultados a la BD. A veces es un proceso batch o un docker o similar, pero básicamente es eso.</p>
+<p>Se me olvidaba que en caso de ser un modelo simple de regresión o regresión logística siempre puede uno escribir la función obtenida en forma de <code>sql</code> y tirar millas. Pero en otro tipo de modelos es un poco más complejo.</p>
+<p>En las <a href="https://www.imus.us.es/congresos/IIIRqueR/">jornadas de R en Sevilla</a> que acaban de terminar, Hannah Frick de Posit nos contó lo <a href="https://hfrick.github.io/2024-3RqueR/#/title-slide">nuevo de tidymodels</a> y aquí es dónde entran un par de librerías, <code>tidypredict</code> y <code>orbital</code>, la primera permite “traducir” la función de predict de un modelo a <code>sql</code> y la segunda traduce todo el <code>workflow</code></p>
+</section><section id="hagamos-la-prueba" class="level2"><h2 class="anchored" data-anchor-id="hagamos-la-prueba">Hagamos la prueba</h2>
+<p>Vamos a usar el ejemplo que tienen en la docu con <code>mtcars</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://tidymodels.tidymodels.org">tidymodels</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://github.com/koalaverse/vip/">vip</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://bigrquery.r-dbi.org">bigrquery</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://dbi.r-dbi.org">DBI</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://dbplyr.tidyverse.org/">dbplyr</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># remotes::install_github("tidymodels/orbital")</span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://github.com/tidymodels/orbital">orbital</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<p>Como BD voy a usar <code>bigquery</code>, utilizo</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># tengo variables de entorno con mi mail y el proyecto de bq personal</span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://bigrquery.r-dbi.org/reference/bq_auth.html">bq_auth</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span>email <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"MIGMAIL"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> </span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mi_proyecto</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"BQ_PROJECT_JLCR"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">sc</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://bigrquery.r-dbi.org/reference/src_bigquery.html">src_bigquery</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mi_proyecto</span>, dataset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">NULL</span>,  max_pages <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<p>Comprobamos que ha ido bien y que puedo ver una tabla que tengo ahí de prueba</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">tabla1</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">sc</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tbl</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"churn2.tabla_churn"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">tabla1</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # Source:   SQL [6 x 21]
+#&gt; # Database: BigQueryConnection
+#&gt;   customerID gender SeniorCitizen Partner Dependents tenure PhoneService
+#&gt;   &lt;chr&gt;      &lt;chr&gt;          &lt;int&gt; &lt;lgl&gt;   &lt;lgl&gt;       &lt;int&gt; &lt;lgl&gt;       
+#&gt; 1 9732-OUYRN Female             0 TRUE    FALSE          49 TRUE        
+#&gt; 2 0661-KQHNK Female             0 TRUE    TRUE            6 TRUE        
+#&gt; 3 4709-LKHYG Female             0 TRUE    TRUE           29 TRUE        
+#&gt; 4 9824-QCJPK Male               0 TRUE    FALSE          36 TRUE        
+#&gt; 5 4716-MRVEN Female             0 FALSE   FALSE          29 TRUE        
+#&gt; 6 8084-OIVBS Female             0 FALSE   FALSE          11 TRUE        
+#&gt; # ℹ 14 more variables: MultipleLines &lt;chr&gt;, InternetService &lt;chr&gt;,
+#&gt; #   OnlineSecurity &lt;chr&gt;, OnlineBackup &lt;chr&gt;, DeviceProtection &lt;chr&gt;,
+#&gt; #   TechSupport &lt;chr&gt;, StreamingTV &lt;chr&gt;, StreamingMovies &lt;chr&gt;,
+#&gt; #   Contract &lt;chr&gt;, PaperlessBilling &lt;lgl&gt;, PaymentMethod &lt;chr&gt;,
+#&gt; #   MonthlyCharges &lt;dbl&gt;, TotalCharges &lt;chr&gt;, Churn &lt;lgl&gt;</code></pre>
+</div>
+</div>
+<p>Ahora subo una parte de mtcars a bigquery</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">32</span>, <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">]</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># creamos la tabla en bigquery en miproyecto.dataset.tbname</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># # borro si ya existia </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># mtcars_test_db_prev &lt;- bq_table(mi_proyecto, "churn2", "test")</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># bq_table_delete(mtcars_test_db_prev)</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># creo la tabla de nuevo</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_test_db</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://bigrquery.r-dbi.org/reference/bq_refs.html">bq_table</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mi_proyecto</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"churn2"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"test"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># subo datos a esa tabla</span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://bigrquery.r-dbi.org/reference/api-table.html">bq_table_upload</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_test_db</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># compruebo qeue se ha subido</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_bq</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">sc</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tbl</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"churn2.test"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_bq</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # Source:   table&lt;churn2.test&gt; [8 x 11]
+#&gt; # Database: BigQueryConnection
+#&gt;      am  carb    vs  qsec    wt  drat  disp    hp   cyl  gear   mpg
+#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+#&gt; 1     0     2     0  17.0  3.84  3.08 400     175     8     3  19.2
+#&gt; 2     1     2     0  16.7  2.14  4.43 120.     91     4     5  26  
+#&gt; 3     1     4     0  14.5  3.17  4.22 351     264     8     5  15.8
+#&gt; 4     1     6     0  15.5  2.77  3.62 145     175     6     5  19.7
+#&gt; 5     1     8     0  14.6  3.57  3.54 301     335     8     5  15  
+#&gt; 6     1     1     1  18.9  1.94  4.08  79      66     4     4  27.3
+#&gt; 7     1     2     1  16.9  1.51  3.77  95.1   113     4     5  30.4
+#&gt; 8     1     2     1  18.6  2.78  4.11 121     109     4     4  21.4</code></pre>
+</div>
+</div>
+</section><section id="entrenamos-un-modelo-con-tidymodels" class="level2"><h2 class="anchored" data-anchor-id="entrenamos-un-modelo-con-tidymodels">Entrenamos un modelo con tidymodels</h2>
+<p>Entreno un modelo simple con tidymodels, el entrenamiento se hace sobre data.frame normal de R</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">train</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">24</span>,<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># preproceso</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rec_spec</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">recipe</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">.</span>, data <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">train</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">step_normalize</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">all_numeric_predictors</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># instancio un modelo linear simple</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">lm_spec</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">linear_reg</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span>mode <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"regression"</span>, engine <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"lm"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># flujo que uno prepdocesamiento y modelo</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_linear</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">workflow</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">add_recipe</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rec_spec</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">add_model</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">lm_spec</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Ajusto el workflow sobre datos de train</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_fit</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">fit</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_linear</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">train</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_fit</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; ══ Workflow [trained] ══════════════════════════════════════════════════════════
+#&gt; Preprocessor: Recipe
+#&gt; Model: linear_reg()
+#&gt; 
+#&gt; ── Preprocessor ────────────────────────────────────────────────────────────────
+#&gt; 1 Recipe Step
+#&gt; 
+#&gt; • step_normalize()
+#&gt; 
+#&gt; ── Model ───────────────────────────────────────────────────────────────────────
+#&gt; 
+#&gt; Call:
+#&gt; stats::lm(formula = ..y ~ ., data = data)
+#&gt; 
+#&gt; Coefficients:
+#&gt; (Intercept)          cyl         disp           hp         drat           wt  
+#&gt;    19.50417      1.70021     -0.50385     -0.39324      2.68970     -0.39831  
+#&gt;        qsec           vs           am         gear         carb  
+#&gt;     0.98482      0.06173      1.43663      0.86633     -2.76451</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_fit</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">extract_fit_parsnip</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://koalaverse.github.io/vip/reference/vip.html">vip</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span>num_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="https://muestrear-no-es-pecado.netlify.app/2024/11/orbital_entornos_hostiles_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>vemos predicciones sobre test</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">prediciones</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_fit</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test_with_pred</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span></span>
+<span>        pred <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">prediciones</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">.pred</span></span>
+<span>    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test_with_pred</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">select</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">everything</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt;                   mpg     pred cyl  disp  hp drat    wt  qsec vs am gear carb
+#&gt; Pontiac Firebird 19.2 17.02483   8 400.0 175 3.08 3.845 17.05  0  0    3    2
+#&gt; Fiat X1-9        27.3 29.26171   4  79.0  66 4.08 1.935 18.90  1  1    4    1
+#&gt; Porsche 914-2    26.0 28.64553   4 120.3  91 4.43 2.140 16.70  0  1    5    2
+#&gt; Lotus Europa     30.4 25.83187   4  95.1 113 3.77 1.513 16.90  1  1    5    2
+#&gt; Ford Pantera L   15.8 23.27644   8 351.0 264 4.22 3.170 14.50  0  1    5    4
+#&gt; Ferrari Dino     19.7 16.08932   6 145.0 175 3.62 2.770 15.50  0  1    5    6
+#&gt; Maserati Bora    15.0 10.66091   8 301.0 335 3.54 3.570 14.60  0  1    5    8
+#&gt; Volvo 142E       21.4 26.21461   4 121.0 109 4.11 2.780 18.60  1  1    4    2</code></pre>
+</div>
+</div>
+</section><section id="uso-de-orbital" class="level2"><h2 class="anchored" data-anchor-id="uso-de-orbital">Uso de orbital</h2>
+<p>Con orbital podemos utilizar el <code>workflow</code> de tidymodels y que el preprocesamiento y la predicción se haga en la base de datos, gracias al uso de la librería <code>tidypredict</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Nota. no se puede usar ccomo nombre de columna en bigquery algo</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># que empiece por "." Les puse un issue  alos de orbital y lo arreglaron, </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pero el fix es en la versión latest, instalr con </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#  remotes::install_github("tidymodels/orbital")</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">orbital_lm_wf</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://orbital.tidymodels.org/reference/orbital.html">orbital</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">wf_fit</span>, prefix <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prediction"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># lo aplicamos a la tabla en bigquery</span></span>
+<span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">orbital_lm_wf</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_bq</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # Source:   SQL [8 x 1]
+#&gt; # Database: BigQueryConnection
+#&gt;   prediction
+#&gt;        &lt;dbl&gt;
+#&gt; 1       17.0
+#&gt; 2       28.6
+#&gt; 3       23.3
+#&gt; 4       16.1
+#&gt; 5       10.7
+#&gt; 6       29.3
+#&gt; 7       25.8
+#&gt; 8       26.2</code></pre>
+</div>
+</div>
+<p>Podemos ver el código <code>sql</code> por si queremos utilizarlo en un entorno hostil dónde sólo podamos ejecutar cosas con sql</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Este sería el código en dplyr que se manda a bigquery </span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_bq</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://orbital.tidymodels.org/reference/orbital_inline.html">orbital_inline</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">orbital_lm_wf</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">select</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">prediction</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">everything</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># vemos el código sql </span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://dbplyr.tidyverse.org/reference/sql_build.html">sql_render</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; &lt;SQL&gt; SELECT
+#&gt;   `mpg`,
+#&gt;   (((((((((19.5041666666667 + (`cyl` * 1.70020928104393)) + (`disp` * -0.503852370218672)) + (`hp` * -0.39323963869249)) + (`drat` * 2.68969716287516)) + (`wt` * -0.398305964689505)) + (`qsec` * 0.984815350290373)) + (`vs` * 0.0617323594407886)) + (`am` * 1.43662793743514)) + (`gear` * 0.86633019389466)) + (`carb` * -2.76451303896608) AS `prediction`,
+#&gt;   `am`,
+#&gt;   `carb`,
+#&gt;   `vs`,
+#&gt;   `qsec`,
+#&gt;   `wt`,
+#&gt;   `drat`,
+#&gt;   `disp`,
+#&gt;   `hp`,
+#&gt;   `cyl`,
+#&gt;   `gear`
+#&gt; FROM (
+#&gt;   SELECT
+#&gt;     (`am` - 0.25) / 0.442325868464691 AS `am`,
+#&gt;     (`carb` - 2.625) / 1.24455335099716 AS `carb`,
+#&gt;     (`vs` - 0.458333333333333) / 0.508977377704051 AS `vs`,
+#&gt;     (`qsec` - 18.2670833333333) / 1.65471258286267 AS `qsec`,
+#&gt;     (`wt` - 3.38454166666667) / 0.986562234056558 AS `wt`,
+#&gt;     (`drat` - 3.51) / 0.543787042716252 AS `drat`,
+#&gt;     (`disp` - 240.445833333333) / 123.862055035173 AS `disp`,
+#&gt;     (`hp` - 140.25) / 59.6141579332205 AS `hp`,
+#&gt;     (`cyl` - 6.33333333333333) / 1.73622946456486 AS `cyl`,
+#&gt;     (`gear` - 3.41666666666667) / 0.503610155185335 AS `gear`,
+#&gt;     `mpg`
+#&gt;   FROM churn2.test
+#&gt; ) `q01`</code></pre>
+</div>
+</div>
+<p>Podemos escribir la query en un fichero</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/write.html">write</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://dbplyr.tidyverse.org/reference/sql_build.html">sql_render</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mpg_lm.sql"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mpg_lm.sql"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>, sep <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"\n"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; SELECT
+#&gt;   `mpg`,
+#&gt;   (((((((((19.5041666666667 + (`cyl` * 1.70020928104393)) + (`disp` * -0.503852370218672)) + (`hp` * -0.39323963869249)) + (`drat` * 2.68969716287516)) + (`wt` * -0.398305964689505)) + (`qsec` * 0.984815350290373)) + (`vs` * 0.0617323594407886)) + (`am` * 1.43662793743514)) + (`gear` * 0.86633019389466)) + (`carb` * -2.76451303896608) AS `prediction`,
+#&gt;   `am`,
+#&gt;   `carb`,
+#&gt;   `vs`,
+#&gt;   `qsec`,
+#&gt;   `wt`,
+#&gt;   `drat`,
+#&gt;   `disp`,
+#&gt;   `hp`,
+#&gt;   `cyl`,
+#&gt;   `gear`
+#&gt; FROM (
+#&gt;   SELECT
+#&gt;     (`am` - 0.25) / 0.442325868464691 AS `am`,
+#&gt;     (`carb` - 2.625) / 1.24455335099716 AS `carb`,
+#&gt;     (`vs` - 0.458333333333333) / 0.508977377704051 AS `vs`,
+#&gt;     (`qsec` - 18.2670833333333) / 1.65471258286267 AS `qsec`,
+#&gt;     (`wt` - 3.38454166666667) / 0.986562234056558 AS `wt`,
+#&gt;     (`drat` - 3.51) / 0.543787042716252 AS `drat`,
+#&gt;     (`disp` - 240.445833333333) / 123.862055035173 AS `disp`,
+#&gt;     (`hp` - 140.25) / 59.6141579332205 AS `hp`,
+#&gt;     (`cyl` - 6.33333333333333) / 1.73622946456486 AS `cyl`,
+#&gt;     (`gear` - 3.41666666666667) / 0.503610155185335 AS `gear`,
+#&gt;     `mpg`
+#&gt;   FROM churn2.test
+#&gt; ) `q01`</code></pre>
+</div>
+</div>
+</section><section id="un-modelo-un-poco-más-complejo" class="level2"><h2 class="anchored" data-anchor-id="un-modelo-un-poco-más-complejo">Un modelo un poco más complejo</h2>
+<p>Lo típico es que se usen modelo algo más complejos.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rec_spec</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">recipe</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">~</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">.</span>, data <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">train</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">step_normalize</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">all_numeric_predictors</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_spec</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">boost_tree</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span></span>
+<span>  trees <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>,</span>
+<span>  tree_depth <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>, min_n <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">set_engine</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"xgboost"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">set_mode</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"regression"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_wf</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">workflow</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">add_recipe</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rec_spec</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">add_model</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_spec</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_fit</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">fit</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_wf</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">orbital_xgb</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://orbital.tidymodels.org/reference/orbital.html">orbital</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_fit</span>, prefix <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prediction"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<p>podemos predecir en la bd</p>
+<p>investigar a ver como lo ha convertido a sql</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Este sería el código en dplyr que se manda a bigquery </span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query_xgb</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mtcars_bq</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://orbital.tidymodels.org/reference/orbital_inline.html">orbital_inline</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">orbital_xgb</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">select</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">prediction</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">everything</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">arrange</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query_xgb</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # Source:     SQL [8 x 12]
+#&gt; # Database:   BigQueryConnection
+#&gt; # Ordered by: mpg
+#&gt;     mpg prediction    am  carb    vs   qsec      wt    drat   disp     hp    cyl
+#&gt;   &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1  15         14.2     1     8     0 -1.82   0.361  -0.106   0.567  2.75   1.01 
+#&gt; 2  15.8       15.1     1     4     0 -1.87  -0.0483  1.17    0.970  1.71   1.01 
+#&gt; 3  19.2       16.5     0     2     0 -0.447  0.642  -0.966   1.37   0.413  1.01 
+#&gt; 4  19.7       19.8     1     6     0 -1.31  -0.457   0.0438 -0.692  0.413 -0.105
+#&gt; 5  21.4       21.4     1     2     1  0.420 -0.447   0.960  -0.885 -0.550 -1.22 
+#&gt; 6  26         25.0     1     2     0 -0.643 -1.10    1.56   -0.891 -0.812 -1.22 
+#&gt; 7  27.3       27.5     1     1     1  0.588 -1.31    0.904  -1.22  -1.18  -1.22 
+#&gt; 8  30.4       28.1     1     2     1 -0.531 -1.74    0.324  -1.09  -0.491 -1.22 
+#&gt; # ℹ 1 more variable: gear &lt;int&gt;</code></pre>
+</div>
+</div>
+<p>Y vemos que concuerda con la predicción en en local</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_xgb_local</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">xgb_fit</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">test</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mutate</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span>pred_xgb <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_xgb_local</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">.pred</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">arrange</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|&gt;</span> </span>
+<span>    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">select</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mpg</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_xgb</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt;                   mpg pred_xgb
+#&gt; Maserati Bora    15.0 14.22048
+#&gt; Ford Pantera L   15.8 15.09601
+#&gt; Pontiac Firebird 19.2 16.46817
+#&gt; Ferrari Dino     19.7 19.79652
+#&gt; Volvo 142E       21.4 21.38598
+#&gt; Porsche 914-2    26.0 25.04269
+#&gt; Fiat X1-9        27.3 27.46302
+#&gt; Lotus Europa     30.4 28.06620</code></pre>
+</div>
+</div>
+<p>Podemos escribir la query en un fichero, que sería la query que iría a producción</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/write.html">write</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://dbplyr.tidyverse.org/reference/sql_build.html">sql_render</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pred_query_xgb</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mpg_xgb.sql"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mpg_xgb.sql"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>, sep <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"\n"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>#&gt; SELECT
+#&gt;   `mpg`,
+#&gt;   ((((((((((0.0 + CASE
+#&gt; WHEN ((`cyl` &lt; 0.454947203 OR (`cyl` IS NULL))) THEN 6.67105246
+#&gt; WHEN (`cyl` &gt;= 0.454947203) THEN 4.0880003
+#&gt; END) + CASE
+#&gt; WHEN ((`cyl` &lt; -0.664922833 OR (`cyl` IS NULL))) THEN 5.36046076
+#&gt; WHEN ((`disp` &lt; 1.7692467 OR (`disp` IS NULL)) AND `cyl` &gt;= -0.664922833) THEN 3.35319948
+#&gt; WHEN (`disp` &gt;= 1.7692467 AND `cyl` &gt;= -0.664922833) THEN 1.16239989
+#&gt; END) + CASE
+#&gt; WHEN ((`wt` &lt; -0.978325605 OR (`wt` IS NULL))) THEN 4.5090394
+#&gt; WHEN ((`disp` &lt; 1.7692467 OR (`disp` IS NULL)) AND `wt` &gt;= -0.978325605) THEN 2.52093935
+#&gt; WHEN (`disp` &gt;= 1.7692467 AND `wt` &gt;= -0.978325605) THEN 0.929919958
+#&gt; END) + CASE
+#&gt; WHEN ((`wt` &lt; -0.978325605 OR (`wt` IS NULL))) THEN 3.34957242
+#&gt; WHEN ((`hp` &lt; 0.668182373 OR (`hp` IS NULL)) AND `wt` &gt;= -0.978325605) THEN 1.93179655
+#&gt; WHEN (`hp` &gt;= 0.668182373 AND `wt` &gt;= -0.978325605) THEN 1.05857491
+#&gt; END) + CASE
+#&gt; WHEN ((`disp` &lt; -1.04222393 OR (`disp` IS NULL))) THEN 2.62246895
+#&gt; WHEN ((`hp` &lt; 0.668182373 OR (`hp` IS NULL)) AND `disp` &gt;= -1.04222393) THEN 1.39560235
+#&gt; WHEN (`hp` &gt;= 0.668182373 AND `disp` &gt;= -1.04222393) THEN 0.780699074
+#&gt; END) + CASE
+#&gt; WHEN (`wt` &gt;= 0.110122316) THEN 0.68489337
+#&gt; WHEN ((`disp` &lt; -1.04222393 OR (`disp` IS NULL)) AND (`wt` &lt; 0.110122316 OR (`wt` IS NULL))) THEN 1.96685159
+#&gt; WHEN (`disp` &gt;= -1.04222393 AND (`wt` &lt; 0.110122316 OR (`wt` IS NULL))) THEN 1.15808082
+#&gt; END) + CASE
+#&gt; WHEN ((`disp` &lt; -1.04222393 OR (`disp` IS NULL))) THEN 1.47513843
+#&gt; WHEN ((`wt` &lt; 0.110122316 OR (`wt` IS NULL)) AND `disp` &gt;= -1.04222393) THEN 0.83960855
+#&gt; WHEN ((`qsec` &lt; -0.0776465684 OR (`qsec` IS NULL)) AND `wt` &gt;= 0.110122316 AND `disp` &gt;= -1.04222393) THEN 0.567495942
+#&gt; WHEN (`qsec` &gt;= -0.0776465684 AND `wt` &gt;= 0.110122316 AND `disp` &gt;= -1.04222393) THEN 0.301891834
+#&gt; END) + CASE
+#&gt; WHEN ((`disp` &lt; -1.22537899 OR (`disp` IS NULL))) THEN 1.30021882
+#&gt; WHEN ((`drat` &lt; -1.26536262 OR (`drat` IS NULL)) AND (`hp` &lt; 0.449405074 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.119869716
+#&gt; WHEN (`drat` &gt;= -1.26536262 AND (`hp` &lt; 0.449405074 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.631567359
+#&gt; WHEN ((`wt` &lt; 0.549589574 OR (`wt` IS NULL)) AND `hp` &gt;= 0.449405074 AND `disp` &gt;= -1.22537899) THEN 0.35708189
+#&gt; WHEN (`wt` &gt;= 0.549589574 AND `hp` &gt;= 0.449405074 AND `disp` &gt;= -1.22537899) THEN 0.191202134
+#&gt; END) + CASE
+#&gt; WHEN ((`disp` &lt; -1.22537899 OR (`disp` IS NULL))) THEN 1.00766969
+#&gt; WHEN ((`qsec` &lt; -0.377040505 OR (`qsec` IS NULL)) AND (`hp` &lt; 0.668182373 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.549484432
+#&gt; WHEN (`qsec` &gt;= -0.377040505 AND (`hp` &lt; 0.668182373 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.298643202
+#&gt; WHEN ((`disp` &lt; 0.966430426 OR (`disp` IS NULL)) AND `hp` &gt;= 0.668182373 AND `disp` &gt;= -1.22537899) THEN 0.0644110739
+#&gt; WHEN (`disp` &gt;= 0.966430426 AND `hp` &gt;= 0.668182373 AND `disp` &gt;= -1.22537899) THEN 0.194638208
+#&gt; END) + CASE
+#&gt; WHEN ((`disp` &lt; -1.22537899 OR (`disp` IS NULL))) THEN 0.78094399
+#&gt; WHEN ((`drat` &lt; 0.754541874 OR (`drat` IS NULL)) AND (`hp` &lt; -0.418411613 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.430569261
+#&gt; WHEN (`drat` &gt;= 0.754541874 AND (`hp` &lt; -0.418411613 OR (`hp` IS NULL)) AND `disp` &gt;= -1.22537899) THEN 0.0782236606
+#&gt; WHEN ((`hp` &lt; 0.230627745 OR (`hp` IS NULL)) AND `hp` &gt;= -0.418411613 AND `disp` &gt;= -1.22537899) THEN (-0.0337554961)
+#&gt; WHEN (`hp` &gt;= 0.230627745 AND `hp` &gt;= -0.418411613 AND `disp` &gt;= -1.22537899) THEN 0.245185137
+#&gt; END) + 0.5 AS `prediction`,
+#&gt;   `am`,
+#&gt;   `carb`,
+#&gt;   `vs`,
+#&gt;   `qsec`,
+#&gt;   `wt`,
+#&gt;   `drat`,
+#&gt;   `disp`,
+#&gt;   `hp`,
+#&gt;   `cyl`,
+#&gt;   `gear`
+#&gt; FROM (
+#&gt;   SELECT
+#&gt;     `am`,
+#&gt;     `carb`,
+#&gt;     `vs`,
+#&gt;     (`qsec` - 17.84875) / 1.78694323609684 AS `qsec`,
+#&gt;     (`wt` - 3.21725) / 0.978457442989697 AS `wt`,
+#&gt;     (`drat` - 3.5965625) / 0.534678736070971 AS `drat`,
+#&gt;     (`disp` - 230.721875) / 123.938693831382 AS `disp`,
+#&gt;     (`hp` - 146.6875) / 68.5628684893206 AS `hp`,
+#&gt;     (`cyl` - 6.1875) / 1.78592164694654 AS `cyl`,
+#&gt;     `gear`,
+#&gt;     `mpg`
+#&gt;   FROM churn2.test
+#&gt; ) `q01`
+#&gt; ORDER BY `mpg`</code></pre>
+</div>
+</div>
+</section><section id="conclusión" class="level2"><h2 class="anchored" data-anchor-id="conclusión">Conclusión</h2>
+<p>La librería orbital permite pasar un preprocesamiento y modelos complejos de tidymodels a sentencias sql que se pueden usar en entornos hostiles y productivizar sin necesidad de tener instalado R, ni docker, ni nada. Evidentemente esto va a generar unas queries que pueden llegar a ser infernales, pero cuando no tienes otra opción esta puede ser tan buena como otra.</p>
+
+
+<!-- -->
+
+</section> ]]></description>
+  <category>2024</category>
+  <category>tidymodels</category>
+  <category>sql</category>
+  <category>machine learning</category>
+  <category>R</category>
+  <guid>https://muestrear-no-es-pecado.netlify.app/2024/11/orbital_entornos_hostiles.html</guid>
+  <pubDate>Fri, 15 Nov 2024 23:00:00 GMT</pubDate>
+  <media:content url="https://muestrear-no-es-pecado.netlify.app/2024/11/pendiente.png" medium="image" type="image/png"/>
+</item>
 <item>
   <title>El bueno, el feo y el bayesiano</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -20591,639 +21880,6 @@ shinyApp(ui, server)
   <category>shiny</category>
   <guid>https://muestrear-no-es-pecado.netlify.app/2023/shinylive-R.html</guid>
   <pubDate>Fri, 15 Dec 2023 23:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Vuelta a la facultad. SVD</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado.netlify.app/2023/Vuelta_a_la_facultad_svd.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>Unos compis del trabajo están haciendo cosas muy chulas utilizando SVD (Descomposición en valores singulares) y me ha recordado a los tiempos de la universidad.</p>
-<p>La SVD es una factorización de una matriz rectangular tal que así.</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20%5Cmathbf%7BX%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20"></p>
-<p>Veamos un ejemplo, dónde tenemos una matriz de 5x4</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1">X <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">matrix</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>( <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>,</span>
-<span id="cb1-2">               <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>,  <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">8</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>,</span>
-<span id="cb1-3">               <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>,  <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>,</span>
-<span id="cb1-4">               <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">7</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">8</span>,  <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">6</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>,</span>
-<span id="cb1-5">               <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> , <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span></span>
-<span id="cb1-6">               ),</span>
-<span id="cb1-7">            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">byrow =</span> T, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">nrow =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">ncol =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>,</span>
-<span id="cb1-8">            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">dimnames =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">list</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P1"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P2"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P3"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P4"</span>,<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P5"</span>),</span>
-<span id="cb1-9">                            <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V1"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V2"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V3"</span>,<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V4"</span>)))</span>
-<span id="cb1-10">X</span>
-<span id="cb1-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    V1 V2 V3 V4</span></span>
-<span id="cb1-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P1 10 -1 -2  2</span></span>
-<span id="cb1-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P2  4  8 -1  3</span></span>
-<span id="cb1-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P3 -2  5 -3  4</span></span>
-<span id="cb1-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P4 -7 -8  6 -2</span></span>
-<span id="cb1-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P5 -2  5  4 -4</span></span></code></pre></div>
-</div>
-<p>Hacemos la svd</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">dvs <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">svd</span>(X)</span>
-<span id="cb2-2">dvs</span>
-<span id="cb2-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $d</span></span>
-<span id="cb2-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 17.033392 10.982941  6.873957  2.997880</span></span>
-<span id="cb2-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; </span></span>
-<span id="cb2-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $u</span></span>
-<span id="cb2-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;             [,1]        [,2]        [,3]        [,4]</span></span>
-<span id="cb2-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,] -0.41759401  0.66860794  0.28085132 -0.28960722</span></span>
-<span id="cb2-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,] -0.50584653 -0.30661800  0.13614448 -0.62790360</span></span>
-<span id="cb2-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,] -0.23820970 -0.40000698 -0.61431429 -0.21204097</span></span>
-<span id="cb2-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,]  0.71395758  0.08354597 -0.00214809 -0.68888308</span></span>
-<span id="cb2-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [5,]  0.05705485 -0.54033629  0.72470722  0.04840934</span></span>
-<span id="cb2-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; </span></span>
-<span id="cb2-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $v</span></span>
-<span id="cb2-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;            [,1]        [,2]       [,3]        [,4]</span></span>
-<span id="cb2-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,] -0.6360870  0.61508773  0.4578647 -0.08614145</span></span>
-<span id="cb2-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,] -0.6015603 -0.77316598  0.2003873 -0.01358129</span></span>
-<span id="cb2-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,]  0.3855737 -0.13572378  0.5864215 -0.69930092</span></span>
-<span id="cb2-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,] -0.2912926  0.07389525 -0.6374282 -0.70948815</span></span></code></pre></div>
-</div>
-<p>Y vemos que efectivamente</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1">dvs<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">diag</span>(dvs<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>d) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">t</span>(dvs<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>v)</span>
-<span id="cb3-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;      [,1] [,2] [,3] [,4]</span></span>
-<span id="cb3-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,]   10   -1   -2    2</span></span>
-<span id="cb3-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,]    4    8   -1    3</span></span>
-<span id="cb3-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,]   -2    5   -3    4</span></span>
-<span id="cb3-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,]   -7   -8    6   -2</span></span>
-<span id="cb3-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [5,]   -2    5    4   -4</span></span></code></pre></div>
-</div>
-<p>Ahora, la proyección de las filas en el espacio vectorial definido por la descomposión en valores singulares sería</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20%20Proj%20=%20%5Cmathbf%7BX%7D%20%5Cmathbf%7BV%7D%20"></p>
-<p>De forma que si tenemos unos nuevos datos y queremos proyectarlos sobre la estructura definida por la DVS ya calculada se haría así.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1">nuevaX <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">matrix</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>( <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">20</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2.1</span>,</span>
-<span id="cb4-2">               <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>,  <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>, <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span></span>
-<span id="cb4-3">               ),</span>
-<span id="cb4-4">            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">byrow =</span> T, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">nrow =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">ncol =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>,</span>
-<span id="cb4-5">            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">dimnames =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">list</span>(<span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P6"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"P7"</span>),</span>
-<span id="cb4-6">                            <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V1"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V2"</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V3"</span>,<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"V4"</span>)))</span>
-<span id="cb4-7"></span>
-<span id="cb4-8">nuevaX</span>
-<span id="cb4-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    V1 V2 V3  V4</span></span>
-<span id="cb4-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P6 20 -2 -3 2.1</span></span>
-<span id="cb4-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P7  5  2 -1 3.0</span></span>
-<span id="cb4-12"></span>
-<span id="cb4-13">(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">proyeccion =</span> nuevaX <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> dvs<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>v)</span>
-<span id="cb4-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;          [,1]      [,2]      [,3]      [,4]</span></span>
-<span id="cb4-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P6 -13.287055 14.410438 5.6586547 -1.087689</span></span>
-<span id="cb4-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P7  -5.643007  1.886516 0.1913919 -1.887033</span></span></code></pre></div>
-</div>
-<p>Y para proyectar los valores de X originales, podemos hacer lo mismo o como sabemos que</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20%5Cmathbf%7BX%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20"></p>
-<p>entonces</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20Proj%20=%20%5Cmathbf%7BX%7D%20%5Cmathbf%7BV%7D%20=%20%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BV%5ET%7D%20%5Cmathbf%7BV%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20%5Cmathbf%7BI%7D%20=%20%5Cmathbf%7BU%7D%20%5Cmathbf%7B%5CSigma%7D%20"></p>
-<p>Es decir, la proyección de las filas son los vectores singulares izquierdos por la matriz diagonal de los valores singulares.</p>
-<p><strong>¿Y para qué sirve esto?</strong> Pues una cosa interesante de la SVD es que nos sirve para reducir la dimensión de los datos, quedándonos con los k primeros valores singulares y los respectivos k primeros vectores singulares.</p>
-<p>Supongamos que queremos quedarnos con k = 3</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">dvs_red <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">svd</span>(X, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">nu =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">nv =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>)</span>
-<span id="cb5-2">dvs_red</span>
-<span id="cb5-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $d</span></span>
-<span id="cb5-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 17.033392 10.982941  6.873957  2.997880</span></span>
-<span id="cb5-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; </span></span>
-<span id="cb5-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $u</span></span>
-<span id="cb5-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;             [,1]        [,2]        [,3]</span></span>
-<span id="cb5-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,] -0.41759401  0.66860794  0.28085132</span></span>
-<span id="cb5-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,] -0.50584653 -0.30661800  0.13614448</span></span>
-<span id="cb5-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,] -0.23820970 -0.40000698 -0.61431429</span></span>
-<span id="cb5-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,]  0.71395758  0.08354597 -0.00214809</span></span>
-<span id="cb5-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [5,]  0.05705485 -0.54033629  0.72470722</span></span>
-<span id="cb5-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; </span></span>
-<span id="cb5-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $v</span></span>
-<span id="cb5-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;            [,1]        [,2]       [,3]</span></span>
-<span id="cb5-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,] -0.6360870  0.61508773  0.4578647</span></span>
-<span id="cb5-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,] -0.6015603 -0.77316598  0.2003873</span></span>
-<span id="cb5-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,]  0.3855737 -0.13572378  0.5864215</span></span>
-<span id="cb5-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,] -0.2912926  0.07389525 -0.6374282</span></span></code></pre></div>
-</div>
-<p>Podemos reconstruir la matriz original tal que así</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># matriz original</span></span>
-<span id="cb6-2">X</span>
-<span id="cb6-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;    V1 V2 V3 V4</span></span>
-<span id="cb6-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P1 10 -1 -2  2</span></span>
-<span id="cb6-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P2  4  8 -1  3</span></span>
-<span id="cb6-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P3 -2  5 -3  4</span></span>
-<span id="cb6-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P4 -7 -8  6 -2</span></span>
-<span id="cb6-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P5 -2  5  4 -4</span></span>
-<span id="cb6-9"></span>
-<span id="cb6-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># reconstrucción </span></span>
-<span id="cb6-11"></span>
-<span id="cb6-12">dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">diag</span>(dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>d[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>]) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">t</span>(dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>v)</span>
-<span id="cb6-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;           [,1]      [,2]      [,3]      [,4]</span></span>
-<span id="cb6-14"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,]  9.925211 -1.011791 -2.607138  1.384017</span></span>
-<span id="cb6-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,]  3.837849  7.974435 -2.316350  1.664474</span></span>
-<span id="cb6-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,] -2.054758  4.991367 -3.444527  3.548997</span></span>
-<span id="cb6-17"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,] -7.177898 -8.028048  4.555812 -3.465227</span></span>
-<span id="cb6-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [5,] -1.987499  5.001971  4.101486 -3.897035</span></span></code></pre></div>
-</div>
-<p>Y así almacenando U, d y V podemos tener una aproximación de X ocupando menos espacio.</p>
-<p>Una utilidad de esto es que si pensamos en las filas como observaciones y las columnnas como variables, la SVD nos sirve para hacer una reducción de la dimensionalidad, de hecho los valores singulares al cuadrado son los autovalores de <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BX%5ET%7D%20%5Cmathbf%7BX%7D"></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1">Z <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">t</span>(X) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> X</span>
-<span id="cb7-2"></span>
-<span id="cb7-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">eigen</span>(Z)</span>
-<span id="cb7-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; eigen() decomposition</span></span>
-<span id="cb7-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $values</span></span>
-<span id="cb7-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 290.136446 120.624987  47.251282   8.987284</span></span>
-<span id="cb7-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; </span></span>
-<span id="cb7-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; $vectors</span></span>
-<span id="cb7-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;            [,1]        [,2]       [,3]       [,4]</span></span>
-<span id="cb7-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1,]  0.6360870  0.61508773 -0.4578647 0.08614145</span></span>
-<span id="cb7-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [2,]  0.6015603 -0.77316598 -0.2003873 0.01358129</span></span>
-<span id="cb7-12"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [3,] -0.3855737 -0.13572378 -0.5864215 0.69930092</span></span>
-<span id="cb7-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [4,]  0.2912926  0.07389525  0.6374282 0.70948815</span></span>
-<span id="cb7-14"></span>
-<span id="cb7-15">dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>d<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">^</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span></span>
-<span id="cb7-16"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; [1] 290.136446 120.624987  47.251282   8.987284</span></span></code></pre></div>
-</div>
-<p>Si nos quedamos con los k primeros singulares podríamos querer tener por ejemplo la proyección de las filas en ese subespacio, y usar esas coordenadas para ver distancias entre filas. Una propiedad deseable de ese subespacio es que las distancias entre los individuos sean parecidas o al menos ordenen de la misma forma que en el espacio original.</p>
-<p>Por ejemplo las distancias euclídeas entre las filas de X</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">dist</span>(X)</span>
-<span id="cb8-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;           P1        P2        P3        P4</span></span>
-<span id="cb8-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P2 10.908712                              </span></span>
-<span id="cb8-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P3 13.601471  7.071068                    </span></span>
-<span id="cb8-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P4 20.445048 21.236761 17.635192          </span></span>
-<span id="cb8-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; P5 15.874508 10.908712 10.630146 14.212670</span></span></code></pre></div>
-</div>
-<p>Vemos que P5 está más cerca de P3 que de P2.</p>
-<p>Si usamos sólo la matriz <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%20%5Ctimes%20k%7D%7D"> para ver distancias tenemos que no se mantiene esa relación entre las distancias</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">dist</span>(dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>u)</span>
-<span id="cb9-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;           1         2         3         4</span></span>
-<span id="cb9-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 2 0.9898455                              </span></span>
-<span id="cb9-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 3 1.4055028 0.8022090                    </span></span>
-<span id="cb9-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 4 1.3049119 1.2881284 1.2309319          </span></span>
-<span id="cb9-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 5 1.3725326 0.8472829 1.3783512 1.1614943</span></span></code></pre></div>
-</div>
-<p>En cambio si utilizamos la proyección tenemos que las distancias son del mismo orden que en los datos originales y que se mantiene la relación entre las diferentes filas.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"></span>
-<span id="cb10-2">proyeccion <span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">&lt;-</span> (dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>u <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">%*%</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">diag</span>(dvs_red<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">$</span>d[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>]))</span>
-<span id="cb10-3"></span>
-<span id="cb10-4"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">dist</span>(proyeccion)</span>
-<span id="cb10-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt;           1         2         3         4</span></span>
-<span id="cb10-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 2 10.861467                              </span></span>
-<span id="cb10-7"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 3 13.599483  6.960296                    </span></span>
-<span id="cb10-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 4 20.409979 21.235974 17.577158          </span></span>
-<span id="cb10-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#&gt; 5 15.842132 10.718639 10.601432 14.039748</span></span></code></pre></div>
-</div>
-<p>Por eso, si queremos utilizar SVD para hacer una reducción de dimensionalidad y posteriormente utilizar técnicas que utilicen distancias puede tener más sentido utilizar la proyección <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%5Ctimes%20k%7D%7D%20%5Cmathbf%7B%5CSigma_%7Bk%20%5Ctimes%20k%7D%7D"> que sólo <img src="https://latex.codecogs.com/png.latex?%5Cmathbf%7BU_%7Bn%5Ctimes%20k%7D%7D"></p>
-
-
-
- ]]></description>
-  <category>2023</category>
-  <category>R</category>
-  <category>Álgebra</category>
-  <guid>https://muestrear-no-es-pecado.netlify.app/2023/Vuelta_a_la_facultad_svd.html</guid>
-  <pubDate>Sat, 02 Dec 2023 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
