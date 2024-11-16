@@ -34,7 +34,6 @@ image: 'pendiente.png'
 ::: callout-note
 ## Listening
 
-'TODO
 
 <iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1ZLtE9tSJdaUiIJ9YoKHQe?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
 
@@ -45,22 +44,22 @@ image: 'pendiente.png'
 ## Introducción
 
 No es raro encontrarse en entornos hostiles. Los que usamos R lo sabemos bien, es una batalla
-constante, que en gran parte tiene que ver con esl desconocimiento y otras con la maldad. 
+constante, que en gran parte tiene que ver con el desconocimiento y otras con la maldad. 
 
 
 ## Hacer cosas en la BD. 
 
 Desde los tiempos de PL/SQL anda por ahi el runrun de hacer cosas en la BD.  El caso típico es hacer
 las transformaciones de filtrado, selección, creación de columnas y joins que hacemos en lenguajes
-como R, pero en la base de datos. Esto hace ya tiempo qu está solucionando gracias a cosas como
+como R, pero en la base de datos. Esto hace ya tiempo que está solucionando gracias a cosas como
 `dbplyr` y similar. De hecho, la filosofía de hazlo con una sintaxis sencilla en el frontend pero
 que el backend pueda cambiar se ha exportado de R a otras tecnologías, esa eRgonomía se ve por
 ejemplo en `ibis` o `polars`. 
 
 Otro caso más complicado es el de tener un modelo que se ha ajustado previamente y queremos usarlo
-para obtener predicciones. En estos casos salvo que estemos en cosas como spark y similar lo que se
+para obtener predicciones. En estos casos salvo que estemos en cosas como spark o similar lo que se
 suele hacer es bajar los datos de la BD, usar el modelo, obtener predicciones y subir los resultados 
-a la BD. A veces es un proceso batch o un docker o similar, pero básicamente es eso. 
+a la BD. A veces es un proceso batch o un docker u otra cosa rara, pero básicamente es eso. 
 
 Se me olvidaba que en caso de ser un modelo simple de regresión o regresión logística siempre puede
 uno escribir la función obtenida en forma de `sql` y tirar millas. Pero en otro tipo de modelos es
@@ -269,9 +268,7 @@ orbital_xgb  <- orbital(xgb_fit, prefix = "prediction")
 
 ```
 
-podemos predecir en la bd
-
-investigar a ver como lo ha convertido a sql
+podemos predecir en la bd usando `predict(orbital_object, tabla_remota` o también usar sintaxis de dplyr y ver el código `sql` generado.
 
 ```{r}
 # Este sería el código en dplyr que se manda a bigquery 

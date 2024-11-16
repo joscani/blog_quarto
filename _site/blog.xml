@@ -25,16 +25,15 @@ Listening
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>’TODO</p>
 <iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1ZLtE9tSJdaUiIJ9YoKHQe?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
 </iframe>
 </div>
 </div>
 <section id="introducción" class="level2"><h2 class="anchored" data-anchor-id="introducción">Introducción</h2>
-<p>No es raro encontrarse en entornos hostiles. Los que usamos R lo sabemos bien, es una batalla constante, que en gran parte tiene que ver con esl desconocimiento y otras con la maldad.</p>
+<p>No es raro encontrarse en entornos hostiles. Los que usamos R lo sabemos bien, es una batalla constante, que en gran parte tiene que ver con el desconocimiento y otras con la maldad.</p>
 </section><section id="hacer-cosas-en-la-bd." class="level2"><h2 class="anchored" data-anchor-id="hacer-cosas-en-la-bd.">Hacer cosas en la BD.</h2>
-<p>Desde los tiempos de PL/SQL anda por ahi el runrun de hacer cosas en la BD. El caso típico es hacer las transformaciones de filtrado, selección, creación de columnas y joins que hacemos en lenguajes como R, pero en la base de datos. Esto hace ya tiempo qu está solucionando gracias a cosas como <code>dbplyr</code> y similar. De hecho, la filosofía de hazlo con una sintaxis sencilla en el frontend pero que el backend pueda cambiar se ha exportado de R a otras tecnologías, esa eRgonomía se ve por ejemplo en <code>ibis</code> o <code>polars</code>.</p>
-<p>Otro caso más complicado es el de tener un modelo que se ha ajustado previamente y queremos usarlo para obtener predicciones. En estos casos salvo que estemos en cosas como spark y similar lo que se suele hacer es bajar los datos de la BD, usar el modelo, obtener predicciones y subir los resultados a la BD. A veces es un proceso batch o un docker o similar, pero básicamente es eso.</p>
+<p>Desde los tiempos de PL/SQL anda por ahi el runrun de hacer cosas en la BD. El caso típico es hacer las transformaciones de filtrado, selección, creación de columnas y joins que hacemos en lenguajes como R, pero en la base de datos. Esto hace ya tiempo que está solucionando gracias a cosas como <code>dbplyr</code> y similar. De hecho, la filosofía de hazlo con una sintaxis sencilla en el frontend pero que el backend pueda cambiar se ha exportado de R a otras tecnologías, esa eRgonomía se ve por ejemplo en <code>ibis</code> o <code>polars</code>.</p>
+<p>Otro caso más complicado es el de tener un modelo que se ha ajustado previamente y queremos usarlo para obtener predicciones. En estos casos salvo que estemos en cosas como spark o similar lo que se suele hacer es bajar los datos de la BD, usar el modelo, obtener predicciones y subir los resultados a la BD. A veces es un proceso batch o un docker u otra cosa rara, pero básicamente es eso.</p>
 <p>Se me olvidaba que en caso de ser un modelo simple de regresión o regresión logística siempre puede uno escribir la función obtenida en forma de <code>sql</code> y tirar millas. Pero en otro tipo de modelos es un poco más complejo.</p>
 <p>En las <a href="https://www.imus.us.es/congresos/IIIRqueR/">jornadas de R en Sevilla</a> que acaban de terminar, Hannah Frick de Posit nos contó lo <a href="https://hfrick.github.io/2024-3RqueR/#/title-slide">nuevo de tidymodels</a> y aquí es dónde entran un par de librerías, <code>tidypredict</code> y <code>orbital</code>, la primera permite “traducir” la función de predict de un modelo a <code>sql</code> y la segunda traduce todo el <code>workflow</code></p>
 </section><section id="hagamos-la-prueba" class="level2"><h2 class="anchored" data-anchor-id="hagamos-la-prueba">Hagamos la prueba</h2>
@@ -1005,8 +1004,7 @@ background-color: null;
 font-style: inherit;">)</span></span></code></pre></div>
 </details>
 </div>
-<p>podemos predecir en la bd</p>
-<p>investigar a ver como lo ha convertido a sql</p>
+<p>podemos predecir en la bd usando <code>predict(orbital_object, tabla_remota</code> o también usar sintaxis de dplyr y ver el código <code>sql</code> generado.</p>
 <div class="cell">
 <details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co" style="color: #5E5E5E;
 background-color: null;
