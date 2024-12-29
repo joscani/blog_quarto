@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
-
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.6.39">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
-
-<title>Muestrear no es pecado</title>
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="dcterms.date" content="2024-12-29">
+<title>Tooling – Muestrear no es pecado</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,28 +19,60 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
-
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d166b450ba5a8e9f7a0ab969bf6592c1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-07d1cc99fe500bdc1baeb2a340c9cdb3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-74d5ed8e33587e0a95b073fc44418bfa.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<script id="quarto-search-options" type="application/json">{
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d166b450ba5a8e9f7a0ab969bf6592c1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-07d1cc99fe500bdc1baeb2a340c9cdb3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-74d5ed8e33587e0a95b073fc44418bfa.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark"><script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
@@ -68,19 +99,13 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<link href="index-styles.css" rel="stylesheet">
-
-
 </head>
-
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
-      <div class="navbar-container container-fluid">
+  <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg " data-bs-theme="dark"><div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Muestrear no es pecado</span>
     </a>
   </div>
@@ -90,12 +115,12 @@ ul.task-list li input[type="checkbox"] {
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="./blog.html"> 
+<li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -119,7 +144,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="./blog.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../blog.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -127,8 +152,8 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Resources</span>
     </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
-        <li>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">
+<li>
     <a class="dropdown-item" href="https://rweekly.org/">
  <span class="dropdown-text">R Weekly</span></a>
   </li>  
@@ -141,163 +166,98 @@ ul.task-list li input[type="checkbox"] {
  <span class="dropdown-text">Datanalytics</span></a>
   </li>  
     </ul>
-  </li>
+</li>
   <li class="nav-item">
-    <a class="nav-link" href="./archive.html"> 
+    <a class="nav-link" href="../../archive.html"> 
 <span class="menu-text">Archivo</span></a>
   </li>  
 </ul>
-          </div> <!-- /navcollapse -->
+</div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
-    </nav>
-</header>
-<!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+    </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On this page</h2>
+   
+  <ul>
+<li><a href="#forma-contenido-tooling." id="toc-forma-contenido-tooling." class="nav-link active" data-scroll-target="#forma-contenido-tooling.">Forma, contenido, tooling.</a></li>
+  </ul></nav>
+    </div>
 <!-- main -->
-<main class="content column-page" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><h1 class="title display-7">Hola a todos</h1></header>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Tooling</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+  <div class="quarto-categories">
+    <div class="quarto-category">2024</div>
+    <div class="quarto-category">tidymodels</div>
+    <div class="quarto-category">mlr3</div>
+    <div class="quarto-category">MLJ</div>
+    <div class="quarto-category">scikit-learn</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
 
-<div class="grid">
-<div id="bio-pic" class="g-col-12 g-col-md-6">
-<p><img src="profile2.jpg" class="img-fluid"></p>
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 29, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header><div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div id="about-me-text" class="g-col-12 g-col-md-6">
-<section id="hola-a-todos" class="level1">
-
-<p>Soy José Luis Cañadas Reche, científico de datos (o estadístico que sabe algo de programación )</p>
-<p>Me puedes encontrar en</p>
+<div class="callout-title-container flex-fill">
+Listening
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5s6QzUcfrXKYHRkjPX7unE?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<section id="forma-contenido-tooling." class="level2"><h2 class="anchored" data-anchor-id="forma-contenido-tooling.">Forma, contenido, tooling.</h2>
+<p>Me comentaba el otro día mi amigo Mario, que por culpa del “tooling” en lo que antes tardaba 2 horas ahora se tira 2 semanas.</p>
+<p>¿A qué me refiero con esto del “tooling”? Pues a lo que he comentado muchas veces, unas por aquí y otras hablando con amigos, a que se le de más importancia al cómo que al qué y al para qué. Por supuesto que el cómo se hagan las cosas es importante, para mí, las cosas se han de hacer bien, de forma sencilla y con “filosofía Unix”.</p>
+<p>Lo de la filosofía UNIX es algo muy simple, haz software que haga una sola cosa pero que la haga bien. También se podría decir aquello del principio KISS (Keep It Simple Stupid).</p>
+<p>En el mundo del análisis de datos hay algunas herramientas que están muy bien hechas y que cumplen ese criterio de Keep It Simple y el de modularidad e ir juntando unas piezas con otras. Ya sea a través de programación orientada a objetos bien hecha o de paradigmas funcionales componiendo operaciones.</p>
+<p>En mi opinión, en vez de intentar crear un megasoftware, nos iría mejor usando lo que ya otros han desarrollado con buen criterio, y así centrarnos en lo verdaderamente importante. Os dejo por aquí algunos enlaces</p>
 <ul>
-<li><a href="https://github.com/joscani">GitHub</a></li>
-<li><a href="https://bsky.app/profile/joscani.muestrear-no-es-pecado.es">Bluesky</a></li>
-<li><a href="https://twitter.com/joscani">Twitter</a></li>
-<li><a href="https://fosstodon.org/@joscani">Fosstodon</a>.</li>
+<li>
+<a href="https://juliaai.github.io/MLJ.jl/dev/">MLJ. Framework en Julia para Machine Learning.</a> a mi me gusta bastante</li>
+<li>
+<a href="https://www.tmwr.org/">Tidymodels</a>. Muy limpio y funcional, útil para centrarse en lo que importa</li>
+<li>
+<a href="https://mlr3book.mlr-org.com/">Mlr3</a>. Desarrollado con paradigma OOP. Implementa flujos más complejos que otros y al usar como estructura de datos los <code>data.table</code> funciona muy bien y rápido</li>
+<li>
+<a href="https://scikit-learn.org/stable/">scikit-lean</a>. Un estándard en muchos sitios, aunque a mi parecer le falta integrar mejor algunas transformaciones.</li>
 </ul>
-</section>
-</div>
-<section id="blogs-últimos-post-y-enlaces-a-blog-antiguo-y-nuevo" class="level1 g-col-12 g-col-md-5 g-start-md-2">
-<h1>Blogs: Últimos post y enlaces a blog antiguo y nuevo</h1>
-<section id="orbital.ayuda-en-entornos-hostiles" class="level5">
-<h5 class="anchored" data-anchor-id="orbital.ayuda-en-entornos-hostiles"><a href="2024/11/orbital_entornos_hostiles.html"><strong>Orbital.¿Ayuda en entornos hostiles?</strong></a></h5>
-</section>
-<section id="el-bueno-el-feo-y-el-bayesiano" class="level5">
-<h5 class="anchored" data-anchor-id="el-bueno-el-feo-y-el-bayesiano"><a href="2024/09/god_and_bad_confounders.html"><strong>El bueno, el feo y el bayesiano</strong></a></h5>
-</section>
-<section id="predictores-a-nivel-de-grupo" class="level5">
-<h5 class="anchored" data-anchor-id="predictores-a-nivel-de-grupo"><a href="2024/08/predictores_nivel_grupo_inf_causal.html"><strong>Predictores a nivel de grupo</strong></a></h5>
-</section>
-<section id="meta-análisis-europeas" class="level5">
-<h5 class="anchored" data-anchor-id="meta-análisis-europeas"><a href="2024/06/meta-analisis-europeas.html"><strong>Meta-análisis europeas</strong></a></h5>
-</section>
-<section id="marketing-mix-modelling-estilo-compadre" class="level5">
-<h5 class="anchored" data-anchor-id="marketing-mix-modelling-estilo-compadre"><a href="2024/06/mmm_estilo_compadre.html"><strong>Marketing mix modelling estilo compadre</strong></a></h5>
-</section>
-<section id="ensalada-no-saludable" class="level5">
-<h5 class="anchored" data-anchor-id="ensalada-no-saludable"><a href="2024/05/Ensalada_no_saludable.html"><strong>Ensalada no saludable</strong></a></h5>
-</section>
-<section id="métricas-de-un-modelo-h2o-con-quarto" class="level5">
-<h5 class="anchored" data-anchor-id="métricas-de-un-modelo-h2o-con-quarto"><a href="2024/04/metricas_modelo_con_quarto.html"><strong>Métricas de un modelo h2o con quarto</strong></a></h5>
-</section>
-<section id="ya-vendrán-tiempos-mejores" class="level5">
-<h5 class="anchored" data-anchor-id="ya-vendrán-tiempos-mejores"><a href="2024/04/tiempos_mejores.html"><strong>Ya vendrán tiempos mejores</strong></a></h5>
-</section>
-<section id="lujuria-e-intervención" class="level5">
-<h5 class="anchored" data-anchor-id="lujuria-e-intervención"><a href="2024/03/lujuria_e_intervencion.html"><strong>Lujuria e intervención</strong></a></h5>
-</section>
-<section id="jornadas-hispalenses" class="level5">
-<h5 class="anchored" data-anchor-id="jornadas-hispalenses"><a href="2024/03/jornadas2024.html"><strong>Jornadas Hispalenses</strong></a></h5>
-</section>
-<section id="nomenclatura" class="level5">
-<h5 class="anchored" data-anchor-id="nomenclatura"><a href="2024/02/nomenclatura.html"><strong>Nomenclatura</strong></a></h5>
-</section>
-<section id="guarnición-de-guerra" class="level5">
-<h5 class="anchored" data-anchor-id="guarnición-de-guerra"><a href="2024/02/guarnicion_de_guerra.html"><strong>Guarnición de guerra</strong></a></h5>
-</section>
-<section id="nvim" class="level5">
-<h5 class="anchored" data-anchor-id="nvim"><a href="2024/01/nvim_quarto.html"><strong>Nvim</strong></a></h5>
-</section>
-<section id="cachitos-2023-cuarta-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2023-cuarta-parte"><a href="2024/01/cachitos_2023_cuarta_parte.html"><strong>Cachitos 2023 Cuarta parte</strong></a></h5>
-</section>
-<section id="cachitos-2023-tercera-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2023-tercera-parte"><a href="2024/01/cachitos_2023_tercera_parte.html"><strong>Cachitos 2023 Tercera parte</strong></a></h5>
-</section>
-<section id="cachitos-2023-segunda-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2023-segunda-parte"><a href="2024/01/cachitos_2023_segunda_parte.html"><strong>Cachitos 2023 Segunda parte</strong></a></h5>
-</section>
-<section id="cachitos-2023-primera-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2023-primera-parte"><a href="2024/01/cachitos_2023_primera_parte.html"><strong>Cachitos 2023 Primera parte</strong></a></h5>
-</section>
-<section id="web-r" class="level5">
-<h5 class="anchored" data-anchor-id="web-r"><a href="2023/webr.html"><strong>Web-R</strong></a></h5>
-</section>
-<section id="shinylive-r" class="level5">
-<h5 class="anchored" data-anchor-id="shinylive-r"><a href="2023/shinylive-R.html"><strong>Shinylive R</strong></a></h5>
-</section>
-<section id="svd.-vuelta-a-la-facultad" class="level5">
-<h5 class="anchored" data-anchor-id="svd.-vuelta-a-la-facultad"><a href="2023/Vuelta_a_la_facultad_svd.html"><strong>SVD. Vuelta a la facultad</strong></a></h5>
-</section>
-<section id="xiii-jornadas-de-r.-barcelona" class="level5">
-<h5 class="anchored" data-anchor-id="xiii-jornadas-de-r.-barcelona"><a href="2023//Jornadas_R_barcelona.html"><strong>XIII Jornadas de R. Barcelona</strong></a></h5>
-</section>
-<section id="shinylive-intento-fallido" class="level5">
-<h5 class="anchored" data-anchor-id="shinylive-intento-fallido"><a href="2023//shinylive-python.html"><strong>Shinylive intento fallido </strong></a></h5>
-</section>
-<section id="y-si-parte-iii" class="level5">
-<h5 class="anchored" data-anchor-id="y-si-parte-iii"><a href="2023/y-si-parte-iii.html"><strong>¿Y si … ? Parte III </strong></a></h5>
-</section>
-<section id="pyrotecnia-1" class="level5">
-<h5 class="anchored" data-anchor-id="pyrotecnia-1"><a href="2023/pyrotecnia-1.html"><strong>Pyrotecnia-1</strong></a></h5>
-</section>
-<section id="meta-análisis.-agregando-encuestas" class="level5">
-<h5 class="anchored" data-anchor-id="meta-análisis.-agregando-encuestas"><a href="2023/metanalisis.html"><strong>Meta-análisis. Agregando encuestas</strong></a></h5>
-</section>
-<section id="categóricas-a-lo-catboost" class="level5">
-<h5 class="anchored" data-anchor-id="categóricas-a-lo-catboost"><a href="2023/06/09/categoricas_a_lo_catboost_pensamientos/"><strong>Categóricas a lo catboost</strong></a></h5>
-</section>
-<section id="mapeando" class="level5">
-<h5 class="anchored" data-anchor-id="mapeando"><a href="2023/05/06/mapeando/"><strong>Mapeando</strong></a></h5>
-</section>
-<section id="regresión-cuantil-con-catboost" class="level5">
-<h5 class="anchored" data-anchor-id="regresión-cuantil-con-catboost"><a href="2023/04/23/quantile-catboost/"><strong>Regresión cuantil con catboost</strong></a></h5>
-</section>
-<section id="conformal-prediction.-estilo-compadre" class="level5">
-<h5 class="anchored" data-anchor-id="conformal-prediction.-estilo-compadre"><a href="2023/03/26/Conformal_estilo_compadre/"><strong>Conformal prediction. Estilo compadre</strong></a></h5>
-</section>
-<section id="arrow-y-s3" class="level5">
-<h5 class="anchored" data-anchor-id="arrow-y-s3"><a href="2023/02/19/Arrow_y_s3/"><strong>Arrow y S3</strong></a></h5>
-</section>
-<section id="explicatividad-no-usual" class="level5">
-<h5 class="anchored" data-anchor-id="explicatividad-no-usual"><a href="2023/01/29/explicatividad_no_usual/"><strong>Explicatividad no usual</strong></a></h5>
-</section>
-<section id="blog-antiguo" class="level5">
-<h5 class="anchored" data-anchor-id="blog-antiguo"><a href="https://muestrear-no-es-pecado-old.netlify.app/">Blog antiguo</a></h5>
-</section>
-</section>
-<section id="investigación-operativa" class="level1 g-col-12 g-col-md-5 g-start-md-2">
-<h1>Investigación operativa</h1>
-<section id="ejemplo-simple" class="level5">
-<h5 class="anchored" data-anchor-id="ejemplo-simple"><a href="2022/06/21/io-parte-1/">Ejemplo simple</a></h5>
-<p>Ejemplo simple de como usar Julia, R y python para investigación operativa</p>
-</section>
-<section id="localización-indios-y-jefes" class="level5">
-<h5 class="anchored" data-anchor-id="localización-indios-y-jefes"><a href="2022/08/01/indios-y-jefes-io-al-servicio-del-mal/">Localización: Indios y jefes</a></h5>
-<p>Asignar <em>localizaciones</em> según demanda y diferentes restricciones. Un problema usual</p>
-</section>
-</section>
-</div>
+<p>En fin, lo que quería decir no lo puedo decir, así es la vida. Pero por favor, centrémonos en qué quiero hacre y para qué, del cómo ya hay muchas herramientas maduras que nos facilitan la vida, no nos compliquemos inútilmente.</p>
 
 
+<!-- -->
 
-</main> <!-- /main -->
-<script id="quarto-html-after-body" type="application/javascript">
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
     const mode = bsSheetEl.getAttribute("data-mode");
@@ -528,6 +488,57 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
@@ -857,9 +868,72 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
-</script>
+</script><script src="https://giscus.app/client.js" data-repo="joscani/blogComments" data-repo-id="R_kgDOIXA9wA" data-category="General" data-category-id="DIC_kwDOIXA9wM4CSZhs" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script><input type="hidden" id="giscus-base-theme" value="light"><input type="hidden" id="giscus-alt-theme" value="dark"><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tooling"  </span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> '2024-12-29'</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - "2024"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - tidymodels</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  - mlr3</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">  - MLJ</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">  - scikit-learn</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> ''</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span><span class="co"> </span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">  output: true</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">  html: </span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-height: 5</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-dpi: 300</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-width: 8</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-align: center</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: show</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">    code-link: true</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">    code-summary: "Show the code"</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true </span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="an">knitr:</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">  opts_chunk:</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">    out.width: 80%</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">    fig.showtext: TRUE</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">    comment: "#&gt;"</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="an">image:</span><span class="co"> 'orbital.webp'</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="fu">## Listening</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>&lt;iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5s6QzUcfrXKYHRkjPX7unE?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"&gt;&lt;/iframe&gt;</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## Forma, contenido, tooling. </span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>Me comentaba el otro día mi amigo Mario, que por culpa del "tooling" en lo que antes tardaba</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>2 horas ahora se tira 2 semanas. </span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>¿A qué me refiero con esto del "tooling"? Pues a lo que he comentado muchas veces, unas por aquí y otras hablando con amigos, a que se le de más importancia al cómo que al qué y al para qué.  Por supuesto que el cómo se hagan las cosas es importante, para mí, las cosas se han de hacer bien, de forma sencilla y con "filosofía Unix". </span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>Lo de la filosofía UNIX es algo muy simple, haz software que haga una sola cosa pero que la haga bien. También se podría decir aquello del principio KISS (Keep It Simple Stupid). </span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>En el mundo del análisis de datos hay algunas herramientas que están muy bien hechas y que cumplen ese criterio de Keep It Simple y el de modularidad e ir juntando unas piezas con otras. Ya sea a través de programación orientada a objetos bien hecha o de paradigmas funcionales componiendo operaciones. </span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>En mi opinión, en vez de intentar crear un megasoftware, nos iría mejor usando lo que ya otros han desarrollado con buen criterio, y así centrarnos en lo verdaderamente importante. </span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>Os dejo por aquí algunos enlaces</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">MLJ. Framework en Julia para Machine Learning.</span><span class="co">](https://juliaai.github.io/MLJ.jl/dev/)</span> a mi me gusta bastante</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">Tidymodels</span><span class="co">](https://www.tmwr.org/)</span>. Muy limpio y funcional, útil para centrarse en lo que importa</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">Mlr3</span><span class="co">](https://mlr3book.mlr-org.com/)</span>. Desarrollado con paradigma OOP. Implementa flujos más complejos que otros y al usar como estructura de datos los <span class="in">`data.table`</span> funciona muy bien y rápido</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">scikit-lean</span><span class="co">](https://scikit-learn.org/stable/)</span>. Un estándard en muchos sitios, aunque a mi parecer le falta integrar mejor algunas transformaciones. </span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>En fin, lo que quería decir no lo puedo decir, así es la vida. Pero por favor, centrémonos en qué quiero hacre y para qué, del cómo ya hay muchas herramientas maduras que nos facilitan la vida, no nos compliquemos inútilmente. </span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
 </div> <!-- /content -->
-
 
 
 
