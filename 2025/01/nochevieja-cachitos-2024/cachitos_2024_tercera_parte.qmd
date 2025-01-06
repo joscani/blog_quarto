@@ -1,0 +1,918 @@
+---
+title: Cachitos 2024. Tercera parte
+date: '2025-01-08'
+categories: 
+  - estadística
+  - polémica
+  - "2025"
+  - textmining
+  - ocr
+  - linux
+  - cachitos
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "topicos_polem.png"
+---
+
+## Anteriores entradas:
+
+* [esta](/2025/01/nochevieja-cachitos-2024/cachitos_2024_primera_parte.html) 
+
+* [esta otra](/2025/01/nochevieja-cachitos-2024/cachitos_2024_segunda_parte.html)
+
+El csv con el texto de los rótulos para 2024 lo tenemos en este
+[enlace](https://drive.google.com/file/d/1MaHCqMV2MX5C4UmGr5D1J2a2TN7aGZTC/view?usp=drive_link)
+
+Vamos al lío
+
+
+## Librerías
+
+```{r}
+
+suppressPackageStartupMessages({
+    
+    library(tidyverse) 
+    library(tidytext)
+    library(quanteda)
+    library(magick)
+    library(RColorBrewer)
+    library(wordcloud)
+    library(topicmodels)
+    
+    }
+)
+
+```
+
+## Lectura de datos, y vistazo datos
+
+```{r}
+root_directory = "~/proyecto_cachitos/"
+anno <- "2024"
+```
+
+Leemos el csv. Uso DT y así podéis ver todos los datos o buscar cosas,
+por ejemplo `puigdemont` o `errejón`
+
+```{r}
+subtitulos_proces <-  read_csv(str_glue("{root_directory}{anno}_txt_unido.csv"))
+
+subtitulos_proces %>% 
+  select(texto, n_fichero, n_caracteres) %>% 
+  DT::datatable()
+
+```
+
+Pues nos valdría con esto para buscar términos polémicos.
+
+## Algo de minería de texto
+
+Quitamos stopwords y tokenizamos de forma que tengamos cada palabra en
+una fila manteniendo de qué rótulo proviene
+
+```{r}
+
+to_remove <- c(tm::stopwords("es"),
+               "hello",
+               "110", "4","1","2","7","10","0","ñ","of",
+               "5","á","i","the","3", "n", "p",
+               "ee","uu","mm","ema", "zz",
+               "wr","wop","wy","x","xi","xl","xt",
+               "xte","yí", "your")
+
+
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% 
+    filter(nchar(word) > 1)
+
+dim(subtitulos_proces_one_word)
+
+```
+
+```{r}
+DT::datatable(subtitulos_proces_one_word)
+```
+
+Contar ocurrencias de cosas es lo más básico.
+
+```{r}
+
+palabras_ordenadas_1 <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas_1 %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+Y como todos los años, una de las palabras más comunes es "canción" . ¿Y si añadimos
+las 20 palabras como stopword, junto con algunas como \["tan",
+"sólo","así", "aquí", "hoy"\] . La tarea de añadir palabras como
+stopwords requiere trabajo, tampoco nos vamos a parar tanto.
+
+```{r}
+(add_to_stop_words <- palabras_ordenadas_1 %>% 
+    slice(1:25) %>% 
+    pull(word) )
+
+
+to_remove <- unique(c(to_remove,
+                      add_to_stop_words,
+                      "tan", 
+                      "sólo", 
+                      "así",
+                      "aquí", 
+                      "hoy",
+                      "va"))
+
+
+subtitulos_proces_one_word <- subtitulos_proces %>% 
+    unnest_tokens(input = texto,
+                  output = word) %>% 
+    filter(! word %in% to_remove) %>% 
+    filter(nchar(word) > 1)
+
+```
+
+```{r}
+
+palabras_ordenadas_2 <- subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    summarise(veces = n()) %>% 
+    arrange(desc(veces))
+
+palabras_ordenadas_2 %>% 
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(word, veces), y = veces)) +
+    geom_col(show.legend = FALSE) +
+    ylab("veces") +
+    xlab("") +
+    coord_flip() +
+    theme_bw()
+
+```
+
+También podemos ver ahora una nube de palabras
+
+```{r, fig.width=14}
+
+pal <- brewer.pal(8,"Dark2")
+
+subtitulos_proces_one_word %>% 
+    group_by(word) %>% 
+    count() %>% 
+    with(wordcloud(word, n, random.order = FALSE, max.words = 100, colors=pal))    
+
+```
+
+## ¿Polémicos?
+
+Creamos lista de palabras polémicas
+
+
+```{r}
+
+palabras_polem <-
+    c(
+        "abascal",
+        "almeida",
+        "amnistía",
+        "ayuso",
+        "belarra",
+        "bloqueo",
+        "brusel",
+        "catal",
+        "ciudada",
+        "comunidad",
+        "constitucional",
+        "coron",
+        "crispación",
+        "democr",
+        "democracia",
+        "derech",
+        "díaz",
+        "dioni",
+        "errejon",
+        "extremadura",
+        "fach",
+        "falcon",
+        "fasc",
+        "franco",
+        "feij",
+        "feijóo",
+        "gobierno",
+        "guardia",
+        "guerra",
+        "iglesias",
+        "izquier",
+        "ley",
+        "madrid",
+        "manipulador",
+        "militares",
+        "minist",
+        "monarca",
+        "montero",
+        "oposición",
+        "page",
+        "pandem",
+        "polarización",
+        "polarizados",
+        "pp",
+        "principe",
+        "prisión",
+        "psoe",
+        "sumar",
+        "puigdemont",
+        "republic",
+        "rey",
+        "rufián",
+        "sánchez",
+        "sanz",
+        "tezanos",
+        "toled",
+        "transición",
+        "ultra",
+        "vicepre",
+        "vox",
+        "yolanda",
+        "zarzu",
+        "zarzuela"
+    )
+
+```
+
+Y construimos una regex simple
+
+```{r}
+(exp_regx <- paste0("^",paste(palabras_polem, collapse = "|^")))
+
+```
+
+Y nos creamos una variable para identificar si es palabra polémica
+
+```{r}
+subtitulos_proces_one_word <- subtitulos_proces_one_word %>% 
+    mutate(polemica= str_detect(word, exp_regx))
+
+
+subtitulos_polemicos <- subtitulos_proces_one_word %>% 
+    filter(polemica) %>% 
+    pull(n_fichero) %>% 
+    unique()
+
+subtitulos_polemicos
+
+```
+
+Y podemos ver en el texto original antes de tokenizar qué rótulos hemos
+considerado polémicos y qué texto
+
+```{r}
+subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    pull(texto) %>% 
+    unique()
+```
+
+Escribimos en un fichero los subtítulos polémicos.
+
+```{r}
+subtitulos_proces %>% 
+    filter(n_fichero %in% subtitulos_polemicos) %>% 
+    arrange(n_fichero) %>% 
+    write_csv(file = "~/proyecto_cachitos/2024_solo_polem.csv")
+
+```
+
+
+Y podemos ver los fotogramas.
+
+```{r}
+# identificamos nombre del archivo jpg con los rótulos polémicos
+polemica_1_fotogramas <- unique(substr(subtitulos_polemicos, 1,9))
+
+head(polemica_1_fotogramas)
+
+# creamos la ruta completa donde están
+polemica_1_fotogramas_full <- paste0(str_glue("{root_directory}video/{anno}_jpg/"), polemica_1_fotogramas, "jpg")
+
+
+# añadimos sufijo subtitulo.tif para tenr localizado la imagen que tiene solo los rótulos
+subtitulos_polemicos_1_full <- paste0(polemica_1_fotogramas_full,".subtitulo.tif")
+
+```
+
+Con la función `image_read` del paquete `magick` leemos las imágenes
+polémicas y los rótulos
+
+```{r}
+fotogramas_polemicos_img <- map(polemica_1_fotogramas_full, image_read)
+subtitulos_polemicos_img <- map(subtitulos_polemicos_1_full, image_read)
+
+```
+
+```{r}
+
+subtitulos_polemicos_img[[24]]
+
+```
+
+```{r}
+fotogramas_polemicos_img[[24]]
+```
+
+Podemos ver una muestra de algunos de ellos.
+
+```{r}
+set.seed(1976) 
+
+indices <- sort(sample(1:length(fotogramas_polemicos_img), 9))
+
+lista_fotogram_polemicos <- lapply(fotogramas_polemicos_img[indices], grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_fotogram_polemicos )
+```
+
+Y el recorte de los subtítulos que hicimos enla primera entrega.
+
+```{r}
+lista_subtitulos <-  lapply(subtitulos_polemicos_img[indices], grid::rasterGrob)
+gridExtra::grid.arrange(grobs=lista_subtitulos)
+
+```
+
+Pues no sé yo si hay sesgo o no. A mi me parece que se meten un poco más con la derecha que con la izquierda, pero lo mismo es que da más juego.
+
+## Tópicos
+
+
+Hacemos algo de topic modelling a la antigua usanza, sin llm's ni nada de eso. _Pasé los rótulos originales por un par de llm's sin obtener resultados claros, el sarcasmo aún le cuesta_
+
+Ya aviso que con tan pocos "documentos",  y siendo tan cortos
+cada rótulo, es muy probable que no salga mucho..
+
+### Tópicos usando conteo de palabras.
+
+Contamos palabras con 3 caracteres o más.
+
+Guardamos la variable `name` que nos indica en qué rótulo ha aparecido
+
+```{r}
+
+word_counts <- subtitulos_proces_one_word %>% 
+    group_by(name, word) %>% 
+    count(sort=TRUE) %>% 
+    mutate(ncharacters = nchar(word)) %>% 
+    filter(
+        ncharacters >= 3) %>% 
+    select(-ncharacters) %>% 
+    ungroup()
+
+
+length(unique(word_counts$name))
+
+head(word_counts, 15)
+
+```
+
+Ahora convertimos este `data.frame` a un `DocumentTermMatrix`
+
+```{r}
+# usamos como peso la TermFrequency de la palabra
+rotulos_dtm <- word_counts %>%
+    cast_dtm(name, word, n, weighting = tm::weightTf)
+
+
+rotulos_dtm
+```
+
+Podríamos haberlo visto en forma de filas = palabras y columnas = rótulo
+
+```{r}
+word_counts  %>%
+    cast_dfm(word, name, n)
+
+```
+
+Vamos a ver si sale algo haciendo un LDA (Latent Dirichlet Allocation)
+
+Considero 20 tópicos porque sí.  El que quiera elegir
+con algo más de criterio que se mire
+[esto](https://cran.r-project.org/web/packages/ldatuning/vignettes/topics.html)
+
+```{r, fig.height= 14}
+
+# Cons
+
+rotulos_lda <- LDA(rotulos_dtm, k = 20, control = list(seed = 1234))
+rotulos_lda
+
+rotulos_lda_td <- tidy(rotulos_lda)
+rotulos_lda_td
+
+# se suele ordenar por beta que ahora mismo no recuerdo que era, 
+
+top_terms <- rotulos_lda_td %>%
+    group_by(topic) %>%
+    top_n(3, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta)
+
+top_terms
+
+
+top_terms %>%
+    mutate(term = reorder_within(term, beta, topic)) %>%
+    ggplot(aes(term, beta)) +
+    geom_bar(stat = "identity") +
+    scale_x_reordered() +
+    facet_wrap(~ topic, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+Pues la verdad es que yo no veo nada interesante
+
+### Tópicos usando tfidf como peso
+
+Vamos a probar usando [tfidf](https://es.wikipedia.org/wiki/Tf-idf)
+
+Como la función `LDA` no permite usar un `DocumentTermMatrix` que se
+haya construido con `cast_dtm` y usando como parámetro de `weighting` el
+peso `tm::weightTfIdf` nos construimos los datos de otra forma.
+
+```{r, warning=FALSE, message=FALSE}
+
+tf_idf_data <- subtitulos_proces_one_word %>% 
+    filter(nchar(word)>2) %>% 
+    group_by(name,word) %>% 
+    summarise(veces_palabra = n()) %>% 
+    bind_tf_idf(word, name, veces_palabra) %>% 
+    ungroup()
+
+tf_idf_data %>% 
+    arrange(desc(veces_palabra)) %>%
+    head()
+
+```
+
+Para cada palabra tenemos su `tf_idf` dentro de cada rótulo en el que
+aparece
+
+```{r}
+tf_idf_data %>% 
+    filter(word== "puigdemont")
+
+```
+
+Como de nuevo LDA solo acepta peso con valores enteros, pues simplemente
+multiplicamos por 100 el `tf_idf` y redondeamos
+
+```{r}
+dtm_long <- tf_idf_data %>% 
+    mutate(tf_idf_integer = round(100*tf_idf)) %>% 
+    cast_dfm(name, word, tf_idf_integer)
+```
+
+```{r}
+lda_model_long_1 <- LDA(dtm_long, k = 20, control = list(seed = 1234))
+```
+
+```{r}
+result <- tidy(lda_model_long_1, 'beta')
+
+result %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+y como suele pasar con tan poco documentos no suele salir nada concluyente
+
+### Sólo con los rótulos polémicos
+
+Asumiendo que parece que no tiene sentido hacer `topicmodelling` sobre
+estos datos, me picó la curiosidad de ver qué pasaba si sólo usaba los
+rótulos polémicos.
+
+```{r, message=FALSE}
+
+tf_idf_data_polem <- subtitulos_proces_one_word %>% 
+    filter(nchar(word)>2, polemica == TRUE) %>% 
+    group_by(name,word) %>% 
+    summarise(veces_palabra = n()) %>% 
+    bind_tf_idf(word, name, veces_palabra) %>% 
+    ungroup() 
+
+
+tf_idf_data_polem %>% 
+    arrange(desc(veces_palabra)) %>%
+    head()
+```
+
+#### Topic modelling usando conteo de palabras
+
+```{r}
+dtm_long_polem <- tf_idf_data_polem %>% 
+    # filter(tf_idf > 0.00006) %>% 
+    # filter(veces_palabra>1) %>%
+    cast_dtm(name, word, veces_palabra)
+
+lda_model_long_polem <- LDA(dtm_long_polem, k = 5, control = list(seed = 1234))
+
+result_polem <- tidy(lda_model_long_polem, 'beta')
+
+```
+
+```{r, fig.width= 12, fig.height=6}
+result_polem %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+
+Y bueno, algún tópico con "sánchez" "feijóo" y el "rey". pero nada muy claro
+
+
+```{r}
+result_documento_polem <-  tidy(lda_model_long_polem, 'gamma')
+
+
+result_documen_polem_top <- 
+    result_documento_polem %>%
+    group_by(topic) %>%
+    top_n(7, gamma) %>%
+    ungroup()
+
+
+ result_documen_polem_top %>%
+    arrange(topic, -gamma) %>% 
+    mutate(document = reorder(document, gamma)) %>%
+    ggplot(aes(document, gamma, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+
+```
+
+Veamos algunos subtítulos del tópico 1
+
+```{r}
+topico_uno <-  result_documen_polem_top |> 
+    filter(topic == 1) |> 
+    pull(document)
+
+subtitulos_proces %>% 
+    filter(name %in% as.numeric(topico_uno)) %>% 
+    pull(texto)
+```
+
+Veamos más documentos relacionados con este tópico
+
+```{r}
+
+top_10_topic3 <-  result_documento_polem %>%
+    group_by(topic) %>% 
+    top_n(12, gamma) %>% 
+    filter(topic==1) %>% 
+    pull(document)
+
+subtitulos_proces %>% 
+    filter(name %in% top_10_topic3) %>% 
+    pull(texto)
+
+```
+
+
+
+#### Topic modelling usando tf_idf
+
+Puede verse algo más claro usando tf-idf
+
+```{r}
+dtm_long_polem_tf_idf <- tf_idf_data_polem %>%
+    mutate(tf_idf_integer = round(100 * tf_idf)) %>%
+    cast_dfm(name, word, tf_idf_integer)
+
+lda_model_long_polem_tf_idf <- LDA(dtm_long_polem_tf_idf, k = 5, control = list(seed = 1234))
+
+result_polem_tf_idf <- tidy(lda_model_long_polem_tf_idf, 'beta')
+
+```
+
+```{r}
+result_polem_tf_idf %>%
+    group_by(topic) %>%
+    top_n(5, beta) %>%
+    ungroup() %>%
+    arrange(topic, -beta) %>% 
+    mutate(term = reorder(term, beta)) %>%
+    ggplot(aes(term, beta, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free", ncol = 4) +
+    coord_flip()
+```
+
+
+### IA's
+
+Alguna prueba con IA, subiendo los rótulos y preguntando. 
+
+```
+Te voy a subir un csv dónde cada fila corresponde a un rótulo del programa Cachitos nochevieja de rtve. en la columna texto está el comentario. Podrías hacer varias cosas 
+1- Identificar rótulos polémicos
+2- Se meten más con el gobierno o con la oposición ' 
+3- Un topic modelling por si hubiera patrones . 
+ChatGPT Plus
+ChatGPT
+¡Claro! Sube el archivo CSV y me pongo manos a la obra. Analizaré el contenido según las tareas que planteas:
+
+Identificar rótulos polémicos: Esto podría incluir identificar lenguaje ofensivo, temas sensibles o comentarios polarizantes.
+Análisis político: Determinar si hay más comentarios críticos hacia el gobierno o hacia la oposición.
+Topic modeling: Utilizaré técnicas como LDA (Latent Dirichlet Allocation) para identificar patrones temáticos en los rótulos.
+¡Adelante, espero tu archivo!
+
+
+
+
+
+
+Tú dijiste:
+2024 Txt Unido
+
+No se puede mostrar la visualización
+ChatGPT Plus
+ChatGPT
+El archivo tiene las siguientes columnas relevantes para el análisis:
+
+texto: Contiene el comentario o rótulo, que será clave para las tareas propuestas.
+Otras columnas como name, n_fichero, n_caracteres y distancia no parecen relevantes para identificar polémica o patrones temáticos directamente.
+Voy a proceder con las tareas solicitadas:
+
+Identificar rótulos polémicos (analizando el contenido de la columna texto).
+Determinar si los comentarios se dirigen más hacia el gobierno o la oposición.
+Realizar un análisis de topic modeling.
+Comienzo con la identificación de rótulos polémicos. ​​
+
+Comentarios Controversiales
+
+
+He identificado los comentarios más polarizantes en función de la polaridad del texto. Te he mostrado una tabla con aquellos rótulos que tienen una polaridad emocional fuerte, positiva o negativa. Ahora paso a analizar si los comentarios se meten más con el gobierno o con la oposición. ​​
+
+Resumen Del Análisis Político
+
+
+He analizado los comentarios para identificar si tienen un sesgo hacia el gobierno o la oposición. La mayoría de los rótulos son neutrales, pero algunos mencionan al gobierno o a la oposición. He presentado los resultados en un resumen visual para que puedas consultarlo. Ahora procederé con el análisis de topic modeling para encontrar patrones temáticos en los rótulos. ​​
+
+Parece que hubo un error con el procesamiento del texto debido a la configuración del idioma para las palabras vacías. Ajustaré el análisis para evitar este problema y continuar con el modelado temático. ​​
+
+Análisis De Topics En Rótulos
+
+
+El análisis de topic modeling ha identificado cinco temas principales en los rótulos, cada uno con sus palabras clave más relevantes. Te he mostrado los resultados en una tabla para que puedas revisarlos.
+
+Si necesitas profundizar en algún tema o realizar algún análisis adicional, ¡avísame! ​​
+
+
+
+
+
+
+Tú dijiste:
+¿Cuáles son los temas más polémicos?
+ChatGPT Plus
+ChatGPT
+Para identificar los temas más polémicos, combinaré los resultados del análisis de polaridad (comentarios más polarizantes) con los temas generados en el topic modeling. Esto permitirá determinar cuáles de los temas contienen una mayor proporción de comentarios con fuerte polaridad emocional.
+
+Voy a calcular esto y mostrarte los resultados.
+
+Parece que hubo un problema al asignar las palabras clave a los temas más polémicos. Revisaré el índice y ajustaré el análisis para garantizar que los temas y sus palabras clave sean correctamente interpretados. Un momento. ​​
+
+Temas Más Polémicos
+
+
+He identificado los temas más polémicos basándome en los comentarios con alta polaridad emocional y sus asignaciones temáticas. Te he mostrado una tabla que incluye:
+
+El tema identificado.
+La cantidad de comentarios controvertidos asociados a cada tema.
+Las palabras clave más representativas de cada tema.
+Si necesitas más detalles o un análisis adicional, ¡házmelo saber! ​​
+
+
+
+
+
+
+Tú dijiste:
+para el análisis quita las stopwords
+ChatGPT Plus
+ChatGPT
+Temas Más Polémicos Sin Stopwords
+
+
+He actualizado el análisis eliminando las stopwords para que los temas reflejen palabras más significativas. Te he mostrado una tabla con:
+
+Los temas más polémicos.
+La cantidad de comentarios controvertidos en cada tema.
+Las palabras clave representativas tras eliminar las stopwords.
+Si quieres ajustar el análisis o necesitas algo más, ¡dímelo! ​​
+
+
+
+
+
+
+Tú dijiste:
+hazme un resumen de tus hallazgos
+ChatGPT Plus
+ChatGPT
+Aquí tienes un resumen de los hallazgos tras analizar los rótulos del programa Cachitos Nochevieja:
+
+1. Identificación de rótulos polémicos
+Se han identificado comentarios polarizantes analizando la polaridad emocional del texto.
+Los comentarios polémicos se caracterizan por un tono fuerte, tanto positivo como negativo, en relación con ciertos temas o expresiones.
+2. Análisis político
+La mayoría de los rótulos son neutrales respecto a su inclinación política.
+Entre los comentarios con sesgo, 5 mencionan al gobierno y 3 a la oposición, lo que indica un equilibrio leve hacia las críticas al gobierno.
+3. Modelado temático (Topic Modeling)
+Se identificaron 5 temas principales en los rótulos, cada uno representado por las palabras más relevantes.
+Los temas más polémicos incluyen aquellos relacionados con expresiones personales, momentos históricos (e.g., años específicos), y observaciones humorísticas o críticas que generan reacciones emocionales.
+4. Temas más polémicos
+Los temas con mayor cantidad de comentarios controvertidos están relacionados con:
+Topic 4: Comentarios de contraste o juicios valorativos (e.g., "esto", "fue", "siempre", "menos").
+Topic 5: Expresiones de celebración o reflexiones (e.g., "hora", "feliz", "canción", "también").
+Otros temas incluyen referencias a nombres, canciones y situaciones que despiertan opiniones polarizadas.
+Conclusiones
+Los rótulos más polémicos parecen surgir de observaciones humorísticas, críticas implícitas o referencias culturales que tocan temas sensibles.
+Aunque la política no domina, los comentarios con sesgo están ligeramente inclinados hacia referencias al gobierno.
+El análisis temático muestra que los patrones más relevantes están relacionados con expresiones generales, referencias temporales, y juicios o emociones personales.
+Si necesitas profundizar en algún punto o realizar otro tipo de análisis, ¡avísame!
+
+
+
+
+
+
+Tú dijiste:
+y hay sesgo n contra del rey ? 
+ChatGPT Plus
+ChatGPT
+Voy a analizar si hay sesgo contra el rey en los rótulos. Buscaré menciones específicas relacionadas con el rey o la monarquía (como "rey", "monarquía", "corona", "Felipe VI", etc.) y determinaré si tienen polaridad negativa. Un momento mientras realizo este análisis.
+
+Rótulos Relacionados Con La Monarquía
+
+
+He analizado los rótulos en busca de menciones a la monarquía (como "rey", "monarquía", "Felipe VI", etc.) y sus polaridades:
+
+Rótulos encontrados: Hay menciones relacionadas con la monarquía en 4 rótulos.
+Distribución del sentimiento: Todas las menciones tienen un sentimiento neutral, sin indicios de sesgo negativo o polarización.
+Te he mostrado los rótulos relevantes para que puedas revisarlos. Si necesitas algún análisis más específico, ¡házmelo saber! ​​
+
+
+
+
+
+
+Tú dijiste:
+y se meten mucho con Errejón ? 
+ChatGPT Plus
+ChatGPT
+Voy a buscar menciones relacionadas con Íñigo Errejón (como "Errejón", "Íñigo Errejón", "Más País", etc.) en los rótulos y analizar su polaridad para determinar si hay un patrón significativo en los comentarios hacia él. Un momento mientras realizo este análisis.
+
+Rótulos Relacionados Con Errejón
+
+
+He analizado los rótulos en busca de menciones relacionadas con Íñigo Errejón:
+
+Rótulos encontrados: Hay 2 menciones relacionadas con Errejón.
+Distribución del sentimiento: Ambos rótulos tienen un sentimiento neutral, sin indicios de sesgo negativo o polarización.
+Te he mostrado los rótulos específicos en una tabla para que puedas revisarlos. Si quieres investigar algo más, ¡dímelo! ​​
+
+
+
+
+
+
+Tú dijiste:
+intenta analizarlo todo pero teniendo en cuenta que es un programa sarcástico
+ChatGPT Plus
+ChatGPT
+Para ajustar el análisis considerando que Cachitos de Nochevieja es un programa sarcástico, necesito reinterpretar las métricas de polaridad y sesgo desde el prisma del humor, la ironía y el contexto. Esto implica:
+
+Reevaluar la polaridad:
+
+Un comentario sarcástico puede ser percibido como negativo según la polaridad, pero el contexto lo convierte en humorístico. Ajustaré el análisis para dar más peso a palabras o frases que suelen asociarse al sarcasmo.
+Identificar sarcasmo político:
+
+Analizar si las menciones al gobierno, oposición, o figuras públicas como el rey o Errejón tienen un tono irónico. Esto requiere identificar expresiones que sean irónicas, exageradas o con doble sentido.
+Revisar los temas más polémicos:
+
+Evaluar si los temas identificados en el modelado temático contienen patrones de sarcasmo o crítica humorística.
+Voy a recalibrar el análisis con estas consideraciones y mostrarte los resultados. Un momento.
+
+Resumen De Sarcasmo En Temas Y Menciones
+
+
+Sarcasmo En Menciones A Monarquía
+
+
+Sarcasmo En Menciones A Errejón
+
+
+Tras ajustar el análisis para considerar el tono sarcástico de Cachitos de Nochevieja, aquí están los hallazgos principales:
+
+1. Sarcasmo en temas generales
+El sarcasmo se detectó en una proporción muy baja de comentarios, con una tasa de sarcasmo máxima de 0.8% en los temas analizados.
+Temas con sarcasmo detectado:
+Topic 2 y Topic 4 mostraron indicios de comentarios sarcásticos, aunque en volúmenes pequeños.
+2. Menciones a la monarquía
+De los 4 comentarios relacionados con la monarquía, ninguno fue identificado como sarcástico según los patrones detectados.
+Las menciones son mayoritariamente neutrales en su polaridad y no contienen ironía explícita.
+3. Menciones a Íñigo Errejón
+De los 2 comentarios que mencionan a Errejón, tampoco se detectó sarcasmo explícito.
+Ambos comentarios también tienen polaridad neutral, lo que sugiere que, al menos en este contexto, no hubo ataques irónicos o humorísticos destacados.
+Conclusiones generales
+Aunque el sarcasmo es una parte fundamental del tono de Cachitos, parece estar distribuido de manera dispersa y no se concentra específicamente en temas como la monarquía o Errejón.
+Los comentarios relacionados con estos temas tienden más hacia la neutralidad, sin un sesgo humorístico o polarizante claro.
+Si deseas afinar el análisis o enfocarlo en algún aspecto específico, ¡avísame! ​​
+
+
+
+
+
+
+Tú dijiste:
+y con respecto a Feijóo, Sánchez o Begoña Gómez? 
+ChatGPT Plus
+ChatGPT
+Hubo un problema al procesar las menciones con las etiquetas de sentimiento. Ajustaré el análisis para corregirlo y ofrecerte los resultados. Un momento. ​​
+
+Resumen De Sentimiento Por Figura
+
+
+Aquí tienes el análisis de las menciones a Feijóo, Sánchez y Begoña Gómez en los rótulos:
+
+Resumen de Sentimientos
+Begoña Gómez:
+2 menciones detectadas, todas con sentimiento neutral.
+Feijóo:
+3 menciones, todas con sentimiento neutral.
+Sánchez:
+7 menciones, también todas con sentimiento neutral.
+Conclusión
+No se detectaron sesgos evidentes o comentarios sarcásticos en las menciones a estas figuras. Los rótulos parecen mantener un tono neutral hacia estos personajes, al menos en las menciones explícitas.
+
+```
+
+
+## Coda
+
+Pues poco más, no he comentado muchos los tópicos este año, porque prefiero que cada uno trastee con el código y vea que le sale. 
+
+Sin más, os deseo un  **Feliz 2025 a todos** y a ver si el año que viene sigo con tiempo para hacer estas cosas. 
