@@ -272,13 +272,13 @@ Listening
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">simulate_regression</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n_rows</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_regression</a></span><span class="op">(</span><span class="va">n_rows</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">predictor_16</span><span class="op">:</span><span class="va">predictor_20</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_regression</a></span><span class="op">(</span><span class="va">n_rows</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">predictor_16</span><span class="op">:</span><span class="va">predictor_20</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">contains</span><span class="op">(</span><span class="st">"_1"</span><span class="op">)</span>, <span class="va">bin_roughly</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">simulate_classification</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n_rows</span>, <span class="va">n_levels</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_classification</a></span><span class="op">(</span><span class="va">n_rows</span>, num_linear <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_classification</a></span><span class="op">(</span><span class="va">n_rows</span>, num_linear <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">contains</span><span class="op">(</span><span class="st">"_1"</span><span class="op">)</span>, <span class="va">bin_roughly</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -347,7 +347,7 @@ Listening
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">wf1_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/fit.html">fit</a></span><span class="op">(</span><span class="va">mod1_spec</span>,formula <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,  <span class="va">d_train_bake</span><span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 5.043 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 4.797 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>En tidymodels para poder usar el <em>submodel trick</em> directamente teneemos la función <code>multi_predict</code> pero no tiene implementado la interfaz de fórmula por lo que tenemos que usar <code>fit_xy</code></p>
@@ -498,11 +498,11 @@ Listening
 </section></section><section id="de-qué-nos-sirve-este-truco-y-como-funciona-en-tidymodels" class="level2"><h2 class="anchored" data-anchor-id="de-qué-nos-sirve-este-truco-y-como-funciona-en-tidymodels">¿De qué nos sirve este truco y como funciona en <code>tidymodels</code>?</h2>
 <p>Cuando hacemos validación cruzada para encontrar los mejores hiperparámetros, este truco sirve para no tener que ejecutar varios modelos. Para que funcione en <code>tidymodels</code> hay que pasarle un grid en formato <code>tibble</code> o <code>data.frame</code> a la función de <code>tune_grid</code>. Veámoslo</p>
 <p>Hacemos el “tuneado” dejando que sea <code>tidymodels</code> quien haga el grid, en este caso no se utiliza el <em>submodel trick</em>. Si tenemos 4 combinaciones y 5 folds, <code>tidymodels</code> ejecutará 4 x 5 modelos.</p>
-<p>Nota: Cuando haya muchos datos y muchos folds es mejor usar <code>plan(multicore)</code> o <code>plan(multisession)</code> para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que la paralelización nativa con <code>xgboost</code> o <code>lightgbm</code> utilice un solo hilo (o como mucho 2), porque si no entra en conflicto la paralelización de <code>future</code> con la nativa de esas librerías basada en <code>OpenMP</code></p>
+<p>Nota: Cuando haya muchos datos y muchos folds es mejor usar <code>plan(multicore)</code> o <code>plan(multisession)</code> para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que la paralelización nativa con <code>xgboost</code> o <code>lightgbm</code> utilice un solo hilo (o como mucho 2), porque si no entra en conflicto la paralelización de <code>future</code> con la nativa de esas librerías basada en <code>OpenMP</code>. Gracias a <a href="https://bsky.app/profile/jrosell.bsky.social">Jordi Rosell</a> por las pistas.</p>
 <div class="cell">
 <details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
 <span><span class="va">bt</span> <span class="op">&lt;-</span> </span>
-<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/boost_tree.html">boost_tree</a></span><span class="op">(</span> trees <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span>, learn_rate <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/boost_tree.html">boost_tree</a></span><span class="op">(</span> trees <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span>, learn_rate <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_args.html">set_mode</a></span><span class="op">(</span><span class="st">"classification"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># engine xgboost</span></span>
@@ -520,7 +520,7 @@ Listening
 <div class="cell">
 <details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
 <span><span class="co"># Extraer hiperparámetros y definir rango</span></span>
-<span><span class="va">param_grid</span> <span class="op">&lt;-</span> <span class="fu">hardhat</span><span class="fu">::</span><span class="fu"><a href="https://hardhat.tidymodels.org/reference/hardhat-extract.html">extract_parameter_set_dials</a></span><span class="op">(</span><span class="va">bt</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span><span class="va">param_grid</span> <span class="op">&lt;-</span> <span class="fu">hardhat</span><span class="fu">::</span><span class="fu"><a href="https://hardhat.tidymodels.org/reference/hardhat-extract.html">extract_parameter_set_dials</a></span><span class="op">(</span><span class="va">bt</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span>trees <span class="op">=</span> <span class="fu">trees</span><span class="op">(</span>range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">140</span><span class="op">)</span><span class="op">)</span>, learn_rate <span class="op">=</span> <span class="fu">learn_rate</span><span class="op">(</span>range<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">49</span><span class="op">)</span></span>
@@ -563,7 +563,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_random</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 223.11 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 230.147 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -647,7 +647,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 83.872 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 110.519 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -698,7 +698,7 @@ Listening
 <p>Otra que cosa que se puede hacer, es simplemente cambiando el <code>engine</code> a uno que funcione más rápido. por ejempolo a <code>lightgbm</code></p>
 <div class="cell">
 <details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
-<span><span class="va">bt_lgb</span> <span class="op">&lt;-</span> <span class="va">bt</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_engine.html">set_engine</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
+<span><span class="va">bt_lgb</span> <span class="op">&lt;-</span> <span class="va">bt</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_engine.html">set_engine</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
 <span></span>
 <span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -710,7 +710,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span>   </span>
-<span><span class="co">#&gt; 17.987 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 31.597 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -1460,13 +1460,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb21-88"><a href="#cb21-88" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb21-89"><a href="#cb21-89" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-90"><a href="#cb21-90" aria-hidden="true" tabindex="-1"></a>simulate_regression <span class="ot">&lt;-</span> <span class="cf">function</span>(n_rows) {</span>
-<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_regression</span>(n_rows) <span class="sc">%&gt;%</span></span>
-<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(predictor_16<span class="sc">:</span>predictor_20)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_regression</span>(n_rows) <span class="sc">|&gt;</span></span>
+<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(predictor_16<span class="sc">:</span>predictor_20)) <span class="sc">|&gt;</span></span>
 <span id="cb21-93"><a href="#cb21-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">"_1"</span>), bin_roughly))</span>
 <span id="cb21-94"><a href="#cb21-94" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb21-95"><a href="#cb21-95" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-96"><a href="#cb21-96" aria-hidden="true" tabindex="-1"></a>simulate_classification <span class="ot">&lt;-</span> <span class="cf">function</span>(n_rows, n_levels) {</span>
-<span id="cb21-97"><a href="#cb21-97" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_classification</span>(n_rows, <span class="at">num_linear =</span> <span class="dv">12</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-97"><a href="#cb21-97" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_classification</span>(n_rows, <span class="at">num_linear =</span> <span class="dv">12</span>) <span class="sc">|&gt;</span></span>
 <span id="cb21-98"><a href="#cb21-98" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">"_1"</span>), bin_roughly))</span>
 <span id="cb21-99"><a href="#cb21-99" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb21-100"><a href="#cb21-100" aria-hidden="true" tabindex="-1"></a></span>
@@ -1628,151 +1628,152 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb21-274"><a href="#cb21-274" aria-hidden="true" tabindex="-1"></a>Nota: Cuando haya muchos datos y muchos folds es mejor usar <span class="in">`plan(multicore)`</span> o <span class="in">`plan(multisession)`</span></span>
 <span id="cb21-275"><a href="#cb21-275" aria-hidden="true" tabindex="-1"></a>para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que</span>
 <span id="cb21-276"><a href="#cb21-276" aria-hidden="true" tabindex="-1"></a>la paralelización nativa con <span class="in">`xgboost`</span> o <span class="in">`lightgbm`</span> utilice un solo hilo (o como mucho 2), porque si </span>
-<span id="cb21-277"><a href="#cb21-277" aria-hidden="true" tabindex="-1"></a>no entra en conflicto la paralelización de <span class="in">`future`</span> con la nativa de esas librerías basada en <span class="in">`OpenMP`</span></span>
-<span id="cb21-278"><a href="#cb21-278" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-281"><a href="#cb21-281" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-282"><a href="#cb21-282" aria-hidden="true" tabindex="-1"></a>bt <span class="ot">&lt;-</span> </span>
-<span id="cb21-283"><a href="#cb21-283" aria-hidden="true" tabindex="-1"></a>  <span class="fu">boost_tree</span>( <span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb21-284"><a href="#cb21-284" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb21-285"><a href="#cb21-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-286"><a href="#cb21-286" aria-hidden="true" tabindex="-1"></a><span class="co"># engine xgboost</span></span>
-<span id="cb21-287"><a href="#cb21-287" aria-hidden="true" tabindex="-1"></a>bt</span>
-<span id="cb21-288"><a href="#cb21-288" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-289"><a href="#cb21-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-277"><a href="#cb21-277" aria-hidden="true" tabindex="-1"></a>no entra en conflicto la paralelización de <span class="in">`future`</span> con la nativa de esas librerías basada en <span class="in">`OpenMP`</span>. </span>
+<span id="cb21-278"><a href="#cb21-278" aria-hidden="true" tabindex="-1"></a>Gracias a <span class="co">[</span><span class="ot">Jordi Rosell</span><span class="co">](https://bsky.app/profile/jrosell.bsky.social)</span> por las pistas. </span>
+<span id="cb21-279"><a href="#cb21-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-282"><a href="#cb21-282" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-283"><a href="#cb21-283" aria-hidden="true" tabindex="-1"></a>bt <span class="ot">&lt;-</span> </span>
+<span id="cb21-284"><a href="#cb21-284" aria-hidden="true" tabindex="-1"></a>  <span class="fu">boost_tree</span>( <span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb21-285"><a href="#cb21-285" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb21-286"><a href="#cb21-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-287"><a href="#cb21-287" aria-hidden="true" tabindex="-1"></a><span class="co"># engine xgboost</span></span>
+<span id="cb21-288"><a href="#cb21-288" aria-hidden="true" tabindex="-1"></a>bt</span>
+<span id="cb21-289"><a href="#cb21-289" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb21-290"><a href="#cb21-290" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-291"><a href="#cb21-291" aria-hidden="true" tabindex="-1"></a>Si dejamos a tidymodels hacer el <span class="in">`grid`</span> de parámetros usará combinaciones aleatorias de los parámetros. </span>
-<span id="cb21-292"><a href="#cb21-292" aria-hidden="true" tabindex="-1"></a>Por ejemplo </span>
-<span id="cb21-293"><a href="#cb21-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-296"><a href="#cb21-296" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-297"><a href="#cb21-297" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer hiperparámetros y definir rango</span></span>
-<span id="cb21-298"><a href="#cb21-298" aria-hidden="true" tabindex="-1"></a>param_grid <span class="ot">&lt;-</span> hardhat<span class="sc">::</span><span class="fu">extract_parameter_set_dials</span>(bt) <span class="sc">%&gt;%</span></span>
-<span id="cb21-299"><a href="#cb21-299" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">140</span>)), <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="at">range=</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)))</span>
-<span id="cb21-300"><a href="#cb21-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-301"><a href="#cb21-301" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">49</span>)</span>
-<span id="cb21-302"><a href="#cb21-302" aria-hidden="true" tabindex="-1"></a>grid_random <span class="ot">&lt;-</span> <span class="fu">grid_random</span>(param_grid, <span class="at">size =</span> <span class="dv">16</span>)</span>
-<span id="cb21-303"><a href="#cb21-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-291"><a href="#cb21-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-292"><a href="#cb21-292" aria-hidden="true" tabindex="-1"></a>Si dejamos a tidymodels hacer el <span class="in">`grid`</span> de parámetros usará combinaciones aleatorias de los parámetros. </span>
+<span id="cb21-293"><a href="#cb21-293" aria-hidden="true" tabindex="-1"></a>Por ejemplo </span>
+<span id="cb21-294"><a href="#cb21-294" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-297"><a href="#cb21-297" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-298"><a href="#cb21-298" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer hiperparámetros y definir rango</span></span>
+<span id="cb21-299"><a href="#cb21-299" aria-hidden="true" tabindex="-1"></a>param_grid <span class="ot">&lt;-</span> hardhat<span class="sc">::</span><span class="fu">extract_parameter_set_dials</span>(bt) <span class="sc">|&gt;</span></span>
+<span id="cb21-300"><a href="#cb21-300" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">140</span>)), <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="at">range=</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)))</span>
+<span id="cb21-301"><a href="#cb21-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-302"><a href="#cb21-302" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">49</span>)</span>
+<span id="cb21-303"><a href="#cb21-303" aria-hidden="true" tabindex="-1"></a>grid_random <span class="ot">&lt;-</span> <span class="fu">grid_random</span>(param_grid, <span class="at">size =</span> <span class="dv">16</span>)</span>
 <span id="cb21-304"><a href="#cb21-304" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-305"><a href="#cb21-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-306"><a href="#cb21-306" aria-hidden="true" tabindex="-1"></a>grid_random</span>
-<span id="cb21-307"><a href="#cb21-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-308"><a href="#cb21-308" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-309"><a href="#cb21-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-310"><a href="#cb21-310" aria-hidden="true" tabindex="-1"></a>Y sería raro que se tenga mismo valor de <span class="in">`learn_rate`</span>  para distintos valores de <span class="in">`trees`</span>. Recordemos </span>
-<span id="cb21-311"><a href="#cb21-311" aria-hidden="true" tabindex="-1"></a>que en estos modelos el _submodel trick_  funciona solo para  <span class="in">`trees`</span>. Si tuviéramos mismo valor de learn_rate</span>
-<span id="cb21-312"><a href="#cb21-312" aria-hidden="true" tabindex="-1"></a>y diferentes valores de <span class="in">`trees`</span> bastaría con ajustar el modelo con mayor número de árboles.</span>
-<span id="cb21-313"><a href="#cb21-313" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-306"><a href="#cb21-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-307"><a href="#cb21-307" aria-hidden="true" tabindex="-1"></a>grid_random</span>
+<span id="cb21-308"><a href="#cb21-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-309"><a href="#cb21-309" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-310"><a href="#cb21-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-311"><a href="#cb21-311" aria-hidden="true" tabindex="-1"></a>Y sería raro que se tenga mismo valor de <span class="in">`learn_rate`</span>  para distintos valores de <span class="in">`trees`</span>. Recordemos </span>
+<span id="cb21-312"><a href="#cb21-312" aria-hidden="true" tabindex="-1"></a>que en estos modelos el _submodel trick_  funciona solo para  <span class="in">`trees`</span>. Si tuviéramos mismo valor de learn_rate</span>
+<span id="cb21-313"><a href="#cb21-313" aria-hidden="true" tabindex="-1"></a>y diferentes valores de <span class="in">`trees`</span> bastaría con ajustar el modelo con mayor número de árboles.</span>
 <span id="cb21-314"><a href="#cb21-314" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-315"><a href="#cb21-315" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-316"><a href="#cb21-316" aria-hidden="true" tabindex="-1"></a>Veamos cuanta tarda en ajustar estas 16 combinaciones de parámetros, sobre los 5 folds. Es decir 80 modelos.</span>
-<span id="cb21-317"><a href="#cb21-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-316"><a href="#cb21-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-317"><a href="#cb21-317" aria-hidden="true" tabindex="-1"></a>Veamos cuanta tarda en ajustar estas 16 combinaciones de parámetros, sobre los 5 folds. Es decir 80 modelos.</span>
 <span id="cb21-318"><a href="#cb21-318" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-319"><a href="#cb21-319" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-320"><a href="#cb21-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-323"><a href="#cb21-323" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-324"><a href="#cb21-324" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
-<span id="cb21-325"><a href="#cb21-325" aria-hidden="true" tabindex="-1"></a>    basic <span class="ot">&lt;-</span> </span>
-<span id="cb21-326"><a href="#cb21-326" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
-<span id="cb21-327"><a href="#cb21-327" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
-<span id="cb21-328"><a href="#cb21-328" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
-<span id="cb21-329"><a href="#cb21-329" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
-<span id="cb21-330"><a href="#cb21-330" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_random</span>
-<span id="cb21-331"><a href="#cb21-331" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb21-332"><a href="#cb21-332" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
-<span id="cb21-333"><a href="#cb21-333" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-334"><a href="#cb21-334" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-335"><a href="#cb21-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-321"><a href="#cb21-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-324"><a href="#cb21-324" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-325"><a href="#cb21-325" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-326"><a href="#cb21-326" aria-hidden="true" tabindex="-1"></a>    basic <span class="ot">&lt;-</span> </span>
+<span id="cb21-327"><a href="#cb21-327" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-328"><a href="#cb21-328" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
+<span id="cb21-329"><a href="#cb21-329" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-330"><a href="#cb21-330" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-331"><a href="#cb21-331" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_random</span>
+<span id="cb21-332"><a href="#cb21-332" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-333"><a href="#cb21-333" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb21-334"><a href="#cb21-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-335"><a href="#cb21-335" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb21-336"><a href="#cb21-336" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-337"><a href="#cb21-337" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-340"><a href="#cb21-340" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-341"><a href="#cb21-341" aria-hidden="true" tabindex="-1"></a>(metricas_basic <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(basic))</span>
-<span id="cb21-342"><a href="#cb21-342" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-343"><a href="#cb21-343" aria-hidden="true" tabindex="-1"></a>metricas_basic  <span class="sc">|&gt;</span>  </span>
-<span id="cb21-344"><a href="#cb21-344" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
-<span id="cb21-345"><a href="#cb21-345" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
-<span id="cb21-346"><a href="#cb21-346" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-347"><a href="#cb21-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-338"><a href="#cb21-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-341"><a href="#cb21-341" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-342"><a href="#cb21-342" aria-hidden="true" tabindex="-1"></a>(metricas_basic <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(basic))</span>
+<span id="cb21-343"><a href="#cb21-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-344"><a href="#cb21-344" aria-hidden="true" tabindex="-1"></a>metricas_basic  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-345"><a href="#cb21-345" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-346"><a href="#cb21-346" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-347"><a href="#cb21-347" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb21-348"><a href="#cb21-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-349"><a href="#cb21-349" aria-hidden="true" tabindex="-1"></a>Para aprovechar el _submodel trick_  hay que construir un _grid_ dónde a igual combinación de otros </span>
-<span id="cb21-350"><a href="#cb21-350" aria-hidden="true" tabindex="-1"></a>parámetros tengamos diferentes valores de <span class="in">`trees`</span></span>
-<span id="cb21-351"><a href="#cb21-351" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-354"><a href="#cb21-354" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-355"><a href="#cb21-355" aria-hidden="true" tabindex="-1"></a>grid_regular <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(param_grid, <span class="at">levels =</span> <span class="dv">4</span>)</span>
-<span id="cb21-356"><a href="#cb21-356" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-357"><a href="#cb21-357" aria-hidden="true" tabindex="-1"></a>grid_regular</span>
-<span id="cb21-358"><a href="#cb21-358" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-359"><a href="#cb21-359" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-360"><a href="#cb21-360" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-361"><a href="#cb21-361" aria-hidden="true" tabindex="-1"></a>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <span class="in">`trees = 100`</span></span>
-<span id="cb21-362"><a href="#cb21-362" aria-hidden="true" tabindex="-1"></a>y <span class="in">`tidymodels`</span> lo tiene en cuenta.</span>
-<span id="cb21-363"><a href="#cb21-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-349"><a href="#cb21-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-350"><a href="#cb21-350" aria-hidden="true" tabindex="-1"></a>Para aprovechar el _submodel trick_  hay que construir un _grid_ dónde a igual combinación de otros </span>
+<span id="cb21-351"><a href="#cb21-351" aria-hidden="true" tabindex="-1"></a>parámetros tengamos diferentes valores de <span class="in">`trees`</span></span>
+<span id="cb21-352"><a href="#cb21-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-355"><a href="#cb21-355" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-356"><a href="#cb21-356" aria-hidden="true" tabindex="-1"></a>grid_regular <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(param_grid, <span class="at">levels =</span> <span class="dv">4</span>)</span>
+<span id="cb21-357"><a href="#cb21-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-358"><a href="#cb21-358" aria-hidden="true" tabindex="-1"></a>grid_regular</span>
+<span id="cb21-359"><a href="#cb21-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-360"><a href="#cb21-360" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-361"><a href="#cb21-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-362"><a href="#cb21-362" aria-hidden="true" tabindex="-1"></a>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <span class="in">`trees = 100`</span></span>
+<span id="cb21-363"><a href="#cb21-363" aria-hidden="true" tabindex="-1"></a>y <span class="in">`tidymodels`</span> lo tiene en cuenta.</span>
 <span id="cb21-364"><a href="#cb21-364" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-365"><a href="#cb21-365" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-368"><a href="#cb21-368" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-369"><a href="#cb21-369" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
-<span id="cb21-370"><a href="#cb21-370" aria-hidden="true" tabindex="-1"></a>    xgb_with_sub_trick <span class="ot">&lt;-</span> </span>
-<span id="cb21-371"><a href="#cb21-371" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
-<span id="cb21-372"><a href="#cb21-372" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
-<span id="cb21-373"><a href="#cb21-373" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
-<span id="cb21-374"><a href="#cb21-374" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
-<span id="cb21-375"><a href="#cb21-375" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
-<span id="cb21-376"><a href="#cb21-376" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb21-377"><a href="#cb21-377" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
-<span id="cb21-378"><a href="#cb21-378" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-379"><a href="#cb21-379" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-380"><a href="#cb21-380" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-383"><a href="#cb21-383" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-384"><a href="#cb21-384" aria-hidden="true" tabindex="-1"></a>(metricas_xgb_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(xgb_with_sub_trick))</span>
-<span id="cb21-385"><a href="#cb21-385" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-386"><a href="#cb21-386" aria-hidden="true" tabindex="-1"></a>metricas_xgb_sub_trick  <span class="sc">|&gt;</span>  </span>
-<span id="cb21-387"><a href="#cb21-387" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
-<span id="cb21-388"><a href="#cb21-388" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
-<span id="cb21-389"><a href="#cb21-389" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-390"><a href="#cb21-390" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-391"><a href="#cb21-391" aria-hidden="true" tabindex="-1"></a>Y debería haber tardado menos. </span>
-<span id="cb21-392"><a href="#cb21-392" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-393"><a href="#cb21-393" aria-hidden="true" tabindex="-1"></a>Vemos las métricas </span>
-<span id="cb21-394"><a href="#cb21-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-366"><a href="#cb21-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-369"><a href="#cb21-369" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-370"><a href="#cb21-370" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-371"><a href="#cb21-371" aria-hidden="true" tabindex="-1"></a>    xgb_with_sub_trick <span class="ot">&lt;-</span> </span>
+<span id="cb21-372"><a href="#cb21-372" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-373"><a href="#cb21-373" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
+<span id="cb21-374"><a href="#cb21-374" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-375"><a href="#cb21-375" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-376"><a href="#cb21-376" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
+<span id="cb21-377"><a href="#cb21-377" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-378"><a href="#cb21-378" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb21-379"><a href="#cb21-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-380"><a href="#cb21-380" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-381"><a href="#cb21-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-384"><a href="#cb21-384" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-385"><a href="#cb21-385" aria-hidden="true" tabindex="-1"></a>(metricas_xgb_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(xgb_with_sub_trick))</span>
+<span id="cb21-386"><a href="#cb21-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-387"><a href="#cb21-387" aria-hidden="true" tabindex="-1"></a>metricas_xgb_sub_trick  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-388"><a href="#cb21-388" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-389"><a href="#cb21-389" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-390"><a href="#cb21-390" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-391"><a href="#cb21-391" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-392"><a href="#cb21-392" aria-hidden="true" tabindex="-1"></a>Y debería haber tardado menos. </span>
+<span id="cb21-393"><a href="#cb21-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-394"><a href="#cb21-394" aria-hidden="true" tabindex="-1"></a>Vemos las métricas </span>
 <span id="cb21-395"><a href="#cb21-395" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-396"><a href="#cb21-396" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-397"><a href="#cb21-397" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-398"><a href="#cb21-398" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-399"><a href="#cb21-399" aria-hidden="true" tabindex="-1"></a><span class="fu">## Truco adicional</span></span>
-<span id="cb21-400"><a href="#cb21-400" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-401"><a href="#cb21-401" aria-hidden="true" tabindex="-1"></a>Otra que cosa que se puede hacer, es simplemente cambiando el <span class="in">`engine`</span> a uno que funcione más </span>
-<span id="cb21-402"><a href="#cb21-402" aria-hidden="true" tabindex="-1"></a>rápido. por ejempolo a <span class="in">`lightgbm`</span></span>
-<span id="cb21-403"><a href="#cb21-403" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-399"><a href="#cb21-399" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-400"><a href="#cb21-400" aria-hidden="true" tabindex="-1"></a><span class="fu">## Truco adicional</span></span>
+<span id="cb21-401"><a href="#cb21-401" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-402"><a href="#cb21-402" aria-hidden="true" tabindex="-1"></a>Otra que cosa que se puede hacer, es simplemente cambiando el <span class="in">`engine`</span> a uno que funcione más </span>
+<span id="cb21-403"><a href="#cb21-403" aria-hidden="true" tabindex="-1"></a>rápido. por ejempolo a <span class="in">`lightgbm`</span></span>
 <span id="cb21-404"><a href="#cb21-404" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-407"><a href="#cb21-407" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-408"><a href="#cb21-408" aria-hidden="true" tabindex="-1"></a>bt_lgb <span class="ot">&lt;-</span> bt <span class="sc">%&gt;%</span> <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
-<span id="cb21-409"><a href="#cb21-409" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-405"><a href="#cb21-405" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-408"><a href="#cb21-408" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-409"><a href="#cb21-409" aria-hidden="true" tabindex="-1"></a>bt_lgb <span class="ot">&lt;-</span> bt <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
 <span id="cb21-410"><a href="#cb21-410" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-411"><a href="#cb21-411" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
-<span id="cb21-412"><a href="#cb21-412" aria-hidden="true" tabindex="-1"></a>lgb_with_sub_trick <span class="ot">&lt;-</span>  </span>
-<span id="cb21-413"><a href="#cb21-413" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
-<span id="cb21-414"><a href="#cb21-414" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt_lgb,</span>
-<span id="cb21-415"><a href="#cb21-415" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
-<span id="cb21-416"><a href="#cb21-416" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
-<span id="cb21-417"><a href="#cb21-417" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
-<span id="cb21-418"><a href="#cb21-418" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb21-419"><a href="#cb21-419" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()   </span>
-<span id="cb21-420"><a href="#cb21-420" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-421"><a href="#cb21-421" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-424"><a href="#cb21-424" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb21-425"><a href="#cb21-425" aria-hidden="true" tabindex="-1"></a>(metricas_lgb_with_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(lgb_with_sub_trick))</span>
-<span id="cb21-426"><a href="#cb21-426" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-427"><a href="#cb21-427" aria-hidden="true" tabindex="-1"></a>metricas_lgb_with_sub_trick  <span class="sc">|&gt;</span> </span>
-<span id="cb21-428"><a href="#cb21-428" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
-<span id="cb21-429"><a href="#cb21-429" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
-<span id="cb21-430"><a href="#cb21-430" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb21-431"><a href="#cb21-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-411"><a href="#cb21-411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-412"><a href="#cb21-412" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-413"><a href="#cb21-413" aria-hidden="true" tabindex="-1"></a>lgb_with_sub_trick <span class="ot">&lt;-</span>  </span>
+<span id="cb21-414"><a href="#cb21-414" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-415"><a href="#cb21-415" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt_lgb,</span>
+<span id="cb21-416"><a href="#cb21-416" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-417"><a href="#cb21-417" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-418"><a href="#cb21-418" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
+<span id="cb21-419"><a href="#cb21-419" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-420"><a href="#cb21-420" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()   </span>
+<span id="cb21-421"><a href="#cb21-421" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-422"><a href="#cb21-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-425"><a href="#cb21-425" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-426"><a href="#cb21-426" aria-hidden="true" tabindex="-1"></a>(metricas_lgb_with_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(lgb_with_sub_trick))</span>
+<span id="cb21-427"><a href="#cb21-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-428"><a href="#cb21-428" aria-hidden="true" tabindex="-1"></a>metricas_lgb_with_sub_trick  <span class="sc">|&gt;</span> </span>
+<span id="cb21-429"><a href="#cb21-429" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-430"><a href="#cb21-430" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-431"><a href="#cb21-431" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb21-432"><a href="#cb21-432" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-433"><a href="#cb21-433" aria-hidden="true" tabindex="-1"></a>Si os fijáis en las salidas al final de cada <span class="in">`tictoc::toc()`</span> se ve que con el truco de los submodelos</span>
-<span id="cb21-434"><a href="#cb21-434" aria-hidden="true" tabindex="-1"></a>ganamos velocidad, pero que si además cambiamos de "engine"  puede llegar a ser 10 veces más rápido.</span>
-<span id="cb21-435"><a href="#cb21-435" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-436"><a href="#cb21-436" aria-hidden="true" tabindex="-1"></a>En próximas entradas contaré algún truquillo más, como los método de <span class="in">`racing`</span>, que permite que cuando</span>
-<span id="cb21-437"><a href="#cb21-437" aria-hidden="true" tabindex="-1"></a>estemos haciendo el "tuning", se descarten modelos sin tener qeu esperar a que se ajusten en todos los folds. </span>
-<span id="cb21-438"><a href="#cb21-438" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-439"><a href="#cb21-439" aria-hidden="true" tabindex="-1"></a>Un saludo. </span>
+<span id="cb21-433"><a href="#cb21-433" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-434"><a href="#cb21-434" aria-hidden="true" tabindex="-1"></a>Si os fijáis en las salidas al final de cada <span class="in">`tictoc::toc()`</span> se ve que con el truco de los submodelos</span>
+<span id="cb21-435"><a href="#cb21-435" aria-hidden="true" tabindex="-1"></a>ganamos velocidad, pero que si además cambiamos de "engine"  puede llegar a ser 10 veces más rápido.</span>
+<span id="cb21-436"><a href="#cb21-436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-437"><a href="#cb21-437" aria-hidden="true" tabindex="-1"></a>En próximas entradas contaré algún truquillo más, como los método de <span class="in">`racing`</span>, que permite que cuando</span>
+<span id="cb21-438"><a href="#cb21-438" aria-hidden="true" tabindex="-1"></a>estemos haciendo el "tuning", se descarten modelos sin tener qeu esperar a que se ajusten en todos los folds. </span>
+<span id="cb21-439"><a href="#cb21-439" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-440"><a href="#cb21-440" aria-hidden="true" tabindex="-1"></a>Un saludo. </span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
