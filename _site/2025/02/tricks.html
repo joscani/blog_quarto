@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.39">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="dcterms.date" content="2025-02-09">
+<title>Trucos. Parte 1. Submodel trick – Muestrear no es pecado</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d166b450ba5a8e9f7a0ab969bf6592c1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-07d1cc99fe500bdc1baeb2a340c9cdb3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-74d5ed8e33587e0a95b073fc44418bfa.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark"><script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+</head>
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg " data-bs-theme="dark"><div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+<li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://bsky.app/profile/joscani.muestrear-no-es-pecado.es"> <i class="bi bi-bluesky" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://x.com/joscani"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"> <i class="bi bi-mastodon" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../blog.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">
+<li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+</li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../archive.html"> 
+<span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+</div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On this page</h2>
+   
+  <ul>
+<li><a href="#nota" id="toc-nota" class="nav-link active" data-scroll-target="#nota">Nota</a></li>
+  <li>
+<a href="#submodel-trick" id="toc-submodel-trick" class="nav-link" data-scroll-target="#submodel-trick">Submodel trick</a>
+  <ul class="collapse">
+<li><a href="#modelo-1" id="toc-modelo-1" class="nav-link" data-scroll-target="#modelo-1">Modelo 1</a></li>
+  </ul>
+</li>
+  <li><a href="#de-qu%C3%A9-nos-sirve-este-truco-y-como-funciona-en-tidymodels" id="toc-de-qué-nos-sirve-este-truco-y-como-funciona-en-tidymodels" class="nav-link" data-scroll-target="#de-qu%C3%A9-nos-sirve-este-truco-y-como-funciona-en-tidymodels">¿De qué nos sirve este truco y como funciona en <code>tidymodels</code>?</a></li>
+  <li><a href="#truco-adicional" id="toc-truco-adicional" class="nav-link" data-scroll-target="#truco-adicional">Truco adicional</a></li>
+  </ul></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Trucos. Parte 1. Submodel trick</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+  <div class="quarto-categories">
+    <div class="quarto-category">estadística</div>
+    <div class="quarto-category">tidymodels</div>
+    <div class="quarto-category">2025</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 9, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header><div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Listening
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/2Oa3BKEKqaceIWKjXELmfp?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<p>El otro día atendí a un webminar junto con <a href="https://www.youtube.com/@ReEstimando">Aitor</a> en el que se hablaba de algunos truquillos del tidymodels.</p>
+<p>No soy muy fan del tuneo de hiperparámetros, pero es innegable que es algo que está ahí.</p>
+<section id="nota" class="level2"><h2 class="anchored" data-anchor-id="nota">Nota</h2>
+<p>Este post está basado en lo leído en <a href="https://emlwr.org/">Efficient Machine Learnig with R</a></p>
+</section><section id="submodel-trick" class="level2"><h2 class="anchored" data-anchor-id="submodel-trick">Submodel trick</h2>
+<p>Por ejemplo, si estamos haciendo un modelo de árboles con boosting, cada árbol se construye sobre el anterior. Por tanto si tengo un modelo con 200 árboles, puedo usarlo para ver que predicciones daría un modelo con 50 árboles, puesto que para llegar a 200 ha tenido que pasar por 50.</p>
+<p>¿Por qué es esto útil? Si tenemos un <em>grid</em> de parámetros que incluya probar mismo modelo de boosting con esta configuración</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="op">(</span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span></span>
+<span>                    n_trees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">100</span><span class="op">)</span>, </span>
+<span>                    learn_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   n_trees learn_rate</span></span>
+<span><span class="co">#&gt; 1      10        0.1</span></span>
+<span><span class="co">#&gt; 2      20        0.1</span></span>
+<span><span class="co">#&gt; 3     100        0.1</span></span>
+<span><span class="co">#&gt; 4      10        0.2</span></span>
+<span><span class="co">#&gt; 5      20        0.2</span></span>
+<span><span class="co">#&gt; 6     100        0.2</span></span>
+<span><span class="co">#&gt; 7      10        2.0</span></span>
+<span><span class="co">#&gt; 8      20        2.0</span></span>
+<span><span class="co">#&gt; 9     100        2.0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>En realidad sólo tendríamos que ajustar 3 modelos, los correspondientes a n_trees = 100 y podríamos usar esos modelos para predecir con cualquier número de árboles del 1 al 100.</p>
+<p>Veamos.</p>
+<p><strong>Funciones auxiliares para simular dataset</strong></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">bin_roughly</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">n_levels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">cutpoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">n_levels</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">vapply</a></span><span class="op">(</span><span class="va">cutpoints</span>, <span class="va">`&gt;`</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html">logical</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>,  <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">x</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"level_"</span>, <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="va">n_levels</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">simulate_regression</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n_rows</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_regression</a></span><span class="op">(</span><span class="va">n_rows</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">predictor_16</span><span class="op">:</span><span class="va">predictor_20</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">contains</span><span class="op">(</span><span class="st">"_1"</span><span class="op">)</span>, <span class="va">bin_roughly</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">simulate_classification</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n_rows</span>, <span class="va">n_levels</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html">sim_classification</a></span><span class="op">(</span><span class="va">n_rows</span>, num_linear <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">contains</span><span class="op">(</span><span class="st">"_1"</span><span class="op">)</span>, <span class="va">bin_roughly</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>__ <code>tidymodels</code> y <code>bonsai</code> para ajustar modelos de boosting__</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidymodels.tidymodels.org">tidymodels</a></span><span class="op">)</span> <span class="co"># modelling framework</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/tidymodels/workflows">workflows</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://bonsai.tidymodels.org/">bonsai</a></span><span class="op">)</span>     <span class="co"># models like lightgm</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://future.futureverse.org">future</a></span><span class="op">)</span>     <span class="co"># parallel processing</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Simulo datos clasificación</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">simulate_classification</span><span class="op">(</span><span class="fl">3e4</span><span class="op">)</span></span>
+<span><span class="va">d</span></span>
+<span><span class="co">#&gt; # A tibble: 30,000 × 18</span></span>
+<span><span class="co">#&gt;    class   two_factor_1 two_factor_2 non_linear_1 non_linear_2 non_linear_3</span></span>
+<span><span class="co">#&gt;    &lt;fct&gt;   &lt;fct&gt;               &lt;dbl&gt; &lt;fct&gt;               &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 class_1 level_4           -0.439  level_1             0.637        0.462</span></span>
+<span><span class="co">#&gt;  2 class_1 level_3            0.764  level_1             0.658        0.266</span></span>
+<span><span class="co">#&gt;  3 class_1 level_3           -1.33   level_1             0.657        0.349</span></span>
+<span><span class="co">#&gt;  4 class_1 level_1            1.87   level_2             0.971        0.836</span></span>
+<span><span class="co">#&gt;  5 class_2 level_2            0.109  level_1             0.534        0.984</span></span>
+<span><span class="co">#&gt;  6 class_1 level_5           -0.0446 level_1             0.959        0.803</span></span>
+<span><span class="co">#&gt;  7 class_1 level_2            1.13   level_2             0.593        0.711</span></span>
+<span><span class="co">#&gt;  8 class_1 level_2            1.45   level_2             0.396        0.582</span></span>
+<span><span class="co">#&gt;  9 class_2 level_2            1.13   level_2             0.438        0.277</span></span>
+<span><span class="co">#&gt; 10 class_2 level_2           -1.04   level_1             0.624        0.737</span></span>
+<span><span class="co">#&gt; # ℹ 29,990 more rows</span></span>
+<span><span class="co">#&gt; # ℹ 12 more variables: linear_01 &lt;dbl&gt;, linear_02 &lt;dbl&gt;, linear_03 &lt;dbl&gt;,</span></span>
+<span><span class="co">#&gt; #   linear_04 &lt;dbl&gt;, linear_05 &lt;dbl&gt;, linear_06 &lt;dbl&gt;, linear_07 &lt;dbl&gt;,</span></span>
+<span><span class="co">#&gt; #   linear_08 &lt;dbl&gt;, linear_09 &lt;dbl&gt;, linear_10 &lt;fct&gt;, linear_11 &lt;fct&gt;,</span></span>
+<span><span class="co">#&gt; #   linear_12 &lt;fct&gt;</span></span>
+<span></span>
+<span><span class="co"># split en train test</span></span>
+<span><span class="va">d_split</span> <span class="op">&lt;-</span> <span class="fu">initial_split</span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span>
+<span><span class="va">d_train</span> <span class="op">&lt;-</span> <span class="fu">training</span><span class="op">(</span><span class="va">d_split</span><span class="op">)</span></span>
+<span><span class="va">d_test</span> <span class="op">&lt;-</span> <span class="fu">testing</span><span class="op">(</span><span class="va">d_split</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># folds sobre train</span></span>
+<span><span class="va">d_folds</span> <span class="op">&lt;-</span> <span class="fu">vfold_cv</span><span class="op">(</span><span class="va">d_train</span>, v <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="modelo-1" class="level3"><h3 class="anchored" data-anchor-id="modelo-1">Modelo 1</h3>
+<p>Modelo con <code>trees = 100</code> y <code>learn_rate = 0.1</code>.</p>
+<p>Estimando este modelo, luego podemos hacer predicciones considerando modelos con menos número de árboles sin necesidad de estimarlos por separado.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">mod1_spec</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/boost_tree.html">boost_tree</a></span><span class="op">(</span> trees <span class="op">=</span> <span class="fl">100</span>, learn_rate <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_args.html">set_mode</a></span><span class="op">(</span><span class="st">"classification"</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_engine.html">set_engine</a></span><span class="op">(</span>engine <span class="op">=</span> <span class="st">"xgboost"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">recipe1</span> <span class="op">&lt;-</span> <span class="fu">recipe</span><span class="op">(</span></span>
+<span>                  <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>, </span>
+<span>                  data <span class="op">=</span> <span class="va">d_train</span><span class="op">)</span>  <span class="op">|&gt;</span></span>
+<span>        <span class="fu">step_dummy</span><span class="op">(</span><span class="fu">all_nominal_predictors</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>        <span class="fu">prep</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">d_train_bake</span> <span class="op">&lt;-</span> <span class="fu">bake</span><span class="op">(</span><span class="va">recipe1</span>, <span class="va">d_train</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">wf1_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/fit.html">fit</a></span><span class="op">(</span><span class="va">mod1_spec</span>,formula <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,  <span class="va">d_train_bake</span><span class="op">)</span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 5.043 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>En tidymodels para poder usar el <em>submodel trick</em> directamente teneemos la función <code>multi_predict</code> pero no tiene implementado la interfaz de fórmula por lo que tenemos que usar <code>fit_xy</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span> <span class="va">wf1_fit_to_multipredict</span>  <span class="op">&lt;-</span>  </span>
+<span>  <span class="va">mod1_spec</span> <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu"><a href="https://generics.r-lib.org/reference/fit_xy.html">fit_xy</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">d_train_bake</span>  <span class="op">|&gt;</span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">class</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">d_train_bake</span><span class="op">$</span><span class="va">class</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Ahora podemos usar la función <code>multi_predict</code> para obtener las prediciones que se obtendrían con un modelo con menos árboles. Es decir, ajustamos un solo modelo con 100 árboles, pero podemos “podar” ese modelo y obtener predicciones usando menos árboles sin tener que reestimar.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">test_bake</span> <span class="op">&lt;-</span> <span class="fu">bake</span><span class="op">(</span><span class="va">recipe1</span>, <span class="va">d_test</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pred_test_100_trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/multi_predict.html">multi_predict</a></span><span class="op">(</span><span class="va">wf1_fit_to_multipredict</span>,</span>
+<span>                                     type <span class="op">=</span> <span class="st">"prob"</span>,</span>
+<span>                                     new_data <span class="op">=</span> <span class="va">test_bake</span> <span class="op">|&gt;</span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">class</span><span class="op">)</span>,</span>
+<span>                                     trees <span class="op">=</span> <span class="fl">100</span> <span class="op">)</span></span>
+<span></span>
+<span><span class="va">pred_test_10_trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/multi_predict.html">multi_predict</a></span><span class="op">(</span><span class="va">wf1_fit_to_multipredict</span>,</span>
+<span>                                     type <span class="op">=</span> <span class="st">"prob"</span>,</span>
+<span>                                     new_data <span class="op">=</span> <span class="va">test_bake</span> <span class="op">|&gt;</span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">class</span><span class="op">)</span>,</span>
+<span>                                     trees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pred_test_100_trees</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 1</span></span>
+<span><span class="co">#&gt;   .pred           </span></span>
+<span><span class="co">#&gt;   &lt;list&gt;          </span></span>
+<span><span class="co">#&gt; 1 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 2 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 3 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 4 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 5 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 6 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pred_test_10_trees</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 1</span></span>
+<span><span class="co">#&gt;   .pred           </span></span>
+<span><span class="co">#&gt;   &lt;list&gt;          </span></span>
+<span><span class="co">#&gt; 1 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 2 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 3 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 4 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 5 &lt;tibble [1 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 6 &lt;tibble [1 × 3]&gt;</span></span>
+<span></span>
+<span><span class="co"># también se puede hacer con varios árboles a la vez</span></span>
+<span><span class="va">pred_test_10_20_trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/multi_predict.html">multi_predict</a></span><span class="op">(</span><span class="va">wf1_fit_to_multipredict</span>,</span>
+<span>                                     type <span class="op">=</span> <span class="st">"prob"</span>,</span>
+<span>                                     new_data <span class="op">=</span> <span class="va">test_bake</span> <span class="op">|&gt;</span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">class</span><span class="op">)</span>,</span>
+<span>                                     trees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pred_test_10_20_trees</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 1</span></span>
+<span><span class="co">#&gt;   .pred           </span></span>
+<span><span class="co">#&gt;   &lt;list&gt;          </span></span>
+<span><span class="co">#&gt; 1 &lt;tibble [2 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 2 &lt;tibble [2 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 3 &lt;tibble [2 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 4 &lt;tibble [2 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 5 &lt;tibble [2 × 3]&gt;</span></span>
+<span><span class="co">#&gt; 6 &lt;tibble [2 × 3]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Podemos ver las predicciones con el modelo completo (100 árboles), con el submodelo (10 árboles) y con los dos submodelos de 10 y 20 árboles.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">pred_test_100_trees</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">unnest</span><span class="op">(</span><span class="va">.pred</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">slice_head</span><span class="op">(</span> n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span><span class="co">#&gt;    trees .pred_class_1 .pred_class_2</span></span>
+<span><span class="co">#&gt;    &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1   100       0.0647         0.935 </span></span>
+<span><span class="co">#&gt;  2   100       0.804          0.196 </span></span>
+<span><span class="co">#&gt;  3   100       0.0584         0.942 </span></span>
+<span><span class="co">#&gt;  4   100       0.0221         0.978 </span></span>
+<span><span class="co">#&gt;  5   100       0.590          0.410 </span></span>
+<span><span class="co">#&gt;  6   100       0.979          0.0210</span></span>
+<span><span class="co">#&gt;  7   100       0.355          0.645 </span></span>
+<span><span class="co">#&gt;  8   100       0.00470        0.995 </span></span>
+<span><span class="co">#&gt;  9   100       0.535          0.465 </span></span>
+<span><span class="co">#&gt; 10   100       0.951          0.0486</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">pred_test_10_trees</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">unnest</span><span class="op">(</span><span class="va">.pred</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">slice_head</span><span class="op">(</span> n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span><span class="co">#&gt;    trees .pred_class_1 .pred_class_2</span></span>
+<span><span class="co">#&gt;    &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1    10         0.220         0.780</span></span>
+<span><span class="co">#&gt;  2    10         0.687         0.313</span></span>
+<span><span class="co">#&gt;  3    10         0.228         0.772</span></span>
+<span><span class="co">#&gt;  4    10         0.264         0.736</span></span>
+<span><span class="co">#&gt;  5    10         0.465         0.535</span></span>
+<span><span class="co">#&gt;  6    10         0.759         0.241</span></span>
+<span><span class="co">#&gt;  7    10         0.465         0.535</span></span>
+<span><span class="co">#&gt;  8    10         0.184         0.816</span></span>
+<span><span class="co">#&gt;  9    10         0.544         0.456</span></span>
+<span><span class="co">#&gt; 10    10         0.720         0.280</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">pred_test_10_20_trees</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">unnest</span><span class="op">(</span><span class="va">.pred</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">slice_head</span><span class="op">(</span> n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span><span class="co">#&gt;    trees .pred_class_1 .pred_class_2</span></span>
+<span><span class="co">#&gt;    &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1    10         0.220         0.780</span></span>
+<span><span class="co">#&gt;  2    20         0.111         0.889</span></span>
+<span><span class="co">#&gt;  3    10         0.687         0.313</span></span>
+<span><span class="co">#&gt;  4    20         0.726         0.274</span></span>
+<span><span class="co">#&gt;  5    10         0.228         0.772</span></span>
+<span><span class="co">#&gt;  6    20         0.124         0.876</span></span>
+<span><span class="co">#&gt;  7    10         0.264         0.736</span></span>
+<span><span class="co">#&gt;  8    20         0.135         0.865</span></span>
+<span><span class="co">#&gt;  9    10         0.465         0.535</span></span>
+<span><span class="co">#&gt; 10    20         0.490         0.510</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Comparamos métrica de roc_auc entre el modelo de 100 árboles y el submodelo de 10</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">pred_test_100_trees</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">unnest</span><span class="op">(</span><span class="va">.pred</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">bind_cols</span><span class="op">(</span><span class="va">d_test</span> <span class="op">|&gt;</span> <span class="fu">select</span><span class="op">(</span><span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">roc_auc</span><span class="op">(</span>truth <span class="op">=</span> <span class="va">class</span>, <span class="va">.pred_class_1</span> <span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 roc_auc binary         0.952</span></span>
+<span></span>
+<span><span class="va">pred_test_10_trees</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">unnest</span><span class="op">(</span><span class="va">.pred</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">bind_cols</span><span class="op">(</span><span class="va">d_test</span> <span class="op">|&gt;</span> <span class="fu">select</span><span class="op">(</span><span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">roc_auc</span><span class="op">(</span>truth <span class="op">=</span> <span class="va">class</span>, <span class="va">.pred_class_1</span> <span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 roc_auc binary         0.945</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section></section><section id="de-qué-nos-sirve-este-truco-y-como-funciona-en-tidymodels" class="level2"><h2 class="anchored" data-anchor-id="de-qué-nos-sirve-este-truco-y-como-funciona-en-tidymodels">¿De qué nos sirve este truco y como funciona en <code>tidymodels</code>?</h2>
+<p>Cuando hacemos validación cruzada para encontrar los mejores hiperparámetros, este truco sirve para no tener que ejecutar varios modelos. Para que funcione en <code>tidymodels</code> hay que pasarle un grid en formato <code>tibble</code> o <code>data.frame</code> a la función de <code>tune_grid</code>. Veámoslo</p>
+<p>Hacemos el “tuneado” dejando que sea <code>tidymodels</code> quien haga el grid, en este caso no se utiliza el <em>submodel trick</em>. Si tenemos 4 combinaciones y 5 folds, <code>tidymodels</code> ejecutará 4 x 5 modelos.</p>
+<p>Nota: Cuando haya muchos datos y muchos folds es mejor usar <code>plan(multicore)</code> o <code>plan(multisession)</code> para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que la paralelización nativa con <code>xgboost</code> o <code>lightgbm</code> utilice un solo hilo (o como mucho 2), porque si no entra en conflicto la paralelización de <code>future</code> con la nativa de esas librerías basada en <code>OpenMP</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">bt</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/boost_tree.html">boost_tree</a></span><span class="op">(</span> trees <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span>, learn_rate <span class="op">=</span> <span class="fu"><a href="https://hardhat.tidymodels.org/reference/tune.html">tune</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_args.html">set_mode</a></span><span class="op">(</span><span class="st">"classification"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># engine xgboost</span></span>
+<span><span class="va">bt</span></span>
+<span><span class="co">#&gt; Boosted Tree Model Specification (classification)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Main Arguments:</span></span>
+<span><span class="co">#&gt;   trees = tune()</span></span>
+<span><span class="co">#&gt;   learn_rate = tune()</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Computational engine: xgboost</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Si dejamos a tidymodels hacer el <code>grid</code> de parámetros usará combinaciones aleatorias de los parámetros. Por ejemplo</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="co"># Extraer hiperparámetros y definir rango</span></span>
+<span><span class="va">param_grid</span> <span class="op">&lt;-</span> <span class="fu">hardhat</span><span class="fu">::</span><span class="fu"><a href="https://hardhat.tidymodels.org/reference/hardhat-extract.html">extract_parameter_set_dials</a></span><span class="op">(</span><span class="va">bt</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/update.html">update</a></span><span class="op">(</span>trees <span class="op">=</span> <span class="fu">trees</span><span class="op">(</span>range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">140</span><span class="op">)</span><span class="op">)</span>, learn_rate <span class="op">=</span> <span class="fu">learn_rate</span><span class="op">(</span>range<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">49</span><span class="op">)</span></span>
+<span><span class="va">grid_random</span> <span class="op">&lt;-</span> <span class="fu">grid_random</span><span class="op">(</span><span class="va">param_grid</span>, size <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="va">grid_random</span></span>
+<span><span class="co">#&gt; # A tibble: 16 × 2</span></span>
+<span><span class="co">#&gt;    trees learn_rate</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1    19      7.78 </span></span>
+<span><span class="co">#&gt;  2    89      0.202</span></span>
+<span><span class="co">#&gt;  3    32      2.23 </span></span>
+<span><span class="co">#&gt;  4    47      2.65 </span></span>
+<span><span class="co">#&gt;  5   131      0.158</span></span>
+<span><span class="co">#&gt;  6    85      1.27 </span></span>
+<span><span class="co">#&gt;  7   124      0.139</span></span>
+<span><span class="co">#&gt;  8    97      1.22 </span></span>
+<span><span class="co">#&gt;  9    84      6.22 </span></span>
+<span><span class="co">#&gt; 10    66      1.41 </span></span>
+<span><span class="co">#&gt; 11    29      1.62 </span></span>
+<span><span class="co">#&gt; 12    46      0.262</span></span>
+<span><span class="co">#&gt; 13     9      1.32 </span></span>
+<span><span class="co">#&gt; 14    28      4.31 </span></span>
+<span><span class="co">#&gt; 15   135      0.268</span></span>
+<span><span class="co">#&gt; 16   137      0.358</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Y sería raro que se tenga mismo valor de <code>learn_rate</code> para distintos valores de <code>trees</code>. Recordemos que en estos modelos el <em>submodel trick</em> funciona solo para <code>trees</code>. Si tuviéramos mismo valor de learn_rate y diferentes valores de <code>trees</code> bastaría con ajustar el modelo con mayor número de árboles.</p>
+<p>Veamos cuanta tarda en ajustar estas 16 combinaciones de parámetros, sobre los 5 folds. Es decir 80 modelos.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="va">basic</span> <span class="op">&lt;-</span> </span>
+<span>      <span class="fu">tune_grid</span><span class="op">(</span></span>
+<span>        object <span class="op">=</span> <span class="va">bt</span>,</span>
+<span>        preprocessor <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>        resamples <span class="op">=</span> <span class="va">d_folds</span>,</span>
+<span>        grid <span class="op">=</span> <span class="va">grid_random</span></span>
+<span>      <span class="op">)</span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 223.11 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="op">(</span><span class="va">metricas_basic</span> <span class="op">&lt;-</span> <span class="fu">collect_metrics</span><span class="op">(</span><span class="va">basic</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 48 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric     .estimator   mean     n std_err .config         </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;           </span></span>
+<span><span class="co">#&gt;  1   124      0.139 accuracy    binary     0.883      5 0.00231 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  2   124      0.139 brier_class binary     0.0827     5 0.00156 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  3   124      0.139 roc_auc     binary     0.957      5 0.00167 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  4   131      0.158 accuracy    binary     0.881      5 0.00204 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  5   131      0.158 brier_class binary     0.0838     5 0.00152 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  6   131      0.158 roc_auc     binary     0.956      5 0.00165 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  7    89      0.202 accuracy    binary     0.882      5 0.00259 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  8    89      0.202 brier_class binary     0.0837     5 0.00165 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt;  9    89      0.202 roc_auc     binary     0.956      5 0.00181 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt; 10    46      0.262 accuracy    binary     0.883      5 0.00204 Preprocessor1_M…</span></span>
+<span><span class="co">#&gt; # ℹ 38 more rows</span></span>
+<span></span>
+<span><span class="va">metricas_basic</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">.metric</span> <span class="op">==</span> <span class="st">"roc_auc"</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">.metric</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 16 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric .estimator  mean     n std_err .config              </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span><span class="co">#&gt;  1   124      0.139 roc_auc binary     0.957     5 0.00167 Preprocessor1_Model01</span></span>
+<span><span class="co">#&gt;  2   131      0.158 roc_auc binary     0.956     5 0.00165 Preprocessor1_Model02</span></span>
+<span><span class="co">#&gt;  3    89      0.202 roc_auc binary     0.956     5 0.00181 Preprocessor1_Model03</span></span>
+<span><span class="co">#&gt;  4    46      0.262 roc_auc binary     0.956     5 0.00179 Preprocessor1_Model04</span></span>
+<span><span class="co">#&gt;  5   135      0.268 roc_auc binary     0.954     5 0.00170 Preprocessor1_Model05</span></span>
+<span><span class="co">#&gt;  6   137      0.358 roc_auc binary     0.951     5 0.00157 Preprocessor1_Model06</span></span>
+<span><span class="co">#&gt;  7    97      1.22  roc_auc binary     0.939     5 0.00225 Preprocessor1_Model07</span></span>
+<span><span class="co">#&gt;  8    85      1.27  roc_auc binary     0.937     5 0.00217 Preprocessor1_Model08</span></span>
+<span><span class="co">#&gt;  9     9      1.32  roc_auc binary     0.944     5 0.00225 Preprocessor1_Model09</span></span>
+<span><span class="co">#&gt; 10    66      1.41  roc_auc binary     0.932     5 0.00145 Preprocessor1_Model10</span></span>
+<span><span class="co">#&gt; 11    29      1.62  roc_auc binary     0.918     5 0.00514 Preprocessor1_Model11</span></span>
+<span><span class="co">#&gt; 12    32      2.23  roc_auc binary     0.639     5 0.0352  Preprocessor1_Model12</span></span>
+<span><span class="co">#&gt; 13    47      2.65  roc_auc binary     0.595     5 0.0287  Preprocessor1_Model13</span></span>
+<span><span class="co">#&gt; 14    28      4.31  roc_auc binary     0.695     5 0.0524  Preprocessor1_Model14</span></span>
+<span><span class="co">#&gt; 15    84      6.22  roc_auc binary     0.717     5 0.0344  Preprocessor1_Model15</span></span>
+<span><span class="co">#&gt; 16    19      7.78  roc_auc binary     0.665     5 0.0562  Preprocessor1_Model16</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Para aprovechar el <em>submodel trick</em> hay que construir un <em>grid</em> dónde a igual combinación de otros parámetros tengamos diferentes valores de <code>trees</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">grid_regular</span> <span class="op">&lt;-</span> <span class="fu">grid_regular</span><span class="op">(</span><span class="va">param_grid</span>, levels <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grid_regular</span></span>
+<span><span class="co">#&gt; # A tibble: 16 × 2</span></span>
+<span><span class="co">#&gt;    trees learn_rate</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1     1      0.1  </span></span>
+<span><span class="co">#&gt;  2    47      0.1  </span></span>
+<span><span class="co">#&gt;  3    93      0.1  </span></span>
+<span><span class="co">#&gt;  4   140      0.1  </span></span>
+<span><span class="co">#&gt;  5     1      0.464</span></span>
+<span><span class="co">#&gt;  6    47      0.464</span></span>
+<span><span class="co">#&gt;  7    93      0.464</span></span>
+<span><span class="co">#&gt;  8   140      0.464</span></span>
+<span><span class="co">#&gt;  9     1      2.15 </span></span>
+<span><span class="co">#&gt; 10    47      2.15 </span></span>
+<span><span class="co">#&gt; 11    93      2.15 </span></span>
+<span><span class="co">#&gt; 12   140      2.15 </span></span>
+<span><span class="co">#&gt; 13     1     10    </span></span>
+<span><span class="co">#&gt; 14    47     10    </span></span>
+<span><span class="co">#&gt; 15    93     10    </span></span>
+<span><span class="co">#&gt; 16   140     10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <code>trees = 100</code> y <code>tidymodels</code> lo tiene en cuenta.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="va">xgb_with_sub_trick</span> <span class="op">&lt;-</span> </span>
+<span>      <span class="fu">tune_grid</span><span class="op">(</span></span>
+<span>        object <span class="op">=</span> <span class="va">bt</span>,</span>
+<span>        preprocessor <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>        resamples <span class="op">=</span> <span class="va">d_folds</span>,</span>
+<span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
+<span>      <span class="op">)</span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 83.872 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="op">(</span><span class="va">metricas_xgb_sub_trick</span> <span class="op">&lt;-</span> <span class="fu">collect_metrics</span><span class="op">(</span><span class="va">xgb_with_sub_trick</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 48 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric     .estimator   mean     n  std_err .config        </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;    &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span><span class="co">#&gt;  1     1        0.1 accuracy    binary     0.864      5 0.00356  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  2     1        0.1 brier_class binary     0.220      5 0.000194 Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  3     1        0.1 roc_auc     binary     0.943      5 0.00237  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  4    47        0.1 accuracy    binary     0.886      5 0.00118  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  5    47        0.1 brier_class binary     0.0812     5 0.00154  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  6    47        0.1 roc_auc     binary     0.958      5 0.00187  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  7    93        0.1 accuracy    binary     0.885      5 0.00188  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  8    93        0.1 brier_class binary     0.0813     5 0.00155  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  9    93        0.1 roc_auc     binary     0.958      5 0.00175  Preprocessor1_…</span></span>
+<span><span class="co">#&gt; 10   140        0.1 accuracy    binary     0.883      5 0.00166  Preprocessor1_…</span></span>
+<span><span class="co">#&gt; # ℹ 38 more rows</span></span>
+<span></span>
+<span><span class="va">metricas_xgb_sub_trick</span>  <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">.metric</span> <span class="op">==</span> <span class="st">"roc_auc"</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">.metric</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 16 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric .estimator  mean     n std_err .config              </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span><span class="co">#&gt;  1     1      0.1   roc_auc binary     0.943     5 0.00237 Preprocessor1_Model01</span></span>
+<span><span class="co">#&gt;  2    47      0.1   roc_auc binary     0.958     5 0.00187 Preprocessor1_Model02</span></span>
+<span><span class="co">#&gt;  3    93      0.1   roc_auc binary     0.958     5 0.00175 Preprocessor1_Model03</span></span>
+<span><span class="co">#&gt;  4   140      0.1   roc_auc binary     0.957     5 0.00163 Preprocessor1_Model04</span></span>
+<span><span class="co">#&gt;  5     1      0.464 roc_auc binary     0.943     5 0.00237 Preprocessor1_Model05</span></span>
+<span><span class="co">#&gt;  6    47      0.464 roc_auc binary     0.952     5 0.00174 Preprocessor1_Model06</span></span>
+<span><span class="co">#&gt;  7    93      0.464 roc_auc binary     0.950     5 0.00150 Preprocessor1_Model07</span></span>
+<span><span class="co">#&gt;  8   140      0.464 roc_auc binary     0.950     5 0.00147 Preprocessor1_Model08</span></span>
+<span><span class="co">#&gt;  9     1      2.15  roc_auc binary     0.943     5 0.00237 Preprocessor1_Model09</span></span>
+<span><span class="co">#&gt; 10    47      2.15  roc_auc binary     0.590     5 0.0510  Preprocessor1_Model10</span></span>
+<span><span class="co">#&gt; 11    93      2.15  roc_auc binary     0.590     5 0.0510  Preprocessor1_Model11</span></span>
+<span><span class="co">#&gt; 12   140      2.15  roc_auc binary     0.590     5 0.0510  Preprocessor1_Model12</span></span>
+<span><span class="co">#&gt; 13     1     10     roc_auc binary     0.941     5 0.00222 Preprocessor1_Model13</span></span>
+<span><span class="co">#&gt; 14    47     10     roc_auc binary     0.622     5 0.0394  Preprocessor1_Model14</span></span>
+<span><span class="co">#&gt; 15    93     10     roc_auc binary     0.622     5 0.0394  Preprocessor1_Model15</span></span>
+<span><span class="co">#&gt; 16   140     10     roc_auc binary     0.622     5 0.0394  Preprocessor1_Model16</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Y debería haber tardado menos.</p>
+<p>Vemos las métricas</p>
+</section><section id="truco-adicional" class="level2"><h2 class="anchored" data-anchor-id="truco-adicional">Truco adicional</h2>
+<p>Otra que cosa que se puede hacer, es simplemente cambiando el <code>engine</code> a uno que funcione más rápido. por ejempolo a <code>lightgbm</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="va">bt_lgb</span> <span class="op">&lt;-</span> <span class="va">bt</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://parsnip.tidymodels.org/reference/set_engine.html">set_engine</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">lgb_with_sub_trick</span> <span class="op">&lt;-</span>  </span>
+<span>      <span class="fu">tune_grid</span><span class="op">(</span></span>
+<span>        object <span class="op">=</span> <span class="va">bt_lgb</span>,</span>
+<span>        preprocessor <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>        resamples <span class="op">=</span> <span class="va">d_folds</span>,</span>
+<span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
+<span>      <span class="op">)</span></span>
+<span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span>   </span>
+<span><span class="co">#&gt; 17.987 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="op">(</span><span class="va">metricas_lgb_with_sub_trick</span> <span class="op">&lt;-</span> <span class="fu">collect_metrics</span><span class="op">(</span><span class="va">lgb_with_sub_trick</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 48 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric     .estimator   mean     n  std_err .config        </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;    &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span><span class="co">#&gt;  1     1        0.1 accuracy    binary     0.578      5 0.0240   Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  2     1        0.1 brier_class binary     0.217      5 0.000366 Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  3     1        0.1 roc_auc     binary     0.947      5 0.00232  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  4    47        0.1 accuracy    binary     0.885      5 0.00161  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  5    47        0.1 brier_class binary     0.0810     5 0.00143  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  6    47        0.1 roc_auc     binary     0.958      5 0.00163  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  7    93        0.1 accuracy    binary     0.885      5 0.00189  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  8    93        0.1 brier_class binary     0.0814     5 0.00152  Preprocessor1_…</span></span>
+<span><span class="co">#&gt;  9    93        0.1 roc_auc     binary     0.958      5 0.00165  Preprocessor1_…</span></span>
+<span><span class="co">#&gt; 10   140        0.1 accuracy    binary     0.883      5 0.00200  Preprocessor1_…</span></span>
+<span><span class="co">#&gt; # ℹ 38 more rows</span></span>
+<span></span>
+<span><span class="va">metricas_lgb_with_sub_trick</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">.metric</span> <span class="op">==</span> <span class="st">"roc_auc"</span><span class="op">)</span>  <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">.metric</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 16 × 8</span></span>
+<span><span class="co">#&gt;    trees learn_rate .metric .estimator  mean     n std_err .config              </span></span>
+<span><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span><span class="co">#&gt;  1     1      0.1   roc_auc binary     0.947     5 0.00232 Preprocessor1_Model01</span></span>
+<span><span class="co">#&gt;  2    47      0.1   roc_auc binary     0.958     5 0.00163 Preprocessor1_Model02</span></span>
+<span><span class="co">#&gt;  3    93      0.1   roc_auc binary     0.958     5 0.00165 Preprocessor1_Model03</span></span>
+<span><span class="co">#&gt;  4   140      0.1   roc_auc binary     0.957     5 0.00165 Preprocessor1_Model04</span></span>
+<span><span class="co">#&gt;  5     1      0.464 roc_auc binary     0.947     5 0.00232 Preprocessor1_Model05</span></span>
+<span><span class="co">#&gt;  6    47      0.464 roc_auc binary     0.950     5 0.00170 Preprocessor1_Model06</span></span>
+<span><span class="co">#&gt;  7    93      0.464 roc_auc binary     0.948     5 0.00144 Preprocessor1_Model07</span></span>
+<span><span class="co">#&gt;  8   140      0.464 roc_auc binary     0.948     5 0.00145 Preprocessor1_Model08</span></span>
+<span><span class="co">#&gt;  9     1      2.15  roc_auc binary     0.947     5 0.00232 Preprocessor1_Model09</span></span>
+<span><span class="co">#&gt; 10    47      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model10</span></span>
+<span><span class="co">#&gt; 11    93      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model11</span></span>
+<span><span class="co">#&gt; 12   140      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model12</span></span>
+<span><span class="co">#&gt; 13     1     10     roc_auc binary     0.947     5 0.00232 Preprocessor1_Model13</span></span>
+<span><span class="co">#&gt; 14    47     10     roc_auc binary     0.538     5 0.0354  Preprocessor1_Model14</span></span>
+<span><span class="co">#&gt; 15    93     10     roc_auc binary     0.538     5 0.0354  Preprocessor1_Model15</span></span>
+<span><span class="co">#&gt; 16   140     10     roc_auc binary     0.538     5 0.0354  Preprocessor1_Model16</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Si os fijáis en las salidas al final de cada <code><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tictoc::toc()</a></code> se ve que con el truco de los submodelos ganamos velocidad, pero que si además cambiamos de “engine” puede llegar a ser 10 veces más rápido.</p>
+<p>En próximas entradas contaré algún truquillo más, como los método de <code>racing</code>, que permite que cuando estemos haciendo el “tuning”, se descarten modelos sin tener qeu esperar a que se ajusten en todos los folds.</p>
+<p>Un saludo.</p>
+
+
+<!-- -->
+
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/muestrear-no-es-pecado\.netlify\.app\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb21" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> Trucos. Parte 1. Submodel trick</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> '2025-02-09'</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> </span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - estadística</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - tidymodels</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">  - "2025"</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> ''</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span><span class="co"> </span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">  output: true</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="co">  html: </span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-height: 5</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-dpi: 300</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-width: 8</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-align: center</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: show</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="co">    code-link: true</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="co">    code-summary: "Show the code"</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true </span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="an">knitr:</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="co">  opts_chunk:</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a><span class="co">    out.width: 80%</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="co">    fig.showtext: TRUE</span></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a><span class="co">    collapse: true</span></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a><span class="co">    comment: "#&gt;"</span></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a><span class="an">image:</span><span class="co"> "pendiente_imagen.png"</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a><span class="fu">## Listening</span></span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>&lt;iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/2Oa3BKEKqaceIWKjXELmfp?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"&gt;&lt;/iframe&gt;</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>El otro día atendí a un webminar junto con <span class="co">[</span><span class="ot">Aitor</span><span class="co">](https://www.youtube.com/@ReEstimando)</span> en el que se</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>hablaba de algunos truquillos del tidymodels.</span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>No soy muy fan del tuneo de hiperparámetros, pero es innegable que es algo que está ahí. </span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a><span class="fu">## Nota</span></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>Este post está basado en lo leído en <span class="co">[</span><span class="ot">Efficient Machine Learnig with R</span><span class="co">](https://emlwr.org/)</span></span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a><span class="fu">## Submodel trick</span></span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a>Por ejemplo, si estamos haciendo un modelo de árboles con boosting, cada árbol se construye sobre el</span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>anterior. Por tanto si tengo un modelo con 200 árboles, puedo usarlo para ver que predicciones daría</span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>un modelo con 50 árboles, puesto que para llegar a 200 ha tenido que pasar por 50. </span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>¿Por qué es esto útil? Si tenemos un _grid_ de parámetros que incluya probar mismo modelo de boosting</span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>con esta configuración </span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a>(grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>                    <span class="at">n_trees =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">100</span>), </span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>                    <span class="at">learn_rate =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="dv">2</span>)</span>
+<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-68"><a href="#cb21-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-69"><a href="#cb21-69" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a>En realidad sólo tendríamos que ajustar 3 modelos, los correspondientes a n_trees = 100 y podríamos</span>
+<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a>usar esos modelos para predecir con cualquier número de árboles del 1 al 100. </span>
+<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>Veamos. </span>
+<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>__Funciones auxiliares para simular dataset__</span>
+<span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-82"><a href="#cb21-82" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-83"><a href="#cb21-83" aria-hidden="true" tabindex="-1"></a>bin_roughly <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb21-84"><a href="#cb21-84" aria-hidden="true" tabindex="-1"></a>  n_levels <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb21-85"><a href="#cb21-85" aria-hidden="true" tabindex="-1"></a>  cutpoints <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">sample</span>(x, n_levels))</span>
+<span id="cb21-86"><a href="#cb21-86" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="fu">vapply</span>(cutpoints, <span class="st">`</span><span class="at">&gt;</span><span class="st">`</span>, <span class="fu">logical</span>(<span class="fu">length</span>(x)),  x))</span>
+<span id="cb21-87"><a href="#cb21-87" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(x, <span class="at">labels =</span> <span class="fu">paste0</span>(<span class="st">"level_"</span>, <span class="dv">1</span><span class="sc">:</span>(n_levels<span class="sc">+</span><span class="dv">1</span>)))</span>
+<span id="cb21-88"><a href="#cb21-88" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-89"><a href="#cb21-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-90"><a href="#cb21-90" aria-hidden="true" tabindex="-1"></a>simulate_regression <span class="ot">&lt;-</span> <span class="cf">function</span>(n_rows) {</span>
+<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_regression</span>(n_rows) <span class="sc">%&gt;%</span></span>
+<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(predictor_16<span class="sc">:</span>predictor_20)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-93"><a href="#cb21-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">"_1"</span>), bin_roughly))</span>
+<span id="cb21-94"><a href="#cb21-94" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-95"><a href="#cb21-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-96"><a href="#cb21-96" aria-hidden="true" tabindex="-1"></a>simulate_classification <span class="ot">&lt;-</span> <span class="cf">function</span>(n_rows, n_levels) {</span>
+<span id="cb21-97"><a href="#cb21-97" aria-hidden="true" tabindex="-1"></a>  modeldata<span class="sc">::</span><span class="fu">sim_classification</span>(n_rows, <span class="at">num_linear =</span> <span class="dv">12</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-98"><a href="#cb21-98" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">"_1"</span>), bin_roughly))</span>
+<span id="cb21-99"><a href="#cb21-99" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-100"><a href="#cb21-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-101"><a href="#cb21-101" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-102"><a href="#cb21-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-103"><a href="#cb21-103" aria-hidden="true" tabindex="-1"></a>__ <span class="in">`tidymodels`</span> y <span class="in">`bonsai`</span>  para ajustar modelos de boosting__</span>
+<span id="cb21-104"><a href="#cb21-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-107"><a href="#cb21-107" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-108"><a href="#cb21-108" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) <span class="co"># modelling framework</span></span>
+<span id="cb21-109"><a href="#cb21-109" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(workflows)</span>
+<span id="cb21-110"><a href="#cb21-110" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bonsai)     <span class="co"># models like lightgm</span></span>
+<span id="cb21-111"><a href="#cb21-111" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(future)     <span class="co"># parallel processing</span></span>
+<span id="cb21-112"><a href="#cb21-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-113"><a href="#cb21-113" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-114"><a href="#cb21-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-115"><a href="#cb21-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-116"><a href="#cb21-116" aria-hidden="true" tabindex="-1"></a>Simulo datos clasificación </span>
+<span id="cb21-117"><a href="#cb21-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-118"><a href="#cb21-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-121"><a href="#cb21-121" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-122"><a href="#cb21-122" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb21-123"><a href="#cb21-123" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">simulate_classification</span>(<span class="fl">3e4</span>)</span>
+<span id="cb21-124"><a href="#cb21-124" aria-hidden="true" tabindex="-1"></a>d</span>
+<span id="cb21-125"><a href="#cb21-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-126"><a href="#cb21-126" aria-hidden="true" tabindex="-1"></a><span class="co"># split en train test</span></span>
+<span id="cb21-127"><a href="#cb21-127" aria-hidden="true" tabindex="-1"></a>d_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(d)</span>
+<span id="cb21-128"><a href="#cb21-128" aria-hidden="true" tabindex="-1"></a>d_train <span class="ot">&lt;-</span> <span class="fu">training</span>(d_split)</span>
+<span id="cb21-129"><a href="#cb21-129" aria-hidden="true" tabindex="-1"></a>d_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(d_split)</span>
+<span id="cb21-130"><a href="#cb21-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-131"><a href="#cb21-131" aria-hidden="true" tabindex="-1"></a><span class="co"># folds sobre train</span></span>
+<span id="cb21-132"><a href="#cb21-132" aria-hidden="true" tabindex="-1"></a>d_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(d_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb21-133"><a href="#cb21-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-134"><a href="#cb21-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-135"><a href="#cb21-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-136"><a href="#cb21-136" aria-hidden="true" tabindex="-1"></a><span class="fu">### Modelo 1</span></span>
+<span id="cb21-137"><a href="#cb21-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-138"><a href="#cb21-138" aria-hidden="true" tabindex="-1"></a>Modelo con <span class="in">`trees = 100 `</span> y <span class="in">`learn_rate = 0.1`</span>. </span>
+<span id="cb21-139"><a href="#cb21-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-140"><a href="#cb21-140" aria-hidden="true" tabindex="-1"></a>Estimando este modelo, luego podemos hacer predicciones considerando modelos con menos</span>
+<span id="cb21-141"><a href="#cb21-141" aria-hidden="true" tabindex="-1"></a>número de árboles sin necesidad de estimarlos por separado.</span>
+<span id="cb21-142"><a href="#cb21-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-143"><a href="#cb21-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-146"><a href="#cb21-146" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-147"><a href="#cb21-147" aria-hidden="true" tabindex="-1"></a>mod1_spec <span class="ot">&lt;-</span> </span>
+<span id="cb21-148"><a href="#cb21-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">boost_tree</span>( <span class="at">trees =</span> <span class="dv">100</span>, <span class="at">learn_rate =</span> <span class="fl">0.1</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-149"><a href="#cb21-149" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-150"><a href="#cb21-150" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="at">engine =</span> <span class="st">"xgboost"</span>)</span>
+<span id="cb21-151"><a href="#cb21-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-152"><a href="#cb21-152" aria-hidden="true" tabindex="-1"></a>recipe1 <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb21-153"><a href="#cb21-153" aria-hidden="true" tabindex="-1"></a>                  class <span class="sc">~</span> ., </span>
+<span id="cb21-154"><a href="#cb21-154" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> d_train)  <span class="sc">|&gt;</span></span>
+<span id="cb21-155"><a href="#cb21-155" aria-hidden="true" tabindex="-1"></a>        <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>())  <span class="sc">|&gt;</span> </span>
+<span id="cb21-156"><a href="#cb21-156" aria-hidden="true" tabindex="-1"></a>        <span class="fu">prep</span>()</span>
+<span id="cb21-157"><a href="#cb21-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-158"><a href="#cb21-158" aria-hidden="true" tabindex="-1"></a>d_train_bake <span class="ot">&lt;-</span> <span class="fu">bake</span>(recipe1, d_train)</span>
+<span id="cb21-159"><a href="#cb21-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-160"><a href="#cb21-160" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-161"><a href="#cb21-161" aria-hidden="true" tabindex="-1"></a>wf1_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(mod1_spec,<span class="at">formula =</span> class <span class="sc">~</span> .,  d_train_bake)</span>
+<span id="cb21-162"><a href="#cb21-162" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb21-163"><a href="#cb21-163" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-164"><a href="#cb21-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-165"><a href="#cb21-165" aria-hidden="true" tabindex="-1"></a>En tidymodels para poder usar el _submodel trick_ directamente teneemos la función <span class="in">`multi_predict`</span></span>
+<span id="cb21-166"><a href="#cb21-166" aria-hidden="true" tabindex="-1"></a>pero  no tiene implementado la interfaz de fórmula por lo que tenemos que usar <span class="in">`fit_xy`</span></span>
+<span id="cb21-167"><a href="#cb21-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-170"><a href="#cb21-170" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-171"><a href="#cb21-171" aria-hidden="true" tabindex="-1"></a> wf1_fit_to_multipredict  <span class="ot">&lt;-</span>  </span>
+<span id="cb21-172"><a href="#cb21-172" aria-hidden="true" tabindex="-1"></a>  mod1_spec <span class="sc">|&gt;</span>  </span>
+<span id="cb21-173"><a href="#cb21-173" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_xy</span>(<span class="at">x =</span> d_train_bake  <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>class), <span class="at">y =</span> d_train_bake<span class="sc">$</span>class)</span>
+<span id="cb21-174"><a href="#cb21-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-175"><a href="#cb21-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-176"><a href="#cb21-176" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-177"><a href="#cb21-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-178"><a href="#cb21-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-179"><a href="#cb21-179" aria-hidden="true" tabindex="-1"></a>Ahora podemos usar la función <span class="in">`multi_predict`</span> para obtener las prediciones que</span>
+<span id="cb21-180"><a href="#cb21-180" aria-hidden="true" tabindex="-1"></a>se obtendrían con un modelo con menos árboles. Es decir, ajustamos un solo modelo con 100 árboles,</span>
+<span id="cb21-181"><a href="#cb21-181" aria-hidden="true" tabindex="-1"></a>pero podemos "podar" ese modelo y obtener predicciones usando menos árboles sin tener que reestimar.</span>
+<span id="cb21-182"><a href="#cb21-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-185"><a href="#cb21-185" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-186"><a href="#cb21-186" aria-hidden="true" tabindex="-1"></a>test_bake <span class="ot">&lt;-</span> <span class="fu">bake</span>(recipe1, d_test)</span>
+<span id="cb21-187"><a href="#cb21-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-188"><a href="#cb21-188" aria-hidden="true" tabindex="-1"></a>pred_test_100_trees <span class="ot">&lt;-</span> <span class="fu">multi_predict</span>(wf1_fit_to_multipredict,</span>
+<span id="cb21-189"><a href="#cb21-189" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb21-190"><a href="#cb21-190" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">new_data =</span> test_bake <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>class),</span>
+<span id="cb21-191"><a href="#cb21-191" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">trees =</span> <span class="dv">100</span> )</span>
+<span id="cb21-192"><a href="#cb21-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-193"><a href="#cb21-193" aria-hidden="true" tabindex="-1"></a>pred_test_10_trees <span class="ot">&lt;-</span> <span class="fu">multi_predict</span>(wf1_fit_to_multipredict,</span>
+<span id="cb21-194"><a href="#cb21-194" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb21-195"><a href="#cb21-195" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">new_data =</span> test_bake <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>class),</span>
+<span id="cb21-196"><a href="#cb21-196" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">trees =</span> <span class="fu">c</span>(<span class="dv">10</span>))</span>
+<span id="cb21-197"><a href="#cb21-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-198"><a href="#cb21-198" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pred_test_100_trees)</span>
+<span id="cb21-199"><a href="#cb21-199" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pred_test_10_trees)</span>
+<span id="cb21-200"><a href="#cb21-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-201"><a href="#cb21-201" aria-hidden="true" tabindex="-1"></a><span class="co"># también se puede hacer con varios árboles a la vez</span></span>
+<span id="cb21-202"><a href="#cb21-202" aria-hidden="true" tabindex="-1"></a>pred_test_10_20_trees <span class="ot">&lt;-</span> <span class="fu">multi_predict</span>(wf1_fit_to_multipredict,</span>
+<span id="cb21-203"><a href="#cb21-203" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb21-204"><a href="#cb21-204" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">new_data =</span> test_bake <span class="sc">|&gt;</span>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>class),</span>
+<span id="cb21-205"><a href="#cb21-205" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">trees =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">20</span>))</span>
+<span id="cb21-206"><a href="#cb21-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-207"><a href="#cb21-207" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pred_test_10_20_trees)</span>
+<span id="cb21-208"><a href="#cb21-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-209"><a href="#cb21-209" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-210"><a href="#cb21-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-211"><a href="#cb21-211" aria-hidden="true" tabindex="-1"></a>Podemos ver las predicciones con el modelo completo (100 árboles), con el submodelo (10 árboles)</span>
+<span id="cb21-212"><a href="#cb21-212" aria-hidden="true" tabindex="-1"></a>y con los dos submodelos de 10 y 20 árboles.</span>
+<span id="cb21-213"><a href="#cb21-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-214"><a href="#cb21-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-215"><a href="#cb21-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-218"><a href="#cb21-218" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-219"><a href="#cb21-219" aria-hidden="true" tabindex="-1"></a>pred_test_100_trees  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-220"><a href="#cb21-220" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.pred)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-221"><a href="#cb21-221" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>( <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb21-222"><a href="#cb21-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-223"><a href="#cb21-223" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-224"><a href="#cb21-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-227"><a href="#cb21-227" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-228"><a href="#cb21-228" aria-hidden="true" tabindex="-1"></a>pred_test_10_trees  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-229"><a href="#cb21-229" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.pred)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-230"><a href="#cb21-230" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>( <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb21-231"><a href="#cb21-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-232"><a href="#cb21-232" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-233"><a href="#cb21-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-236"><a href="#cb21-236" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-237"><a href="#cb21-237" aria-hidden="true" tabindex="-1"></a>pred_test_10_20_trees  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-238"><a href="#cb21-238" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.pred)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-239"><a href="#cb21-239" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>( <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb21-240"><a href="#cb21-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-241"><a href="#cb21-241" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-242"><a href="#cb21-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-243"><a href="#cb21-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-244"><a href="#cb21-244" aria-hidden="true" tabindex="-1"></a>Comparamos métrica de roc_auc entre el modelo de 100 árboles y el submodelo de 10</span>
+<span id="cb21-245"><a href="#cb21-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-246"><a href="#cb21-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-249"><a href="#cb21-249" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-250"><a href="#cb21-250" aria-hidden="true" tabindex="-1"></a>pred_test_100_trees  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-251"><a href="#cb21-251" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.pred)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-252"><a href="#cb21-252" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(d_test <span class="sc">|&gt;</span> <span class="fu">select</span>(class)) <span class="sc">|&gt;</span> </span>
+<span id="cb21-253"><a href="#cb21-253" aria-hidden="true" tabindex="-1"></a>  <span class="fu">roc_auc</span>(<span class="at">truth =</span> class, .pred_class_1 )</span>
+<span id="cb21-254"><a href="#cb21-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-255"><a href="#cb21-255" aria-hidden="true" tabindex="-1"></a>pred_test_10_trees  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-256"><a href="#cb21-256" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.pred)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-257"><a href="#cb21-257" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(d_test <span class="sc">|&gt;</span> <span class="fu">select</span>(class)) <span class="sc">|&gt;</span> </span>
+<span id="cb21-258"><a href="#cb21-258" aria-hidden="true" tabindex="-1"></a>  <span class="fu">roc_auc</span>(<span class="at">truth =</span> class, .pred_class_1 )</span>
+<span id="cb21-259"><a href="#cb21-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-260"><a href="#cb21-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-261"><a href="#cb21-261" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-262"><a href="#cb21-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-263"><a href="#cb21-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-264"><a href="#cb21-264" aria-hidden="true" tabindex="-1"></a><span class="fu">## ¿De qué nos sirve este truco y como funciona en `tidymodels`?</span></span>
+<span id="cb21-265"><a href="#cb21-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-266"><a href="#cb21-266" aria-hidden="true" tabindex="-1"></a>Cuando hacemos validación cruzada para encontrar los mejores hiperparámetros, este truco sirve para </span>
+<span id="cb21-267"><a href="#cb21-267" aria-hidden="true" tabindex="-1"></a>no tener que ejecutar varios modelos. Para que funcione en <span class="in">`tidymodels`</span> hay que pasarle  un grid en </span>
+<span id="cb21-268"><a href="#cb21-268" aria-hidden="true" tabindex="-1"></a>formato <span class="in">`tibble`</span> o <span class="in">`data.frame`</span>  a la función de <span class="in">`tune_grid`</span>.  Veámoslo</span>
+<span id="cb21-269"><a href="#cb21-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-270"><a href="#cb21-270" aria-hidden="true" tabindex="-1"></a>Hacemos el "tuneado" dejando que sea <span class="in">`tidymodels`</span> quien haga el grid, en este caso no se utiliza el </span>
+<span id="cb21-271"><a href="#cb21-271" aria-hidden="true" tabindex="-1"></a>_submodel trick_. Si tenemos 4 combinaciones y 5 folds, <span class="in">`tidymodels`</span> ejecutará 4 x 5 modelos. </span>
+<span id="cb21-272"><a href="#cb21-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-273"><a href="#cb21-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-274"><a href="#cb21-274" aria-hidden="true" tabindex="-1"></a>Nota: Cuando haya muchos datos y muchos folds es mejor usar <span class="in">`plan(multicore)`</span> o <span class="in">`plan(multisession)`</span></span>
+<span id="cb21-275"><a href="#cb21-275" aria-hidden="true" tabindex="-1"></a>para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que</span>
+<span id="cb21-276"><a href="#cb21-276" aria-hidden="true" tabindex="-1"></a>la paralelización nativa con <span class="in">`xgboost`</span> o <span class="in">`lightgbm`</span> utilice un solo hilo (o como mucho 2), porque si </span>
+<span id="cb21-277"><a href="#cb21-277" aria-hidden="true" tabindex="-1"></a>no entra en conflicto la paralelización de <span class="in">`future`</span> con la nativa de esas librerías basada en <span class="in">`OpenMP`</span></span>
+<span id="cb21-278"><a href="#cb21-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-281"><a href="#cb21-281" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-282"><a href="#cb21-282" aria-hidden="true" tabindex="-1"></a>bt <span class="ot">&lt;-</span> </span>
+<span id="cb21-283"><a href="#cb21-283" aria-hidden="true" tabindex="-1"></a>  <span class="fu">boost_tree</span>( <span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb21-284"><a href="#cb21-284" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb21-285"><a href="#cb21-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-286"><a href="#cb21-286" aria-hidden="true" tabindex="-1"></a><span class="co"># engine xgboost</span></span>
+<span id="cb21-287"><a href="#cb21-287" aria-hidden="true" tabindex="-1"></a>bt</span>
+<span id="cb21-288"><a href="#cb21-288" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-289"><a href="#cb21-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-290"><a href="#cb21-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-291"><a href="#cb21-291" aria-hidden="true" tabindex="-1"></a>Si dejamos a tidymodels hacer el <span class="in">`grid`</span> de parámetros usará combinaciones aleatorias de los parámetros. </span>
+<span id="cb21-292"><a href="#cb21-292" aria-hidden="true" tabindex="-1"></a>Por ejemplo </span>
+<span id="cb21-293"><a href="#cb21-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-296"><a href="#cb21-296" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-297"><a href="#cb21-297" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer hiperparámetros y definir rango</span></span>
+<span id="cb21-298"><a href="#cb21-298" aria-hidden="true" tabindex="-1"></a>param_grid <span class="ot">&lt;-</span> hardhat<span class="sc">::</span><span class="fu">extract_parameter_set_dials</span>(bt) <span class="sc">%&gt;%</span></span>
+<span id="cb21-299"><a href="#cb21-299" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">140</span>)), <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="at">range=</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)))</span>
+<span id="cb21-300"><a href="#cb21-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-301"><a href="#cb21-301" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">49</span>)</span>
+<span id="cb21-302"><a href="#cb21-302" aria-hidden="true" tabindex="-1"></a>grid_random <span class="ot">&lt;-</span> <span class="fu">grid_random</span>(param_grid, <span class="at">size =</span> <span class="dv">16</span>)</span>
+<span id="cb21-303"><a href="#cb21-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-304"><a href="#cb21-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-305"><a href="#cb21-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-306"><a href="#cb21-306" aria-hidden="true" tabindex="-1"></a>grid_random</span>
+<span id="cb21-307"><a href="#cb21-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-308"><a href="#cb21-308" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-309"><a href="#cb21-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-310"><a href="#cb21-310" aria-hidden="true" tabindex="-1"></a>Y sería raro que se tenga mismo valor de <span class="in">`learn_rate`</span>  para distintos valores de <span class="in">`trees`</span>. Recordemos </span>
+<span id="cb21-311"><a href="#cb21-311" aria-hidden="true" tabindex="-1"></a>que en estos modelos el _submodel trick_  funciona solo para  <span class="in">`trees`</span>. Si tuviéramos mismo valor de learn_rate</span>
+<span id="cb21-312"><a href="#cb21-312" aria-hidden="true" tabindex="-1"></a>y diferentes valores de <span class="in">`trees`</span> bastaría con ajustar el modelo con mayor número de árboles.</span>
+<span id="cb21-313"><a href="#cb21-313" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-314"><a href="#cb21-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-315"><a href="#cb21-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-316"><a href="#cb21-316" aria-hidden="true" tabindex="-1"></a>Veamos cuanta tarda en ajustar estas 16 combinaciones de parámetros, sobre los 5 folds. Es decir 80 modelos.</span>
+<span id="cb21-317"><a href="#cb21-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-318"><a href="#cb21-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-319"><a href="#cb21-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-320"><a href="#cb21-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-323"><a href="#cb21-323" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-324"><a href="#cb21-324" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-325"><a href="#cb21-325" aria-hidden="true" tabindex="-1"></a>    basic <span class="ot">&lt;-</span> </span>
+<span id="cb21-326"><a href="#cb21-326" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-327"><a href="#cb21-327" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
+<span id="cb21-328"><a href="#cb21-328" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-329"><a href="#cb21-329" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-330"><a href="#cb21-330" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_random</span>
+<span id="cb21-331"><a href="#cb21-331" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-332"><a href="#cb21-332" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb21-333"><a href="#cb21-333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-334"><a href="#cb21-334" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-335"><a href="#cb21-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-336"><a href="#cb21-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-337"><a href="#cb21-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-340"><a href="#cb21-340" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-341"><a href="#cb21-341" aria-hidden="true" tabindex="-1"></a>(metricas_basic <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(basic))</span>
+<span id="cb21-342"><a href="#cb21-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-343"><a href="#cb21-343" aria-hidden="true" tabindex="-1"></a>metricas_basic  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-344"><a href="#cb21-344" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-345"><a href="#cb21-345" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-346"><a href="#cb21-346" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-347"><a href="#cb21-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-348"><a href="#cb21-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-349"><a href="#cb21-349" aria-hidden="true" tabindex="-1"></a>Para aprovechar el _submodel trick_  hay que construir un _grid_ dónde a igual combinación de otros </span>
+<span id="cb21-350"><a href="#cb21-350" aria-hidden="true" tabindex="-1"></a>parámetros tengamos diferentes valores de <span class="in">`trees`</span></span>
+<span id="cb21-351"><a href="#cb21-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-354"><a href="#cb21-354" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-355"><a href="#cb21-355" aria-hidden="true" tabindex="-1"></a>grid_regular <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(param_grid, <span class="at">levels =</span> <span class="dv">4</span>)</span>
+<span id="cb21-356"><a href="#cb21-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-357"><a href="#cb21-357" aria-hidden="true" tabindex="-1"></a>grid_regular</span>
+<span id="cb21-358"><a href="#cb21-358" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-359"><a href="#cb21-359" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-360"><a href="#cb21-360" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-361"><a href="#cb21-361" aria-hidden="true" tabindex="-1"></a>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <span class="in">`trees = 100`</span></span>
+<span id="cb21-362"><a href="#cb21-362" aria-hidden="true" tabindex="-1"></a>y <span class="in">`tidymodels`</span> lo tiene en cuenta.</span>
+<span id="cb21-363"><a href="#cb21-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-364"><a href="#cb21-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-365"><a href="#cb21-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-368"><a href="#cb21-368" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-369"><a href="#cb21-369" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-370"><a href="#cb21-370" aria-hidden="true" tabindex="-1"></a>    xgb_with_sub_trick <span class="ot">&lt;-</span> </span>
+<span id="cb21-371"><a href="#cb21-371" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-372"><a href="#cb21-372" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt,</span>
+<span id="cb21-373"><a href="#cb21-373" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-374"><a href="#cb21-374" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-375"><a href="#cb21-375" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
+<span id="cb21-376"><a href="#cb21-376" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-377"><a href="#cb21-377" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb21-378"><a href="#cb21-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-379"><a href="#cb21-379" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-380"><a href="#cb21-380" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-383"><a href="#cb21-383" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-384"><a href="#cb21-384" aria-hidden="true" tabindex="-1"></a>(metricas_xgb_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(xgb_with_sub_trick))</span>
+<span id="cb21-385"><a href="#cb21-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-386"><a href="#cb21-386" aria-hidden="true" tabindex="-1"></a>metricas_xgb_sub_trick  <span class="sc">|&gt;</span>  </span>
+<span id="cb21-387"><a href="#cb21-387" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-388"><a href="#cb21-388" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-389"><a href="#cb21-389" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-390"><a href="#cb21-390" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-391"><a href="#cb21-391" aria-hidden="true" tabindex="-1"></a>Y debería haber tardado menos. </span>
+<span id="cb21-392"><a href="#cb21-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-393"><a href="#cb21-393" aria-hidden="true" tabindex="-1"></a>Vemos las métricas </span>
+<span id="cb21-394"><a href="#cb21-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-395"><a href="#cb21-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-396"><a href="#cb21-396" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-397"><a href="#cb21-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-398"><a href="#cb21-398" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-399"><a href="#cb21-399" aria-hidden="true" tabindex="-1"></a><span class="fu">## Truco adicional</span></span>
+<span id="cb21-400"><a href="#cb21-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-401"><a href="#cb21-401" aria-hidden="true" tabindex="-1"></a>Otra que cosa que se puede hacer, es simplemente cambiando el <span class="in">`engine`</span> a uno que funcione más </span>
+<span id="cb21-402"><a href="#cb21-402" aria-hidden="true" tabindex="-1"></a>rápido. por ejempolo a <span class="in">`lightgbm`</span></span>
+<span id="cb21-403"><a href="#cb21-403" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-404"><a href="#cb21-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-407"><a href="#cb21-407" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-408"><a href="#cb21-408" aria-hidden="true" tabindex="-1"></a>bt_lgb <span class="ot">&lt;-</span> bt <span class="sc">%&gt;%</span> <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
+<span id="cb21-409"><a href="#cb21-409" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-410"><a href="#cb21-410" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-411"><a href="#cb21-411" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb21-412"><a href="#cb21-412" aria-hidden="true" tabindex="-1"></a>lgb_with_sub_trick <span class="ot">&lt;-</span>  </span>
+<span id="cb21-413"><a href="#cb21-413" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tune_grid</span>(</span>
+<span id="cb21-414"><a href="#cb21-414" aria-hidden="true" tabindex="-1"></a>        <span class="at">object =</span> bt_lgb,</span>
+<span id="cb21-415"><a href="#cb21-415" aria-hidden="true" tabindex="-1"></a>        <span class="at">preprocessor =</span> class <span class="sc">~</span> .,</span>
+<span id="cb21-416"><a href="#cb21-416" aria-hidden="true" tabindex="-1"></a>        <span class="at">resamples =</span> d_folds,</span>
+<span id="cb21-417"><a href="#cb21-417" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid =</span> grid_regular</span>
+<span id="cb21-418"><a href="#cb21-418" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb21-419"><a href="#cb21-419" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()   </span>
+<span id="cb21-420"><a href="#cb21-420" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-421"><a href="#cb21-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-424"><a href="#cb21-424" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-425"><a href="#cb21-425" aria-hidden="true" tabindex="-1"></a>(metricas_lgb_with_sub_trick <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(lgb_with_sub_trick))</span>
+<span id="cb21-426"><a href="#cb21-426" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-427"><a href="#cb21-427" aria-hidden="true" tabindex="-1"></a>metricas_lgb_with_sub_trick  <span class="sc">|&gt;</span> </span>
+<span id="cb21-428"><a href="#cb21-428" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb21-429"><a href="#cb21-429" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.metric))</span>
+<span id="cb21-430"><a href="#cb21-430" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-431"><a href="#cb21-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-432"><a href="#cb21-432" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-433"><a href="#cb21-433" aria-hidden="true" tabindex="-1"></a>Si os fijáis en las salidas al final de cada <span class="in">`tictoc::toc()`</span> se ve que con el truco de los submodelos</span>
+<span id="cb21-434"><a href="#cb21-434" aria-hidden="true" tabindex="-1"></a>ganamos velocidad, pero que si además cambiamos de "engine"  puede llegar a ser 10 veces más rápido.</span>
+<span id="cb21-435"><a href="#cb21-435" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-436"><a href="#cb21-436" aria-hidden="true" tabindex="-1"></a>En próximas entradas contaré algún truquillo más, como los método de <span class="in">`racing`</span>, que permite que cuando</span>
+<span id="cb21-437"><a href="#cb21-437" aria-hidden="true" tabindex="-1"></a>estemos haciendo el "tuning", se descarten modelos sin tener qeu esperar a que se ajusten en todos los folds. </span>
+<span id="cb21-438"><a href="#cb21-438" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-439"><a href="#cb21-439" aria-hidden="true" tabindex="-1"></a>Un saludo. </span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+</body></html>

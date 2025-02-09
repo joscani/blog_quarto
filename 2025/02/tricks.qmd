@@ -1,0 +1,418 @@
+---
+title: Trucos. Parte 1. Submodel trick
+date: '2025-02-09'
+categories: 
+  - estadística
+  - tidymodels
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "pendiente_imagen.png"
+---
+
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/2Oa3BKEKqaceIWKjXELmfp?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+:::
+
+El otro día atendí a un webminar junto con [Aitor](https://www.youtube.com/@ReEstimando) en el que se
+hablaba de algunos truquillos del tidymodels.
+
+No soy muy fan del tuneo de hiperparámetros, pero es innegable que es algo que está ahí. 
+
+## Nota
+
+Este post está basado en lo leído en [Efficient Machine Learnig with R](https://emlwr.org/)
+
+
+## Submodel trick
+
+Por ejemplo, si estamos haciendo un modelo de árboles con boosting, cada árbol se construye sobre el
+anterior. Por tanto si tengo un modelo con 200 árboles, puedo usarlo para ver que predicciones daría
+un modelo con 50 árboles, puesto que para llegar a 200 ha tenido que pasar por 50. 
+
+¿Por qué es esto útil? Si tenemos un _grid_ de parámetros que incluya probar mismo modelo de boosting
+con esta configuración 
+
+```{r}
+(grid <- expand.grid(
+                    n_trees = c(10, 20, 100), 
+                    learn_rate = c(0.1, 0.2, 2)
+))
+
+
+```
+
+En realidad sólo tendríamos que ajustar 3 modelos, los correspondientes a n_trees = 100 y podríamos
+usar esos modelos para predecir con cualquier número de árboles del 1 al 100. 
+
+
+Veamos. 
+
+__Funciones auxiliares para simular dataset__
+
+
+```{r}
+
+bin_roughly <- function(x) {
+  n_levels <- sample(1:4, 1)
+  cutpoints <- sort(sample(x, n_levels))
+  x <- rowSums(vapply(cutpoints, `>`, logical(length(x)),  x))
+  factor(x, labels = paste0("level_", 1:(n_levels+1)))
+}
+
+simulate_regression <- function(n_rows) {
+  modeldata::sim_regression(n_rows) %>%
+    select(-c(predictor_16:predictor_20)) %>%
+    mutate(across(contains("_1"), bin_roughly))
+}
+
+simulate_classification <- function(n_rows, n_levels) {
+  modeldata::sim_classification(n_rows, num_linear = 12) %>%
+    mutate(across(contains("_1"), bin_roughly))
+}
+
+```
+
+__ `tidymodels` y `bonsai`  para ajustar modelos de boosting__
+
+```{r}
+
+library(tidymodels) # modelling framework
+library(workflows)
+library(bonsai)     # models like lightgm
+library(future)     # parallel processing
+
+```
+
+
+Simulo datos clasificación 
+
+
+```{r}
+
+set.seed(1)
+d <- simulate_classification(3e4)
+d
+
+# split en train test
+d_split <- initial_split(d)
+d_train <- training(d_split)
+d_test <- testing(d_split)
+
+# folds sobre train
+d_folds <- vfold_cv(d_train, v = 5)
+
+```
+
+### Modelo 1
+
+Modelo con `trees = 100 ` y `learn_rate = 0.1`. 
+
+Estimando este modelo, luego podemos hacer predicciones considerando modelos con menos
+número de árboles sin necesidad de estimarlos por separado.
+
+
+```{r}
+
+mod1_spec <- 
+  boost_tree( trees = 100, learn_rate = 0.1)  |> 
+  set_mode("classification")  |> 
+  set_engine(engine = "xgboost")
+
+recipe1 <- recipe(
+                  class ~ ., 
+                  data = d_train)  |>
+        step_dummy(all_nominal_predictors())  |> 
+        prep()
+
+d_train_bake <- bake(recipe1, d_train)
+
+tictoc::tic()
+wf1_fit <- fit(mod1_spec,formula = class ~ .,  d_train_bake)
+tictoc::toc()
+```
+
+En tidymodels para poder usar el _submodel trick_ directamente teneemos la función `multi_predict`
+pero  no tiene implementado la interfaz de fórmula por lo que tenemos que usar `fit_xy`
+
+```{r}
+
+ wf1_fit_to_multipredict  <-  
+  mod1_spec |>  
+  fit_xy(x = d_train_bake  |>  dplyr::select(-class), y = d_train_bake$class)
+
+
+```
+
+
+Ahora podemos usar la función `multi_predict` para obtener las prediciones que
+se obtendrían con un modelo con menos árboles. Es decir, ajustamos un solo modelo con 100 árboles,
+pero podemos "podar" ese modelo y obtener predicciones usando menos árboles sin tener que reestimar.
+
+```{r}
+
+test_bake <- bake(recipe1, d_test)
+
+pred_test_100_trees <- multi_predict(wf1_fit_to_multipredict,
+                                     type = "prob",
+                                     new_data = test_bake |>  dplyr::select(-class),
+                                     trees = 100 )
+
+pred_test_10_trees <- multi_predict(wf1_fit_to_multipredict,
+                                     type = "prob",
+                                     new_data = test_bake |>  dplyr::select(-class),
+                                     trees = c(10))
+
+head(pred_test_100_trees)
+head(pred_test_10_trees)
+
+# también se puede hacer con varios árboles a la vez
+pred_test_10_20_trees <- multi_predict(wf1_fit_to_multipredict,
+                                     type = "prob",
+                                     new_data = test_bake |>  dplyr::select(-class),
+                                     trees = c(10, 20))
+
+head(pred_test_10_20_trees)
+
+```
+
+Podemos ver las predicciones con el modelo completo (100 árboles), con el submodelo (10 árboles)
+y con los dos submodelos de 10 y 20 árboles.
+
+
+
+```{r}
+
+pred_test_100_trees  |>  
+  unnest(.pred)  |> 
+  slice_head( n = 10)
+
+```
+
+```{r}
+
+pred_test_10_trees  |>  
+  unnest(.pred)  |> 
+  slice_head( n = 10)
+
+```
+
+```{r}
+
+pred_test_10_20_trees  |>  
+  unnest(.pred)  |> 
+  slice_head( n = 10)
+
+```
+
+
+Comparamos métrica de roc_auc entre el modelo de 100 árboles y el submodelo de 10
+
+
+```{r}
+
+pred_test_100_trees  |>  
+  unnest(.pred)  |> 
+  bind_cols(d_test |> select(class)) |> 
+  roc_auc(truth = class, .pred_class_1 )
+
+pred_test_10_trees  |>  
+  unnest(.pred)  |> 
+  bind_cols(d_test |> select(class)) |> 
+  roc_auc(truth = class, .pred_class_1 )
+
+
+```
+
+
+## ¿De qué nos sirve este truco y como funciona en `tidymodels`?
+
+Cuando hacemos validación cruzada para encontrar los mejores hiperparámetros, este truco sirve para 
+no tener que ejecutar varios modelos. Para que funcione en `tidymodels` hay que pasarle  un grid en 
+formato `tibble` o `data.frame`  a la función de `tune_grid`.  Veámoslo
+
+Hacemos el "tuneado" dejando que sea `tidymodels` quien haga el grid, en este caso no se utiliza el 
+_submodel trick_. Si tenemos 4 combinaciones y 5 folds, `tidymodels` ejecutará 4 x 5 modelos. 
+
+
+Nota: Cuando haya muchos datos y muchos folds es mejor usar `plan(multicore)` o `plan(multisession)`
+para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que
+la paralelización nativa con `xgboost` o `lightgbm` utilice un solo hilo (o como mucho 2), porque si 
+no entra en conflicto la paralelización de `future` con la nativa de esas librerías basada en `OpenMP`
+
+```{r}
+
+bt <- 
+  boost_tree( trees = tune(), learn_rate = tune()) %>%
+  set_mode("classification")
+
+# engine xgboost
+bt
+```
+
+
+Si dejamos a tidymodels hacer el `grid` de parámetros usará combinaciones aleatorias de los parámetros. 
+Por ejemplo 
+
+```{r}
+
+# Extraer hiperparámetros y definir rango
+param_grid <- hardhat::extract_parameter_set_dials(bt) %>%
+  update(trees = trees(range = c(1, 140)), learn_rate = learn_rate(range= c(-1, 1)))
+
+set.seed(49)
+grid_random <- grid_random(param_grid, size = 16)
+
+
+
+grid_random
+
+```
+
+Y sería raro que se tenga mismo valor de `learn_rate`  para distintos valores de `trees`. Recordemos 
+que en estos modelos el _submodel trick_  funciona solo para  `trees`. Si tuviéramos mismo valor de learn_rate
+y diferentes valores de `trees` bastaría con ajustar el modelo con mayor número de árboles.
+
+
+
+Veamos cuanta tarda en ajustar estas 16 combinaciones de parámetros, sobre los 5 folds. Es decir 80 modelos.
+
+
+
+
+```{r}
+
+tictoc::tic()
+    basic <- 
+      tune_grid(
+        object = bt,
+        preprocessor = class ~ .,
+        resamples = d_folds,
+        grid = grid_random
+      )
+tictoc::toc()
+
+```
+
+
+
+```{r}
+
+(metricas_basic <- collect_metrics(basic))
+
+metricas_basic  |>  
+  filter(.metric == "roc_auc")  |> 
+  arrange(desc(.metric))
+```
+
+
+Para aprovechar el _submodel trick_  hay que construir un _grid_ dónde a igual combinación de otros 
+parámetros tengamos diferentes valores de `trees`
+
+```{r}
+
+grid_regular <- grid_regular(param_grid, levels = 4)
+
+grid_regular
+
+```
+
+Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde `trees = 100`
+y `tidymodels` lo tiene en cuenta.
+
+
+
+```{r}
+
+tictoc::tic()
+    xgb_with_sub_trick <- 
+      tune_grid(
+        object = bt,
+        preprocessor = class ~ .,
+        resamples = d_folds,
+        grid = grid_regular
+      )
+tictoc::toc()
+
+```
+
+```{r}
+
+(metricas_xgb_sub_trick <- collect_metrics(xgb_with_sub_trick))
+
+metricas_xgb_sub_trick  |>  
+  filter(.metric == "roc_auc")  |> 
+  arrange(desc(.metric))
+```
+
+Y debería haber tardado menos. 
+
+Vemos las métricas 
+
+
+
+
+
+## Truco adicional
+
+Otra que cosa que se puede hacer, es simplemente cambiando el `engine` a uno que funcione más 
+rápido. por ejempolo a `lightgbm`
+
+
+```{r}
+
+bt_lgb <- bt %>% set_engine("lightgbm")
+
+
+tictoc::tic()
+lgb_with_sub_trick <-  
+      tune_grid(
+        object = bt_lgb,
+        preprocessor = class ~ .,
+        resamples = d_folds,
+        grid = grid_regular
+      )
+tictoc::toc()   
+```
+
+```{r}
+
+(metricas_lgb_with_sub_trick <- collect_metrics(lgb_with_sub_trick))
+
+metricas_lgb_with_sub_trick  |> 
+  filter(.metric == "roc_auc")  |> 
+  arrange(desc(.metric))
+```
+
+
+Si os fijáis en las salidas al final de cada `tictoc::toc()` se ve que con el truco de los submodelos
+ganamos velocidad, pero que si además cambiamos de "engine"  puede llegar a ser 10 veces más rápido.
+
+En próximas entradas contaré algún truquillo más, como los método de `racing`, que permite que cuando
+estemos haciendo el "tuning", se descarten modelos sin tener qeu esperar a que se ajusten en todos los folds. 
+
+Un saludo. 
