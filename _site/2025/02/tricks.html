@@ -347,7 +347,7 @@ Listening
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">wf1_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/fit.html">fit</a></span><span class="op">(</span><span class="va">mod1_spec</span>,formula <span class="op">=</span> <span class="va">class</span> <span class="op">~</span> <span class="va">.</span>,  <span class="va">d_train_bake</span><span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 4.797 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 4.908 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>En tidymodels para poder usar el <em>submodel trick</em> directamente teneemos la función <code>multi_predict</code> pero no tiene implementado la interfaz de fórmula por lo que tenemos que usar <code>fit_xy</code></p>
@@ -563,7 +563,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_random</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 230.147 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 223.145 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -635,7 +635,7 @@ Listening
 <span><span class="co">#&gt; 16   140     10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <code>trees = 100</code> y <code>tidymodels</code> lo tiene en cuenta.</p>
+<p>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <code>trees = 140</code> y <code>tidymodels</code> lo tiene en cuenta.</p>
 <div class="cell">
 <details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">tic</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -647,7 +647,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 110.519 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 86.619 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -710,7 +710,7 @@ Listening
 <span>        grid <span class="op">=</span> <span class="va">grid_regular</span></span>
 <span>      <span class="op">)</span></span>
 <span><span class="fu">tictoc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html">toc</a></span><span class="op">(</span><span class="op">)</span>   </span>
-<span><span class="co">#&gt; 31.597 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 18.747 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -746,9 +746,9 @@ Listening
 <span><span class="co">#&gt;  7    93      0.464 roc_auc binary     0.948     5 0.00144 Preprocessor1_Model07</span></span>
 <span><span class="co">#&gt;  8   140      0.464 roc_auc binary     0.948     5 0.00145 Preprocessor1_Model08</span></span>
 <span><span class="co">#&gt;  9     1      2.15  roc_auc binary     0.947     5 0.00232 Preprocessor1_Model09</span></span>
-<span><span class="co">#&gt; 10    47      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model10</span></span>
-<span><span class="co">#&gt; 11    93      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model11</span></span>
-<span><span class="co">#&gt; 12   140      2.15  roc_auc binary     0.597     5 0.0282  Preprocessor1_Model12</span></span>
+<span><span class="co">#&gt; 10    47      2.15  roc_auc binary     0.606     5 0.0244  Preprocessor1_Model10</span></span>
+<span><span class="co">#&gt; 11    93      2.15  roc_auc binary     0.606     5 0.0244  Preprocessor1_Model11</span></span>
+<span><span class="co">#&gt; 12   140      2.15  roc_auc binary     0.606     5 0.0244  Preprocessor1_Model12</span></span>
 <span><span class="co">#&gt; 13     1     10     roc_auc binary     0.947     5 0.00232 Preprocessor1_Model13</span></span>
 <span><span class="co">#&gt; 14    47     10     roc_auc binary     0.538     5 0.0354  Preprocessor1_Model14</span></span>
 <span><span class="co">#&gt; 15    93     10     roc_auc binary     0.538     5 0.0354  Preprocessor1_Model15</span></span>
@@ -1703,7 +1703,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb21-359"><a href="#cb21-359" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-360"><a href="#cb21-360" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb21-361"><a href="#cb21-361" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-362"><a href="#cb21-362" aria-hidden="true" tabindex="-1"></a>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <span class="in">`trees = 100`</span></span>
+<span id="cb21-362"><a href="#cb21-362" aria-hidden="true" tabindex="-1"></a>Ahora en vez de tener que ajustar las 16 combinaciones solo hace falta ajustar las 4 dónde <span class="in">`trees = 140`</span></span>
 <span id="cb21-363"><a href="#cb21-363" aria-hidden="true" tabindex="-1"></a>y <span class="in">`tidymodels`</span> lo tiene en cuenta.</span>
 <span id="cb21-364"><a href="#cb21-364" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-365"><a href="#cb21-365" aria-hidden="true" tabindex="-1"></a></span>
