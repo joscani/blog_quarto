@@ -85,13 +85,13 @@ bin_roughly <- function(x) {
 }
 
 simulate_regression <- function(n_rows) {
-  modeldata::sim_regression(n_rows) %>%
-    select(-c(predictor_16:predictor_20)) %>%
+  modeldata::sim_regression(n_rows) |>
+    select(-c(predictor_16:predictor_20)) |>
     mutate(across(contains("_1"), bin_roughly))
 }
 
 simulate_classification <- function(n_rows, n_levels) {
-  modeldata::sim_classification(n_rows, num_linear = 12) %>%
+  modeldata::sim_classification(n_rows, num_linear = 12) |>
     mutate(across(contains("_1"), bin_roughly))
 }
 
@@ -262,12 +262,13 @@ _submodel trick_. Si tenemos 4 combinaciones y 5 folds, `tidymodels` ejecutará 
 Nota: Cuando haya muchos datos y muchos folds es mejor usar `plan(multicore)` o `plan(multisession)`
 para que tidymodels paralelice y haga fold en un proceso. Pero en ese caso es muy importante poner que
 la paralelización nativa con `xgboost` o `lightgbm` utilice un solo hilo (o como mucho 2), porque si 
-no entra en conflicto la paralelización de `future` con la nativa de esas librerías basada en `OpenMP`
+no entra en conflicto la paralelización de `future` con la nativa de esas librerías basada en `OpenMP`. 
+Gracias a [Jordi Rosell](https://bsky.app/profile/jrosell.bsky.social) por las pistas. 
 
 ```{r}
 
 bt <- 
-  boost_tree( trees = tune(), learn_rate = tune()) %>%
+  boost_tree( trees = tune(), learn_rate = tune()) |>
   set_mode("classification")
 
 # engine xgboost
@@ -281,7 +282,7 @@ Por ejemplo
 ```{r}
 
 # Extraer hiperparámetros y definir rango
-param_grid <- hardhat::extract_parameter_set_dials(bt) %>%
+param_grid <- hardhat::extract_parameter_set_dials(bt) |>
   update(trees = trees(range = c(1, 140)), learn_rate = learn_rate(range= c(-1, 1)))
 
 set.seed(49)
@@ -385,7 +386,7 @@ rápido. por ejempolo a `lightgbm`
 
 ```{r}
 
-bt_lgb <- bt %>% set_engine("lightgbm")
+bt_lgb <- bt |> set_engine("lightgbm")
 
 
 tictoc::tic()
