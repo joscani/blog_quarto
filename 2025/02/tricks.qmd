@@ -327,7 +327,7 @@ tictoc::toc()
 
 metricas_basic  |>  
   filter(.metric == "roc_auc")  |> 
-  arrange(desc(.metric))
+  arrange(desc(mean))
 ```
 
 
@@ -367,7 +367,7 @@ tictoc::toc()
 
 metricas_xgb_sub_trick  |>  
   filter(.metric == "roc_auc")  |> 
-  arrange(desc(.metric))
+  arrange(desc(mean))
 ```
 
 Y debería haber tardado menos. 
@@ -406,7 +406,7 @@ tictoc::toc()
 
 metricas_lgb_with_sub_trick  |> 
   filter(.metric == "roc_auc")  |> 
-  arrange(desc(.metric))
+  arrange(desc(mean))
 ```
 
 
