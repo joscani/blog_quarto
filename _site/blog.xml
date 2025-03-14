@@ -10,7 +10,675 @@
 <atom:link href="https://muestrear-no-es-pecado.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.6.39</generator>
-<lastBuildDate>Sun, 23 Feb 2025 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 14 Mar 2025 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>AUC en SQL. Dos formas</title>
+  <link>https://muestrear-no-es-pecado.netlify.app/2025/03/auc_sql.html</link>
+  <description><![CDATA[ <p>Pdte de poner cancion , la de disorder de system of a down</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Listening
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/0snQkGI5qnAmohLE7jTsTn?utm_source=generator" width="100%" height="250" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+</div>
+</div>
+<p>En post de <a href="../../2021/03/08/auc-wilcoxon-de-nuevo/index.html">auc-wilcoxon-de-nuevo</a> ya comenté sobre la relación entre el auc-wilcoxon-de-nuevo y también sobre una definición alternativa del AUC como la probabilidad de que un “sí” elegido al azar tenga un score mayor que un “no” elegido al azar. Para calcularlo de esta última forma se puede aproximar mediante muestreo, obteniendo muestras aleatorias con reemplezamiento de los “síes” y de los “noes” y ver la proporción de veces que el score de los “síes” es mayor que el de los “noes”.</p>
+<section id="datos-y-auc" class="level2"><h2 class="anchored" data-anchor-id="datos-y-auc">Datos y auc</h2>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;-</span>  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">here</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://here.r-lib.org//reference/here.html">here</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"data/test_auc.csv"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">target</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;  0  1 </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 60 10</span></span>
+<span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/tapply.html">tapply</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">score</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">target</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">mean</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt;         0         1 </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; 0.4249752 1.0612920</span></span>
+<span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">DT</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/pkg/DT/man/datatable.html">datatable</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span>,</span>
+<span>              extensions <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Buttons'</span>, <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Activa la extensión Buttons</span></span>
+<span>  options <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span></span>
+<span>    dom <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Bfrtip'</span>, <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Define la posición del botón</span></span>
+<span>    buttons <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'copy'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'csv'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'excel'</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Elige los botones deseados</span></span>
+<span>  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span></code></pre></div>
+</details><div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-4393c89cd03b35a84d0d" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-4393c89cd03b35a84d0d">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70"],[0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.7871513130009957,0.4108373325124965,0.1942540128908807,1.269292468130818,0.6797606468164582,0.1117102279507804,0.1466170959135902,1.043213231848131,0.7620052802750662,0.5862914812565646,0.2892315425234719,0.0002496209071436465,0.635136898622028,0.7027168987223291,0.4355579498799027,0.1689211625451299,0.7149172324097952,0.6369319897944163,0.3821982533695989,0.3781126534407306,0.199123389033371,0.3944308289333805,0.5470067196044771,0.129866528772233,0.4816330268966281,0.6214422071392629,0.4688701281845642,0.5064162005331079,0.7452836831880232,0.3661062318727096,0.6778095029545352,0.3568597630131863,0.4383250299550968,0.356037551927062,0.7540726757670453,0.4887435467412748,0.4204624811584161,0.2341538088258663,0.5982628461121889,1.167032810449143,1.056025676319306,0.04860586445582069,0.6060737011196519,0.2818559895139789,0.3496601279699051,0.5731285664229272,0.2073238150350082,0.01207886775772154,0.5554641779181537,0.6952891094162656,0.1806790923320626,0.1196534928962571,1.465808845260323,1.158292298412759,1.398958630905712,0.4505184347054265,0.1031068831592367,0.6189684416222315,0.6666387365343051,0.03298348819578585,0.6170626984832901,0.6917392999457542,0.4357136719173849,0.4575702525640519,0.7784146482777758,0.06255034361409885,0.5347181507637883,0.3056688744456659,0.7977626930924758,0.5620702626277149]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>target<\/th>\n      <th>score<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Bfrtip","buttons":["copy","csv","excel"],"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"target","targets":1},{"name":"score","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p>Hay un AUC de 0.952</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Show the code</summary><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span></span>
+<span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">pROC</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">target</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">datos</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">score</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Call:</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; roc.default(response = datos$target, predictor = datos$score)</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; </span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Data: datos$score in 60 controls (datos$target 0) &lt; 10 cases (datos$target 1).</span></span>
+<span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#&gt; Area under the curve: 0.9517</span></span></code></pre></div>
+</details>
+</div>
+</section><section id="auc-con-muestreo-en-sql.-en-este-bigquery" class="level2"><h2 class="anchored" data-anchor-id="auc-con-muestreo-en-sql.-en-este-bigquery">AUC con muestreo en sql. En este bigquery</h2>
+<p>Supongamos que tenemos los datos en una tabla en un SGBD, y que tenemos las columnas de target y score</p>
+<p>Pues podríamos muestrear con reemplazamiento el mismo número de target = 1 y de target = 0 y ver simplemente la proporción de cuando el score de target = 1 es mayor que el score de target = 0</p>
+<p>En sql sería algo parecido a esto. No he encontrado forma más sencilla, si alguien la sabe, que la ponga en comentarios.</p>
+<p>En este ejemplo repetimos cada fila un número de veces ( he puesto 10000), y luego tomamos dos muestras aleatorias de tamaño 10000, una para la clase 1 y otra para la clase 0. Unimos y simplemente vamos comparando los scores fila a fila y vemos la media de cuando (score_target_1 &gt; score_target_0). En una ejecución de este código con los datos que he dejado, sale auc de 0.951</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WITH</span> sample_data <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb3-2">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> target, score  </span>
+<span id="cb3-3">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> `proyecto.dataset.tabla`</span>
+<span id="cb3-4">),</span>
+<span id="cb3-5"></span>
+<span id="cb3-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-- Muestreo con reemplazo para target=0</span></span>
+<span id="cb3-7">sampled_0 <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb3-8">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> z.target, z.score</span>
+<span id="cb3-9">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> (</span>
+<span id="cb3-10">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> target, score</span>
+<span id="cb3-11">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> sample_data</span>
+<span id="cb3-12">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WHERE</span> target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb3-13">  ) z,</span>
+<span id="cb3-14">  UNNEST(GENERATE_ARRAY(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span>)) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> dummy</span>
+<span id="cb3-15">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ORDER</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">BY</span> RAND()</span>
+<span id="cb3-16">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">LIMIT</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span></span>
+<span id="cb3-17">),</span>
+<span id="cb3-18"></span>
+<span id="cb3-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-- Muestreo con reemplazo para target=1</span></span>
+<span id="cb3-20">sampled_1 <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb3-21">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> o.target, o.score</span>
+<span id="cb3-22">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> (</span>
+<span id="cb3-23">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> target, score</span>
+<span id="cb3-24">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> sample_data</span>
+<span id="cb3-25">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WHERE</span> target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb3-26">  ) o,</span>
+<span id="cb3-27">  UNNEST(GENERATE_ARRAY(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span>)) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> dummy</span>
+<span id="cb3-28">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ORDER</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">BY</span> RAND()</span>
+<span id="cb3-29">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">LIMIT</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span></span>
+<span id="cb3-30">),</span>
+<span id="cb3-31"></span>
+<span id="cb3-32">combined_data <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb3-33">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> sampled_0</span>
+<span id="cb3-34">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">UNION</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ALL</span></span>
+<span id="cb3-35">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> sampled_1</span>
+<span id="cb3-36">),</span>
+<span id="cb3-37"></span>
+<span id="cb3-38"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-- Si necesitas volver a numerar, por ejemplo para la comparación posterior:</span></span>
+<span id="cb3-39">numbered_data <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb3-40">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span></span>
+<span id="cb3-41">    target,</span>
+<span id="cb3-42">    score,</span>
+<span id="cb3-43">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ROW_NUMBER</span>() <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">OVER</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">PARTITION</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">BY</span> target <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ORDER</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">BY</span> RAND()) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> rn</span>
+<span id="cb3-44">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> combined_data</span>
+<span id="cb3-45">)</span>
+<span id="cb3-46"></span>
+<span id="cb3-47"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span></span>
+<span id="cb3-48">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">AVG</span>(<span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">IF</span>(score_target_1 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> score_target_0, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> auc_calc</span>
+<span id="cb3-49"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> numbered_data</span>
+<span id="cb3-50">PIVOT (</span>
+<span id="cb3-51">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">MAX</span>(score) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> score</span>
+<span id="cb3-52">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FOR</span> target <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">IN</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> target_0, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> target_1)</span>
+<span id="cb3-53">);</span>
+<span id="cb3-54"></span></code></pre></div>
+</section><section id="auc-como-test-de-rangos-de-wilcoxon." class="level2"><h2 class="anchored" data-anchor-id="auc-como-test-de-rangos-de-wilcoxon.">AUC como test de rangos de wilcoxon.</h2>
+<p>El test de rangos de wilcoxon compara rangos de dos distribuciones, y en realidad para este caso está relacionado justamente con el AUC. Si un modelo es bueno, si ordeno por score y me quedo con la posición la mayoría de los casos con target = 1 tienen que tener mayor rango que los casos con target = 0.</p>
+<p>Podemos implementar el AUC-ROC como suma de los rangos positivos</p>
+<p><img src="https://latex.codecogs.com/png.latex?AUC%20=%20%5Cdfrac%7BU%7D%7Bn_%7B%5Ctext%7Btarget%5C_1%7D%7D%20%5Ctimes%20n_%7B%5Ctext%7Btarget%5C_0%7D%7D%7D"></p>
+<p>dónde U es la suma de los rangos para los casos positivos menos la suma mínima de rangos que tendrían si todos los target = 1 tuvieran score más bajo que cualquier target = 0</p>
+<p>En sql</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WITH</span> sample_data <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb4-2">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span> target, score</span>
+<span id="cb4-3">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> `proyecto.dataset.tabla`</span>
+<span id="cb4-4">),</span>
+<span id="cb4-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-- ordenamos por score todos los casos  y le ponemos el rango</span></span>
+<span id="cb4-6">ranked <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb4-7">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span></span>
+<span id="cb4-8">    target,</span>
+<span id="cb4-9">    score,</span>
+<span id="cb4-10">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ROW_NUMBER</span>() <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">OVER</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ORDER</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">BY</span> score) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> rnk,</span>
+<span id="cb4-11">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">SUM</span>(<span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">CASE</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WHEN</span> target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">THEN</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ELSE</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">END</span>) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">OVER</span> () <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> n_pos,</span>
+<span id="cb4-12">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">SUM</span>(<span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">CASE</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WHEN</span> target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">THEN</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ELSE</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">END</span>) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">OVER</span> () <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> n_neg</span>
+<span id="cb4-13">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> sample_data</span>
+<span id="cb4-14">),</span>
+<span id="cb4-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-- suma de lso rangos solo para los positivos</span></span>
+<span id="cb4-16"></span>
+<span id="cb4-17">positive_ranks <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> (</span>
+<span id="cb4-18">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span></span>
+<span id="cb4-19">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">SUM</span>(rnk) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> sum_ranks,</span>
+<span id="cb4-20">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">MAX</span>(n_pos) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> n_pos,</span>
+<span id="cb4-21">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">MAX</span>(n_neg) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> n_neg</span>
+<span id="cb4-22">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> ranked</span>
+<span id="cb4-23">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">WHERE</span> target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb4-24">)</span>
+<span id="cb4-25"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">SELECT</span></span>
+<span id="cb4-26">  (sum_ranks <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> (n_pos <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> (n_pos <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> (n_pos <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> n_neg) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">AS</span> auc</span>
+<span id="cb4-27"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">FROM</span> positive_ranks;</span></code></pre></div>
+<p>y esto da como resultado un AUC de 0.9516.</p>
+<p>Y bueno, son dos formas interesantes de calcular el AUC sin tener que recurrir a librerías específicas</p>
+
+
+<!-- -->
+
+</section> ]]></description>
+  <category>estadística</category>
+  <category>2025</category>
+  <guid>https://muestrear-no-es-pecado.netlify.app/2025/03/auc_sql.html</guid>
+  <pubDate>Fri, 14 Mar 2025 23:00:00 GMT</pubDate>
+  <media:content url="https://muestrear-no-es-pecado.netlify.app/2025/03/pendiente_imagen.png" medium="image" type="image/png"/>
+</item>
 <item>
   <title>Error irreducible</title>
   <link>https://muestrear-no-es-pecado.netlify.app/2025/02/error_irreducible.html</link>
@@ -26585,46 +27253,6 @@ font-style: inherit;">"Density"</span>)</span></code></pre></div>
   <category>curro</category>
   <guid>https://muestrear-no-es-pecado.netlify.app/2024/02/guarnicion_de_guerra.html</guid>
   <pubDate>Thu, 15 Feb 2024 23:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Neovim</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado.netlify.app/2024/01/nvim_quarto.html</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>Pues me ha dado por aprender cosas de <code>vim</code>, y en particular de <a href="https://neovim.io/"><code>Neovim</code></a>. La verdad es que me está gustando bastante. Os dejo una serie de enlaces</p>
-<ul>
-<li><a href="https://victorhck.gitbook.io/aprende-vim/">Aprende VIM</a></li>
-<li><a href="https://github.com/joscani/nvim_config">Mi confi de Neovim</a></li>
-<li><a href="https://vonheikemen.github.io/devlog/">Blog devlog</a></li>
-<li><a href="https://www.youtube.com/c/ThePrimeagen">ThePrimeagen youtube</a></li>
-<li><a href="https://www.youtube.com/@typecraft_dev">Typecraft youtube</a></li>
-</ul>
-<p>Y ahora estoy probando a ver qué tal se edita este post desde Neovim. <img src="https://muestrear-no-es-pecado.netlify.app/2024/01/quarto-nvim.png" class="img-fluid" alt="quarto-nvim"></p>
-<p>Tengo abierto el fichero <code>qmd</code>, a la derecha el repl de R, y debajo un terminal.</p>
-<p>He configurado Neovim con plugins para tener R como repl <a href="https://github.com/jalvesaq/Nvim-R">Nvim-R</a> autocompletado con <a href="https://github.com/hrsh7th/nvim-cmp"><code>cmp</code></a> e instalado también plugins para <code>LSP</code>(language server protocol) para tener linters en R o en python, o <a href="https://github.com/nvim-treesitter/nvim-treesitter">Treesitter</a> para tener coloreado de sintaxis según el lenguaje o y otros plugins diversos.</p>
-<p>Total, que me está gustando bastante todo el tema de <code>vim</code>, pero la verdadera potencia está en las características propias de <code>vim</code>, como poder asignar atajos de teclado o todo el tema de poder cambiar lo de dentro de un text-object por ejemplo con <code>ci(</code> en modo normal cambias todo lo que hay dentro de un paréntesis que esté en la línea del cursor. O todo el tema de los registros de vim o de la macros. En realidad es todo un mundo.</p>
-<p>Pero tal y como dice mi <a href="https://chat.openai.com/g/g-Cw2plOtQj-asistente-sarcastico">Chat Gpt sarcástico</a></p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><a href="vim-vs-emacs.png" class="lightbox" data-glightbox="description: .lightbox-desc-1" data-gallery="quarto-lightbox-gallery-1" title="vim-vs-emacs"><img src="https://muestrear-no-es-pecado.netlify.app/2024/01/vim-vs-emacs.png" class="img-fluid figure-img" alt="vim-vs-emacs"></a></p>
-<figcaption>vim-vs-emacs</figcaption>
-</figure>
-</div>
-<p>Pues nada, sigo aprendiendo Neovim y ya iré poniendo posts con curiosidades.</p>
-
-
-
-
- ]]></description>
-  <category>2024</category>
-  <category>linux</category>
-  <category>Neovim</category>
-  <guid>https://muestrear-no-es-pecado.netlify.app/2024/01/nvim_quarto.html</guid>
-  <pubDate>Fri, 12 Jan 2024 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
