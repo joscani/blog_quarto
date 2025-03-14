@@ -1,0 +1,213 @@
+---
+title: AUC en SQL. Dos formas 
+date: '2025-03-15'
+categories: 
+  - estadística
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "pendiente_imagen.png"
+---
+
+Pdte de poner cancion , la de disorder de system of a down
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/0snQkGI5qnAmohLE7jTsTn?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
+</iframe>
+:::
+
+En post de
+[auc-wilcoxon-de-nuevo](../../2021/03/08/auc-wilcoxon-de-nuevo/index.html)
+ya comenté sobre la relación entre el auc-wilcoxon-de-nuevo y también
+sobre una definición alternativa del AUC como la probabilidad de que un
+"sí" elegido al azar tenga un score mayor que un "no" elegido al azar.
+Para calcularlo de esta última forma se puede aproximar mediante
+muestreo, obteniendo muestras aleatorias con reemplezamiento de los
+"síes" y de los "noes" y ver la proporción de veces que el score de los
+"síes " es mayor que el de los "noes".
+
+## Datos y auc
+
+```{r}
+
+library(pROC)
+
+datos  <-  read.csv(here::here("data/test_auc.csv"))
+
+table(datos$target)
+
+tapply(datos$score, datos$target, mean)
+
+DT::datatable(datos,
+              extensions = 'Buttons', # Activa la extensión Buttons
+  options = list(
+    dom = 'Bfrtip', # Define la posición del botón
+    buttons = c('copy', 'csv', 'excel') # Elige los botones deseados
+  ))
+
+
+```
+
+Hay un AUC de 0.952
+
+```{r}
+
+pROC::roc(datos$target, datos$score)
+
+```
+
+## AUC con muestreo en sql. En este bigquery
+
+Supongamos que tenemos los datos en una tabla en un SGBD, y que tenemos
+las columnas de target y score
+
+Pues podríamos muestrear con reemplazamiento el mismo número de target =
+1 y de target = 0 y ver simplemente la proporción de cuando el score de
+target = 1 es mayor que el score de target = 0
+
+En sql sería algo parecido a esto. No he encontrado forma más sencilla,
+si alguien la sabe, que la ponga en comentarios.
+
+En este ejemplo repetimos cada fila un número de veces ( he puesto
+10000), y luego tomamos dos muestras aleatorias de tamaño 10000, una
+para la clase 1 y otra para la clase 0. Unimos y simplemente vamos
+comparando los scores fila a fila y vemos la media de cuando
+(score_target_1 \> score_target_0). En una ejecución de este código con
+los datos que he dejado, sale auc de 0.951
+
+``` sql
+WITH sample_data AS (
+  SELECT target, score  
+  FROM `proyecto.dataset.tabla`
+),
+
+-- Muestreo con reemplazo para target=0
+sampled_0 AS (
+  SELECT z.target, z.score
+  FROM (
+    SELECT target, score
+    FROM sample_data
+    WHERE target = 0
+  ) z,
+  UNNEST(GENERATE_ARRAY(1, 10000)) AS dummy
+  ORDER BY RAND()
+  LIMIT 10000
+),
+
+-- Muestreo con reemplazo para target=1
+sampled_1 AS (
+  SELECT o.target, o.score
+  FROM (
+    SELECT target, score
+    FROM sample_data
+    WHERE target = 1
+  ) o,
+  UNNEST(GENERATE_ARRAY(1, 10000)) AS dummy
+  ORDER BY RAND()
+  LIMIT 10000
+),
+
+combined_data AS (
+  SELECT * FROM sampled_0
+  UNION ALL
+  SELECT * FROM sampled_1
+),
+
+-- Si necesitas volver a numerar, por ejemplo para la comparación posterior:
+numbered_data AS (
+  SELECT
+    target,
+    score,
+    ROW_NUMBER() OVER (PARTITION BY target ORDER BY RAND()) AS rn
+  FROM combined_data
+)
+
+SELECT
+  AVG(IF(score_target_1 >= score_target_0, 1, 0)) AS auc_calc
+FROM numbered_data
+PIVOT (
+  MAX(score) AS score
+  FOR target IN (0 AS target_0, 1 AS target_1)
+);
+
+
+```
+
+## AUC como test de rangos de wilcoxon.
+
+El test de rangos de wilcoxon compara rangos de dos distribuciones, y en
+realidad para este caso está relacionado justamente con el AUC. Si un
+modelo es bueno, si ordeno por score y me quedo con la posición la
+mayoría de los casos con target = 1 tienen que tener mayor rango que los
+casos con target = 0.
+
+Podemos implementar el AUC-ROC como suma de los rangos positivos
+
+$$AUC = \dfrac{U}{n_{\text{target\_1}} \times n_{\text{target\_0}}}$$
+
+
+dónde U es la suma de los rangos para los casos positivos menos la suma
+mínima de rangos que tendrían si todos los target = 1 tuvieran score más
+bajo que cualquier target = 0
+
+En sql
+
+``` sql
+WITH sample_data AS (
+  SELECT target, score
+  FROM `proyecto.dataset.tabla`
+),
+-- ordenamos por score todos los casos  y le ponemos el rango
+ranked AS (
+  SELECT
+    target,
+    score,
+    ROW_NUMBER() OVER (ORDER BY score) AS rnk,
+    SUM(CASE WHEN target = 1 THEN 1 ELSE 0 END) OVER () AS n_pos,
+    SUM(CASE WHEN target = 0 THEN 1 ELSE 0 END) OVER () AS n_neg
+  FROM sample_data
+),
+-- suma de lso rangos solo para los positivos
+
+positive_ranks AS (
+  SELECT
+    SUM(rnk) AS sum_ranks,
+    MAX(n_pos) AS n_pos,
+    MAX(n_neg) AS n_neg
+  FROM ranked
+  WHERE target = 1
+)
+SELECT
+  (sum_ranks - (n_pos * (n_pos + 1)) / 2.0) / (n_pos * n_neg) AS auc
+FROM positive_ranks;
+
+```
+
+y esto da como resultado un AUC de 0.9516.
+
+Y bueno, son dos formas interesantes de calcular el AUC sin tener que
+recurrir a librerías específicas
