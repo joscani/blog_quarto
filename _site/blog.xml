@@ -10,7 +10,45 @@
 <atom:link href="https://muestrear-no-es-pecado.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.6.39</generator>
-<lastBuildDate>Fri, 14 Mar 2025 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 21 Mar 2025 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Submuestrear si es pecado</title>
+  <link>https://muestrear-no-es-pecado.netlify.app/2025/03/submuestrear.html</link>
+  <description><![CDATA[ <div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Watching
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<iframe width="560" height="315" src="https://youtu.be/lm53uqt-ln0?si=LUx6pFbeAk1yMUWd" title="Probability song" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="">
+</iframe>
+</div>
+</div>
+<p>Aunque el título de este blog es Muestrear no es pecado, hoy quiero comentar brevemente algo que creo que si no es pecado, se acerca bastante. Se trata del submuestreo.</p>
+<p>El miércoles pasado estaba de cervezas con mi amiga Laura y su pareja y comentábamos muchas de las cosas que se hacen mal en la industria. Y me acordé del próximo podcast que vamos a sacar Leo y yo dónde tratamos de forma tangencial el tema del submuestreo.</p>
+<p>Al grano, mucha gente piensa que cuando tienes que modelar una variable dicotómica en la que la proporción del “éxito” es muy pequeña, (típicamente lo llaman “dataset desbalanceado”), creen que lo que hay que hacer es algún tipo de balanceo, y entre los más conocidos está el submustrear observaciones de la clase mayoritaria. Básicamente, eliminar filas .</p>
+<p>Se supone que de esta forma se facilita el ajuste de los algoritmos de Machín Lenin. Por la red se puede encontrar fácilmente demostracinoes que por ejemplo en el caso de la regresión logística el modelo que se obtiene submuestreando y sin submuestrear es equivalente en cuánto al orden de los “scores”.</p>
+<p>Y en otro tipo de algoritmos como los basados en árboles uno podría pensar que tendría cierta lógica, pero existen alternativas.</p>
+<p>Por ejemplo, se puede dar un peso a las observaciones de la clase minoritaria de forma que el algoritmo las tenga más en cuenta sin tener que descartar observaciones de la mayoritaria, o incluso modificar la función de coste utilizada de forma que se penalice más equivocarse en la predicción de esa clase.</p>
+<p>Con el afán de submuestrear (o balancear) he visto por esos lares aberraciones como la de submuestrear en el conjunto de train, estandarizar las variables en ese conjunto de train submuestreado y aplicar esas medias y desviaciones típicas al conjunto que se va a predecir, lo cual, obviamente es un error conceptual grave.</p>
+<p>Pues nada más, a ver si Leo puede editar pronto el episodio que grabamos hablando sobre bootstrap, submuestreo y demás cositas. Yo creo que estuvo bastante bien, al menos yo me lo pasé estupendamente grabándolo.</p>
+
+
+<!-- -->
+
+
+ ]]></description>
+  <category>estadística</category>
+  <category>muestreo</category>
+  <category>2025</category>
+  <guid>https://muestrear-no-es-pecado.netlify.app/2025/03/submuestrear.html</guid>
+  <pubDate>Fri, 21 Mar 2025 23:00:00 GMT</pubDate>
+  <media:content url="https://muestrear-no-es-pecado.netlify.app/2025/03/ups.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>AUC en SQL. Dos formas</title>
   <link>https://muestrear-no-es-pecado.netlify.app/2025/03/auc_sql.html</link>
@@ -173,8 +211,8 @@ font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">)</span></span></code></pre></div>
 </details><div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-f5c2dcb76cafe5759fbd" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-f5c2dcb76cafe5759fbd">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70"],[0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.7871513130009957,0.4108373325124965,0.1942540128908807,1.269292468130818,0.6797606468164582,0.1117102279507804,0.1466170959135902,1.043213231848131,0.7620052802750662,0.5862914812565646,0.2892315425234719,0.0002496209071436465,0.635136898622028,0.7027168987223291,0.4355579498799027,0.1689211625451299,0.7149172324097952,0.6369319897944163,0.3821982533695989,0.3781126534407306,0.199123389033371,0.3944308289333805,0.5470067196044771,0.129866528772233,0.4816330268966281,0.6214422071392629,0.4688701281845642,0.5064162005331079,0.7452836831880232,0.3661062318727096,0.6778095029545352,0.3568597630131863,0.4383250299550968,0.356037551927062,0.7540726757670453,0.4887435467412748,0.4204624811584161,0.2341538088258663,0.5982628461121889,1.167032810449143,1.056025676319306,0.04860586445582069,0.6060737011196519,0.2818559895139789,0.3496601279699051,0.5731285664229272,0.2073238150350082,0.01207886775772154,0.5554641779181537,0.6952891094162656,0.1806790923320626,0.1196534928962571,1.465808845260323,1.158292298412759,1.398958630905712,0.4505184347054265,0.1031068831592367,0.6189684416222315,0.6666387365343051,0.03298348819578585,0.6170626984832901,0.6917392999457542,0.4357136719173849,0.4575702525640519,0.7784146482777758,0.06255034361409885,0.5347181507637883,0.3056688744456659,0.7977626930924758,0.5620702626277149]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>target<\/th>\n      <th>score<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Bfrtip","buttons":["copy","csv","excel"],"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"target","targets":1},{"name":"score","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-bd3de5dad6ba889e4edb" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-bd3de5dad6ba889e4edb">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70"],[0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0.7871513130009957,0.4108373325124965,0.1942540128908807,1.269292468130818,0.6797606468164582,0.1117102279507804,0.1466170959135902,1.043213231848131,0.7620052802750662,0.5862914812565646,0.2892315425234719,0.0002496209071436465,0.635136898622028,0.7027168987223291,0.4355579498799027,0.1689211625451299,0.7149172324097952,0.6369319897944163,0.3821982533695989,0.3781126534407306,0.199123389033371,0.3944308289333805,0.5470067196044771,0.129866528772233,0.4816330268966281,0.6214422071392629,0.4688701281845642,0.5064162005331079,0.7452836831880232,0.3661062318727096,0.6778095029545352,0.3568597630131863,0.4383250299550968,0.356037551927062,0.7540726757670453,0.4887435467412748,0.4204624811584161,0.2341538088258663,0.5982628461121889,1.167032810449143,1.056025676319306,0.04860586445582069,0.6060737011196519,0.2818559895139789,0.3496601279699051,0.5731285664229272,0.2073238150350082,0.01207886775772154,0.5554641779181537,0.6952891094162656,0.1806790923320626,0.1196534928962571,1.465808845260323,1.158292298412759,1.398958630905712,0.4505184347054265,0.1031068831592367,0.6189684416222315,0.6666387365343051,0.03298348819578585,0.6170626984832901,0.6917392999457542,0.4357136719173849,0.4575702525640519,0.7784146482777758,0.06255034361409885,0.5347181507637883,0.3056688744456659,0.7977626930924758,0.5620702626277149]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>target<\/th>\n      <th>score<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Bfrtip","buttons":["copy","csv","excel"],"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"target","targets":1},{"name":"score","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <p>Hay un AUC de 0.952</p>
@@ -27225,33 +27263,6 @@ font-style: inherit;">"Density"</span>)</span></code></pre></div>
   <category>tiempos modernos</category>
   <guid>https://muestrear-no-es-pecado.netlify.app/2024/02/nomenclatura.html</guid>
   <pubDate>Fri, 23 Feb 2024 23:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Guarnición de guerra</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado.netlify.app/2024/02/guarnicion_de_guerra.html</link>
-  <description><![CDATA[ 
-
-
-
-
-<p><em>Se conoce como guarnición a las tropas que protegen y están destinadas en un palacio, un castillo, un fuerte, un buque de guerra o una zona o región, por ejemplo.</em></p>
-<p>Esta semana ha sido <em>interesante</em> en el curro. He vivido lo que en el argot se conoce como “war room”. Básicamente tiene que ver con que hay algo que ha fallado o se ha retrasado - típicamente en producción - y nadie tiene ni puta idea de por qué ha pasado.</p>
-<p>Es entonces cuando se convoca la “war room” , “gabinete de crisis” o “guarnición de guerra”. Consiste en montar reunión durante prácticamente todo el día y durante varios días , y se convoca a los equipos implicados. A saber, gente que se encarga de las operaciones en producción, el equipo de desarrollo, e incluso gente de negocio si fuera necesario. Durante estas reuniones se trabaja codo con codo en intentar solucionar el problema y todo lo demás pasa a ser secundario.</p>
-<p>Ha sido mi primera “war room” en la empresa dónde curro y a pesar de la situación, que era crítica, ha sido una buena experiencia. Por un lado se ha mandado a tomar por saco todas las tonterías del agile y demás historias, aquí se está para currar y solucionar el problema. La gente en ningún momento ha echado nada en cara al otro equipo , ya sabéis , en plan “tú código es una mierda” y blablalba. En estas war rooms se valora a la gente resolutiva, que ofrece soluciones, se escucha a todo el mundo, porque incluso aunque se digan cosas que a priori pueden ser una locura, puede que hagan pensar en alguien en la posible solución.</p>
-<p>Y tengo que hablar de la gente, al menos en esta “guarnición de guerra” , la gente ha sido lo mejor. La gente de operaciones son muy profesionales, colaboradores, y tienen una paciencia infinita. La gente de mi equipo igual, unos cracks todos. He aprendido muchísimo y sobre todo valoro mucho más a la gente con la que trabajo.</p>
-<p>No sé si daremos con la tecla del problema, y puede que no sea lo más importante, lo que si sé es que compartir trinchera forja alianzas.</p>
-<p>Por mi parte, puede que de esta “guarnición de guerra” me gane unas cuántas cervezas, pues para cada hipótesis que se me ocurría de dónde pudiera estar el problema ( y una de las hipótesis que defiendo es que ha sido todo fruto del azar) me apostaba un par de cervezas con alguien. ” Me juego 2 cervezas a que esto no falla más en lo que queda de mes” ( ya lleva varios días seguidos sin fallar, la actualización de mi posteriori me da pie a pensar que voy a ganar la apuesta) o cosas así.</p>
-<p>La sensación es rara, por un lado ha habido problemas con cosas del proyecto y aún no tenemos claro por qué. Por otro lado, el compartir trinchera y trabajar todos a una en intentar solucionarlo me ha gustado mucho, y ha hecho que valore aún más a la gente de operaciones. Gracias a todos y feliz fin de semana.</p>
-<p><strong>Seguimos el lunes</strong></p>
-
-
-
- ]]></description>
-  <category>2024</category>
-  <category>curro</category>
-  <guid>https://muestrear-no-es-pecado.netlify.app/2024/02/guarnicion_de_guerra.html</guid>
-  <pubDate>Thu, 15 Feb 2024 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
