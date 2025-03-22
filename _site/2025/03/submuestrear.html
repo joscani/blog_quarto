@@ -219,15 +219,14 @@ Watching
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<iframe width="560" height="315" src="https://youtu.be/lm53uqt-ln0?si=LUx6pFbeAk1yMUWd" title="Probability song" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lm53uqt-ln0" title="Probability song" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="">
 </iframe>
 </div>
 </div>
 <p>Aunque el título de este blog es Muestrear no es pecado, hoy quiero comentar brevemente algo que creo que si no es pecado, se acerca bastante. Se trata del submuestreo.</p>
 <p>El miércoles pasado estaba de cervezas con mi amiga Laura y su pareja y comentábamos muchas de las cosas que se hacen mal en la industria. Y me acordé del próximo podcast que vamos a sacar Leo y yo dónde tratamos de forma tangencial el tema del submuestreo.</p>
 <p>Al grano, mucha gente piensa que cuando tienes que modelar una variable dicotómica en la que la proporción del “éxito” es muy pequeña, (típicamente lo llaman “dataset desbalanceado”), creen que lo que hay que hacer es algún tipo de balanceo, y entre los más conocidos está el submustrear observaciones de la clase mayoritaria. Básicamente, eliminar filas .</p>
-<p>Se supone que de esta forma se facilita el ajuste de los algoritmos de Machín Lenin. Por la red se puede encontrar fácilmente demostracinoes que por ejemplo en el caso de la regresión logística el modelo que se obtiene submuestreando y sin submuestrear es equivalente en cuánto al orden de los “scores”.</p>
-<p>Y en otro tipo de algoritmos como los basados en árboles uno podría pensar que tendría cierta lógica, pero existen alternativas.</p>
+<p>Se supone que de esta forma se facilita el ajuste de los algoritmos de Machín Lenin. Por la red se puede encontrar fácilmente demostracinoes que por ejemplo en el caso de la regresión logística el modelo que se obtiene submuestreando y sin submuestrear es equivalente en cuánto al orden de los “scores”. Y en otro tipo de algoritmos como los basados en árboles uno podría pensar que tendría cierta lógica, pero existen alternativas.</p>
 <p>Por ejemplo, se puede dar un peso a las observaciones de la clase minoritaria de forma que el algoritmo las tenga más en cuenta sin tener que descartar observaciones de la mayoritaria, o incluso modificar la función de coste utilizada de forma que se penalice más equivocarse en la predicción de esa clase.</p>
 <p>Con el afán de submuestrear (o balancear) he visto por esos lares aberraciones como la de submuestrear en el conjunto de train, estandarizar las variables en ese conjunto de train submuestreado y aplicar esas medias y desviaciones típicas al conjunto que se va a predecir, lo cual, obviamente es un error conceptual grave.</p>
 <p>Pues nada más, a ver si Leo puede editar pronto el episodio que grabamos hablando sobre bootstrap, submuestreo y demás cositas. Yo creo que estuvo bastante bien, al menos yo me lo pasé estupendamente grabándolo.</p>
@@ -888,7 +887,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>&lt;iframe </span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  width="560" </span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  height="315" </span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  src="https://youtu.be/lm53uqt-ln0?si=LUx6pFbeAk1yMUWd" </span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  src="https://www.youtube.com/embed/lm53uqt-ln0" </span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  title="Probability song" </span>
 <span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  frameborder="0" </span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" </span>
@@ -897,37 +896,22 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>Aunque el título de este blog es Muestrear no es pecado, hoy quiero comentar brevemente algo que creo </span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>que si no es pecado, se acerca bastante. Se trata del submuestreo.</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>El miércoles pasado estaba de cervezas con mi amiga Laura y su pareja  y comentábamos muchas de las </span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>cosas que se hacen mal en la industria. Y me acordé del próximo podcast que vamos a sacar Leo y yo</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>dónde tratamos de forma tangencial el tema del submuestreo. </span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>Al grano, mucha gente piensa que cuando tienes que modelar una variable dicotómica en la que la proporción del </span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>"éxito" es muy pequeña, (típicamente lo llaman "dataset desbalanceado"), creen que lo que hay que hacer</span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>es algún tipo de balanceo, y entre los más conocidos está el submustrear observaciones de la clase mayoritaria. </span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>Básicamente, eliminar filas . </span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>Aunque el título de este blog es Muestrear no es pecado, hoy quiero comentar brevemente algo que creo  que si no es pecado, se acerca bastante. Se trata del submuestreo.</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>El miércoles pasado estaba de cervezas con mi amiga Laura y su pareja  y comentábamos muchas de las  cosas que se hacen mal en la industria. Y me acordé del próximo podcast que vamos a sacar Leo y yo dónde tratamos de forma tangencial el tema del submuestreo. </span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>Al grano, mucha gente piensa que cuando tienes que modelar una variable dicotómica en la que la proporción del  "éxito" es muy pequeña, (típicamente lo llaman "dataset desbalanceado"), creen que lo que hay que hacer es algún tipo de balanceo, y entre los más conocidos está el submustrear observaciones de la clase mayoritaria.  Básicamente, eliminar filas . </span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>Se supone que de esta forma se facilita el ajuste  de los algoritmos de Machín Lenin. Por la red se  puede encontrar fácilmente demostracinoes que por ejemplo en el caso de la regresión logística el modelo que se obtiene submuestreando y sin submuestrear es equivalente en cuánto al orden de los "scores".  Y en otro tipo de algoritmos como los basados en árboles uno podría pensar que tendría cierta lógica, pero existen alternativas. </span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>Por ejemplo, se puede dar un peso a las observaciones de la clase minoritaria de forma que el algoritmo las tenga más en cuenta sin tener que descartar observaciones de la mayoritaria, o incluso modificar la función de coste utilizada de forma que se penalice más equivocarse en la predicción de esa clase. </span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>Con el afán de submuestrear (o balancear) he visto por esos lares aberraciones como la de submuestrear en el conjunto de train,  estandarizar las variables en ese conjunto de train submuestreado y aplicar esas medias y desviaciones típicas al conjunto que se va a predecir,  lo cual, obviamente es un error conceptual grave. </span>
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>Se supone que de esta forma se facilita el ajuste  de los algoritmos de Machín Lenin. Por la red se </span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>puede encontrar fácilmente demostracinoes que por ejemplo en el caso de la regresión logística el modelo que se obtiene</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>submuestreando y sin submuestrear es equivalente en cuánto al orden de los "scores". </span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>Y en otro tipo de algoritmos como los basados en árboles uno podría pensar que tendría cierta lógica, pero existen alternativas. </span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>Por ejemplo, se puede dar un peso a las observaciones de la clase minoritaria de forma que el algoritmo las tenga más en cuenta</span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>sin tener que descartar observaciones de la mayoritaria, o incluso modificar la función de coste utilizada de forma que se penalice</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>más equivocarse en la predicción de esa clase. </span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>Con el afán de submuestrear (o balancear) he visto por esos lares aberraciones como la de submuestrear en el conjunto de train, </span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>estandarizar las variables en ese conjunto de train submuestreado y aplicar esas medias y desviaciones típicas al conjunto que se va a predecir, </span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>lo cual, obviamente es un error conceptual grave. </span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>Pues nada más, a ver si Leo puede editar pronto el episodio que grabamos hablando sobre bootstrap, submuestreo  y demás cositas. </span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>Yo creo que estuvo bastante bien, al menos yo me lo pasé estupendamente grabándolo. </span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>Pues nada más, a ver si Leo puede editar pronto el episodio que grabamos hablando sobre bootstrap, submuestreo  y demás cositas.  Yo creo que estuvo bastante bien, al menos yo me lo pasé estupendamente grabándolo. </span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
