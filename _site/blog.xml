@@ -10,7 +10,59 @@
 <atom:link href="https://muestrear-no-es-pecado.netlify.app/blog.xml" rel="self" type="application/rss+xml"/>
 <description>Estadística, ciencia de datos, big data, cosas varias</description>
 <generator>quarto-1.6.39</generator>
-<lastBuildDate>Fri, 21 Mar 2025 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 29 Apr 2025 22:00:00 GMT</lastBuildDate>
+<item>
+  <title>¿Para qué usar scikit-learn si puedes reinventarlo mal en tres sprints?</title>
+  <dc:creator>José Luis Cañadas Reche</dc:creator>
+  <link>https://muestrear-no-es-pecado.netlify.app/2025/04/Frameworks.html</link>
+  <description><![CDATA[ <div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Llegas al nuevo curro. Proyecto de scoring para clientes. Negocio necesita resultados “rápido pero bien”. Preguntas cómo se entrena un modelo. Silencio incómodo. Finalmente alguien dice:</p>
+<p>“Tienes que usar el ModelOrchestratorPipeline que está en ds-core. Ojo, que la clase BaseModel está deprecated pero seguimos usándola porque la nueva versión no soporta pipelines anidados con catboost.”</p>
+<p>Empiezas a sospechar. No sabes si estás en un equipo de Data Science o en un escape room con código legacy.</p>
+</div>
+</div>
+<section id="el-síndrome-del-framework-casero" class="level2"><h2 class="anchored" data-anchor-id="el-síndrome-del-framework-casero">El síndrome del framework casero</h2>
+<p>Cada empresa tiene su propio framework de Data Science. Cada equipo cree que el suyo es la excepción brillante. Spoiler: no lo es.</p>
+<p>Parece haber una necesidad casi religiosa de crear un sistema nuevo que, esta vez sí, “lo unifique todo”. Entrenamiento, inferencia, logging, tracking, batch, real time… y a ser posible, <strong>que sea 100% agnóstico al modelo, al backend y al sentido común</strong>.</p>
+<p>¿Por qué pasa esto?</p>
+<ol type="1">
+<li><p>Ego técnico mal canalizado Lo de entrenar modelos ya aburre. Lo divertido es montar arquitecturas que nadie entienda. Y si además lleva decorators y metaclases, mejor. Nadie podrá decir que no es “robusto”.</p></li>
+<li><p>El síndrome del niño nuevo Nuevo en el equipo, ves que lo que hay no te gusta. En vez de entenderlo o mejorar pequeñas partes, decides rehacerlo todo. Sin tests, pero con mucha ilusión. Te irás en 8 meses y dejarás otro cadáver técnico.</p></li>
+<li><p>Abstracción infinita, uso cero BaseTrainer, ModelInterface, Runner, Executor, ConfigurableTask. Todo suena muy bien… hasta que alguien quiere cambiar una métrica o probar otro modelo. Entonces necesitas 3 PRs, 2 approvals y media tarde.</p></li>
+<li><p>Falta de foco en negocio El framework se convierte en el producto. Y el cliente, mientras tanto, sigue sin su puto modelo en producción.</p></li>
+</ol>
+<p>Pero… ¿y si esta vez sí funciona? Spoiler: no. O sí, durante 3 meses. Hasta que venga otra persona que no lo entienda, lo rehaga, y el ciclo vuelva a empezar.</p>
+</section><section id="qué-podríamos-hacer-en-vez-de-esto" class="level2"><h2 class="anchored" data-anchor-id="qué-podríamos-hacer-en-vez-de-esto">¿Qué podríamos hacer en vez de esto?</h2>
+<p>Usar librerías existentes y sólidas: scikit-learn, mlflow, dagster, prefect, fastapi. No hace falta reinventarlo todo.</p>
+<p>Favorecer la legibilidad sobre la “elegancia” mal entendida.</p>
+<p>Priorizar la entrega de valor frente a la creación de frameworks que nadie ha pedido.</p>
+<p>Y, por favor, ¡documentar!</p>
+<p>No digo que esté mal crear herramientas internas. A veces es necesario. Pero montar un framework completo, sin necesidad clara, sin mantenimiento garantizado y sin consenso del equipo, es una forma elegante de enterrar la productividad en cemento técnico.</p>
+<p>Si alguna vez te has encontrado atrapado en un ModelManager que hereda de un BaseWrapper que nadie recuerda por qué existe… no estás solo.</p>
+<p>Estamos contigo. Y quizás, solo quizás, deberíamos dejar de montar frameworks para montar soluciones.</p>
+</section><section id="coda" class="level2"><h2 class="anchored" data-anchor-id="coda">CODA</h2>
+<p>Todo este post lo ha escrito chatgpt 4 con un prompt mínimo. Las opiniones aquí vertidas son sólo suyas , o no, puesto que si chatgpt da la respuesta más probable (y el eigenvalue trap algo tiene que decir al respecto), quizá sólo está haciendo una síntesis de lo mucho escrito por ahí.</p>
+
+
+<!-- -->
+
+</section> ]]></description>
+  <category>Humor</category>
+  <category>IA</category>
+  <category>2025</category>
+  <guid>https://muestrear-no-es-pecado.netlify.app/2025/04/Frameworks.html</guid>
+  <pubDate>Tue, 29 Apr 2025 22:00:00 GMT</pubDate>
+  <media:content url="https://muestrear-no-es-pecado.netlify.app/2025/04/ml_framework.png" medium="image" type="image/png" height="96" width="144"/>
+</item>
 <item>
   <title>Submuestrear si es pecado</title>
   <dc:creator>José Luis Cañadas Reche</dc:creator>
@@ -27237,38 +27289,6 @@ font-style: inherit;">"Density"</span>)</span></code></pre></div>
   <category>R</category>
   <guid>https://muestrear-no-es-pecado.netlify.app/2024/03/jornadas2024.html</guid>
   <pubDate>Sun, 17 Mar 2024 23:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Nomenclatura</title>
-  <dc:creator>José Luis Cañadas Reche</dc:creator>
-  <link>https://muestrear-no-es-pecado.netlify.app/2024/02/nomenclatura.html</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>A mis cuarenta y pocos tacos, como decía Sabina. El título de la entrada tiene que ver con algo que me llamó la atención de cuando empecé a currar en cosas de estas del Big Data. Se trata del cambio de denominación de ciertas cosas.</p>
-<p>Algunos ejemplos.</p>
-<ul>
-<li>Llamar modelo multiclase a lo que siempre llamé <strong>modelo multinomial</strong>.</li>
-<li>Modelo multioutput a lo que siempre llamé <strong>modelo multivariante</strong> (más de una variable dependiente)</li>
-<li>Análisis supervisado / no supervisado a lo que se conocía como <strong>modelos de dependencia y modelos de interdependencia.</strong></li>
-<li>Instancia a lo que siempre se ha denominado <strong>observación</strong></li>
-<li>Regresor o clasificador a lo que llamaba <strong>modelos de regresión</strong> o <strong>modelos de respuesta discreta</strong></li>
-</ul>
-<p>Sin hablar de que la denominación del oficio ha pasado desde “el de los datos que está en el sótano”, hasta “experto en IA, ML , fullstack DS” pasando por los más normales de “Analista de datos”, “Minero de datos” o similar.</p>
-<p>Yo simplemente me considero un estadístico que sabe algo de estadística y algo de programación y tecnología.</p>
-<p>No sé si hablaremos de este tema en próximos episodios del <a href="https://open.spotify.com/show/3Ku9xHJdqu4g3VM5maolr7?si=44d43ab344014636">podcast</a> que tenemos Leo y yo.</p>
-<p>Feliz día.</p>
-
-
-
- ]]></description>
-  <category>2024</category>
-  <category>estadística</category>
-  <category>tiempos modernos</category>
-  <guid>https://muestrear-no-es-pecado.netlify.app/2024/02/nomenclatura.html</guid>
-  <pubDate>Fri, 23 Feb 2024 23:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

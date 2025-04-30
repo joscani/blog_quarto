@@ -1,0 +1,426 @@
+---
+title: Submuestrear si es pecado.Ejemplo
+date: '2025-03-23'
+categories: 
+  - estadística
+  - muestreo
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "ups.jpg"
+---
+
+
+::: callout-note
+## Watching
+
+<iframe 
+  width="560" 
+  height="315" 
+  src="https://www.youtube.com/embed/lm53uqt-ln0" 
+  title="Probability song" 
+  frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+  allowfullscreen>
+</iframe>
+:::
+
+## Credit card
+
+El típico ejemplo de creditcard de kagle. 
+
+```{r}
+
+use(package = "pROC", c("roc", "auc"))
+
+logloss <- function(p, y) {
+  eps <- 1e-15
+  p <- pmin(pmax(p, eps), 1 - eps)
+  -mean(y * log(p) + (1 - y) * log(1 - p))
+}
+
+creditcard <- data.table::fread(here::here("data/creditcard.csv"))  |>  as.data.frame()
+creditcard$Class  <-  as.factor(creditcard$Class)
+
+table(creditcard$Class)
+
+skimr::skim(creditcard)
+
+
+
+```
+
+Muy desbalanceado. 
+
+```{r}
+id_train <- sample(1:nrow(creditcard), 140000)
+id_test <- setdiff(1:nrow(creditcard), id_train)
+
+
+train <- creditcard[id_train, ]
+test <-  creditcard[id_test, ]
+
+(t1 <- table(train$Class))
+(t2 <- table(test$Class))
+
+prop.table(t1)
+prop.table(t2)
+
+
+```
+
+
+## Modelo glm normal, con submuestreo y con pesos 
+
+
+Comparando los tres glms con unas pocas variables, submuestrear parece ser mejor
+
+
+__modelo normal__
+
+```{r}
+
+f1  <-  as.formula("Class ~ V1 + V2 + V3 + V4 + V5 +V6 + V7 + V8 + V9 + V10 + V11 + V12 +V13 +V14 + Amount")
+
+glm1 <- glm(f1, family = binomial, data = train)
+
+pROC::roc(test$Class, predict(glm1, newdata = test, type = "response"))
+
+ytrue <- as.numeric(as.character(test$Class))
+
+logloss(ytrue, predict(glm1, newdata = test, type = "response"))
+
+```
+
+__modelo_submuestreo__
+
+```{r}
+
+samples_0  <-  train[sample(rownames(train[train$Class == "0",]), 3000),]
+
+table(samples_0$Class)
+
+train_subsample  <- rbind(samples_0, train[train$Class=="1", ])
+    
+table(train_subsample$Class)
+
+glm2  <-  glm(f1, family = binomial, data = train_subsample)
+
+pROC::roc(test$Class, predict(glm2, newdata = test, type = "response"))
+
+logloss(ytrue, predict(glm2, newdata = test, type = "response"))
+
+```
+
+
+__modelo_pesos__
+
+
+```{r}
+
+# Pesos inversamente proporcionales al tamaño de la clase
+pesos <- ifelse(train$Class == "1", sum(train$Class == "0")/sum(train$Class == "1"), 1)
+
+# Modelo con pesos
+glm_pesos <- glm(f1, family = binomial, data = train, weights = pesos)
+
+pROC::roc(test$Class, predict(glm_pesos, newdata = test, type = "response"))
+
+logloss(ytrue, predict(glm_pesos, newdata = test, type = "response"))
+
+```
+
+
+```{r}
+
+library(xgboost)
+
+
+vars <- c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "Amount")
+
+
+# Preparamos las matrices
+dtrain <- xgb.DMatrix(data = as.matrix(train[, vars]), label = as.numeric(as.character(train$Class)))
+dtest  <- xgb.DMatrix(data = as.matrix(test[, vars]),  label = as.numeric(as.character(test$Class)))
+
+# Entrenamos
+xgb1 <- xgboost(data = dtrain, nrounds = 100, objective = "binary:logistic", verbose = 0)
+
+# AUC
+roc1 <- pROC::roc(test$Class, predict(xgb1, dtest))
+
+print(pROC::auc(roc1))
+
+logloss(ytrue, predict(xgb1, dtest))
+
+```
+
+```{r}
+
+samples_0  <- train[sample(rownames(train[train$Class == "0",]), sum(train$Class == "1")), ]
+train_sub <- rbind(samples_0, train[train$Class == "1", ])
+
+dtrain_sub <- xgb.DMatrix(data = as.matrix(train_sub[, vars]), label = as.numeric(as.character(train_sub$Class)))
+
+xgb2 <- xgboost(data = dtrain_sub, nrounds = 100, objective = "binary:logistic", verbose = 0)
+
+# AUC
+roc2 <- pROC::roc(test$Class, predict(xgb2, dtest))
+print(pROC::auc(roc2))
+logloss(ytrue, predict(xgb2, dtest))
+
+```
+
+
+
+```{r}
+
+# Calcular el ratio de clases
+ratio <- sum(train$Class == "0") / sum(train$Class == "1")
+
+# Entrenamiento con pesos
+xgb3 <- xgboost(data = dtrain, nrounds = 100, objective = "binary:logistic",
+                scale_pos_weight = ratio, verbose = 0)
+
+# AUC
+roc3 <- pROC::roc(test$Class, predict(xgb3, dtest))
+print(pROC::auc(roc3))
+
+logloss(ytrue, predict(xgb3, dtest))
+
+```
+
+
+```{r}
+
+# Solo clase 0
+negativos <- train[train$Class == "0", vars]
+
+# Clustering
+set.seed(123)
+k <- 700  # número de centroides que quieres
+clusters <- kmeans(negativos, centers = k, iter.max = 40)
+
+# Creamos dataset con centroides como clase 0
+centroides <- as.data.frame(clusters$centers)
+centroides$Class <- factor("0")
+
+# Usamos todos los fraudes (clase 1)
+positivos <- train[train$Class == "1", vars]
+positivos$Class <- factor("1")
+
+# Dataset combinado
+train_clustered <- rbind(centroides, positivos)
+
+
+train_clustered
+dim(train_clustered)
+
+dtrain_cluster <- xgb.DMatrix(data = as.matrix(train_clustered[, vars]), 
+                              label = as.numeric(as.character(train_clustered$Class)))
+
+
+
+xgb_cluster <- xgboost(data = dtrain_cluster, nrounds = 100, objective = "binary:logistic",
+                scale_pos_weight = ratio, verbose = 0)
+
+# AUC
+roc4 <- pROC::roc(test$Class, predict(xgb_cluster, dtest))
+print(pROC::auc(roc4))
+
+logloss(ytrue, predict(xgb_cluster, dtest))
+
+
+```
+
+
+
+```{r}
+
+library(arm)
+modelo_bayes <- bayesglm(f1, 
+                         family = binomial, data = train)
+
+# Predicciones sobre test
+probs_bayes <- predict(modelo_bayes, newdata = test, type = "response")
+
+roc_bayes <- roc(test$Class, probs_bayes)
+auc(roc_bayes)
+
+library(recipes)
+rec <- recipe(f1, data = train) %>%
+  step_normalize(all_predictors()) %>%
+  prep()
+
+train_scaled <- bake(rec, new_data = NULL)
+test_scaled  <- bake(rec, new_data = test)
+
+modelo_bayes <- bayesglm(f1, data = train_scaled, family = binomial)
+probs_bayes <- predict(modelo_bayes, newdata = test_scaled, type = "response")
+
+
+```
+
+
+
+
+```{r}
+
+qlogis(0.0017)  # ≈ -6.38
+options(brms.backend = "cmdstanr")
+
+library(brms)
+f_hs <- bf(Class ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 +V12 +
+                    V13 + V14 + Amount)
+
+
+prior_custom <- c(
+  set_prior("normal(0, 5)", class = "b"),               # para coeficientes
+  set_prior("normal(-6.4, 2)", class = "Intercept")     # prior del intercepto ajustado
+
+prior_hs <- c(
+  set_prior("horseshoe(2)", class = "b"),                # regularización para coeficientes
+  set_prior("normal(-6.4, 2)", class = "Intercept")      # prior centrado en la prevalencia
+)
+# modelo_brm <- brm(
+#   f_hs,
+#   data = train,
+#   family = bernoulli(link = "logit"),
+#   prior = prior_hs,
+#   # algorithm = "meanfield",
+#   # algorithm = "fullrank",
+#   algorithm = "sampling",
+#   # algorithm = "pathfinder",
+#   file = "modelo_brm_1",
+#   file_refit = "on_change",
+#   chains = 6, iter = 4000, cores = 6, 
+#   backend = "cmdstanr"
+# )
+
+modelo_brm_vi <- brm(
+  f_hs,
+  data = train,
+  family = bernoulli(link = "logit"),
+  prior = prior_hs,
+  algorithm = "meanfield",
+  # algorithm = "fullrank",
+  # algorithm = "sampling",
+  # algorithm = "pathfinder",
+  chains = 6, iter = 4000, cores = 6, 
+  backend = "cmdstanr"
+)
+
+summary(modelo_brm_vi)
+
+modelo_brm <- brm(file = "modelo_brm_1")
+
+summary(modelo_brm)
+
+probs_brm <- posterior_epred(modelo_brm_vi, newdata = test, ndraws = 1000)  |>  colMeans()
+
+length(probs_brm)
+
+probs_brm_noise <- predict(modelo_brm, newdata = test, type = "response",ndraws = 1000)[, "Estimate"]
+
+length(probs_brm_noise)
+
+y_true  <-  test$Class
+
+(roc_brm <- roc(y_true, probs_brm))
+
+(roc_brm_noise <- roc(y_true, probs_brm_noise))
+
+
+logloss(probs_brm,ytrue)
+
+logloss(ytrue, probs_brm_noise)
+
+
+summary(modelo_brm)
+
+
+```
+
+
+
+```{r}
+library(tidyverse)
+coefs <- as_draws_df(modelo_brm)
+
+# Extraemos solo las betas (coeficientes, no el intercepto ni parámetros auxiliares)
+betas <- coefs %>%
+  select(starts_with("b_")) %>%
+  pivot_longer(cols = everything(), names_to = "term", values_to = "value")
+
+# Calculamos media y percentiles
+(summary_betas <- betas %>%
+  group_by(term) %>%
+  summarise(
+    mean = mean(value),
+    q025 = quantile(value, 0.025),
+    q975 = quantile(value, 0.975)
+  ) %>%
+  arrange(abs(mean)))  # ordenamos por magnitud de efectojj
+
+
+library(stringr)
+library(posterior)
+
+
+## vibe coding
+
+
+```
+
+
+```{r}
+library(projpred)
+
+# 1. Ajustar un modelo grande
+modelo_grande <- brm(
+  formula = Class ~ (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + Amount)^2,
+  data = train,
+  family = bernoulli(link = "logit"),
+  prior = prior_hs,
+  algorithm = "meanfield"
+)
+
+# 2. Crear objeto proyectivo
+refmod <- get_refmodel(modelo_grande)
+
+# 3. Selección de variables (forward)
+vs <- varsel(refmod, method = "forward")
+
+# 4. Ver resumen
+summary(vs)
+
+# 5. Ver variables seleccionadas (según tamaño del submodelo óptimo)
+suggest_size(vs)
+projpred_vars <- proj_linpred(vs, nv = suggest_size(vs)$size)
+
+# 6. Extraer fórmula reducida
+formula_reducida <- formula(vs, nv = suggest_size(vs)$size)
+
+
+```

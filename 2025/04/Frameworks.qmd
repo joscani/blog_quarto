@@ -1,0 +1,108 @@
+---
+title: ¿Para qué usar scikit-learn si puedes reinventarlo mal en tres sprints?
+date: '2025-04-30'
+categories: 
+  - Humor
+  - IA
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "ml_framework.png"
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
+::: callout-note
+Llegas al nuevo curro.
+Proyecto de scoring para clientes.
+Negocio necesita resultados "rápido pero bien".
+Preguntas cómo se entrena un modelo.
+Silencio incómodo.
+Finalmente alguien dice:
+
+“Tienes que usar el ModelOrchestratorPipeline que está en ds-core.
+Ojo, que la clase BaseModel está deprecated pero seguimos usándola porque la nueva versión no soporta pipelines anidados con catboost.”
+
+Empiezas a sospechar.
+No sabes si estás en un equipo de Data Science o en un escape room con código legacy.
+:::
+
+## El síndrome del framework casero 
+
+Cada empresa tiene su propio framework de Data Science.
+Cada equipo cree que el suyo es la excepción brillante.
+Spoiler: no lo es.
+
+Parece haber una necesidad casi religiosa de crear un sistema nuevo que, esta vez sí, “lo unifique todo”.
+Entrenamiento, inferencia, logging, tracking, batch, real time… y a ser posible, **que sea 100% agnóstico al modelo, al backend y al sentido común**.
+
+¿Por qué pasa esto?
+
+1.   Ego técnico mal canalizado Lo de entrenar modelos ya aburre.
+    Lo divertido es montar arquitecturas que nadie entienda.
+    Y si además lleva decorators y metaclases, mejor.
+    Nadie podrá decir que no es “robusto”.
+
+2.  El síndrome del niño nuevo Nuevo en el equipo, ves que lo que hay no te gusta.
+    En vez de entenderlo o mejorar pequeñas partes, decides rehacerlo todo.
+    Sin tests, pero con mucha ilusión.
+    Te irás en 8 meses y dejarás otro cadáver técnico.
+
+3.  Abstracción infinita, uso cero BaseTrainer, ModelInterface, Runner, Executor, ConfigurableTask.
+    Todo suena muy bien… hasta que alguien quiere cambiar una métrica o probar otro modelo.
+    Entonces necesitas 3 PRs, 2 approvals y media tarde.
+
+4.  Falta de foco en negocio El framework se convierte en el producto.
+    Y el cliente, mientras tanto, sigue sin su puto modelo en producción.
+
+Pero… ¿y si esta vez sí funciona?
+Spoiler: no.
+O sí, durante 3 meses.
+Hasta que venga otra persona que no lo entienda, lo rehaga, y el ciclo vuelva a empezar.
+
+## ¿Qué podríamos hacer en vez de esto? 
+
+Usar librerías existentes y sólidas: scikit-learn, mlflow, dagster, prefect, fastapi.
+No hace falta reinventarlo todo.
+
+Favorecer la legibilidad sobre la “elegancia” mal entendida.
+
+Priorizar la entrega de valor frente a la creación de frameworks que nadie ha pedido.
+
+Y, por favor, ¡documentar!
+
+No digo que esté mal crear herramientas internas.
+A veces es necesario.
+Pero montar un framework completo, sin necesidad clara, sin mantenimiento garantizado y sin consenso del equipo, es una forma elegante de enterrar la productividad en cemento técnico.
+
+Si alguna vez te has encontrado atrapado en un ModelManager que hereda de un BaseWrapper que nadie recuerda por qué existe… no estás solo.
+
+Estamos contigo.
+Y quizás, solo quizás, deberíamos dejar de montar frameworks para montar soluciones.
+
+## CODA
+
+Todo este post lo ha escrito chatgpt 4 con un prompt mínimo.
+Las opiniones aquí vertidas son sólo suyas , o no, puesto que si chatgpt da la respuesta más probable (y el eigenvalue trap algo tiene que decir al respecto), quizá sólo está haciendo una síntesis de lo mucho escrito por ahí.
