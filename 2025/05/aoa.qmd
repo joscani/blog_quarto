@@ -1,0 +1,213 @@
+---
+title: "Área de Aplicación" 
+date: '2025-05-04'
+categories: 
+  - "Data Science"
+  - "Estadística"  
+  - "ML"
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/2PnlsTsOTLE5jnBnNe2K0A?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+::: {.callout-tip}
+Este puente he estado leyendo sobre [AOA (area of applicability)](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13650)
+. En el artículo de Hanna Mayer y Edzer Pebesma se centran en él área de aplicación de un modelo cuando se quiere
+predecir en temas espaciales. 
+:::
+
+El concepto es bastante simple.  Tienes un modelo de estos modernos de random forest o boosting, que 
+has entrenado con unos datos maravillosos. Y ahora lo quieres utilizar para obtener predicciones en 
+otro conjunto de datos. El área de aplicación lo que te dice es en qué datos de esos nuevos datos el 
+modelo se puede aplicar.  La idea es sencilla, simplemente calcula la distancia multivariable entre
+los puntos del nuevo conjunto de datos y los datos de train.  Pero no es lo mismo estar muy lejos 
+en una de las variables más importantes del modelo que en una de las últimas. Por eso lo que hacen
+es ponderar las distancias por la importancia de las variables en el modelo. 
+
+
+Todo esto tiene que ver con cosas como el concepto de "Data Drift", en el cual vemos si la distribución 
+multivariable en el espacio de los predictores ha cambiado mucho entre train y test. Si esto es así
+entonces decimos que algo hay raro con los datos.  También tiene que ver con que los modelos de árboles
+no son muy buenos extrapolando más allá del dominio de la variable que han visto, y esto lo que mira 
+es si los datos a predecir están muy lejos de un "entorno" multivariable de los datos de train. 
+
+Evidentemente, en el artículo viene bien explicado todo esto y formalizan una técnica para identificar
+en qué puntos de test se puede aplicar el modelo.
+
+
+## Ejemplo
+
+En este [post](https://geocompx.org/post/2025/sml-bp1/) Jakub Nowosad pone un ejemplo utilizando 196 
+datos de train para predecir la temperatura en España. En el post también se cuenta la importancia
+de utilizar validación cruzada que tenga en cuenta la estructura espacial. 
+
+__Reproduzco su ejemplo__
+
+
+```{r}
+library(terra)
+library(sf)
+train_points <- sf::read_sf("https://github.com/LOEK-RS/FOSSGIS2025-examples/raw/refs/heads/main/data/temp_train.gpkg")
+predictor_stack <- terra::rast("https://github.com/LOEK-RS/FOSSGIS2025-examples/raw/refs/heads/main/data/predictors.tif")
+
+```
+
+```{r}
+predictor_names <- names(predictor_stack)[1:14]
+temperature_train <- terra::extract(predictor_stack[[predictor_names]],
+    train_points,
+    bind = TRUE
+) |>
+    sf::st_as_sf()
+
+```
+
+Veamos los datos de train, tanto el dataframe y la geometría en puntos. 
+
+
+```{r}
+dim(temperature_train)
+
+head(temperature_train)
+
+plot(temperature_train)
+
+```
+
+
+__Librerías__
+
+La librería `waywiser` implementa lo del área de aplicación de forma que se pueda
+usar con `tidymodels`. 
+
+```{r}
+
+library(tidymodels)         # metapackage for modeling
+library(spatialsample)      # for spatial cross-validation
+library(waywiser)           # for area of applicability
+library(vip)                # for variable importance (used in AOA)
+```
+
+
+Hace folds espaciales, de forma que dentro de un fold caigan datos que están 
+cercanos espacialmente
+
+```{r}
+set.seed(22)
+form <- as.formula(paste0("temp ~ ", paste(predictor_names, collapse = " + ")))
+recipe <- recipes::recipe(form, data = temperature_train)
+
+rf_model <- parsnip::rand_forest(
+    trees = 100,
+    mtry = 8,
+    min_n = 5, 
+    mode = "regression"
+) |>
+    set_engine("ranger", splitrule = "extratrees", importance = "impurity")
+
+workflow <- workflows::workflow() |>
+    workflows::add_recipe(recipe) |>
+    workflows::add_model(rf_model)
+
+block_folds <- spatialsample::spatial_block_cv(temperature_train, v = 5)
+spatialsample::autoplot(block_folds)
+
+
+```
+
+El modelo 
+
+```{r}
+
+rf_spatial <- tune::fit_resamples(
+    workflow,
+    resamples = block_folds,
+    control = tune::control_resamples(save_pred = TRUE, save_workflow = TRUE)
+)
+model_tidymodels <- fit_best(rf_spatial)
+
+tune::collect_metrics(rf_spatial)
+```
+
+Para hacer la predicción sobre toda España, se puede utilzar la función `predict` de la librería
+`terra` que puede tomar un objeto `raster` como datos de entrada.
+
+
+```{r}
+
+pred_tidymodels <- terra::predict(predictor_stack, model_tidymodels, na.rm = TRUE)
+
+plot(pred_tidymodels)
+
+```
+
+
+## Área de Aplicación.
+
+
+Ahora tomando como imput los datos de train, los de test y la importancia de las variables  se calcula 
+el área de aplicación. 
+
+
+```{r}
+model_aoa <- waywiser::ww_area_of_applicability(
+    st_drop_geometry(temperature_train[, predictor_names]),
+    importance = vip::vi_model(model_tidymodels)
+)
+AOA_tidymodels <- terra::predict(predictor_stack, model_aoa)
+plot(AOA_tidymodels$aoa)
+
+```
+
+Y vemos que la zona de Sierra Nevada y la Alpujarra están fuera del área de aplicación  y por tanto 
+las predicciones que se obtengan ahí hay que tomarlas con cautela.
+
+
+```{r}
+head(as.data.frame(AOA_tidymodels$aoa))
+
+
+# hay unas 40 mil filas que caen fuera del área de apliación  
+table(as.data.frame(AOA_tidymodels$aoa)$aoa)
+```
+
+
+## Coda
+
+Esta técnica se puede aplicar a cualquier tipo de datos y constituye un indicador más
+de la incertidumbre. Me parece una herramienta bastante útil para encontrar conjuntos de datos en los 
+que si se pueda aplicar el modelo. 
+
+
+
