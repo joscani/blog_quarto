@@ -1,0 +1,238 @@
+---
+title: Submuestrear sigue siendo pecado.Ejemplo
+date: '2025-05-16'
+categories: 
+  - estadística
+  - muestreo
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+image: "v14.png"
+---
+
+::: callout-important
+
+El post anterior a este no vale para mucho, puesto que Harrell tenía razón (as
+usual). Gracias a [Carlos Gil](https://datanalytics.com/) que me avisaba de que había 
+algo raro en mi post.
+
+El problema es que el glm inicial no converge. El tema era movidas de configuración en mi slimbook
+con Linux. Tenía puesto para BLAS y LAPACK cosas incongruentes. Usaba intel mkl para LAPACK y en BLAS la de por defecto  
+
+```
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.10.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/libmkl_rt.so;
+
+```
+
+En problemas como el creditcard dónde hay una separación muy buena entre los 1's y los 0's,  la estabilidad numérica en el algoritmoi de iteratively reweighted least squares (IWLS)  que usa glm es importante. Y esta incoherencia en mi sistema hizo que `glm` no convergiera al usar un conjunto de train grande, y se dieran coeficientes muy grandes en valor absoluto.  
+
+Lo he arreglado y ahora tengo `openblas` tanto para BLAS como para LAPACK.
+```
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+```
+
+Y ya no hay problemas.  De todas formas la librería `rms` de Harrell es muy buena y hace un ajuste penalizado si es necesario.
+
+:::
+
+
+
+Hago lo mismo que en post anterior, pero para los glms uso la fantástica librería de Harrell
+
+## Credit card
+
+El típico ejemplo de creditcard de kagle.
+
+```{r}
+# pruebo esto de la funcińo use nueva en r base.
+
+use(package = "pROC", c("roc", "auc"))
+use(package = "yardstick", c("mn_log_loss_vec"))
+
+creditcard <- data.table::fread(here::here("data/creditcard.csv"))  |>  as.data.frame()
+creditcard$Class  <-  as.factor(creditcard$Class)
+
+table(creditcard$Class)
+
+skimr::skim(creditcard)
+
+
+
+```
+
+El dataset está muy desbalanceado.
+
+```{r}
+id_train <- sample(1:nrow(creditcard), 140000)
+id_test <- setdiff(1:nrow(creditcard), id_train)
+
+
+train <- creditcard[id_train, ]
+test <-  creditcard[id_test, ]
+
+(t1 <- table(train$Class))
+(t2 <- table(test$Class))
+
+prop.table(t1)
+prop.table(t2)
+
+
+```
+
+## Modelos glm normal, con submuestreo y con pesos
+
+
+### Modelo normal sin submuestrear
+
+No uso la variable Time, ni me caliento la cabez en buscar interacciones
+(por el momento)
+
+```{r}
+
+f1  <-  as.formula("Class ~ V1 + V2 + V3 + V4 + V5 +V6 + V7 + V8 + V9 + V10 + V11 + V12 +V13 +V14 + Amount")
+
+glm1 <- glm(f1, family = binomial, data = train)
+
+## no ha ajustado y coeficentes muy altos y bajos, inestabilidad
+# señal de que algo ha ido muy muy mal
+summary(glm1)
+
+(roc_glm <- roc(test$Class, predict(glm1, newdata = test, type = "response")))
+
+
+
+(logloss_glm <- mn_log_loss_vec(as.factor(test$Class), predict(glm1, newdata = test, type = "response"), event_level = "second"))
+
+# logloss(ytrue, predict(glm1, newdata = test, type = "response"))
+
+```
+
+Usando la librería`rms` que da mucha más información del modelo ajustado, como ínidices de discriminación o C-index.
+
+```{r}
+library(rms)
+
+dd <- datadist(train)
+options(datadist = "dd")
+
+modelo_rms <- lrm(Class ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 +
+                    V9 + V10 + V11 + V12 + V13 + V14 + Amount,
+                  data = train,
+                  x = TRUE, y = TRUE)
+
+modelo_rms
+
+
+(roc_glm_harrel <- roc(test$Class, predict(modelo_rms, newdata = test, type = "fitted")))
+
+
+```
+
+### Modelo glm submuestreado
+
+Vamos a submuestrear la clase 0, pero no demasiado, nos quedamos con
+3000
+
+```{r}
+
+samples_0  <-  train[sample(rownames(train[train$Class == "0",]), 3000),]
+
+table(samples_0$Class)
+
+train_subsample  <- rbind(samples_0, train[train$Class=="1", ])
+
+dd_sub <- datadist(train_subsample)
+options(datadist = "dd_sub")
+    
+table(train_subsample$Class)
+
+glm2  <-  lrm(f1, data = train_subsample, x = TRUE,  y = TRUE)
+
+(roc_glm_submuestreo <- pROC::roc(test$Class, predict(glm2, newdata = test, type = "fitted")))
+
+(logloss_glm_submuestreo <- mn_log_loss_vec(as.factor(test$Class), predict(glm2, newdata = test, type = "fitted"), event_level = "second"))
+
+```
+
+Y en este caso , submuestrear  es básicamente igual que no hacerlo. 
+
+
+### Modelo glm con pesos
+
+```{r}
+
+# Pesos inversamente proporcionales al tamaño de la clase
+pesos <- ifelse(train$Class == "1", sum(train$Class == "0")/sum(train$Class == "1"), 1)
+
+# Modelo con pesos 
+# glm_pesos <- glm(f1, family = binomial, data = train, weights = pesos)
+# 
+# (roc_glm_pesos <- pROC::roc(test$Class, predict(glm_pesos, newdata = test, type = "response")))
+# 
+# (logloss_glm_pesos<- mn_log_loss_vec(as.factor(test$Class), predict(glm_pesos, newdata = test, type = "response"), event_level = "second"))
+
+options(datadist = "dd")
+
+modelo_rms_pesos <- lrm(Class ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 +
+                            V9 + V10 + V11 + V12 + V13 + V14 + Amount,
+                        data = train,
+                        weights = pesos,
+                        x = TRUE, y = TRUE)
+
+
+(roc_rms_pesos <- pROC::roc(test$Class, predict(modelo_rms_pesos, newdata = test, type = "fitted")))
+
+(logloss_rms_pesos <- mn_log_loss_vec(as.factor(test$Class), predict(modelo_rms_pesos, newdata = test, type = "fitted"), event_level = "second"))
+
+
+
+
+```
+
+
+Pues amigos, tanto con submuestreo, pesos o sin hacer nada, la regresión logística ha funcionado estupendamente aún estando el dataset tan desbalanceado. 
+
+De hecho 
+
+```{r}
+print(glue::glue("Auc sin submuestrear: {round(roc_glm_harrel$auc, 3)}"))
+print(glue::glue("Auc muestreando: {round(roc_glm_submuestreo$auc, 3)}"))
+print(glue::glue("Auc glm con pesos: {round(roc_rms_pesos$auc, 3)}"))
+
+```
+
+
+
+## Coda
+
+Tuve el atrevimiento de pensar que Harrell se equivocaba, iluso de mi. El error en 
+la confi de mi sistema me la jugó. 
+Cuando uno lee a Harrell hay que tomarse muy en serio todo lo que diga, aunque a veces
+parezca ser contraintuitivo. 
+
+No volveré a cometer semejante error. Buen finde
