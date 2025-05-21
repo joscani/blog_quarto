@@ -775,20 +775,20 @@ Listening
 <span><span class="op">(</span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;      0      1 </span></span>
-<span><span class="co">#&gt; 139766    234</span></span>
+<span><span class="co">#&gt; 139751    249</span></span>
 <span><span class="op">(</span><span class="va">t2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;      0      1 </span></span>
-<span><span class="co">#&gt; 144549    258</span></span>
+<span><span class="co">#&gt; 144564    243</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html">prop.table</a></span><span class="op">(</span><span class="va">t1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           0           1 </span></span>
-<span><span class="co">#&gt; 0.998328571 0.001671429</span></span>
+<span><span class="co">#&gt; 0.998221429 0.001778571</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html">prop.table</a></span><span class="op">(</span><span class="va">t2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           0           1 </span></span>
-<span><span class="co">#&gt; 0.998218318 0.001781682</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 0.998321904 0.001678096</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section><section id="modelos-glm-normal-con-submuestreo-y-con-pesos" class="level2"><h2 class="anchored" data-anchor-id="modelos-glm-normal-con-submuestreo-y-con-pesos">Modelos glm normal, con submuestreo y con pesos</h2>
@@ -806,13 +806,13 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(glm1,     newdata = test, type = "response"))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(glm1, newdata = test, type = "response") in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Data: predict(glm1, newdata = test, type = "response") in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
 <span><span class="co">#&gt; Area under the curve: 0.5</span></span>
 <span></span>
 <span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_glm</span> <span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">glm1</span>, newdata <span class="op">=</span> <span class="va">test</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 35.97944</span></span>
+<span><span class="co">#&gt; [1] 0.0604847</span></span>
 <span></span>
 <span><span class="co"># logloss(ytrue, predict(glm1, newdata = test, type = "response"))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -833,7 +833,7 @@ Listening
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train_subsample</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    0    1 </span></span>
-<span><span class="co">#&gt; 3000  234</span></span>
+<span><span class="co">#&gt; 3000  249</span></span>
 <span></span>
 <span><span class="va">glm2</span>  <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">f1</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">train_subsample</span><span class="op">)</span></span>
 <span></span>
@@ -842,11 +842,11 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(glm2,     newdata = test, type = "response"))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(glm2, newdata = test, type = "response") in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.8251</span></span>
+<span><span class="co">#&gt; Data: predict(glm2, newdata = test, type = "response") in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.5546</span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_glm_submuestreo</span> <span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">glm2</span>, newdata <span class="op">=</span> <span class="va">test</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4.09927</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.2523929</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Y en este caso , submuestrear parece ser mejor.</p>
@@ -864,11 +864,11 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(glm_pesos,     newdata = test, type = "response"))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(glm_pesos, newdata = test, type = "response") in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Data: predict(glm_pesos, newdata = test, type = "response") in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
 <span><span class="co">#&gt; Area under the curve: 0.5</span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_glm_pesos</span><span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">glm_pesos</span>, newdata <span class="op">=</span> <span class="va">test</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.06421832</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 35.98317</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Y vemos que una regresión logística al uso no es suficiente para pillar hacer un modelo, en este caso submuestrear no es pecado, y no se ha arreglado usando pesos.</p>
@@ -897,12 +897,12 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(xgb1,     dtest))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(xgb1, dtest) in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.974</span></span>
+<span><span class="co">#&gt; Data: predict(xgb1, dtest) in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.9617</span></span>
 <span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_xgb</span><span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">xgb1</span>, newdata <span class="op">=</span> <span class="va">dtest</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.003324766</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.003468277</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Vaya, pues el boosting lo hace muy bien, al fin y al cabo son árboles encadenados, y pilla bien las interacciones</p>
@@ -922,11 +922,11 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(xgb2,     dtest))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(xgb2, dtest) in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.9755</span></span>
+<span><span class="co">#&gt; Data: predict(xgb2, dtest) in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.9653</span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_xgb_submues</span><span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">xgb2</span>, newdata <span class="op">=</span> <span class="va">dtest</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.09754112</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.163512</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section><section id="boosting-con-pesos" class="level3"><h3 class="anchored" data-anchor-id="boosting-con-pesos">Boosting con pesos</h3>
@@ -944,11 +944,11 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = test$Class, predictor = predict(xgb3,     dtest))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: predict(xgb3, dtest) in 144549 controls (test$Class 0) &lt; 258 cases (test$Class 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.9697</span></span>
+<span><span class="co">#&gt; Data: predict(xgb3, dtest) in 144564 controls (test$Class 0) &lt; 243 cases (test$Class 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.9642</span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">logloss_xgb_pesos</span> <span class="op">&lt;-</span> <span class="fu">mn_log_loss_vec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">test</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">xgb3</span>, newdata <span class="op">=</span> <span class="va">dtest</span><span class="op">)</span>, event_level <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.003567933</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.003572369</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Pues los xgboost funcionan bien sea como sea.</p>
@@ -961,7 +961,7 @@ Listening
 <span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train</span><span class="op">$</span><span class="va">Class</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           0           1 </span></span>
-<span><span class="co">#&gt; 0.998328571 0.001671429</span></span>
+<span><span class="co">#&gt; 0.998221429 0.001778571</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html">qlogis</a></span><span class="op">(</span><span class="fl">0.0017</span><span class="op">)</span>  <span class="co"># ≈ -6.38</span></span>
 <span><span class="co">#&gt; [1] -6.375426</span></span>
@@ -1012,8 +1012,8 @@ Listening
 <span><span class="co">#&gt;   This procedure has not been thoroughly tested and may be unstable </span></span>
 <span><span class="co">#&gt;   or buggy. The interface is subject to change. </span></span>
 <span><span class="co">#&gt; ------------------------------------------------------------ </span></span>
-<span><span class="co">#&gt; Gradient evaluation took 0.013178 seconds </span></span>
-<span><span class="co">#&gt; 1000 transitions using 10 leapfrog steps per transition would take 131.78 seconds. </span></span>
+<span><span class="co">#&gt; Gradient evaluation took 0.005593 seconds </span></span>
+<span><span class="co">#&gt; 1000 transitions using 10 leapfrog steps per transition would take 55.93 seconds. </span></span>
 <span><span class="co">#&gt; Adjust your expectations accordingly! </span></span>
 <span><span class="co">#&gt; Begin eta adaptation. </span></span>
 <span><span class="co">#&gt; Iteration:   1 / 250 [  0%]  (Adaptation) </span></span>
@@ -1024,16 +1024,23 @@ Listening
 <span><span class="co">#&gt; Success! Found best value [eta = 1] earlier than expected. </span></span>
 <span><span class="co">#&gt; Begin stochastic gradient ascent. </span></span>
 <span><span class="co">#&gt;   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  </span></span>
-<span><span class="co">#&gt;    100        -1642.107             1.000            1.000 </span></span>
-<span><span class="co">#&gt;    200         -744.125             1.103            1.207 </span></span>
-<span><span class="co">#&gt;    300         -687.814             0.763            1.000 </span></span>
-<span><span class="co">#&gt;    400         -688.984             0.573            1.000 </span></span>
-<span><span class="co">#&gt;    500         -678.847             0.326            0.082 </span></span>
-<span><span class="co">#&gt;    600         -680.317             0.025            0.015 </span></span>
-<span><span class="co">#&gt;    700         -678.326             0.005            0.003   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED </span></span>
+<span><span class="co">#&gt;    100        -1145.629             1.000            1.000 </span></span>
+<span><span class="co">#&gt;    200         -777.796             0.736            1.000 </span></span>
+<span><span class="co">#&gt;    300         -711.459             0.522            0.473 </span></span>
+<span><span class="co">#&gt;    400         -698.357             0.396            0.473 </span></span>
+<span><span class="co">#&gt;    500         -692.432             0.148            0.093 </span></span>
+<span><span class="co">#&gt;    600         -697.675             0.032            0.019 </span></span>
+<span><span class="co">#&gt;    700         -689.003             0.012            0.013 </span></span>
+<span><span class="co">#&gt;    800         -698.835             0.011            0.013 </span></span>
+<span><span class="co">#&gt;    900         -683.979             0.014            0.014 </span></span>
+<span><span class="co">#&gt;   1000         -708.684             0.021            0.022 </span></span>
+<span><span class="co">#&gt;   1100         -687.713             0.025            0.030 </span></span>
+<span><span class="co">#&gt;   1200         -685.163             0.023            0.030 </span></span>
+<span><span class="co">#&gt;   1300         -684.128             0.018            0.030 </span></span>
+<span><span class="co">#&gt;   1400         -689.093             0.011            0.007   MEDIAN ELBO CONVERGED </span></span>
 <span><span class="co">#&gt; Drawing a sample of size 1000 from the approximate posterior...  </span></span>
 <span><span class="co">#&gt; COMPLETED. </span></span>
-<span><span class="co">#&gt; Finished in  27.2 seconds.</span></span>
+<span><span class="co">#&gt; Finished in  15.9 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">modelo_brm_vi</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  Family: bernoulli </span></span>
@@ -1045,22 +1052,22 @@ Listening
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Regression Coefficients:</span></span>
 <span><span class="co">#&gt;           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS</span></span>
-<span><span class="co">#&gt; Intercept    -8.08      0.13    -8.34    -7.83 1.00     1003      853</span></span>
-<span><span class="co">#&gt; V1            0.01      0.03    -0.03     0.08 1.00      891      970</span></span>
-<span><span class="co">#&gt; V2           -0.00      0.02    -0.06     0.03 1.00     1042      848</span></span>
-<span><span class="co">#&gt; V3            0.01      0.02    -0.02     0.07 1.00      976     1024</span></span>
-<span><span class="co">#&gt; V4            0.40      0.07     0.29     0.56 1.00     1050     1026</span></span>
-<span><span class="co">#&gt; V5            0.03      0.03    -0.00     0.12 1.00     1014      919</span></span>
-<span><span class="co">#&gt; V6           -0.02      0.06    -0.15     0.03 1.00      824      932</span></span>
-<span><span class="co">#&gt; V7           -0.03      0.03    -0.11    -0.00 1.00     1030      954</span></span>
-<span><span class="co">#&gt; V8           -0.13      0.04    -0.22    -0.06 1.00      947     1072</span></span>
-<span><span class="co">#&gt; V9           -0.01      0.04    -0.09     0.04 1.00     1043      882</span></span>
-<span><span class="co">#&gt; V10          -0.51      0.07    -0.65    -0.39 1.00      859     1011</span></span>
-<span><span class="co">#&gt; V11           0.01      0.04    -0.07     0.09 1.00      972      981</span></span>
-<span><span class="co">#&gt; V12          -0.12      0.04    -0.23    -0.06 1.00      917      852</span></span>
-<span><span class="co">#&gt; V13          -0.02      0.05    -0.15     0.04 1.00      971      961</span></span>
-<span><span class="co">#&gt; V14          -0.77      0.06    -0.88    -0.67 1.00      962     1008</span></span>
-<span><span class="co">#&gt; Amount       -0.00      0.00    -0.00    -0.00 1.00      915      896</span></span>
+<span><span class="co">#&gt; Intercept    -8.09      0.11    -8.28    -7.87 1.00     1036     1069</span></span>
+<span><span class="co">#&gt; V1           -0.00      0.01    -0.03     0.03 1.00      911      840</span></span>
+<span><span class="co">#&gt; V2           -0.00      0.02    -0.04     0.03 1.00     1013      880</span></span>
+<span><span class="co">#&gt; V3            0.01      0.02    -0.01     0.05 1.00      908      847</span></span>
+<span><span class="co">#&gt; V4            0.48      0.05     0.39     0.57 1.00      651      883</span></span>
+<span><span class="co">#&gt; V5            0.00      0.02    -0.03     0.04 1.00     1037      927</span></span>
+<span><span class="co">#&gt; V6           -0.01      0.04    -0.10     0.06 1.00      954      941</span></span>
+<span><span class="co">#&gt; V7           -0.02      0.03    -0.08     0.00 1.00     1018      982</span></span>
+<span><span class="co">#&gt; V8           -0.14      0.04    -0.22    -0.08 1.00      862      980</span></span>
+<span><span class="co">#&gt; V9           -0.01      0.04    -0.10     0.05 1.00      959      819</span></span>
+<span><span class="co">#&gt; V10          -0.43      0.06    -0.55    -0.32 1.00      964      881</span></span>
+<span><span class="co">#&gt; V11           0.00      0.03    -0.03     0.06 1.00      696      749</span></span>
+<span><span class="co">#&gt; V12          -0.32      0.07    -0.45    -0.20 1.00      906      936</span></span>
+<span><span class="co">#&gt; V13          -0.01      0.06    -0.10     0.03 1.00      902      906</span></span>
+<span><span class="co">#&gt; V14          -0.62      0.05    -0.71    -0.53 1.00     1036     1026</span></span>
+<span><span class="co">#&gt; Amount       -0.00      0.00    -0.00     0.00 1.00     1064      854</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Draws were sampled using variational(meanfield).</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -1114,8 +1121,8 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = y_true, predictor = probs_brm)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: probs_brm in 144549 controls (y_true 0) &lt; 258 cases (y_true 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.9759</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; Data: probs_brm in 144564 controls (y_true 0) &lt; 243 cases (y_true 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.9744</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Y el modelo bayesiano sin submuestrear con prior sobre el intercept funciona igual de bien que los xgboost, y es más interpretable.</p>
@@ -1130,8 +1137,8 @@ Listening
 <span><span class="co">#&gt; Call:</span></span>
 <span><span class="co">#&gt; roc.default(response = y_true, predictor = probs_brm_noise)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Data: probs_brm_noise in 144549 controls (y_true 0) &lt; 258 cases (y_true 1).</span></span>
-<span><span class="co">#&gt; Area under the curve: 0.97</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; Data: probs_brm_noise in 144564 controls (y_true 0) &lt; 243 cases (y_true 1).</span></span>
+<span><span class="co">#&gt; Area under the curve: 0.9384</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Podemos ordenar las variables por su coeficiente, por ejemplo</p>
