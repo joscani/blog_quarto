@@ -1,0 +1,367 @@
+---
+title: IO con Julia
+date: '2025-07-20'
+categories: 
+  - estadística
+  - ciencia de datos
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+engine: julia
+---
+
+
+
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/2jGfKzi1RvbkAyffbDyESE?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+Este post viene a ampliar el de la IO al servicio del mal. y está en Work in Progress. 
+
+```{julia}
+using Pkg
+Pkg.activate(@__DIR__)
+Pkg.instantiate()
+using JuMP, DataFrames, CSV, Plots, HiGHS
+```
+
+```{julia}
+
+
+ANDALUCIA = ["ALMERIA", "CADIZ",
+ "CORDOBA","GRANADA",
+"HUELVA", "JAEN",
+"MALAGA", 
+"SEVILLA"]
+
+cod_postales_raw = DataFrame(CSV.File("cod_postales.csv"))
+sedes_raw = DataFrame(CSV.File("sedes.csv"))
+
+cod_postales_raw
+```
+
+Seleccionamos solo Andalucía. Tanto para las sedes como para las códigos postales
+
+
+```{julia}
+
+cod_postales = cod_postales_raw[[i ∈ ANDALUCIA for i in cod_postales_raw.provincia ], :]
+
+sedes = subset(sedes_raw, :provincia => ByRow(x -> x ∈ ANDALUCIA))
+```
+
+
+Ordenamos el dataset de sedes por si son jefes o indios
+
+```{julia}
+sort!(sedes, :tipo, rev = true)
+```
+
+Creamos funcion haversine que nos va a dar la distancia entre los puntos dada longitud y latitud. Hay que pasarle las longitudes y latitude y el radio estimado de la tierra. 
+
+
+```{julia}
+
+"""
+    haversine(lat1, long1, lat2, long2, r = 6372.8)
+
+Compute the haversine distance between two points on a sphere of radius `r`,
+where the points are given by the latitude/longitude pairs `lat1/long1` and
+`lat2/long2` (in degrees).
+"""
+function haversine(lat1, long1, lat2, long2, r = 6372.8)
+    lat1, long1 = deg2rad(lat1), deg2rad(long1)
+    lat2, long2 = deg2rad(lat2), deg2rad(long2)
+    hav(a, b) = sin((b - a) / 2)^2
+    inner_term = hav(lat1, lat2) + cos(lat1) * cos(lat2) * hav(long1, long2)
+    d = 2 * r * asin(sqrt(inner_term))
+    # Round distance to nearest kilometer.
+    return round( d, digits = 2)
+end
+```
+
+ y ahora calculamos las distancias entre todos los códigos postales y todas las sedes de los trabajadores. 
+En Julia esto es muy rápido
+
+
+ ```{julia}
+# number of clients
+n = size(cod_postales,1)
+# number of  comerciales (facilities)
+m = size(sedes, 1)
+
+# esto es como en python, una list comprehension
+
+c  = [haversine( 
+            cod_postales.centroide_latitud[i], cod_postales.centroide_longitud[i],
+            sedes.centroide_latitud[j], sedes.centroide_longitud[j]) 
+            for i in 1:n, j in 1:m]
+
+
+
+ 
+ ```
+
+ Ahora para hacer truco de que a los jefes les toque códigos postales más cercanos a su sede lo que hacemos es aumentar la distancia artificialmente. 
+
+
+ ```{julia}
+ # utilizamos operador ternario 
+# Si eres jefe te pongo distancia 1.1, si no 0.9
+for j in 1:m
+    c[:,j] = sedes.tipo[j] == "jefe" ? 1.1 * c[:, j] : 0.9 * c[:,j]
+end
+ ```
+
+ Contamos cuantos jefes y cuantos indios hay. 
+
+
+ ```{julia}
+n_jefes = sum(sedes.tipo .=="jefe")
+print(n_jefes)
+n_indios = m - n_jefes
+print(n_indios)
+ ```
+
+
+Y ahora definimos el problema de optimización y sus restricciones 
+
+
+```{julia}
+# Fixed costs
+f = ones(m);
+
+```
+
+Definimos el modelo dónde x va a ser una matriz de variables binarias qeu va a indicar si un código postal (de 1 a n) se asigna a un comercial (jefe o indio) va de 1 a m. Y la variable y va a indicar si ese código postal (o tienda) está asignado o no. Si no está asignado entonces se podrá asignar a un comercial. 
+
+
+```{julia}
+ufl = Model(HiGHS.Optimizer)
+
+@variable(ufl, x[1:n, 1:m], Bin);
+@variable(ufl, y[1:m], Bin);
+
+```
+
+Ahora vamos a poner restricione está asignado o no. Si no está asignado entonces se podrá asignar a un comercial. 
+
+
+```{julia}
+ufl = Model(HiGHS.Optimizer)
+
+@variable(ufl, x[1:n, 1:m], Bin);
+@variable(ufl, y[1:m], Bin);
+
+```
+
+Ahora vamos a poner restriciones
+
+Lo primero es definir una serie de restricciones de forma que a cada código postal sólo se le puede asignar un comercial. Eso se define haciendo que en la matriz X , que tiene n filas (sedes) y j columnas (comercials) , al sumar por fila el valor sea igual a 1. Es decir, a cada código postal sólo puede ir un comercial.  (Se podría cambiar a que fueran 2 por ejemplo)
+
+```{julia}
+# esta restriccion es poner que  a  cada  cod postal solo puede ir un comecial, (sea indio o jefe)
+
+@constraint(ufl, client_service[i in 1:n], sum(x[i, j] for j in 1:m) == 1);
+```
+
+
+La siguiente restricción es poner que un comercial sólo puede ser asignado a un código postal (sede, tienda) que esté abierta. 
+
+Esto se hace haciendo que la matriz x[i,j] sea menor o igual que y[j].  puesto que y[j] vale 1 si la "tienda" está abierta,  y por tanto si está cerrada vale 0 y x[i,j] por narices tiene que ser 0 , es decir, si la "tienda" ha sido asignada ya no se puede 
+
+```{julia}
+# siguiente restricción es poner que un cod postales solo puede ir a una que esté abierta
+# esto es, si y[j] = 0 significa sede cerrada y no se puede asignar nadie ahí
+
+@constraint(ufl, open_facility[i in 1:n, j in 1:m], x[i, j] <= y[j]);
+
+```
+Estas dos restricciones implican. 
+- Cada código postal sólo puede ser visitado por un único comercial
+- Un comercial sólo puede ser asignado a una sede si esta está abierta 
+
+Si tengo 3 cod postales y 2 comerciales
+```
+sum(x[1,1], x[1,2]) == 1  # cod postal 1 → un solo comercial
+sum(x[2,1], x[2,2]) == 1  # cod postal 2 → un solo comercial
+sum(x[3,1], x[3,2]) == 1  # cod postal 3 → un solo comercial
+
+x[i,j] <= y[j]            # Solo puedes usar comercial j si está abierto
+
+```
+De esta forma, un comercial puede ir a varios códigos postales pero un código postal solo puede ser visitado por un comercial. 
+
+Ahora vamos con las restriciones diferenciadas según el tipo de comercial. 
+
+La restricción para los indios es que al menos tienen que visitar 3 códigos postales cada uno y como máximo 100. Mientras que para los jefes se impone que al menos tienen que visitar un código postal (si no, sería muy cantoso) y cómo máximo 10. 
+
+```{julia}
+
+# restricciones para los indios, jefes  
+@constraint(ufl, tot_por_indio[j in (n_jefes+1):m], 3 <= sum(x[i, j] for i in 1:n) <= 100);
+@constraint(ufl, tot_por_jefe[j ∈ 1:n_jefes], 1<=sum(x[i, j] for i in 1:n) <= 10);
+
+
+
+```
+
+Si hacemos print(ufl) veremos las restricciones planteadas, pero son muchas. 
+En Jump también podemos escribir la formulación en LaTex
+
+```{julia}
+latex_formulation(ufl)
+```
+
+Y con esto ya podemos plantear el objetivo. que va a ser 
+
+```{julia}
+@objective(ufl, Min, f'y + sum(c .* x));
+```
+
+Dónde f'y es un coste fijo (que hemos puesto de 1) que imponemos por abrir cada sede (código postal)
+ y 
+ sum(c .* x)  
+
+ dónde c es la matriz ajustada de distancias entre los comerciales y las sedes (con el truco de aumentar artificialmente la distancia para los jefes)  y x[i,j] es la matriz n x m que indica si la sede i se asigna a comercial j. con .* se hace la multiplicación elemento a elemento , y se suma para obtener el coste total. 
+  Al minimizar esto lo que estamos indicando es que asigne sedes a comerciales de forma que se minimice de forma global las distancias a las sedes (queremos que la gente de Almería no le asignes una sede en Huelva). Y además hemos metido las restricciones de que solo un comercial por sede  y lo de que los jefes no trabajen demasiado (como mucho 10 sedes por jefe)
+
+
+Pues ya solo queda dejar que JuMP haga su magia. 
+
+
+
+```{julia}
+
+optimize!(ufl)
+
+println("Optimal value: ", objective_value(ufl))
+
+```
+
+
+
+```{julia}
+# value.(x) obtiene una matriz con los valores optimizados de las variables x[i,j] (pueden ser algo como 0.999999 o 1.0 por temas de redondeo).
+ # x_ es una matriz booleana del mismo tamaño que x, indicando qué asignaciones cliente–sede están activas.
+ # y_ devuelve true o false indicando que sedes se han habierto
+
+x_ = value.(x) .> 1 - 1e-5
+y_ = value.(y) .> 1 - 1e-5
+
+#value.(comparacion)
+value.(tot_por_indio)
+value.(tot_por_jefe)
+```
+
+Pintamos, la verdad es que pintar en Julia no me agrada demasiado
+
+
+```{julia}
+
+p = Plots.scatter(
+    cod_postales.centroide_longitud,
+    cod_postales.centroide_latitud;
+    markershape = :circle,
+    markercolor = :blue,
+    label = nothing,
+)
+
+
+mc = [(y_[j] ? :red : :white) for j in 1:m]
+Plots.scatter!(
+    sedes.centroide_longitud,
+    sedes.centroide_latitud;
+    markershape = :square,
+    markercolor = mc,
+    markersize = 4,
+    markerstrokecolor = :red,
+    markerstrokewidth = 2,
+    label = nothing,
+)
+
+
+for i in 1:n
+    for j in 1:m
+        if x_[i, j] == 1
+            Plots.plot!(
+                [cod_postales.centroide_longitud[i], sedes.centroide_longitud[j]],
+                [cod_postales.centroide_latitud[i], sedes.centroide_latitud[j]];
+                color = :black,
+                label = nothing,
+            )
+        end
+    end
+end
+
+p
+```
+
+Ahora extraemos las asignaciones matrix x[i,j]  y contamos para cada columna j cuantos códigos postales le han caído. Es decir, cuántas le han tocado a cada comercial
+```{julia}
+# 
+x_collect= collect(x_)
+#sum(collect(x_), dims=1)
+sum(x_, dims = 1) 
+
+```
+
+Lo siguiente es solo comprobar que a cada cod postal solo va un único comercial. 
+```{julia}
+sum(x_, dims = 2)
+```
+
+
+Lo siguiente lo hice hace tiempo y no recuerdo muy bien lo que hace, pero el objetivo era mostrar para cada comercial, cuántos cod postales tiene que visitar.  Al final salen tuplas dónde el primer elemento es el índice del comercial y el segndo el total de códigos postales que visita. Como ordenamos poniendo primero a los jefes veremos que como máximo visitan 10 códigos postales y como mínimo 1. Luego vendrán las asignaciones de los pobres indios, dónde alguno puede haber tenido fortuna y solo se le asignan 3 códigos postales.  Hace falta un sindicato, claramente
+
+```{julia}
+[x for x in 1:10 if x % 2 == 0]
+# comprehension lista 
+asignaciones  = Dict()
+#= for j in 1:m
+    asignaciones("clave" => j, "valor" =>
+        [index for (index, fila) 
+        in enumerate(x_collect[:,j]) 
+        if fila .== 1])
+end  =#
+
+asignaciones  = Dict()
+for j in 1:m
+    asignaciones[j] = 
+    [index for (index, fila) in enumerate(x_collect[:,j]) if fila .== 1]
+end 
+
+for j in 1:m
+    asignaciones[j] = 
+    cod_postales[ [index for (index, fila) in enumerate(x_collect[:,j]) if fila .== 1], :cod_postal]
+end 
+
+for j in 1:m
+    asignaciones[j] = 
+    cod_postales[ [index for (index, fila) in enumerate(x_collect[:,j]) if fila .== 1], [:cod_postal, :provincia]]
+end 
+
+
+for j in 1:m
+    println((j, size(asignaciones[j])[1]))
+end 
+```
