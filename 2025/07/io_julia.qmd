@@ -138,6 +138,8 @@ end
  ```{julia}
 n_jefes = sum(sedes.tipo .=="jefe")
 print(n_jefes)
+```
+```{julia}
 n_indios = m - n_jefes
 print(n_indios)
  ```
@@ -226,16 +228,18 @@ La restricción para los indios es que al menos tienen que visitar 3 códigos po
 ```
 
 Si hacemos print(ufl) veremos las restricciones planteadas, pero son muchas. 
-En Jump también podemos escribir la formulación en LaTex
 
-```{julia}
-latex_formulation(ufl)
-```
 
 Y con esto ya podemos plantear el objetivo. que va a ser 
 
 ```{julia}
 @objective(ufl, Min, f'y + sum(c .* x));
+```
+
+En Jump también podemos escribir la formulación en LaTex
+
+```{julia}
+latex_formulation(ufl)
 ```
 
 Dónde f'y es un coste fijo (que hemos puesto de 1) que imponemos por abrir cada sede (código postal)
