@@ -1,0 +1,108 @@
+---
+title: Sin sentidos
+date: '2025-08-15'
+categories: 
+  - estadística
+  - ciencia de datos
+  - "2025"
+description: ''
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/4mqbTmpIvq8n0JjngQeowg?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+En un tiempo no muy lejano del cual estoy intentando olvidarme oí hablar de lo que yo llamo "gatillos" o como les gusta decir a algunos "triggers" ( lo de gatillos viene de derivar triggers a tigres y luego a gatillos, que encima tiene que ver con disparar) 
+
+Es una cosa muy sencilla, si se da un eventoA entonces mando a la gente que tiene ese evento a campaña 1, y se da eventoB mando a esos a campaña 2. 
+
+Hasta aquí todo más o menos bien, pero como pensaría cualquier persona normal, ¿ si tener el eventoA o tener el eventoB aumentan la probabilidad de comprar el mismo producto, por qué no meter esos eventos en un modelo, de forma que pille las interacciones y así seleccionar a los más propensos a comprar el producto?
+Pues os prometo que me miraban con cara de estupor, sin entender  el por qué eso iba a ser mejor. Visto con cierta distancia, la verdad es que no creo que no se entendiera, sino que simplemente no se quería cambiar nada y que cualquier propuesta que viniera de determinada gente, simplemente se ignoraba o se consideraba errónea. Un sinsentido. 
+
+
+Un poco de código para ejemplificar. 
+
+Generamos unos datos dónde tenemos EventoA (1,0), EventoB (1,0) y una variable target que está relacionada positivamente con ambos eventos, por lo cual es lógico pensar que las observaciones que tienen ambos eventos estarán aún más relacionadas con la target. 
+
+
+```{r}
+library(dplyr)
+set.seed(123)
+
+n <- 1000
+
+Evento1 <- rbinom(n, size = 1, prob = 0.7) 
+Evento2 <- rbinom(n, size = 1, prob = 0.6) 
+
+p_target <- ifelse(Evento1 == 1, 0.7, 0.2)
+
+p_target <- p_target + ifelse(Evento2 == 1, 0.3, -0.05)
+p_target <- pmin(pmax(p_target, 0.01), 0.99) # limitar entre 0 y 1
+
+# Simular target 
+target <- rbinom(n, size = 1, prob = p_target)
+
+df <- data.frame(Evento1, Evento2, target)
+
+head(df)
+```
+
+Comprobamos que efectivamente es así 
+
+```{r}
+# Comprobar proporciones
+prop.table(table(df$target, df$Evento1), margin = 2)
+prop.table(table(df$target, df$Evento2), margin = 2)
+
+
+df |>
+  group_by(Evento1, Evento2) |>
+  summarise(
+    mean(target)
+  )
+```
+Y como no podía ser de otra manera, la interacción (tener ambos eventos) tiene una mayor proporción de target=1 que cada evento por separado
+
+
+Pues simplemente haber hecho un modelo donde entraran los "gatillos" habría sido mucho mejor que simplemente considerar por separado. 
+
+```{r}
+m_eff_princ <- glm(target ~ Evento1 + Evento2, data = df, family = binomial)
+m_eff_interacc <- glm(target ~ Evento1 * Evento2, data = df, family = binomial)
+
+
+summary(m_eff_princ)
+
+summary(m_eff_interacc)
+
+
+```
+
+Siiii, ya sé que es un post muy ponto y fácil, pero es que muchas veces me encuentro con gente que no sabe qué es una interacción (aunque usen constantemente xgboost, que es una glorificación de la interacción). 
+
