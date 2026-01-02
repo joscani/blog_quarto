@@ -393,7 +393,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   
 
 
-</header><p>Como todos los años toca hacer el análisis de de los subtítulos de <em>Nochevieja a Cachitos</em></p>
+</header><p>Hasta siempre Robe.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="extremo.jpg" class="img-fluid figure-img" alt="Extremoduro"></p>
+<figcaption>Extremoduro</figcaption></figure>
+</div>
+<p>Como todos los años toca hacer el análisis de de los subtítulos de <em>Nochevieja a Cachitos</em></p>
 <p>Este post es prácticamente idéntico al del año pasado. El script ha funcionado igual y lo único que he tardado un pelín más en hacerlo porque he cambiado de sistema operativo. He pasado hace poco a una distribución rolling release basada en <code>arch</code> y aún estoy dejando el sistema fino.</p>
 <section id="requisitos" class="level2"><h2 class="anchored" data-anchor-id="requisitos">Requisitos</h2>
 <ul>
@@ -489,8 +494,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> <span class="at">-10c</span> <span class="at">-exec</span> rm <span class="at">-f</span> {} <span class="dt">\;</span></span>
 <span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Para que funcione este script el archivo <code>2025_cachitos.mkv</code> tiene que estar en el directorio <code>video</code>, en años anteriores me bajaba el video directamente con el script, en este no.</p>
 <section id="extracción-de-fotogramas" class="level3"><h3 class="anchored" data-anchor-id="extracción-de-fotogramas">Extracción de fotogramas</h3>
 <p>Usando mplayer que sirve para reproducir el vídeo, podemos indicar además que nos extraiga una imagen cada 200 fotogramas <code>framestep=200</code>, también le decimos que lo reproduzca sin sonido y a velocidad alta y que guarde esos fotogramas como archivos jpeg en la ruta relativa `2023_jpg dentro de nuestro directorio principal.</p>
@@ -1084,241 +1088,272 @@ Así, para cada imagen jpg creamos un archivo con nombre <code>nombre_imagen.jpg
 <span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a><span class="an">image:</span><span class="co"> "extremo.jpg"</span></span>
 <span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>Como todos los años toca hacer el análisis de de los subtítulos de _Nochevieja a Cachitos_</span>
-<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>Este post es prácticamente idéntico al del año pasado. El script ha funcionado igual y lo único que he tardado un pelín más en hacerlo porque he cambiado de sistema operativo. He pasado hace poco a una distribución rolling release basada en <span class="in">`arch`</span> y aún estoy dejando el sistema fino.  </span>
-<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## Requisitos</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>Hasta siempre Robe.</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a><span class="al">![Extremoduro](extremo.jpg)</span>{fig-alt="Extremoduro"}</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>Como todos los años toca hacer el análisis de de los subtítulos de</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>*Nochevieja a Cachitos*</span>
 <span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Un plugin en el navegador que pueda identificar el <span class="in">`m3u`</span> asociado al archivo <span class="in">`mp4`</span> del video de Cachitos que está en rtve play. Yo he usado <span class="co">[</span><span class="ot">live Stream Downloader</span><span class="co">](https://chromewebstore.google.com/detail/live-stream-downloader/looepbdllpjgdmkpdcdffhdbmpbcfekj)</span> , pero seguro que hay alguno mejor</span>
-<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Usar un sistema operativo GNU/Linux, en mi caso Omarchy 3.2.3. Una distro basada en Arch linux</span>
-<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="in">`ffmpeg`</span>    ffmpeg nos va a servir para poder bajar el video </span>
-<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="in">`mplayer`</span>   vamos a extraer 1 de cada 200 fotogramas del video</span>
-<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="ss">*  </span><span class="in">`imagemagick`</span>  Con <span class="in">`imagemagick`</span> vamos a cambiar el tamaño de los fotogramas, recortar el área dónde están los subtítulos, convertir a formato <span class="in">`tif`</span> e invertir los colores para que el texto se vea mejor. </span>
-<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="in">`parallel`</span> Con <span class="in">`parallel`</span> vamos a poder utilizar varios núcleos e hilos del ordenador en paralelo y poder hacer la modificación de los fotogramas y el reconocimiento óptico de caracteres más rápido. </span>
-<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="in">`tesseract`</span> Con <span class="in">`tesseract`</span> se va a hacer el reconocimiento óptico del texto y guardar en ficheros de texto. </span>
-<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Elimina ficheros de texto de menos de 10 bytes, puesto que ahí no hay texto . </span>
-<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Plugin </span></span>
-<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>Con el plugin de Live Stream instalado en el navegador, lo primero que hacemos es ir a la web de rtveplay, buscar Nochevieja a Cachitos y darle al play. </span>
-<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a>Estando en esa pestaña, le damos al plugin y nos abrirá una ventana emergente dónde se nos ha copiado la info del streaming. Nos bajamos el archivo y cambiamos el nombre a <span class="in">`2024_cachitos.mkv`</span></span>
-<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a><span class="fu">## Script de bash</span></span>
-<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a>El script es <span class="co">[</span><span class="ot">`extract_subtitles.sh`</span><span class="co">](../extract_subtitles.sh)</span> , se ejecutaría con <span class="in">`extract_subtitles.sh 2025`</span>   </span>
-<span id="cb11-62"><a href="#cb11-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-63"><a href="#cb11-63" aria-hidden="true" tabindex="-1"></a>El script es similar al de años anteriores</span>
-<span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-65"><a href="#cb11-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-66"><a href="#cb11-66" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb11-67"><a href="#cb11-67" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
-<span id="cb11-68"><a href="#cb11-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-69"><a href="#cb11-69" aria-hidden="true" tabindex="-1"></a><span class="va">root_directory</span><span class="op">=</span>/home/jose/proyecto_cachitos</span>
-<span id="cb11-70"><a href="#cb11-70" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span></span>
-<span id="cb11-71"><a href="#cb11-71" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>Este post es prácticamente idéntico al del año pasado. El script ha</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>funcionado igual y lo único que he tardado un pelín más en hacerlo</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>porque he cambiado de sistema operativo. He pasado hace poco a una</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>distribución rolling release basada en <span class="in">`arch`</span> y aún estoy dejando el</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>sistema fino.</span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a><span class="fu">## Requisitos</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Un plugin en el navegador que pueda identificar el <span class="in">`m3u`</span> asociado al</span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>    archivo <span class="in">`mp4`</span> del video de Cachitos que está en rtve play. Yo he</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>    usado [live Stream</span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>    Downloader](https://chromewebstore.google.com/detail/live-stream-downloader/looepbdllpjgdmkpdcdffhdbmpbcfekj)</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>    , pero seguro que hay alguno mejor</span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Usar un sistema operativo GNU/Linux, en mi caso Omarchy 3.2.3. Una</span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a>    distro basada en Arch linux</span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`ffmpeg`</span> ffmpeg nos va a servir para poder bajar el video</span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`mplayer`</span> vamos a extraer 1 de cada 200 fotogramas del video</span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`imagemagick`</span> Con <span class="in">`imagemagick`</span> vamos a cambiar el tamaño de los</span>
+<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a>    fotogramas, recortar el área dónde están los subtítulos, convertir a</span>
+<span id="cb11-62"><a href="#cb11-62" aria-hidden="true" tabindex="-1"></a>    formato <span class="in">`tif`</span> e invertir los colores para que el texto se vea mejor.</span>
+<span id="cb11-63"><a href="#cb11-63" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`parallel`</span> Con <span class="in">`parallel`</span> vamos a poder utilizar varios núcleos e</span>
+<span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a>    hilos del ordenador en paralelo y poder hacer la modificación de los</span>
+<span id="cb11-65"><a href="#cb11-65" aria-hidden="true" tabindex="-1"></a>    fotogramas y el reconocimiento óptico de caracteres más rápido.</span>
+<span id="cb11-66"><a href="#cb11-66" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`tesseract`</span> Con <span class="in">`tesseract`</span> se va a hacer el reconocimiento óptico</span>
+<span id="cb11-67"><a href="#cb11-67" aria-hidden="true" tabindex="-1"></a>    del texto y guardar en ficheros de texto.</span>
+<span id="cb11-68"><a href="#cb11-68" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Elimina ficheros de texto de menos de 10 bytes, puesto que ahí no</span>
+<span id="cb11-69"><a href="#cb11-69" aria-hidden="true" tabindex="-1"></a>    hay texto .</span>
+<span id="cb11-70"><a href="#cb11-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-71"><a href="#cb11-71" aria-hidden="true" tabindex="-1"></a><span class="fu">## Plugin</span></span>
 <span id="cb11-72"><a href="#cb11-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-73"><a href="#cb11-73" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"First arg: </span><span class="va">$1</span><span class="st">"</span></span>
-<span id="cb11-74"><a href="#cb11-74" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> video</span>
-<span id="cb11-75"><a href="#cb11-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-76"><a href="#cb11-76" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> video</span>
-<span id="cb11-77"><a href="#cb11-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-78"><a href="#cb11-78" aria-hidden="true" tabindex="-1"></a><span class="va">ANNO</span><span class="op">=</span><span class="va">$1</span></span>
-<span id="cb11-79"><a href="#cb11-79" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$ANNO</span></span>
-<span id="cb11-80"><a href="#cb11-80" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video</span><span class="op">=</span><span class="st">"_cachitos.mp4"</span></span>
-<span id="cb11-81"><a href="#cb11-81" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video_2024</span><span class="op">=</span><span class="st">"_cachitos.mkv"</span></span>
-<span id="cb11-82"><a href="#cb11-82" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video_2025</span><span class="op">=</span><span class="st">"_cachitos.mkv"</span></span>
-<span id="cb11-83"><a href="#cb11-83" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_jpg_dir</span><span class="op">=</span><span class="st">"_jpg"</span></span>
-<span id="cb11-84"><a href="#cb11-84" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_txt_dir</span><span class="op">=</span><span class="st">"_txt"</span></span>
+<span id="cb11-73"><a href="#cb11-73" aria-hidden="true" tabindex="-1"></a>Con el plugin de Live Stream instalado en el navegador, lo primero que</span>
+<span id="cb11-74"><a href="#cb11-74" aria-hidden="true" tabindex="-1"></a>hacemos es ir a la web de rtveplay, buscar Nochevieja a Cachitos y darle</span>
+<span id="cb11-75"><a href="#cb11-75" aria-hidden="true" tabindex="-1"></a>al play. Estando en esa pestaña, le damos al plugin y nos abrirá una</span>
+<span id="cb11-76"><a href="#cb11-76" aria-hidden="true" tabindex="-1"></a>ventana emergente dónde se nos ha copiado la info del streaming. Nos</span>
+<span id="cb11-77"><a href="#cb11-77" aria-hidden="true" tabindex="-1"></a>bajamos el archivo y cambiamos el nombre a <span class="in">`2024_cachitos.mkv`</span></span>
+<span id="cb11-78"><a href="#cb11-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-79"><a href="#cb11-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## Script de bash</span></span>
+<span id="cb11-80"><a href="#cb11-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-81"><a href="#cb11-81" aria-hidden="true" tabindex="-1"></a>El script es <span class="co">[</span><span class="ot">`extract_subtitles.sh`</span><span class="co">](../extract_subtitles.sh)</span> , se</span>
+<span id="cb11-82"><a href="#cb11-82" aria-hidden="true" tabindex="-1"></a>ejecutaría con <span class="in">`extract_subtitles.sh 2025`</span></span>
+<span id="cb11-83"><a href="#cb11-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-84"><a href="#cb11-84" aria-hidden="true" tabindex="-1"></a>El script es similar al de años anteriores</span>
 <span id="cb11-85"><a href="#cb11-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-86"><a href="#cb11-86" aria-hidden="true" tabindex="-1"></a><span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video</span></span>
-<span id="cb11-87"><a href="#cb11-87" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$video_file</span></span>
+<span id="cb11-86"><a href="#cb11-86" aria-hidden="true" tabindex="-1"></a><span class="in">``` bash</span></span>
+<span id="cb11-87"><a href="#cb11-87" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
 <span id="cb11-88"><a href="#cb11-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-89"><a href="#cb11-89" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2025"</span> <span class="bu">]</span> <span class="kw">;</span></span>
-<span id="cb11-90"><a href="#cb11-90" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
-<span id="cb11-91"><a href="#cb11-91" aria-hidden="true" tabindex="-1"></a>  <span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video_2025</span></span>
-<span id="cb11-92"><a href="#cb11-92" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$video_file</span></span>
-<span id="cb11-93"><a href="#cb11-93" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
-<span id="cb11-94"><a href="#cb11-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-95"><a href="#cb11-95" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2024"</span> <span class="bu">]</span> <span class="kw">;</span></span>
-<span id="cb11-96"><a href="#cb11-96" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
-<span id="cb11-97"><a href="#cb11-97" aria-hidden="true" tabindex="-1"></a>  <span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video_2024</span></span>
-<span id="cb11-98"><a href="#cb11-98" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$video_file</span></span>
-<span id="cb11-99"><a href="#cb11-99" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
-<span id="cb11-100"><a href="#cb11-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-101"><a href="#cb11-101" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2023"</span> <span class="bu">]</span> <span class="kw">;</span></span>
-<span id="cb11-102"><a href="#cb11-102" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
-<span id="cb11-103"><a href="#cb11-103" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821"</span> <span class="at">-c</span> copy <span class="va">$video_file</span></span>
-<span id="cb11-104"><a href="#cb11-104" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb11-89"><a href="#cb11-89" aria-hidden="true" tabindex="-1"></a><span class="va">root_directory</span><span class="op">=</span>/home/jose/proyecto_cachitos</span>
+<span id="cb11-90"><a href="#cb11-90" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span></span>
+<span id="cb11-91"><a href="#cb11-91" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span></span>
+<span id="cb11-92"><a href="#cb11-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-93"><a href="#cb11-93" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"First arg: </span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb11-94"><a href="#cb11-94" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> video</span>
+<span id="cb11-95"><a href="#cb11-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-96"><a href="#cb11-96" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> video</span>
+<span id="cb11-97"><a href="#cb11-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-98"><a href="#cb11-98" aria-hidden="true" tabindex="-1"></a><span class="va">ANNO</span><span class="op">=</span><span class="va">$1</span></span>
+<span id="cb11-99"><a href="#cb11-99" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$ANNO</span></span>
+<span id="cb11-100"><a href="#cb11-100" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video</span><span class="op">=</span><span class="st">"_cachitos.mp4"</span></span>
+<span id="cb11-101"><a href="#cb11-101" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video_2024</span><span class="op">=</span><span class="st">"_cachitos.mkv"</span></span>
+<span id="cb11-102"><a href="#cb11-102" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_video_2025</span><span class="op">=</span><span class="st">"_cachitos.mkv"</span></span>
+<span id="cb11-103"><a href="#cb11-103" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_jpg_dir</span><span class="op">=</span><span class="st">"_jpg"</span></span>
+<span id="cb11-104"><a href="#cb11-104" aria-hidden="true" tabindex="-1"></a><span class="va">suffix_txt_dir</span><span class="op">=</span><span class="st">"_txt"</span></span>
 <span id="cb11-105"><a href="#cb11-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-106"><a href="#cb11-106" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2022"</span> <span class="bu">]</span> <span class="kw">;</span></span>
-<span id="cb11-107"><a href="#cb11-107" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
-<span id="cb11-108"><a href="#cb11-108" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=6767615"</span> <span class="at">-c</span> copy <span class="va">$video_file</span></span>
-<span id="cb11-109"><a href="#cb11-109" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span> </span>
-<span id="cb11-110"><a href="#cb11-110" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb11-111"><a href="#cb11-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-112"><a href="#cb11-112" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar a jpg uno de cada 200 fotogramas</span></span>
-<span id="cb11-113"><a href="#cb11-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-114"><a href="#cb11-114" aria-hidden="true" tabindex="-1"></a><span class="ex">mplayer</span> <span class="at">-vf</span> framestep=200 <span class="at">-framedrop</span> <span class="at">-nosound</span> <span class="va">$video_file</span> <span class="at">-speed</span> 100 <span class="at">-vo</span> jpeg:outdir=<span class="va">$ANNO$suffix_jpg_dir</span> </span>
-<span id="cb11-115"><a href="#cb11-115" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb11-116"><a href="#cb11-116" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$ANNO$suffix_jpg_dir</span> </span>
-<span id="cb11-117"><a href="#cb11-117" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb11-118"><a href="#cb11-118" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir a formato más pequño</span></span>
-<span id="cb11-119"><a href="#cb11-119" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 mogrify <span class="at">-resize</span> 642x480 {}</span>
+<span id="cb11-106"><a href="#cb11-106" aria-hidden="true" tabindex="-1"></a><span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video</span></span>
+<span id="cb11-107"><a href="#cb11-107" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$video_file</span></span>
+<span id="cb11-108"><a href="#cb11-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-109"><a href="#cb11-109" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2025"</span> <span class="bu">]</span> <span class="kw">;</span></span>
+<span id="cb11-110"><a href="#cb11-110" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
+<span id="cb11-111"><a href="#cb11-111" aria-hidden="true" tabindex="-1"></a>  <span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video_2025</span></span>
+<span id="cb11-112"><a href="#cb11-112" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$video_file</span></span>
+<span id="cb11-113"><a href="#cb11-113" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb11-114"><a href="#cb11-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-115"><a href="#cb11-115" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2024"</span> <span class="bu">]</span> <span class="kw">;</span></span>
+<span id="cb11-116"><a href="#cb11-116" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
+<span id="cb11-117"><a href="#cb11-117" aria-hidden="true" tabindex="-1"></a>  <span class="va">video_file</span><span class="op">=</span><span class="va">$ANNO$suffix_video_2024</span></span>
+<span id="cb11-118"><a href="#cb11-118" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$video_file</span></span>
+<span id="cb11-119"><a href="#cb11-119" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
 <span id="cb11-120"><a href="#cb11-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-121"><a href="#cb11-121" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionar cacho dond están subtitulos</span></span>
-<span id="cb11-122"><a href="#cb11-122" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-crop</span> 460x50+90+285 +repage <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}.subtitulo.tif</span>
-<span id="cb11-123"><a href="#cb11-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-124"><a href="#cb11-124" aria-hidden="true" tabindex="-1"></a><span class="co"># Poner en negativo para que el ocr funcione mejor</span></span>
-<span id="cb11-125"><a href="#cb11-125" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-negate</span> <span class="at">-fx</span> <span class="st">'.8*r+.8*g+0*b'</span> <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}</span>
-<span id="cb11-126"><a href="#cb11-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-127"><a href="#cb11-127" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar el ocr con idioma en español</span></span>
-<span id="cb11-128"><a href="#cb11-128" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 tesseract <span class="at">-l</span> spa {} {}</span>
-<span id="cb11-129"><a href="#cb11-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-130"><a href="#cb11-130" aria-hidden="true" tabindex="-1"></a><span class="co"># mover a directorio texto</span></span>
-<span id="cb11-131"><a href="#cb11-131" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-132"><a href="#cb11-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-133"><a href="#cb11-133" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="pp">*</span>.txt <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-134"><a href="#cb11-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-135"><a href="#cb11-135" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-136"><a href="#cb11-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-137"><a href="#cb11-137" aria-hidden="true" tabindex="-1"></a><span class="co"># Borrar archivos de 10 bytes , subtítulos vacíos</span></span>
-<span id="cb11-138"><a href="#cb11-138" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> <span class="at">-10c</span> <span class="at">-exec</span> rm <span class="at">-f</span> {} <span class="dt">\;</span></span>
-<span id="cb11-139"><a href="#cb11-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-140"><a href="#cb11-140" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span></span>
-<span id="cb11-141"><a href="#cb11-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-142"><a href="#cb11-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-121"><a href="#cb11-121" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2023"</span> <span class="bu">]</span> <span class="kw">;</span></span>
+<span id="cb11-122"><a href="#cb11-122" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
+<span id="cb11-123"><a href="#cb11-123" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/3/1/1704096565613.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=7047821"</span> <span class="at">-c</span> copy <span class="va">$video_file</span></span>
+<span id="cb11-124"><a href="#cb11-124" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb11-125"><a href="#cb11-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-126"><a href="#cb11-126" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ANNO</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"2022"</span> <span class="bu">]</span> <span class="kw">;</span></span>
+<span id="cb11-127"><a href="#cb11-127" aria-hidden="true" tabindex="-1"></a><span class="cf">then</span></span>
+<span id="cb11-128"><a href="#cb11-128" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ffmpeg</span> <span class="at">-i</span> <span class="st">"https://rtvehlsvodlote7.rtve.es/mediavodv2/resources/TE_SHIECRO/mp4/1/5/1672556504451.mp4/video.m3u8?hls_no_audio_only=true&amp;hls_client_manifest_version=3&amp;idasset=6767615"</span> <span class="at">-c</span> copy <span class="va">$video_file</span></span>
+<span id="cb11-129"><a href="#cb11-129" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span> </span>
+<span id="cb11-130"><a href="#cb11-130" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb11-131"><a href="#cb11-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-132"><a href="#cb11-132" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar a jpg uno de cada 200 fotogramas</span></span>
+<span id="cb11-133"><a href="#cb11-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-134"><a href="#cb11-134" aria-hidden="true" tabindex="-1"></a><span class="ex">mplayer</span> <span class="at">-vf</span> framestep=200 <span class="at">-framedrop</span> <span class="at">-nosound</span> <span class="va">$video_file</span> <span class="at">-speed</span> 100 <span class="at">-vo</span> jpeg:outdir=<span class="va">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb11-135"><a href="#cb11-135" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb11-136"><a href="#cb11-136" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb11-137"><a href="#cb11-137" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb11-138"><a href="#cb11-138" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir a formato más pequño</span></span>
+<span id="cb11-139"><a href="#cb11-139" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 mogrify <span class="at">-resize</span> 642x480 {}</span>
+<span id="cb11-140"><a href="#cb11-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-141"><a href="#cb11-141" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionar cacho dond están subtitulos</span></span>
+<span id="cb11-142"><a href="#cb11-142" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-crop</span> 460x50+90+285 +repage <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}.subtitulo.tif</span>
 <span id="cb11-143"><a href="#cb11-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-144"><a href="#cb11-144" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-145"><a href="#cb11-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-146"><a href="#cb11-146" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> que funcione este script el archivo <span class="kw">`</span>2025_cachitos.mkv<span class="kw">`</span> <span class="ex">tiene</span> que estar en el directorio <span class="kw">`</span>video<span class="kw">`</span><span class="ex">,</span> en años anteriores me bajaba el video directamente con el script, en este no. </span>
-<span id="cb11-147"><a href="#cb11-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-148"><a href="#cb11-148" aria-hidden="true" tabindex="-1"></a><span class="co">### Extracción de fotogramas</span></span>
+<span id="cb11-144"><a href="#cb11-144" aria-hidden="true" tabindex="-1"></a><span class="co"># Poner en negativo para que el ocr funcione mejor</span></span>
+<span id="cb11-145"><a href="#cb11-145" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-negate</span> <span class="at">-fx</span> <span class="st">'.8*r+.8*g+0*b'</span> <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}</span>
+<span id="cb11-146"><a href="#cb11-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-147"><a href="#cb11-147" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar el ocr con idioma en español</span></span>
+<span id="cb11-148"><a href="#cb11-148" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 tesseract <span class="at">-l</span> spa {} {}</span>
 <span id="cb11-149"><a href="#cb11-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-150"><a href="#cb11-150" aria-hidden="true" tabindex="-1"></a><span class="ex">Usando</span> mplayer que sirve para reproducir el vídeo, podemos indicar además  que nos extraiga una imagen cada 200 fotogramas <span class="kw">`</span>framestep=200<span class="kw">`</span><span class="ex">,</span> también le decimos que lo reproduzca sin sonido y a velocidad alta y que guarde esos fotogramas como archivos jpeg en la ruta relativa <span class="kw">`</span>2023_jpg dentro de nuestro directorio principal. </span>
-<span id="cb11-151"><a href="#cb11-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-152"><a href="#cb11-152" aria-hidden="true" tabindex="-1"></a><span class="ex">Este</span> es el comando que hace todo eso</span>
-<span id="cb11-153"><a href="#cb11-153" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-154"><a href="#cb11-154" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
-<span id="cb11-155"><a href="#cb11-155" aria-hidden="true" tabindex="-1"></a><span class="ex">mplayer</span> <span class="at">-vf</span> framestep=200 <span class="at">-framedrop</span> <span class="at">-nosound</span> <span class="va">$video_file</span> <span class="at">-speed</span> 100 <span class="at">-vo</span> jpeg:outdir=<span class="va">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb11-150"><a href="#cb11-150" aria-hidden="true" tabindex="-1"></a><span class="co"># mover a directorio texto</span></span>
+<span id="cb11-151"><a href="#cb11-151" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
+<span id="cb11-152"><a href="#cb11-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-153"><a href="#cb11-153" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="pp">*</span>.txt <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
+<span id="cb11-154"><a href="#cb11-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-155"><a href="#cb11-155" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
 <span id="cb11-156"><a href="#cb11-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-157"><a href="#cb11-157" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-158"><a href="#cb11-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-159"><a href="#cb11-159" aria-hidden="true" tabindex="-1"></a><span class="co">### Recorte de la zona de dónde está el rótulo</span></span>
-<span id="cb11-160"><a href="#cb11-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-161"><a href="#cb11-161" aria-hidden="true" tabindex="-1"></a><span class="ex">De</span> años anteriores sé que si <span class="st">"achico"</span> cada imagen anterior me vale de igual forma y por prueba y error vi en que parte de la imagen suelen colocar los rótulos. Así que con herramientas de <span class="kw">`</span><span class="ex">imagemagick</span><span class="kw">`</span> puedo manipular esas imágenes y extraer solo la zona del rótulo. </span>
+<span id="cb11-157"><a href="#cb11-157" aria-hidden="true" tabindex="-1"></a><span class="co"># Borrar archivos de 10 bytes , subtítulos vacíos</span></span>
+<span id="cb11-158"><a href="#cb11-158" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> <span class="at">-10c</span> <span class="at">-exec</span> rm <span class="at">-f</span> {} <span class="dt">\;</span></span>
+<span id="cb11-159"><a href="#cb11-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-160"><a href="#cb11-160" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span></span>
+<span id="cb11-161"><a href="#cb11-161" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-162"><a href="#cb11-162" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-163"><a href="#cb11-163" aria-hidden="true" tabindex="-1"></a><span class="co">#### Reducción de la imagen</span></span>
+<span id="cb11-163"><a href="#cb11-163" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
 <span id="cb11-164"><a href="#cb11-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-165"><a href="#cb11-165" aria-hidden="true" tabindex="-1"></a><span class="ex">Cambiamos</span> al directorio dónde hemos dejado las imágenes, y usando el comando <span class="kw">`</span><span class="fu">find</span><span class="kw">`</span> seleccionamos todos los archivos con extensión <span class="kw">`</span><span class="ex">jpg</span><span class="kw">`</span> y los reducimos a formato de 642x480. </span>
-<span id="cb11-166"><a href="#cb11-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-167"><a href="#cb11-167" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> eso usamos <span class="kw">`</span><span class="ex">mogrify</span><span class="kw">`</span> que forma parte de <span class="kw">`</span><span class="ex">imagemagick</span><span class="kw">`</span> y la parte de usar <span class="kw">`</span><span class="ex">parallel</span><span class="kw">`</span> es para que se ejecute en paralelo usando 8 hilos de cpu. </span>
+<span id="cb11-165"><a href="#cb11-165" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> que funcione este script el archivo <span class="kw">`</span>2025_cachitos.mkv<span class="kw">`</span> <span class="ex">tiene</span> que</span>
+<span id="cb11-166"><a href="#cb11-166" aria-hidden="true" tabindex="-1"></a><span class="ex">estar</span> en el directorio <span class="kw">`</span>video<span class="kw">`</span><span class="ex">,</span> en años anteriores me bajaba el video</span>
+<span id="cb11-167"><a href="#cb11-167" aria-hidden="true" tabindex="-1"></a><span class="ex">directamente</span> con el script, en este no.</span>
 <span id="cb11-168"><a href="#cb11-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-169"><a href="#cb11-169" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
-<span id="cb11-170"><a href="#cb11-170" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb11-171"><a href="#cb11-171" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$ANNO$suffix_jpg_dir</span> </span>
-<span id="cb11-172"><a href="#cb11-172" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb11-173"><a href="#cb11-173" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir a formato más pequño</span></span>
-<span id="cb11-174"><a href="#cb11-174" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 mogrify <span class="at">-resize</span> 642x480 {}</span>
-<span id="cb11-175"><a href="#cb11-175" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-169"><a href="#cb11-169" aria-hidden="true" tabindex="-1"></a><span class="co">### Extracción de fotogramas</span></span>
+<span id="cb11-170"><a href="#cb11-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-171"><a href="#cb11-171" aria-hidden="true" tabindex="-1"></a><span class="ex">Usando</span> mplayer que sirve para reproducir el vídeo, podemos indicar</span>
+<span id="cb11-172"><a href="#cb11-172" aria-hidden="true" tabindex="-1"></a><span class="ex">además</span> que nos extraiga una imagen cada 200 fotogramas <span class="kw">`</span>framestep=200<span class="kw">`</span><span class="ex">,</span></span>
+<span id="cb11-173"><a href="#cb11-173" aria-hidden="true" tabindex="-1"></a><span class="ex">también</span> le decimos que lo reproduzca sin sonido y a velocidad alta y que</span>
+<span id="cb11-174"><a href="#cb11-174" aria-hidden="true" tabindex="-1"></a><span class="ex">guarde</span> esos fotogramas como archivos jpeg en la ruta relativa <span class="dt">\`</span>2023_jpg</span>
+<span id="cb11-175"><a href="#cb11-175" aria-hidden="true" tabindex="-1"></a><span class="ex">dentro</span> de nuestro directorio principal.</span>
 <span id="cb11-176"><a href="#cb11-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-177"><a href="#cb11-177" aria-hidden="true" tabindex="-1"></a><span class="co">#### Seleccionar la zona dónde están los rótulos</span></span>
+<span id="cb11-177"><a href="#cb11-177" aria-hidden="true" tabindex="-1"></a><span class="ex">Este</span> es el comando que hace todo eso</span>
 <span id="cb11-178"><a href="#cb11-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-179"><a href="#cb11-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-180"><a href="#cb11-180" aria-hidden="true" tabindex="-1"></a><span class="ex">Ahora</span> usamos otras funciones de <span class="kw">`</span><span class="ex">imagemagick</span><span class="kw">`</span> que son <span class="kw">`</span><span class="ex">convert</span><span class="kw">`</span> y <span class="kw">`</span><span class="ex">crop</span><span class="kw">`</span> . Lo que hacemos es convertir a formato tif y recortamos justo la zona dónde están los rótulos.  </span>
-<span id="cb11-181"><a href="#cb11-181" aria-hidden="true" tabindex="-1"></a><span class="ex">Así,</span> para cada imagen jpg creamos un archivo con nombre <span class="kw">`</span><span class="ex">nombre_imagen.jpg.subtitulo.tif</span><span class="kw">`</span> </span>
+<span id="cb11-179"><a href="#cb11-179" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> bash</span>
+<span id="cb11-180"><a href="#cb11-180" aria-hidden="true" tabindex="-1"></a><span class="ex">mplayer</span> <span class="at">-vf</span> framestep=200 <span class="at">-framedrop</span> <span class="at">-nosound</span> <span class="va">$video_file</span> <span class="at">-speed</span> 100 <span class="at">-vo</span> jpeg:outdir=<span class="va">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb11-181"><a href="#cb11-181" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
 <span id="cb11-182"><a href="#cb11-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-183"><a href="#cb11-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-184"><a href="#cb11-184" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span> </span>
-<span id="cb11-185"><a href="#cb11-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-186"><a href="#cb11-186" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionar cacho dond están subtitulos</span></span>
-<span id="cb11-187"><a href="#cb11-187" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-crop</span> 460x50+90+285 +repage <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}.subtitulo.tif</span>
-<span id="cb11-188"><a href="#cb11-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-189"><a href="#cb11-189" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-190"><a href="#cb11-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-183"><a href="#cb11-183" aria-hidden="true" tabindex="-1"></a><span class="co">### Recorte de la zona de dónde está el rótulo</span></span>
+<span id="cb11-184"><a href="#cb11-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-185"><a href="#cb11-185" aria-hidden="true" tabindex="-1"></a><span class="ex">De</span> años anteriores sé que si <span class="st">"achico"</span> cada imagen anterior me vale de</span>
+<span id="cb11-186"><a href="#cb11-186" aria-hidden="true" tabindex="-1"></a><span class="ex">igual</span> forma y por prueba y error vi en que parte de la imagen suelen</span>
+<span id="cb11-187"><a href="#cb11-187" aria-hidden="true" tabindex="-1"></a><span class="ex">colocar</span> los rótulos. Así que con herramientas de <span class="kw">`</span>imagemagick<span class="kw">`</span> <span class="ex">puedo</span></span>
+<span id="cb11-188"><a href="#cb11-188" aria-hidden="true" tabindex="-1"></a><span class="ex">manipular</span> esas imágenes y extraer solo la zona del rótulo.</span>
+<span id="cb11-189"><a href="#cb11-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-190"><a href="#cb11-190" aria-hidden="true" tabindex="-1"></a><span class="co">#### Reducción de la imagen</span></span>
 <span id="cb11-191"><a href="#cb11-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-192"><a href="#cb11-192" aria-hidden="true" tabindex="-1"></a><span class="co">#### Hacer el negativo de las imágenes </span></span>
-<span id="cb11-193"><a href="#cb11-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-194"><a href="#cb11-194" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> ayudar al software de reconocimiento óptico de caractereres obtenemos el negativo de cada tif. Para eso usamos de nuevo convert pero con la opción <span class="kw">`</span><span class="ex">negate</span><span class="kw">`</span></span>
+<span id="cb11-192"><a href="#cb11-192" aria-hidden="true" tabindex="-1"></a><span class="ex">Cambiamos</span> al directorio dónde hemos dejado las imágenes, y usando el</span>
+<span id="cb11-193"><a href="#cb11-193" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="kw">`</span>find<span class="kw">`</span> <span class="ex">seleccionamos</span> todos los archivos con extensión <span class="kw">`</span>jpg<span class="kw">`</span> <span class="ex">y</span></span>
+<span id="cb11-194"><a href="#cb11-194" aria-hidden="true" tabindex="-1"></a><span class="ex">los</span> reducimos a formato de 642x480.</span>
 <span id="cb11-195"><a href="#cb11-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-196"><a href="#cb11-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-197"><a href="#cb11-197" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
-<span id="cb11-198"><a href="#cb11-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-199"><a href="#cb11-199" aria-hidden="true" tabindex="-1"></a><span class="co"># Poner en negativo para que el ocr funcione mejor</span></span>
-<span id="cb11-200"><a href="#cb11-200" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-negate</span> <span class="at">-fx</span> <span class="st">'.8*r+.8*g+0*b'</span> <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}</span>
-<span id="cb11-201"><a href="#cb11-201" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-202"><a href="#cb11-202" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-203"><a href="#cb11-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-204"><a href="#cb11-204" aria-hidden="true" tabindex="-1"></a><span class="ex">![subtitulo_negativo]</span><span class="er">(</span><span class="ex">00000990.jpg.subtitulo.tif</span><span class="kw">)</span></span>
-<span id="cb11-205"><a href="#cb11-205" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-206"><a href="#cb11-206" aria-hidden="true" tabindex="-1"></a><span class="co">### Reconocimiento óptico de caracteres</span></span>
+<span id="cb11-196"><a href="#cb11-196" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> eso usamos <span class="kw">`</span>mogrify<span class="kw">`</span> <span class="ex">que</span> forma parte de <span class="kw">`</span>imagemagick<span class="kw">`</span> <span class="ex">y</span> la parte de</span>
+<span id="cb11-197"><a href="#cb11-197" aria-hidden="true" tabindex="-1"></a><span class="ex">usar</span> <span class="kw">`</span>parallel<span class="kw">`</span> <span class="ex">es</span> para que se ejecute en paralelo usando 8 hilos de</span>
+<span id="cb11-198"><a href="#cb11-198" aria-hidden="true" tabindex="-1"></a><span class="ex">cpu.</span></span>
+<span id="cb11-199"><a href="#cb11-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-200"><a href="#cb11-200" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> bash</span>
+<span id="cb11-201"><a href="#cb11-201" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb11-202"><a href="#cb11-202" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$ANNO$suffix_jpg_dir</span> </span>
+<span id="cb11-203"><a href="#cb11-203" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb11-204"><a href="#cb11-204" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir a formato más pequño</span></span>
+<span id="cb11-205"><a href="#cb11-205" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 mogrify <span class="at">-resize</span> 642x480 {}</span>
+<span id="cb11-206"><a href="#cb11-206" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
 <span id="cb11-207"><a href="#cb11-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-208"><a href="#cb11-208" aria-hidden="true" tabindex="-1"></a><span class="ex">Nosotros</span> lo que queremos es tener el texto, no una imagen. Para eso utilizamos <span class="pp">[</span><span class="ss">`tesseract`</span><span class="pp">]</span><span class="er">(</span><span class="ex">https://es.wikipedia.org/wiki/Tesseract_OCR</span><span class="kw">)</span><span class="bu">.</span> Le pasamos cada una de las imágenes anteriores en formato tif y nos devolverá el texto que contienen. No siempre lo hará bien, pero el resultado es aceptable. También creamos directorio dónde vamos a mover todos los ficheros de texto creados y eliminamos los ficheros con menos de 10 bytes. </span>
+<span id="cb11-208"><a href="#cb11-208" aria-hidden="true" tabindex="-1"></a><span class="co">#### Seleccionar la zona dónde están los rótulos</span></span>
 <span id="cb11-209"><a href="#cb11-209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-210"><a href="#cb11-210" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
-<span id="cb11-211"><a href="#cb11-211" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar el ocr con idioma en español</span></span>
-<span id="cb11-212"><a href="#cb11-212" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 tesseract <span class="at">-l</span> spa {} {}</span>
-<span id="cb11-213"><a href="#cb11-213" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-214"><a href="#cb11-214" aria-hidden="true" tabindex="-1"></a><span class="co"># mover a directorio texto</span></span>
-<span id="cb11-215"><a href="#cb11-215" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-216"><a href="#cb11-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-217"><a href="#cb11-217" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="pp">*</span>.txt <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-218"><a href="#cb11-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-219"><a href="#cb11-219" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
-<span id="cb11-220"><a href="#cb11-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-221"><a href="#cb11-221" aria-hidden="true" tabindex="-1"></a><span class="co"># Borrar archivos de 10 bytes , subtítulos vacíos, bytes se indican con la letra c, cosas de linux</span></span>
-<span id="cb11-222"><a href="#cb11-222" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> <span class="at">-10c</span> <span class="at">-exec</span> rm <span class="at">-f</span> {} <span class="dt">\;</span></span>
+<span id="cb11-210"><a href="#cb11-210" aria-hidden="true" tabindex="-1"></a><span class="ex">Ahora</span> usamos otras funciones de <span class="kw">`</span>imagemagick<span class="kw">`</span> <span class="ex">que</span> son <span class="kw">`</span>convert<span class="kw">`</span> <span class="ex">y</span> <span class="kw">`</span>crop<span class="kw">`</span></span>
+<span id="cb11-211"><a href="#cb11-211" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> Lo que hacemos es convertir a formato tif y recortamos justo la zona</span>
+<span id="cb11-212"><a href="#cb11-212" aria-hidden="true" tabindex="-1"></a><span class="ex">dónde</span> están los rótulos.<span class="dt">\</span></span>
+<span id="cb11-213"><a href="#cb11-213" aria-hidden="true" tabindex="-1"></a>Así, para cada imagen jpg creamos un archivo con nombre</span>
+<span id="cb11-214"><a href="#cb11-214" aria-hidden="true" tabindex="-1"></a><span class="kw">`</span>nombre_imagen.jpg.subtitulo.tif<span class="kw">`</span></span>
+<span id="cb11-215"><a href="#cb11-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-216"><a href="#cb11-216" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> bash</span>
+<span id="cb11-217"><a href="#cb11-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-218"><a href="#cb11-218" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionar cacho dond están subtitulos</span></span>
+<span id="cb11-219"><a href="#cb11-219" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.jpg'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-crop</span> 460x50+90+285 +repage <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}.subtitulo.tif</span>
+<span id="cb11-220"><a href="#cb11-220" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-221"><a href="#cb11-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-222"><a href="#cb11-222" aria-hidden="true" tabindex="-1"></a><span class="co">#### Hacer el negativo de las imágenes</span></span>
 <span id="cb11-223"><a href="#cb11-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-224"><a href="#cb11-224" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-225"><a href="#cb11-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-226"><a href="#cb11-226" aria-hidden="true" tabindex="-1"></a><span class="ex">Y</span> podemos ver cómo ha convertido por ejemplo el rótulo asociado al fotograma 514. </span>
+<span id="cb11-224"><a href="#cb11-224" aria-hidden="true" tabindex="-1"></a><span class="ex">Para</span> ayudar al software de reconocimiento óptico de caractereres</span>
+<span id="cb11-225"><a href="#cb11-225" aria-hidden="true" tabindex="-1"></a><span class="ex">obtenemos</span> el negativo de cada tif. Para eso usamos de nuevo convert pero</span>
+<span id="cb11-226"><a href="#cb11-226" aria-hidden="true" tabindex="-1"></a><span class="ex">con</span> la opción <span class="kw">`</span>negate<span class="kw">`</span></span>
 <span id="cb11-227"><a href="#cb11-227" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-228"><a href="#cb11-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-228"><a href="#cb11-228" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> bash</span>
 <span id="cb11-229"><a href="#cb11-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-232"><a href="#cb11-232" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb11-233"><a href="#cb11-233" aria-hidden="true" tabindex="-1"></a><span class="ex">cmd</span> <span class="op">&lt;</span>-  <span class="st">"cat ~/proyecto_cachitos/2025_txt/00000990.jpg.subtitulo.tif.txt"</span></span>
-<span id="cb11-234"><a href="#cb11-234" aria-hidden="true" tabindex="-1"></a><span class="ex">system</span><span class="er">(</span><span class="ex">cmd,</span> intern = TRUE<span class="kw">)</span></span>
-<span id="cb11-235"><a href="#cb11-235" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-236"><a href="#cb11-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-237"><a href="#cb11-237" aria-hidden="true" tabindex="-1"></a><span class="ex">Como</span> vemos, la lógica de la creación de los ficheros de texto ha sido la de ir guardando el nombre original del fotograma e ir añadiendo extensiones, <span class="er">(</span><span class="ex">.jpg,</span> .subtitulo.tif, .txt<span class="kw">)</span><span class="bu">.</span> </span>
-<span id="cb11-238"><a href="#cb11-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-239"><a href="#cb11-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-240"><a href="#cb11-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-241"><a href="#cb11-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-242"><a href="#cb11-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-243"><a href="#cb11-243" aria-hidden="true" tabindex="-1"></a><span class="co">## Algún ejemplo</span></span>
-<span id="cb11-244"><a href="#cb11-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-230"><a href="#cb11-230" aria-hidden="true" tabindex="-1"></a><span class="co"># Poner en negativo para que el ocr funcione mejor</span></span>
+<span id="cb11-231"><a href="#cb11-231" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 convert {} <span class="at">-negate</span> <span class="at">-fx</span> <span class="st">'.8*r+.8*g+0*b'</span> <span class="at">-compress</span> none <span class="at">-depth</span> 8 {}</span>
+<span id="cb11-232"><a href="#cb11-232" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-233"><a href="#cb11-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-234"><a href="#cb11-234" aria-hidden="true" tabindex="-1"></a><span class="ex">![subtitulo_negativo]</span><span class="er">(</span><span class="ex">00000990.jpg.subtitulo.tif</span><span class="kw">)</span></span>
+<span id="cb11-235"><a href="#cb11-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-236"><a href="#cb11-236" aria-hidden="true" tabindex="-1"></a><span class="co">### Reconocimiento óptico de caracteres</span></span>
+<span id="cb11-237"><a href="#cb11-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-238"><a href="#cb11-238" aria-hidden="true" tabindex="-1"></a><span class="ex">Nosotros</span> lo que queremos es tener el texto, no una imagen. Para eso</span>
+<span id="cb11-239"><a href="#cb11-239" aria-hidden="true" tabindex="-1"></a><span class="ex">utilizamos</span> <span class="pp">[</span><span class="ss">`tesseract`</span><span class="pp">]</span><span class="er">(</span><span class="ex">https://es.wikipedia.org/wiki/Tesseract_OCR</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb11-240"><a href="#cb11-240" aria-hidden="true" tabindex="-1"></a><span class="ex">Le</span> pasamos cada una de las imágenes anteriores en formato tif y nos</span>
+<span id="cb11-241"><a href="#cb11-241" aria-hidden="true" tabindex="-1"></a><span class="ex">devolverá</span> el texto que contienen. No siempre lo hará bien, pero el</span>
+<span id="cb11-242"><a href="#cb11-242" aria-hidden="true" tabindex="-1"></a><span class="ex">resultado</span> es aceptable. También creamos directorio dónde vamos a mover</span>
+<span id="cb11-243"><a href="#cb11-243" aria-hidden="true" tabindex="-1"></a><span class="ex">todos</span> los ficheros de texto creados y eliminamos los ficheros con menos</span>
+<span id="cb11-244"><a href="#cb11-244" aria-hidden="true" tabindex="-1"></a><span class="ex">de</span> 10 bytes.</span>
 <span id="cb11-245"><a href="#cb11-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-248"><a href="#cb11-248" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb11-249"><a href="#cb11-249" aria-hidden="true" tabindex="-1"></a><span class="ex">library</span><span class="er">(</span><span class="ex">tidyverse</span><span class="kw">)</span></span>
-<span id="cb11-250"><a href="#cb11-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-251"><a href="#cb11-251" aria-hidden="true" tabindex="-1"></a><span class="ex">root_directory</span> = <span class="st">"~/proyecto_cachitos/"</span></span>
-<span id="cb11-252"><a href="#cb11-252" aria-hidden="true" tabindex="-1"></a><span class="ex">anno</span> <span class="op">&lt;</span>- <span class="st">"2025"</span></span>
-<span id="cb11-253"><a href="#cb11-253" aria-hidden="true" tabindex="-1"></a><span class="ex">library</span><span class="er">(</span><span class="ex">magick</span><span class="kw">)</span></span>
-<span id="cb11-254"><a href="#cb11-254" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">directorio_imagenes</span> <span class="op">&lt;</span>- str_glue<span class="er">(</span><span class="st">"{root_directory}video/{anno}_jpg/"</span><span class="kw">))</span></span>
-<span id="cb11-255"><a href="#cb11-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-256"><a href="#cb11-256" aria-hidden="true" tabindex="-1"></a><span class="ex">image_read</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"{directorio_imagenes}00000130.jpg"</span><span class="kw">))</span></span>
-<span id="cb11-257"><a href="#cb11-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-258"><a href="#cb11-258" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-259"><a href="#cb11-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-246"><a href="#cb11-246" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span> bash</span>
+<span id="cb11-247"><a href="#cb11-247" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar el ocr con idioma en español</span></span>
+<span id="cb11-248"><a href="#cb11-248" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">'*.tif'</span> <span class="kw">|</span>  <span class="ex">parallel</span> <span class="at">-j</span> 8 tesseract <span class="at">-l</span> spa {} {}</span>
+<span id="cb11-249"><a href="#cb11-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-250"><a href="#cb11-250" aria-hidden="true" tabindex="-1"></a><span class="co"># mover a directorio texto</span></span>
+<span id="cb11-251"><a href="#cb11-251" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
+<span id="cb11-252"><a href="#cb11-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-253"><a href="#cb11-253" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="pp">*</span>.txt <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
+<span id="cb11-254"><a href="#cb11-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-255"><a href="#cb11-255" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$root_directory</span>/<span class="va">$ANNO$suffix_txt_dir</span></span>
+<span id="cb11-256"><a href="#cb11-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-257"><a href="#cb11-257" aria-hidden="true" tabindex="-1"></a><span class="co"># Borrar archivos de 10 bytes , subtítulos vacíos, bytes se indican con la letra c, cosas de linux</span></span>
+<span id="cb11-258"><a href="#cb11-258" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> <span class="at">-10c</span> <span class="at">-exec</span> rm <span class="at">-f</span> {} <span class="dt">\;</span></span>
+<span id="cb11-259"><a href="#cb11-259" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
 <span id="cb11-260"><a href="#cb11-260" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-261"><a href="#cb11-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-264"><a href="#cb11-264" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb11-265"><a href="#cb11-265" aria-hidden="true" tabindex="-1"></a><span class="ex">image_read</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"{directorio_imagenes}00000130.jpg.subtitulo.tif"</span><span class="kw">))</span></span>
-<span id="cb11-266"><a href="#cb11-266" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-267"><a href="#cb11-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-268"><a href="#cb11-268" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-271"><a href="#cb11-271" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb11-272"><a href="#cb11-272" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">directorio_texto</span> <span class="op">&lt;</span>- str_glue<span class="er">(</span><span class="st">"{root_directory}{anno}_txt/"</span><span class="kw">))</span></span>
-<span id="cb11-273"><a href="#cb11-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-274"><a href="#cb11-274" aria-hidden="true" tabindex="-1"></a><span class="ex">system</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"cat {directorio_texto}00000130.jpg.subtitulo.tif.txt"</span><span class="kw">)</span><span class="ex">,</span> intern = TRUE<span class="kw">)</span></span>
-<span id="cb11-275"><a href="#cb11-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-276"><a href="#cb11-276" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
-<span id="cb11-277"><a href="#cb11-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-278"><a href="#cb11-278" aria-hidden="true" tabindex="-1"></a><span class="ex">Y</span> en los siguientes post veremos el análisis de los comentarios. Podremos  contestar a preguntas si se menciona más a Sánchez o a Feijoó, y que cada uno al leer los comentarios decida si el programa tiene sesgo o no. </span>
+<span id="cb11-261"><a href="#cb11-261" aria-hidden="true" tabindex="-1"></a><span class="ex">Y</span> podemos ver cómo ha convertido por ejemplo el rótulo asociado al</span>
+<span id="cb11-262"><a href="#cb11-262" aria-hidden="true" tabindex="-1"></a><span class="ex">fotograma</span> 514.</span>
+<span id="cb11-263"><a href="#cb11-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-266"><a href="#cb11-266" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb11-267"><a href="#cb11-267" aria-hidden="true" tabindex="-1"></a><span class="ex">cmd</span> <span class="op">&lt;</span>-  <span class="st">"cat ~/proyecto_cachitos/2025_txt/00000990.jpg.subtitulo.tif.txt"</span></span>
+<span id="cb11-268"><a href="#cb11-268" aria-hidden="true" tabindex="-1"></a><span class="ex">system</span><span class="er">(</span><span class="ex">cmd,</span> intern = TRUE<span class="kw">)</span></span>
+<span id="cb11-269"><a href="#cb11-269" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-270"><a href="#cb11-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-271"><a href="#cb11-271" aria-hidden="true" tabindex="-1"></a><span class="ex">Como</span> vemos, la lógica de la creación de los ficheros de texto ha sido la</span>
+<span id="cb11-272"><a href="#cb11-272" aria-hidden="true" tabindex="-1"></a><span class="ex">de</span> ir guardando el nombre original del fotograma e ir añadiendo</span>
+<span id="cb11-273"><a href="#cb11-273" aria-hidden="true" tabindex="-1"></a><span class="ex">extensiones,</span> <span class="er">(</span><span class="ex">.jpg,</span> .subtitulo.tif, .txt<span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb11-274"><a href="#cb11-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-275"><a href="#cb11-275" aria-hidden="true" tabindex="-1"></a><span class="co">## Algún ejemplo</span></span>
+<span id="cb11-276"><a href="#cb11-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-279"><a href="#cb11-279" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb11-280"><a href="#cb11-280" aria-hidden="true" tabindex="-1"></a><span class="ex">library</span><span class="er">(</span><span class="ex">tidyverse</span><span class="kw">)</span></span>
+<span id="cb11-281"><a href="#cb11-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-282"><a href="#cb11-282" aria-hidden="true" tabindex="-1"></a><span class="ex">root_directory</span> = <span class="st">"~/proyecto_cachitos/"</span></span>
+<span id="cb11-283"><a href="#cb11-283" aria-hidden="true" tabindex="-1"></a><span class="ex">anno</span> <span class="op">&lt;</span>- <span class="st">"2025"</span></span>
+<span id="cb11-284"><a href="#cb11-284" aria-hidden="true" tabindex="-1"></a><span class="ex">library</span><span class="er">(</span><span class="ex">magick</span><span class="kw">)</span></span>
+<span id="cb11-285"><a href="#cb11-285" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">directorio_imagenes</span> <span class="op">&lt;</span>- str_glue<span class="er">(</span><span class="st">"{root_directory}video/{anno}_jpg/"</span><span class="kw">))</span></span>
+<span id="cb11-286"><a href="#cb11-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-287"><a href="#cb11-287" aria-hidden="true" tabindex="-1"></a><span class="ex">image_read</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"{directorio_imagenes}00000130.jpg"</span><span class="kw">))</span></span>
+<span id="cb11-288"><a href="#cb11-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-289"><a href="#cb11-289" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-290"><a href="#cb11-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-293"><a href="#cb11-293" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb11-294"><a href="#cb11-294" aria-hidden="true" tabindex="-1"></a><span class="ex">image_read</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"{directorio_imagenes}00000130.jpg.subtitulo.tif"</span><span class="kw">))</span></span>
+<span id="cb11-295"><a href="#cb11-295" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-296"><a href="#cb11-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-299"><a href="#cb11-299" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb11-300"><a href="#cb11-300" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">directorio_texto</span> <span class="op">&lt;</span>- str_glue<span class="er">(</span><span class="st">"{root_directory}{anno}_txt/"</span><span class="kw">))</span></span>
+<span id="cb11-301"><a href="#cb11-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-302"><a href="#cb11-302" aria-hidden="true" tabindex="-1"></a><span class="ex">system</span><span class="er">(</span><span class="ex">str_glue</span><span class="er">(</span><span class="st">"cat {directorio_texto}00000130.jpg.subtitulo.tif.txt"</span><span class="kw">)</span><span class="ex">,</span> intern = TRUE<span class="kw">)</span></span>
+<span id="cb11-303"><a href="#cb11-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-304"><a href="#cb11-304" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span></span>
+<span id="cb11-305"><a href="#cb11-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-306"><a href="#cb11-306" aria-hidden="true" tabindex="-1"></a><span class="ex">Y</span> en los siguientes post veremos el análisis de los comentarios.</span>
+<span id="cb11-307"><a href="#cb11-307" aria-hidden="true" tabindex="-1"></a><span class="ex">Podremos</span> contestar a preguntas si se menciona más a Sánchez o a Feijoó,</span>
+<span id="cb11-308"><a href="#cb11-308" aria-hidden="true" tabindex="-1"></a><span class="ex">y</span> que cada uno al leer los comentarios decida si el programa tiene sesgo</span>
+<span id="cb11-309"><a href="#cb11-309" aria-hidden="true" tabindex="-1"></a><span class="ex">o</span> no.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
