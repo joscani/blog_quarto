@@ -305,9 +305,22 @@ indices <- sort(sample(1:length(sanchez_fotogramas_img), 4))
 lista_fotogram_polemicos <- lapply(sanchez_fotogramas_img[indices], grid::rasterGrob)
 gridExtra::grid.arrange(grobs=lista_fotogram_polemicos )
 ```
-Podéis hacer el ejercicio buscando a Errejón o a Feijóo o al juez Peinado y ya que cada cual saque sus conclusiones
+Podéis hacer el ejercicio buscando a Mazón o a Feijóo y ya que cada cual saque sus conclusiones.
 
 
+Con Mazón
+
+```{r}
+rot_mazon <- subtitulos_proces |> 
+    filter(
+        texto |> tolower() |>
+        stringr::str_detect("\\bmazón\\b|\\bmazon\\b"))
+
+
+
+rot_mazon$texto
+
+```
 
 
 Con Feijóo
