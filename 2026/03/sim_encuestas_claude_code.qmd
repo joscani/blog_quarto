@@ -1,0 +1,145 @@
+---
+title: Construyendo un simulador de encuestas con Claude Code
+date: '2026-03-09'
+categories: 
+  - R
+  - shiny
+  - estadística
+  - IA
+  - "2026"
+description: 'Cómo usé Claude Code para construir un simulador de encuestas electorales en R desde cero'
+execute: 
+  message: false
+  warning: false
+  echo: true
+  output: true
+format: 
+  html: 
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Show the code"
+    code-tools: true 
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/0vFOzaXqZHahrZp6enQwQb?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+
+## La idea
+
+Llevo tiempo queriendo hacer una herramienta educativa para enseñar conceptos de muestreo. Una de esas cosas que siempre tienes en la cabeza pero que nunca te pones a hacer porque "es mucho curro". El caso es que quería algo que mostrara de forma interactiva cómo el tamaño muestral, el diseño de muestreo y los sesgos afectan a la precisión de una encuesta electoral. Algo que un alumno pudiera tocar y ver qué pasa cuando cambias las cosas.
+
+La idea en sí no es complicada: generar una población sintética basada en datos reales de las elecciones de 2023, y luego simular encuestas sobre esa población con Monte Carlo. Pero la implementación sí que tiene bastante trabajo: crear la población con estratificación por provincia, edad y sexo, implementar varios tipos de muestreo, meter sesgos realistas, hacer un dashboard en Shiny... En fin, un proyecto que en condiciones normales me habría llevado unos cuantos fines de semana.
+
+Y aquí es donde entra [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+
+## Qué es Claude Code
+
+Para el que no lo conozca, Claude Code es un agente de programación que funciona en terminal. Le describes lo que quieres y él va escribiendo el código, ejecutándolo, corrigiendo errores y haciendo commits. Es como tener un programador junior bastante competente al que le puedes ir dando instrucciones en lenguaje natural.
+
+No es magia, tiene sus limitaciones y hay que saber dirigirle, pero para cierto tipo de proyectos es francamente útil.
+
+
+## El proceso
+
+### Planificación
+
+Lo primero fue explicarle a Claude Code qué quería: un simulador de encuestas electorales basado en datos de las generales de 2023, con población sintética, varios diseños de muestreo, sesgos y una app Shiny. Le di la idea general y él generó un plan de implementación bastante detallado que se guardó en `docs/plans/`.
+
+El plan dividía el proyecto en unas 20 tareas, cada una con pasos concretos. Desde la estructura del proyecto y los datos, pasando por la creación de la población sintética, las funciones de simulación, hasta el dashboard y el deployment. Cada tarea incluía el código a escribir, los tests a ejecutar y el commit a hacer. 
+
+Esto es algo que me gustó: antes de escribir ni una línea de código, tenía un plan completo. Algo que los humanos muchas veces no hacemos (yo el primero).
+
+### La población sintética
+
+El corazón del proyecto es una población de **1.5 millones de individuos sintéticos** que representan los ~37 millones de electores españoles. Cada individuo tiene provincia, grupo de edad, sexo y voto asignado según los resultados reales de 2023, modulados por patrones demográficos conocidos (los jóvenes votan diferente a los mayores, etc.).
+
+La estructura tiene 624 combinaciones: 52 provincias × 6 grupos de edad × 2 sexos. Con sus partidos regionales que solo tienen presencia en determinadas provincias (ERC y Junts en Cataluña, PNV y Bildu en País Vasco, BNG en Galicia).
+
+```r
+# Así se ve la estructura básica
+marco_poblacion <- dist_provincial |>
+  crossing(dist_demografica) |>
+  mutate(
+    pct_total = pct_poblacion / 100 * porcentaje / 100,
+    n_individuos = round(pct_total * 1500000)
+  )
+```
+
+### Los diseños de muestreo
+
+Se implementaron 4 tipos de muestreo:
+
+- **Aleatorio simple**: el clásico, coges n personas al azar
+- **Estratificado por provincia**: respetas la distribución territorial
+- **Estratificado por edad/sexo**: respetas la estructura demográfica
+- **Multinivel**: combinas estratificación provincial y demográfica
+
+La gracia del simulador es que puedes comparar cómo se comportan estos diseños con el mismo tamaño muestral. Spoiler: el estratificado gana, como era de esperar. Pero verlo con tus propios ojos y con datos concretos es mucho más convincente que una demostración teórica.
+
+### Los sesgos
+
+Aquí es donde la cosa se pone interesante desde el punto de vista pedagógico. Se modelaron tres sesgos realistas:
+
+- **No-respuesta por edad**: los jóvenes responden un 40% mientras que los mayores llegan al 85%. Esto sesga la muestra hacia perfiles más mayores y, por tanto, hacia ciertos partidos.
+- **Deseabilidad social**: un ~15% de votantes de Vox no declaran su voto real. El famoso "voto oculto".
+- **Marco muestral**: si haces la encuesta por teléfono fijo, infrarepresentas a los jóvenes (solo un 15% de los 18-24 tiene fijo).
+
+Y luego se puede aplicar **ponderación post-estratificación** para intentar corregir estos sesgos. Que a veces funciona y a veces no tanto.
+
+
+### El dashboard Shiny
+
+La app permite configurar todo: tamaño muestral, número de réplicas, tipo de muestreo, qué sesgos activar, si ponderar o no. Y luego te muestra resultados agregados, distribuciones por partido, y permite comparar escenarios.
+
+Se puede probar online: [https://canadasreche.shinyapps.io/sim-encuestas-electorales/](https://canadasreche.shinyapps.io/sim-encuestas-electorales/)
+
+## Mi experiencia con Claude Code
+
+### Lo bueno
+
+**Velocidad**. El proyecto tiene unos 2000 líneas de R entre los 4 scripts principales. Hacerlo desde cero me habría llevado varios días. Con Claude Code, la estructura básica estaba en unas pocas horas de una tarde.
+
+**Estructura**. El código que genera es razonablemente limpio y bien organizado. Divide las cosas en funciones con documentación, hace validaciones, pone mensajes informativos. Es más disciplinado que yo escribiendo código un viernes por la tarde.
+
+**Iteración rápida**. Cuando algo no funcionaba o quería cambiar algo, simplemente se lo decía y lo arreglaba. "Oye, el sesgo de deseabilidad social no está redistribuyendo bien los NS/NC" y lo corregía.
+
+**Los planes**. El hecho de que primero genere un plan detallado antes de ponerse a escribir código me parece muy acertado. Te permite revisar el enfoque antes de que se ponga a implementar. Si ves algo raro, lo corriges en la fase de diseño, no cuando ya tienes 500 líneas escritas.
+
+### Lo menos bueno
+
+**Hay que saber qué pedir**. Si le dices "haz un simulador de encuestas" a secas, el resultado va a ser mediocre. Hay que darle contexto: qué datos usar, qué diseños de muestreo, qué sesgos modelar, cómo calcular las métricas. El conocimiento del dominio sigue siendo tuyo.
+
+**A veces se pasa de frenada**. Hay funciones que son más complejas de lo necesario. El cálculo de métricas, por ejemplo, tenía una primera versión con unos joins anidados dentro de un mutate que eran innecesariamente rebuscados. Tuve que pedirle que simplificara.
+
+**El Shiny**. El dashboard funciona, pero usa `shinydashboard` que no es lo que yo habría elegido (prefiero `bslib`). Además, 830 líneas en un solo archivo para una app Shiny es bastante. Con más tiempo lo habría modularizado con Shiny modules, pero para un prototipo funcional vale.
+
+**No sustituye el criterio**. Los multiplicadores demográficos para el voto (que los jóvenes votan más a Sumar y menos a PP, por ejemplo) son simplificaciones razonables pero no rigurosas. Claude Code los puso basándose en "patrones conocidos", pero si quieres algo serio tienes que ir a las encuestas postelectorales del CIS y validar. La IA te monta la estructura, pero el rigor lo pones tú.
+
+## Reflexión
+
+Hay gente que dice que la IA va a sustituir a los programadores. Yo no lo veo así todavía, al menos no para este tipo de trabajo. Lo que sí hace es cambiar radicalmente la velocidad a la que puedes prototipar. Un proyecto que en mi cabeza iba a ser "para cuando tenga tiempo" pasó a estar desplegado en shinyapps.io en una tarde.
+
+Pero el valor añadido sigue estando en saber qué quieres construir, por qué, y poder evaluar si lo que te devuelve tiene sentido. Si no sabes lo que es un muestreo estratificado o por qué la no-respuesta sesga tus resultados, da igual que tengas la herramienta más potente del mundo. Volvemos al principio: basura entra, basura sale.
+
+Al final, la combinación de conocimiento de dominio + herramientas de IA es bastante potente. Ni el uno sin el otro.
+
+
+El repo está en [GitHub](https://github.com/joscani/sim_encuestas) y la app se puede probar en [shinyapps.io](https://canadasreche.shinyapps.io/sim-encuestas-electorales/).
+
