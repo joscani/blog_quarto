@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.29">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>Julia – Muestrear no es pecado</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -38,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ccd81253fefb92e9cd3f9eb5b5d87b54.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6033a600180109c3731f6a886c29932c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5685cd926c25366c96d9f1407e584118.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-6033a600180109c3731f6a886c29932c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -104,7 +107,7 @@ ul.task-list li input[type="checkbox"] {
   </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -117,7 +120,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -289,6 +292,7 @@ window.Quarto = {
       toggleColorMode(toAlternate);
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
     };
     // Switch to dark mode if need be
     if (hasAlternateSentinel()) {
@@ -411,7 +415,7 @@ window.Quarto = {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="SnVsaWElMkNwcm9kdWNjaW9uJTJDbGludXglMkMyMDIy" data-listing-date-sort="1666735200000" data-listing-file-modified-sort="1748015130595" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="758">
+<div class="quarto-post image-right" data-index="0" data-categories="SnVsaWElMkNwcm9kdWNjaW9uJTJDbGludXglMkMyMDIy" data-listing-date-sort="1666735200000" data-listing-file-modified-sort="1767612342610" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="758">
 <div class="thumbnail"><a href="./2022/10/26/sigo-trasteando-con-julia/index.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -430,7 +434,7 @@ Oct 26, 2022
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="SnVsaWElMkNhbiVDMyVBMWxpc2lzJTIwYmF5ZXNpYW5vJTJDMjAyMg==" data-listing-date-sort="1656626400000" data-listing-file-modified-sort="1748015130589" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="17" data-listing-word-count-sort="3222">
+<div class="quarto-post image-right" data-index="1" data-categories="SnVsaWElMkNhbiVDMyVBMWxpc2lzJTIwYmF5ZXNpYW5vJTJDMjAyMg==" data-listing-date-sort="1656626400000" data-listing-file-modified-sort="1767612342603" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="17" data-listing-word-count-sort="3222">
 <div class="thumbnail"><a href="./2022/07/01/palabras-para-julia-parte-4-n/index.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -449,10 +453,10 @@ Jul 1, 2022
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="SnVsaWElMkNSJTJDU3RhbiUyQ2FuJUMzJUExbGlzaXMlMjBiYXllc2lhbm8lMkMyMDIy" data-listing-date-sort="1647730800000" data-listing-file-modified-sort="1748015130587" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1972">
+<div class="quarto-post image-right" data-index="2" data-categories="SnVsaWElMkNSJTJDU3RhbiUyQ2FuJUMzJUExbGlzaXMlMjBiYXllc2lhbm8lMkMyMDIy" data-listing-date-sort="1647730800000" data-listing-file-modified-sort="1767612342600" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1972">
 <div class="thumbnail"><a href="./2022/03/20/palabras-para-julia-parte-3-n/index.html" class="no-external">
 
-<p class="card-img-top"><img src="2022/03/20/palabras-para-julia-parte-3-n/index_files/figure-html/unnamed-chunk-3-1.png"  class="thumbnail-image card-img"/></p>
+<p class="card-img-top"><img loading='lazy' src="2022/03/20/palabras-para-julia-parte-3-n/index_files/figure-html/unnamed-chunk-3-1.png"  class="thumbnail-image card-img"/></p>
 
 </a></div>
 <div class="body">
@@ -468,7 +472,7 @@ Mar 20, 2022
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="SnVsaWElMkNjaWVuY2lhJTIwZGUlMjBkYXRvcyUyQzIwMjE=" data-listing-date-sort="1629064800000" data-listing-file-modified-sort="1748015130570" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2397">
+<div class="quarto-post image-right" data-index="3" data-categories="SnVsaWElMkNjaWVuY2lhJTIwZGUlMjBkYXRvcyUyQzIwMjE=" data-listing-date-sort="1629064800000" data-listing-file-modified-sort="1767612342583" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2397">
 <div class="thumbnail"><a href="./2021/08/16/palabras-para-julia-parte-2-n/index.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -487,10 +491,10 @@ Aug 16, 2021
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="SnVsaWElMkNjaWVuY2lhJTIwZGUlMjBkYXRvcyUyQ3NvZnR3YXJlJTJDMjAyMQ==" data-listing-date-sort="1628287200000" data-listing-file-modified-sort="1748015130569" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1460">
+<div class="quarto-post image-right" data-index="4" data-categories="SnVsaWElMkNjaWVuY2lhJTIwZGUlMjBkYXRvcyUyQ3NvZnR3YXJlJTJDMjAyMQ==" data-listing-date-sort="1628287200000" data-listing-file-modified-sort="1767612342583" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1460">
 <div class="thumbnail"><a href="./2021/08/07/palabras-para-julia-parte-1-n/index.html" class="no-external">
 
-<p class="card-img-top"><img src="2021/08/07/palabras-para-julia-parte-1-n/plot1.png"  class="thumbnail-image card-img"/></p>
+<p class="card-img-top"><img loading='lazy' src="2021/08/07/palabras-para-julia-parte-1-n/plot1.png"  class="thumbnail-image card-img"/></p>
 
 </a></div>
 <div class="body">
@@ -573,13 +577,14 @@ Aug 7, 2021
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
