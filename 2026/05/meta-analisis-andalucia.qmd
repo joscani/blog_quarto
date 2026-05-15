@@ -1,6 +1,6 @@
 ---
 title: "Meta-análisis. Agregando encuestas III. Elecciones andaluzas 2026"
-date: '2026-05-10'
+date: '2026-05-12'
 categories:
   - "2026"
   - muestreo
@@ -30,11 +30,13 @@ knitr:
 
 ## Nota previa del "autor" humano
 
-Este post se ha generado solito usando Claude code. Simplemente le dije que mirara como lo hice en las elecciones de 2023 (generales) y 2024(europeas) , que leyera mis posts, y que buscara datos en la web de las encuestas. Me ha creado el csv (que ni he revisado) y que hiciera la estimación siguiendo mi metodología. 
-
-El próximo sábado 16 de mayo de 2026 lo revisaré por si hay alguna cagada. O revisadlo vosotros y me decís que está mal. 
+Este post se ha generado solito usando Claude code. Simplemente le dije que mirara como lo hice en las elecciones de 2023 (generales) y 2024(europeas) , que leyera mis posts, y que buscara datos en la web de las encuestas. Me ha creado el csv (que ni he revisado) y que hiciera la estimación siguiendo mi metodología.
 
 Tiempo total que me ha llevado hacer el post, menos de 1 hora.
+
+::: callout-note
+**Actualización 12 mayo 2026**: Se han añadido 10 encuestas nuevas publicadas entre el 6 y el 11 de mayo (Data10, SocioMétrica, Target Point, Sigma Dos, EM-Analytics, Celeste-Tel, IMOP, NC Report, GAD3 y 40dB/Prisa). El modelo se ha re-entrenado con las 23 encuestas disponibles a 5 días de las elecciones.
+:::
 
 ## Introducción
 
@@ -131,6 +133,17 @@ df_wider$cell_counts <- with(
 datatable(df_wider |> select(empresa, time, n, cell_counts))
 ```
 
+::: callout-note
+**Nota sobre `n`**: el `n` original de cada encuesta se sustituye por la suma
+de los conteos imputados (`votos = round(n × estim / 100)`). El redondeo
+introduce una discrepancia de ±1-2 votos respecto al tamaño muestral real, lo
+que puede alterar ligeramente el denominador en `trials(n)`. Para las encuestas
+con `n` grande (> 1 000) el efecto es despreciable; en las más pequeñas puede
+suponer una diferencia de hasta un 0.2 % en las estimaciones. En un análisis
+de producción convendría conservar el `n` original y reescalar los conteos.
+:::
+
+
 ## Modelo meta-análisis
 
 ```{r}
@@ -147,6 +160,81 @@ formula <- brmsformula(
 )
 
 (priors <- get_prior(formula, df_wider, family = multinomial()))
+```
+
+### Prior predictive check
+
+Antes de ajustar con datos, comprobamos que los priors generan proporciones de
+voto plausibles. Los priors por defecto de brms para efectos fijos en modelos
+multinomiales son impropers (flat), lo que impide muestrear solo del prior.
+Para el check usamos priors propios pero débilmente informativos en la escala
+log-odds: `Normal(0, 2)` para interceptos y pendientes, `Exponential(1)` para
+las desviaciones de los efectos aleatorios.
+
+```{r}
+#| cache: false
+# Los priors por defecto para b e Intercept en multinomial son flat (improper),
+# lo que impide muestrear solo del prior. Sustituimos los flat por propios:
+#   b / Intercept → Normal(0, 2) en escala log-odds (muy permisivo: cubre 0-100% de voto)
+#   sd            → Exponential(1) (restricción a positivos, cola moderada)
+priors_ppc <- priors |>
+  dplyr::mutate(prior = dplyr::case_when(
+    prior != ""        ~ prior,
+    class == "b"       ~ "normal(0, 2)",
+    class == "Intercept" ~ "normal(0, 2)",
+    class == "sd"      ~ "exponential(1)",
+    class == "cor"     ~ "lkj(1)",
+    TRUE               ~ prior
+  ))
+
+model_prior <- brm(
+  formula,
+  df_wider,
+  multinomial(),
+  prior          = priors_ppc,
+  sample_prior   = "only",
+  iter           = 2000,
+  warmup         = 500,
+  cores          = 4,
+  chains         = 2,
+  seed           = 47,
+  file           = here::here("2026/05/mod_meta_andalucia_prior"),
+  backend        = "cmdstanr",
+  refresh        = 0
+)
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+
+pred_prior <- df_wider |>
+  add_epred_draws(model_prior, ndraws = 100) |>
+  rename(partido = .category, pred = .epred) |>
+  ungroup() |>
+  mutate(pred = pred / n) |>
+  select(empresa, time, partido, pred, .draw)
+
+obs_props_ppc <- df_wider |>
+  mutate(across(c(pp, psoe, vox, por_andalucia, adelante, resto),
+                \(x) x / n)) |>
+  select(empresa, time, pp, psoe, vox, por_andalucia, adelante, resto) |>
+  pivot_longer(pp:resto, names_to = "partido", values_to = "obs")
+
+pred_prior |>
+  left_join(obs_props_ppc, by = c("empresa", "time", "partido")) |>
+  ggplot(aes(x = time, color = partido)) +
+  stat_lineribbon(aes(y = pred), .width = c(0.50, 0.90), alpha = 0.25) +
+  geom_point(aes(y = obs), size = 1.5) +
+  facet_wrap(~partido, scales = "free_y") +
+  scale_color_manual(values = colores, guide = "none") +
+  scale_fill_grey(start = 0.6, end = 0.85) +
+  labs(
+    title    = "Prior predictive check — multinomial",
+    subtitle = "Bandas: IC 50 % y 90 % prior · Puntos: proporción observada",
+    x = "Días hasta las elecciones", y = "Proporción"
+  ) +
+  theme_minimal()
 ```
 
 ```{r}
@@ -167,6 +255,80 @@ model_andalucia <- brm(
 )
 
 summary(model_andalucia)
+```
+
+## Diagnósticos
+
+### Priors utilizados
+
+`brms` asigna priors por defecto basados en la escala de los datos. Los
+mostramos para que quede constancia de qué asumió el modelo:
+
+```{r}
+prior_summary(model_andalucia)
+```
+
+### Convergencia
+
+Revisamos Rhat, ESS y transiciones divergentes. Rhat debe estar cerca de 1 (< 1.01)
+y el ESS por encima de 400:
+
+```{r}
+s <- summary(model_andalucia)
+
+# Tabla compacta con los parámetros de población (fixed effects)
+as.data.frame(s$fixed) |>
+  tibble::rownames_to_column("param") |>
+  select(param, Estimate, Est.Error, `l-95% CI`, `u-95% CI`, Rhat, Bulk_ESS, Tail_ESS) |>
+  mutate(across(where(is.numeric), \(x) round(x, 3)))
+```
+
+```{r}
+# Transiciones divergentes: deben ser 0
+div <- nuts_params(model_andalucia) |>
+  dplyr::filter(Parameter == "divergent__") |>
+  dplyr::summarise(n_divergent = sum(Value))
+
+div
+```
+
+### Posterior predictive check
+
+`pp_check()` no está implementado para la familia multinomial, así que lo
+hacemos a mano: comparamos las proporciones predichas por el modelo (IC 50 % y
+90 %) con las proporciones observadas en cada encuesta:
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+
+obs_props <- df_wider |>
+  mutate(across(c(pp, psoe, vox, por_andalucia, adelante, resto),
+                \(x) x / n)) |>
+  select(empresa, time, pp, psoe, vox, por_andalucia, adelante, resto) |>
+  pivot_longer(pp:resto, names_to = "partido", values_to = "obs")
+
+pred_props <- df_wider |>
+  add_epred_draws(model_andalucia, ndraws = 200) |>
+  rename(partido = .category, pred = .epred) |>
+  ungroup() |>
+  mutate(pred = pred / n) |>
+  select(empresa, time, partido, pred, .draw)
+
+pred_props |>
+  left_join(obs_props, by = c("empresa", "time", "partido")) |>
+  ggplot(aes(x = time, color = partido)) +
+  stat_lineribbon(aes(y = pred), .width = c(0.50, 0.90), alpha = 0.25) +
+  geom_point(aes(y = obs), size = 1.5) +
+  facet_wrap(~partido, scales = "free_y") +
+  scale_color_manual(values = colores, guide = "none") +
+  scale_fill_grey(start = 0.6, end = 0.85) +
+  labs(
+    title    = "Posterior predictive check — multinomial",
+    subtitle = "Bandas: IC 50 % y 90 % del posterior · Puntos: proporción observada",
+    x = "Días hasta las elecciones", y = "Proporción"
+  ) +
+  theme_minimal()
 ```
 
 ## Estimación para el día de las elecciones
@@ -233,6 +395,6 @@ estimaciones |>
 
 ## Coda
 
-Datos de 13 encuestas (fuente: Wikipedia EN, tabla de sondeos). La metodología es idéntica a los posts anteriores:
+Datos de 23 encuestas (fuente: Wikipedia EN, tabla de sondeos). La metodología es idéntica a los posts anteriores:
 modelo multinomial bayesiano con efectos aleatorios por empresa y tendencia temporal. Actualización post-electoral
 pendiente una vez se conozcan los resultados del 17-M.
