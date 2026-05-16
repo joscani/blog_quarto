@@ -487,7 +487,11 @@ sim_escanos_draw <- function(k, draw_vec) {
     prov_vec        <- dirichlet_mats[[i]][k, ]
     ratio           <- prov_vec / (regional_2022[partidos] / 100)  # desviación provincial vs media regional
     raw             <- draw_vec * ratio
-    norm            <- raw / sum(raw)  # normalizamos para que sumen 1 dentro de la provincia
+    norm            <- raw / sum(raw)
+    # "resto" agrupa varios partidos (SALF, etc.) que se reparten esos votos;
+    # ninguno los obtendría individualmente, así que no compiten por escaños
+    norm["resto"]   <- 0
+    norm            <- norm / sum(norm)
     escanos_totales <- escanos_totales + dhondt(norm, ref_2022$escanos[i])
   }
   escanos_totales
