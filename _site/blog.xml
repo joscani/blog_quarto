@@ -1588,7 +1588,7 @@ font-style: inherit;">11</span>)</span></code></pre></div></div>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Show the code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">dhondt <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1">dhondt_old <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
 background-color: null;
@@ -1634,7 +1634,178 @@ background-color: null;
 font-style: inherit;">1</span></span>
 <span id="cb11-6">  }</span>
 <span id="cb11-7">  result</span>
-<span id="cb11-8">}</span></code></pre></div></div>
+<span id="cb11-8">}</span>
+<span id="cb11-9"></span>
+<span id="cb11-10">dhondt <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(votos, escanos, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">threshold =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.03</span>) {</span>
+<span id="cb11-11">  </span>
+<span id="cb11-12">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># asegurar nombres</span></span>
+<span id="cb11-13">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">is.null</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(votos))) {</span>
+<span id="cb11-14">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stop</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"El vector 'votos' debe tener nombres de partidos."</span>)</span>
+<span id="cb11-15">  }</span>
+<span id="cb11-16">  </span>
+<span id="cb11-17">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># quitar negativos por seguridad</span></span>
+<span id="cb11-18">  votos <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">pmax</span>(votos, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb11-19">  </span>
+<span id="cb11-20">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># total de votos válidos considerados</span></span>
+<span id="cb11-21">  total_validos <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sum</span>(votos)</span>
+<span id="cb11-22">  </span>
+<span id="cb11-23">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (total_validos <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb11-24">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">return</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">setNames</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rep</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>L, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(votos)), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(votos)))</span>
+<span id="cb11-25">  }</span>
+<span id="cb11-26">  </span>
+<span id="cb11-27">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># aplicar barrera del 3%</span></span>
+<span id="cb11-28">  pasan_umbral <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> votos <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> total_validos <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> threshold</span>
+<span id="cb11-29">  votos_filtrados <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> votos</span>
+<span id="cb11-30">  votos_filtrados[<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span>pasan_umbral] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb11-31">  </span>
+<span id="cb11-32">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># si ningún partido pasa, devolver ceros</span></span>
+<span id="cb11-33">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sum</span>(votos_filtrados) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb11-34">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">return</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">setNames</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rep</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>L, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(votos)), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(votos)))</span>
+<span id="cb11-35">  }</span>
+<span id="cb11-36">  </span>
+<span id="cb11-37">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># reparto D'Hondt</span></span>
+<span id="cb11-38">  resultado <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">setNames</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">integer</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(votos_filtrados)), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(votos_filtrados))</span>
+<span id="cb11-39">  </span>
+<span id="cb11-40">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> (i <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">seq_len</span>(escanos)) {</span>
+<span id="cb11-41">    cocientes <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> votos_filtrados <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> (resultado <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb11-42">    ganador <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">which.max</span>(cocientes)</span>
+<span id="cb11-43">    resultado[ganador] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> resultado[ganador] <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>L</span>
+<span id="cb11-44">  }</span>
+<span id="cb11-45">  </span>
+<span id="cb11-46">  resultado</span>
+<span id="cb11-47">}</span></code></pre></div></div>
 </details>
 </div>
 <p>Antes del bucle completo, veamos qué pasa con el primer draw en Almería (12 escaños). Partimos de <code>draw_adj[1, ]</code> (posterior regional ajustada con error histórico) y lo perturbamos con el sample Dirichlet 1 de Almería para obtener proporciones provinciales:</p>
@@ -2276,6 +2447,21 @@ background-color: null;
 font-style: inherit;">nrow</span>(resultados_escanos)))</span>
 <span id="cb14-31">}</span></code></pre></div></div>
 </details>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Haced caso a Virgilio
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Tras comentar con <a href="https://www.linkedin.com/in/virgilio-g%C3%B3mez-rubio-a98953b0/">Virgilio Gómez Rubio</a> , me dice que la aproximación es un poco “compadre” , jajaja. Y no le falta razón. Me dice que lo suyo es meter todas las fuentes de incertidumbre en un modelo bayesiano( pero es un pelín más complejo y ya hoy no lo voy a hacer )<br>
+<br>
+Y para la ñapa de los errores históricos en vez de añadir errores de forma aditiva de la normal multivariante , lo que hay que hacer es pasar las posterioris al espacio logit , los errores también, añadir en ese espacio los errores y luego transformar de nuevo para que estén en espacio de probabilidad</p>
+</div>
 </div>
 </section>
 <section id="distribución-de-escaños" class="level2">
