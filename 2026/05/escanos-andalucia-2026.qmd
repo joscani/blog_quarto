@@ -1,0 +1,780 @@
+---
+title: "¿Mayoría absoluta? Escaños con incertidumbre. Andalucía 2026"
+draft: true
+date: '2026-05-12'
+categories:
+  - "2026"
+  - muestreo
+  - encuestas electorales
+  - análisis bayesiano
+description: 'D''Hondt bayesiano: cojo el posterior del meta-análisis de encuestas andaluzas y lo distribuyo por provincias para estimar escaños con su incertidumbre.'
+execute:
+  message: false
+  warning: false
+  echo: true
+format:
+  html:
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 9
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5ghIJDpPoe3CfHMGu71E6T?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+## El problema
+
+En el [post anterior](https://muestrear-no-es-pecado.netlify.app/2026/05/meta-analisis-andalucia) hacía un
+meta-análisis bayesiano con 23 encuestas y obtenía distribuciones posteriores sobre el porcentaje de voto para
+cada partido el día de las elecciones. Eso está bien, pero me quedaba corto: para saber si el PP tiene o no
+mayoría absoluta necesito **escaños**, y los escaños en Andalucía se reparten **por provincia** con D'Hondt.
+
+El Parlamento andaluz tiene 109 escaños distribuidos así:
+
+```{r}
+library(tidyverse)
+library(DT)
+library(ggridges)
+library(brms)
+library(tidybayes)
+
+options(brms.backend = "cmdstanr")
+
+escanos_prov <- tibble(
+  provincia = c("Sevilla", "Málaga", "Cádiz", "Granada",
+                "Almería", "Córdoba", "Huelva", "Jaén"),
+  escanos   = c(18, 17, 15, 13, 12, 12, 11, 11)
+)
+
+datatable(escanos_prov)
+```
+
+Así que el ejercicio de hoy es: coger cada draw del posterior del modelo anterior y aplicarle D'Hondt en cada
+provincia. Resultado: una distribución de escaños por partido, con toda la incertidumbre que ya llevaba el
+modelo de encuestas más la incertidumbre de cómo se distribuye ese voto entre provincias.
+
+## El truco de la distribución provincial
+
+El problema gordo es que casi todas las encuestas son a nivel regional. Solo el CIS (n=8.017) y el CENTRA
+(n=8.000) tienen muestra para hablar de provincias. Así que voy a hacer lo siguiente:
+
+> Para cada draw del posterior (que me da porcentajes regionales), ajusto esos porcentajes por provincia
+usando los **resultados reales de 2022** como referencia del "desvío provincial". Si en 2022 el PP sacó un
+5% más en Almería que la media regional, asumo que ese sesgo se mantiene en 2026.
+
+Formalmente: si el draw regional para el PP es $\pi_{PP}$ y en 2022 sacó $r_{PP,prov}$ en la provincia $prov$ con
+media regional $\bar{r}_{PP}$, la estimación provincial es
+
+$$\tilde{\pi}_{PP,prov} = \pi_{PP} \cdot \frac{r_{PP,prov}}{\bar{r}_{PP}}$$
+
+y luego normalizo para que sumen 1 dentro de cada provincia. Supuesto heroico, lo sé. Pero es lo que hay
+sin datos provinciales recientes.
+
+
+::: callout-warning
+Las estimaciones de Almería llevan la mayor incertidumbre: en 2022 Vox sacó allí el **20.8%** (el doble de
+su media regional) y arañó 3 escaños. Si ese diferencial se mantiene en 2026 con un Vox más fuerte
+regionalmente, la pelea por el décimo escaño en Almería puede cambiar el resultado global.
+:::
+
+## Datos de referencia 2022
+
+```{r}
+ref_2022 <- read_csv(here::here("2026/05/ref_provincial_2022.csv"))
+
+# Media regional 2022 (los usamos como denominador del ratio)
+regional_2022 <- c(
+  pp            = 43.10,
+  psoe          = 24.10,
+  vox           = 13.46,
+  por_andalucia =  7.68,
+  adelante      =  4.58,
+  resto         =  7.08
+)
+
+datatable(ref_2022)
+```
+
+```{r}
+# Votos a candidaturas por provincia, elecciones 2022
+# Almería, Cádiz, Córdoba: datos exactos (Parlamento de Andalucía, actas definitivas)
+# Resto: estimados por proporción de población sobre el total regional
+votos_prov_2022 <- c(
+  almeria = 258942,
+  cadiz   = 511390,
+  cordoba = 382994,
+  granada = 360000,  # estimado
+  huelva  = 207000,  # estimado
+  jaen    = 247000,  # estimado
+  malaga  = 660000,  # estimado
+  sevilla = 760000   # estimado
+)
+
+ref_2022 <- ref_2022 |>
+  mutate(votos_cand = votos_prov_2022[provincia])
+```
+
+## D'Hondt
+
+```{r}
+dhondt <- function(votos, escanos) {
+  result <- setNames(integer(length(votos)), names(votos))
+  for (i in seq_len(escanos)) {
+    ganador <- which.max(votos / (result + 1))
+    result[ganador] <- result[ganador] + 1
+  }
+  result
+}
+```
+
+## Simulación
+
+Cargo el modelo del post anterior y saco los draws para `time = 0` (día de elecciones, empresa desconocida).
+
+```{r}
+
+model_andalucia <- readRDS(here::here("2026/05/mod_meta_andalucia.rds"))
+```
+
+```{r}
+partidos <- c("pp", "psoe", "vox", "por_andalucia", "adelante", "resto")
+
+draws_wide <- tibble(empresa = "votaciones_17mayo", time = 0, n = 1) |>
+  add_epred_draws(model_andalucia, allow_new_levels = TRUE) |>
+  ungroup() |>
+  dplyr::select(.draw, .category, .epred) |>
+  pivot_wider(names_from = .category, values_from = .epred)
+
+cat("Draws disponibles:", nrow(draws_wide), "\n")
+head(draws_wide, 4)
+```
+
+Función que, dado un draw regional y la referencia provincial 2022, devuelve el vector de escaños totales:
+
+```{r}
+library(gtools)  # rdirichlet
+library(furrr)   # future_map
+
+# Acepta prov_samples: lista de nrow(ref_2022) vectores ya sampleados (pre-Dirichlet)
+# scale_factor controla la incertidumbre provincial:
+#   α_provincia = (votos_cand / scale_factor) × proporción_partido
+#   Con scale_factor = 1000: sd ≈ 2-4 pp por partido y provincia
+sim_escanos_draw <- function(draw_vec, prov_samples) {
+  escanos_totales <- integer(length(partidos))
+  for (i in seq_len(nrow(ref_2022))) {
+    ratio <- prov_samples[[i]] / (regional_2022[partidos] / 100)
+    raw   <- draw_vec * ratio
+    norm  <- raw / sum(raw)
+    escanos_totales <- escanos_totales + dhondt(norm, ref_2022$escanos[i])
+  }
+  setNames(escanos_totales, partidos)
+}
+```
+
+Antes de simular, construyo la distribución del error histórico de encuestas en Andalucía y genero una muestra por draw.
+
+```{r}
+# Errores históricos: E = Real − Estimación (en puntos porcentuales)
+# Fuente: 20 años de elecciones andaluzas (2004-2022)
+# Izq. (IU/Pod/PorA) repartido igualmente entre por_andalucia y adelante;
+# Cs asignado a resto en todos los ciclos.
+error_hist <- matrix(
+  c(
+  # pp     psoe    vox    pora    aa    resto
+   +6.3,  -1.0,  -3.7,  -0.7,  -0.7,  -3.3,  # 2022
+   +0.5,  -2.6,  +7.9,  -1.4,  -1.4,  -0.2,  # 2018
+   +3.2,  +1.9,    NA,  -1.2,    NA,   -2.7,  # 2015 (sin Vox / sin AA)
+   -3.8,  +6.3,    NA,  -1.2,    NA,     NA,  # 2012
+   +0.4,  -0.8,    NA,  -0.1,    NA,     NA,  # 2008
+   -1.1,  +3.3,    NA,  -1.3,    NA,     NA   # 2004
+  ),
+  nrow = 6, byrow = TRUE,
+  dimnames = list(c("2022","2018","2015","2012","2008","2004"), partidos)
+)
+
+# σ por partido: calculadas del histórico disponible; VOX y PP tienen mayor
+# incertidumbre por el trasvase de voto útil en el electorado andaluz
+sigma_pp <- c(
+  pp            = 3.0,
+  psoe          = 2.8,
+  vox           = 3.0,   # 2018 fue anomalía de primera irrupción; desde 2022 Vox es predecible
+  por_andalucia = 1.8,
+  adelante      = 1.5,
+  resto         = 2.0
+)
+
+# Matriz de correlación del error de encuestas, especificada a mano.
+# Con solo 2 elecciones con datos completos (2022 y 2018) no hay suficiente
+# muestra para estimarla del histórico; se usa criterio experto basado en la
+# dinámica del voto andaluz:
+#
+#   ρ(PP, VOX) = -0.5  Las encuestas sobreestiman a uno cuando infraestiman
+#                      al otro (trasvase de voto útil en el bloque de derecha).
+#                      En 2022 el PP se llevó +6.3 pp mientras Vox se quedó
+#                      en -3.7 pp respecto a las encuestas.
+#
+#   ρ(PSOE, PorA) = +0.5  El bloque de izquierda falla o acierta en bloque:
+#   ρ(PSOE, AA)   = +0.4  cuando las encuestas inflan PSOE suelen inflar
+#                         también PorA y Adelante (o al revés).
+#
+#   ρ(PorA, AA)   = +0.6  Los dos partidos a la izquierda del PSOE comparten
+#                         electores y sus errores de encuesta van en la misma
+#                         dirección.
+#
+# El código que sigue imprime la correlación empírica de los dos años con
+# datos completos como sanity-check; los valores son ruidosos por el n=2
+# pero las correlaciones de mayor magnitud coinciden con la estructura aquí.
+cor(error_hist[complete.cases(error_hist), ], use = "complete.obs") |> round(2)
+
+R_corr <- matrix(c(
+#  pp    psoe   vox   pora    aa   resto
+  1.0, -0.3, -0.5, -0.1, -0.1,  0.0,
+ -0.3,  1.0, -0.2,  0.5,  0.4,  0.0,
+ -0.5, -0.2,  1.0, -0.1, -0.1,  0.0,
+ -0.1,  0.5, -0.1,  1.0,  0.6,  0.0,
+ -0.1,  0.4, -0.1,  0.6,  1.0,  0.0,
+  0.0,  0.0,  0.0,  0.0,  0.0,  1.0
+), nrow = 6, ncol = 6, byrow = TRUE,
+dimnames = list(partidos, partidos))
+
+# Σ = D R D (en pp²), convertida a proporciones dividiendo por 100²
+D_sigma      <- diag(sigma_pp)
+Sigma_struct <- D_sigma %*% R_corr %*% D_sigma
+Sigma_prop   <- Sigma_struct / 1e4
+
+round(Sigma_struct, 2)
+
+set.seed(2847)
+error_draws <- MASS::mvrnorm(
+  nrow(draws_wide),
+  mu    = rep(0, 6),
+  Sigma = Sigma_prop
+)
+
+head(error_draws)
+```
+
+Aplico las tres fuentes de incertidumbre en cadena. Pre-genero los samples Dirichlet fuera
+del bucle (8 llamadas a `rdirichlet(n_draws, α)` en vez de 96.000 a `rdirichlet(1, α)`) y
+paralelizo con `furrr`:
+
+```{r}
+n_draws   <- nrow(draws_wide)
+draws_mat <- as.matrix(draws_wide[, partidos])  # acceso O(1) por fila
+
+# ② Pre-generar muestras Dirichlet: lista de 8 matrices n_draws × 6
+dirichlet_mats <- lapply(seq_len(nrow(ref_2022)), function(i) {
+  alpha <- as.numeric(ref_2022[i, partidos]) / 100 * (ref_2022$votos_cand[i] / 1000)
+  gtools::rdirichlet(n_draws, alpha)
+})
+
+# ③ Simular en paralelo
+plan(multisession, workers = parallel::detectCores() - 1)
+
+escanos_list <- future_map(
+  seq_len(n_draws),
+  \(k) {
+    # ① Error de encuestas
+    draw_adj <- pmax(draws_mat[k, ] + error_draws[k, ], 0)
+    draw_adj <- draw_adj / sum(draw_adj)
+    names(draw_adj) <- partidos
+    # extraer fila k de cada matriz provincial
+    prov_samples <- lapply(dirichlet_mats, \(m) { v <- m[k, ]; names(v) <- partidos; v })
+    sim_escanos_draw(draw_adj, prov_samples)
+  },
+  .options = furrr_options(seed = NULL)
+)
+
+plan(sequential)
+
+resultados_escanos <- draws_wide |>
+  mutate(
+    escanos           = escanos_list,
+    pp_esc            = map_int(escanos_list, "pp"),
+    psoe_esc          = map_int(escanos_list, "psoe"),
+    vox_esc           = map_int(escanos_list, "vox"),
+    por_andalucia_esc = map_int(escanos_list, "por_andalucia"),
+    adelante_esc      = map_int(escanos_list, "adelante"),
+    resto_esc         = map_int(escanos_list, "resto")
+  )
+```
+
+```{r}
+#| label: validacion-escanos
+
+totales <- resultados_escanos |>
+  transmute(total = pp_esc + psoe_esc + vox_esc + por_andalucia_esc + adelante_esc + resto_esc)
+
+n_mal <- sum(totales$total != 109)
+
+if (n_mal > 0) {
+  stop(sprintf("¡Error en D'Hondt! %d draws no suman 109 escaños.", n_mal))
+} else {
+  message(sprintf("✓ Los %d draws suman exactamente 109 escaños.", nrow(totales)))
+}
+```
+
+## Distribución de escaños
+
+```{r}
+#| fig-width: 11
+
+colores_esc <- c(
+  "PP"             = "#005999",
+  "PSOE-A"         = "#FF0126",
+  "Vox"            = "#51962A",
+  "Por Andalucía"  = "#E51C55",
+  "Adelante A."    = "#8C66F1",
+  "Otros"          = "#aaaaaa"
+)
+
+# Mapeo interno → etiqueta legible, reutilizado en todo el documento
+nombres_partido <- c(
+  pp_esc            = "PP",
+  psoe_esc          = "PSOE-A",
+  vox_esc           = "Vox",
+  por_andalucia_esc = "Por Andalucía",
+  adelante_esc      = "Adelante A.",
+  resto_esc         = "Otros"
+)
+
+resultados_escanos |>
+  select(.draw, all_of(names(nombres_partido))) |>
+  pivot_longer(-.draw, names_to = "partido", values_to = "escanos") |>
+  mutate(partido = nombres_partido[partido]) |>
+  mutate(partido = factor(partido, levels = c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A.", "Otros"))) |>
+  count(partido, escanos) |>
+  group_by(partido) |>
+  mutate(prop = n / sum(n)) |>
+  ggplot(aes(x = escanos, y = prop, fill = partido)) +
+  geom_col(width = 1, alpha = 0.85) +
+  facet_wrap(~partido, scales = "free_y") +
+  scale_fill_manual(values = colores_esc, guide = "none") +
+  geom_vline(
+    data = tibble(
+      partido  = factor(c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A."),
+                        levels = c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A.", "Otros")),
+      ref_2022 = c(58, 30, 14, 5, 2)
+    ),
+    aes(xintercept = ref_2022), linetype = "dashed", color = "grey40"
+  ) +
+  labs(
+    title = "Distribución posterior de escaños. Elecciones andaluzas 2026",
+    subtitle = "Línea discontinua: resultado real 2022",
+    x = "Escaños", y = "Proporción de simulaciones"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| fig-height: 4.5
+#| fig-width: 9
+resumen_ridge <- resultados_escanos |>
+  select(all_of(names(nombres_partido))) |>
+  summarise(across(
+    everything(),
+    list(
+      media = mean,
+      lo80 = \(x) quantile(x, 0.10),
+      hi80 = \(x) quantile(x, 0.90)
+    )
+  )) |>
+  pivot_longer(
+    everything(),
+    names_to = c("partido", ".value"),
+    names_sep = "_(?=[^_]+$)"
+  ) |>
+  mutate(
+    partido = nombres_partido[partido],
+    partido = factor(
+      partido,
+      levels = rev(c(
+        "PP",
+        "PSOE-A",
+        "Vox",
+        "Por Andalucía",
+        "Adelante A.",
+        "Otros"
+      ))
+    ),
+    media = round(media, 1)
+  )
+ niveles_ridge <- rev(c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A.", "Otros"))
+     ref2022_ridge <- tibble(
+     partido      = factor(c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A."),
+                                                    levels = niveles_ridge),
+     escanos_2022 = c(58, 30, 14, 5, 2)
+   )
+   
+   resultados_escanos |>
+     select(.draw, all_of(names(nombres_partido))) |>
+     pivot_longer(-.draw, names_to = "partido", values_to = "escanos") |>
+     mutate(
+          partido = nombres_partido[partido],
+          partido = factor(partido, levels = niveles_ridge)
+        ) |>
+     ggplot(aes(x = escanos, y = partido, fill = partido)) +
+     geom_density_ridges(
+          scale     = 0.9,
+          bandwidth = 0.8,
+          alpha     = 0.85,
+          color     = NA
+        ) +
+     # línea blanca: media
+     geom_segment(
+          data = resumen_ridge,
+          aes(x = media, xend = media,
+                        y = as.numeric(partido), yend = as.numeric(partido) + 0.9),
+          color = "white", linewidth = 0.8
+        ) +
+     # línea discontinua: resultado 2022
+     geom_segment(
+          data = ref2022_ridge,
+          aes(x = escanos_2022, xend = escanos_2022,
+                        y = as.numeric(partido), yend = as.numeric(partido) + 0.9),
+          color = "grey20", linewidth = 0.55, linetype = "dashed"
+        ) +
+     # media en negrita
+     geom_text(
+          data = resumen_ridge,
+          aes(x = media, y = partido, label = media),
+          nudge_y = 0.60, fontface = "bold", size = 3.3, color = "grey20"
+        ) +
+     # IC 80%
+     geom_text(
+          data = resumen_ridge,
+          aes(x = lo80, y = partido, label = lo80),
+          nudge_y = 0.18, size = 2.7, color = "grey40"
+        ) +
+     geom_text(
+          data = resumen_ridge,
+          aes(x = hi80, y = partido, label = hi80),
+          nudge_y = 0.18, size = 2.7, color = "grey40"
+        ) +
+     scale_fill_manual(values = colores_esc, guide = "none") +
+     scale_x_continuous(breaks = seq(0, 65, 5)) +
+     labs(
+          title    = "Distribución posterior de escaños. Elecciones andaluzas 2026",
+          subtitle = "Negrita: media · Pequeño: IC 80% · Discontinua: resultado 2022 · Medias suman 109",
+          x = "Escaños", y = NULL
+        ) +
+     theme_minimal(base_size = 12) +
+     theme(
+          plot.title         = element_text(face = "bold", size = 13),
+          plot.subtitle      = element_text(color = "grey45", size = 10),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor   = element_blank(),
+          axis.ticks         = element_blank()
+        )
+   
+```
+
+## Horquilla de escaños
+
+```{r}
+#| label: draws-long-esc
+
+library(ggdist)
+library(ggparliament)
+
+orden_partidos <- c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A.", "Otros")
+
+# para pintar lo ponemos en formato long 
+draws_long_esc <- resultados_escanos |>
+  select(.draw, all_of(names(nombres_partido))) |>
+  pivot_longer(-.draw, names_to = "partido", values_to = "escanos") |>
+  mutate(
+    partido = nombres_partido[partido],
+    partido = factor(partido, levels = rev(orden_partidos))
+  )
+```
+
+```{r}
+#| fig-height: 4.5
+#| fig-width: 9
+
+resumen_esc <- draws_long_esc |>
+  group_by(partido) |>
+  summarise(
+    mediana = median(escanos),
+    lo80    = quantile(escanos, 0.10),
+    hi80    = quantile(escanos, 0.90)
+  )
+
+# Ajuste de redondeo: las medianas marginales suman 107; los 2 restantes van a PP
+resumen_esc <- resumen_esc |>
+  mutate(mediana = if_else(
+    partido == "PP",
+    mediana + (109L - as.integer(sum(mediana))),
+    mediana
+  ))
+
+draws_long_esc |>
+  ggplot(aes(y = partido, x = escanos, color = partido)) +
+  # Intervalos con grosor variable; punto oculto (se añade desde resumen_esc)
+  stat_pointinterval(
+    .width              = c(0.80, 0.95),
+    point_size          = 0,
+    interval_size_range = c(1.2, 3.5)
+  ) +
+  # Punto en la mediana ajustada
+  geom_point(
+    data  = resumen_esc,
+    aes(y = partido, x = mediana),
+    size  = 3.5,
+    shape = 19
+  ) +
+  # mediana: encima del punto, bold
+  geom_text(
+    data = resumen_esc,
+    aes(y = partido, x = mediana, label = mediana),
+    nudge_y = 0.22, fontface = "bold", size = 3.6
+  ) +
+  # hi80: a la derecha del extremo superior
+  geom_text(
+    data = resumen_esc,
+    aes(y = partido, x = hi80, label = hi80),
+    hjust = 0, nudge_x = 0.7, nudge_y = -0.22, size = 3.1
+  ) +
+  # lo80: a la izquierda del extremo inferior
+  geom_text(
+    data = resumen_esc,
+    aes(y = partido, x = lo80, label = lo80),
+    hjust = 1, nudge_x = -0.7, nudge_y = -0.22, size = 3.1
+  ) +
+  geom_vline(xintercept = 55, linetype = "dashed",
+             color = "grey35", linewidth = 0.6) +
+  annotate("text", x = 55.6, y = "PP", label = "May. abs. (55)",
+           hjust = 0, vjust = -0.6, size = 2.8, color = "grey35") +
+  scale_color_manual(values = colores_esc, guide = "none") +
+  scale_x_continuous(
+    breaks = seq(0, 75, 5),
+    expand = expansion(mult = c(0.06, 0.10))
+  ) +
+  labs(
+    title    = "Horquilla de escaños. Elecciones andaluzas 17-M 2026",
+    subtitle = "Línea gruesa: IC 80% · Línea fina: IC 95% · Punto: mediana",
+    x = "Escaños", y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(color = "grey45", size = 10),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor   = element_blank(),
+    axis.ticks         = element_blank()
+  )
+```
+
+## Hemiciclo
+
+Composición esperada (medianas) del Parlamento andaluz.
+
+```{r}
+#| fig-height: 4
+#| fig-width: 9
+
+medianas_esc <- resultados_escanos |>
+  summarise(across(
+    c(pp_esc, psoe_esc, vox_esc, por_andalucia_esc, adelante_esc, resto_esc),
+    \(x) as.integer(round(median(x)))
+  ))
+
+# Ajuste para que sumen exactamente 109
+total_med <- rowSums(medianas_esc)
+medianas_esc$pp_esc <- medianas_esc$pp_esc + (109L - as.integer(total_med))
+
+# Orden izquierda → derecha: izquierda junta a la izquierda, PP+Vox juntos a la derecha
+parl_df <- tibble(
+  party_long  = c("Adelante A.", "Por Andalucía", "PSOE-A", "Otros", "PP",      "Vox"),
+  seats       = c(medianas_esc$adelante_esc, medianas_esc$por_andalucia_esc,
+                  medianas_esc$psoe_esc,     medianas_esc$resto_esc,
+                  medianas_esc$pp_esc,       medianas_esc$vox_esc),
+  colour      = c("#8C66F1", "#E51C55", "#FF0126", "#cccccc", "#005999", "#51962A"),
+  government  = c(0, 0, 0, 0, 1, 1)
+) |>
+  filter(seats > 0)
+
+parl_coords <- parliament_data(
+  election_data = parl_df,
+  type          = "semicircle",
+  parl_rows     = 10,
+  party_seats   = parl_df$seats
+)
+
+ggplot(parl_coords, aes(x, y, colour = party_long)) +
+  geom_parliament_seats(size = 3) +
+  scale_colour_manual(
+    values = setNames(parl_df$colour, parl_df$party_long),
+    name   = ""
+  ) +
+  geom_parliament_bar(colour = colour, party = party_long) +
+  draw_majoritythreshold(n = 55, label = TRUE, type = "semicircle") +
+  labs(
+    title    = "Hemiciclo estimado. Parlamento andaluz 17-M 2026",
+    subtitle = paste0(
+      "PP: ", medianas_esc$pp_esc, " · ",
+      "PSOE-A: ", medianas_esc$psoe_esc, " · ",
+      "Vox: ", medianas_esc$vox_esc, " · ",
+      "PorA: ", medianas_esc$por_andalucia_esc, " · ",
+      "AA: ", medianas_esc$adelante_esc
+    )
+  ) +
+  theme_void() +
+  theme(legend.position = "bottom")
+```
+
+## ¿Mayoría absoluta?
+
+```{r}
+resultados_escanos |>
+  mutate(
+    pp_vox  = pp_esc + vox_esc,
+    pp_solo = pp_esc >= 55
+  ) |>
+  summarise(
+    `PP mediana (esc.)`           = median(pp_esc),
+    `P(PP mayoría abs.)`          = mean(pp_solo),
+    `P(PP+Vox mayoría, sin abs.)` = mean(!pp_solo & pp_vox >= 55),
+    `P(PP+Vox < 55)`              = mean(pp_vox < 55)
+  ) |>
+  mutate(across(starts_with("P("), scales::label_percent(accuracy = 0.1))) |>
+  knitr::kable(align = c("r", "r", "r", "r"))
+```
+
+```{r}
+#| fig-height: 4.2
+#| fig-width: 9
+
+col_mayoria <- c(
+  "Izquierda"   = "#cc3333",
+  "Sin mayoría" = "#aaaaaa",
+  "PP + Vox"    = "#7ab8d9",
+  "PP solo"     = "#005999"
+)
+
+# ventaja continua de voto + escenario calculado por escaños D'Hondt
+mayoria_df <- draws_wide |>
+  mutate(ventaja_voto = 100 * ((pp + vox) - (psoe + por_andalucia + adelante))) |>
+  select(.draw, ventaja_voto) |>
+  left_join(
+    resultados_escanos |>
+      mutate(
+        pp_vox = pp_esc + vox_esc,
+        izq    = psoe_esc + por_andalucia_esc + adelante_esc,
+        scenario = case_when(
+          pp_esc >= 55 ~ "PP solo",
+          pp_vox >= 55 ~ "PP + Vox",
+          izq    >= 55 ~ "Izquierda",
+          TRUE         ~ "Sin mayoría"
+        ),
+        scenario = factor(scenario, levels = names(col_mayoria))
+      ) |>
+      select(.draw, scenario, pp_esc, pp_vox),
+    by = ".draw"
+  )
+
+# probabilidades (named vector scenario → proporción)
+pct <- mayoria_df |>
+  count(scenario) |>
+  mutate(pct = n / sum(n)) |>
+  select(scenario, pct) |>      # deframe() necesita exactamente 2 columnas
+  tibble::deframe()
+
+# helper: cuantil de ventaja_voto en un escenario (NA si no hay draws)
+xann <- function(scen, q = 0.5) {
+  v <- mayoria_df$ventaja_voto[mayoria_df$scenario == scen]
+  if (length(v) == 0) NA_real_ else quantile(v, q)
+}
+# PP solo: anclado en el extremo DERECHO de su zona (texto irá a la izquierda)
+xann_ppsolo <- xann("PP solo",  q = 0.92)
+# PP+Vox: anclado en el extremo IZQUIERDO de su zona (texto irá a la derecha)
+xann_ppvox  <- xann("PP + Vox", q = 0.08)
+xann_sinmay <- xann("Sin mayoría")
+# "Izquierda" tiene <5 draws en medio del histograma; se ancla al extremo izquierdo
+xann_izq    <- min(mayoria_df$ventaja_voto) - 0.5
+
+# umbrales en escala de voto (donde las mayorías cruzan 55 escaños)
+thresh_ppvox  <- mayoria_df |> filter(abs(pp_vox - 55) <= 1) |> summarise(x = median(ventaja_voto)) |> pull(x)
+thresh_ppsolo <- mayoria_df |> filter(abs(pp_esc - 55) <= 1) |> summarise(x = median(ventaja_voto)) |> pull(x)
+
+max_n <- mayoria_df |>
+  mutate(bin = round(ventaja_voto / 0.5) * 0.5) |>
+  count(bin) |> pull(n) |> max()
+
+# helper: cuadrado + % + nombre. offset>0 → texto a la derecha; offset<0 → izquierda
+ann <- function(p, x, y_pct, col, label_name,
+                pct_size = 5.2, name_size = 3.3, gap = 0.13,
+                offset = 0.7, hjust = 0) {
+  if (is.na(x) || is.na(p)) return(list())
+  acc <- ifelse(p < 0.01, 0.1, 1)
+  list(
+    annotate("point", x = x,            y = y_pct,               color = col, size = 3.2, shape = 15),
+    annotate("text",  x = x + offset,   y = y_pct,               hjust = hjust, vjust = 0.4,
+             label = scales::percent(p, accuracy = acc),
+             color = col, fontface = "bold", size = pct_size),
+    annotate("text",  x = x + offset,   y = y_pct - max_n * gap, hjust = hjust, vjust = 0.4,
+             label = label_name, color = col, size = name_size)
+  )
+}
+
+ggplot(mayoria_df, aes(x = ventaja_voto, fill = scenario)) +
+  geom_histogram(binwidth = 0.5, color = "white", linewidth = 0.08) +
+
+
+  # PP solo: extremo derecho de su zona, texto hacia la IZQUIERDA (hjust=1, offset negativo)
+  ann(pct["PP solo"],  xann_ppsolo, max_n * 1.38, "#005999", "PP solo",
+      offset = -0.7, hjust = 1) +
+  # PP+Vox: extremo izquierdo de su zona, texto hacia la DERECHA (por defecto)
+  ann(pct["PP + Vox"], xann_ppvox,  max_n * 1.38, "#4a9cc4", "PP + Vox") +
+  # Izquierda: más bajo aún, extremo izquierdo
+  ann(pct["Izquierda"],   xann_izq,    max_n * 0.20, "#cc3333", "Izquierda",
+      pct_size = 3.8, name_size = 2.9) +
+  scale_fill_manual(values = col_mayoria, guide = "none") +
+  scale_x_continuous(breaks = seq(-20, 60, 10)) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.55)),
+    labels = scales::label_comma()
+  ) +
+  labs(
+    title    = "¿Qué probabilidad tiene cada mayoría?",
+    subtitle = "Con encuestas y simulaciones bayesianas. El área de cada color representa la probabilidad de cada escenario",
+    x = "\u2190 Izquierda · Ventaja voto (pp+vox \u2212 psoe+por\u0061+aa), puntos porcentuales · Derecha \u2192",
+    y = "N\u00famero de simulaciones"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(color = "grey45", size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.y = element_line(color = "grey92"),
+    axis.ticks         = element_blank()
+  )
+```
+
+## Coda
+
+El método es simple: para cada uno de los ~12.000 draws del posterior del modelo de encuestas, distribuyo
+el voto regional a cada provincia usando los resultados de 2022 como prior del desvío territorial, y aplico
+D'Hondt. El resultado son distribuciones de escaños con toda la incertidumbre que arrastra el modelo de
+encuestas más la incertidumbre de cómo ha cambiado (o no) la geografía del voto desde 2022.
+
+El supuesto más gordo es ese: que los sesgos territoriales de 2022 se mantienen. Si Vox ha crecido más en
+Almería que en el resto (o al revés), el modelo lo ignorará. Con solo el CIS y el CENTRA publicando datos
+provinciales, y sin sus microdatos limpios, es lo mejor que puedo hacer sin currármelo más.
+
+Actualización post-electoral el 17-M.

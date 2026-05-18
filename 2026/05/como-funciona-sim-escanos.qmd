@@ -1,0 +1,291 @@
+---
+title: "Cómo funciona sim_escanos_draw: D'Hondt bayesiano paso a paso"
+draft: true
+date: '2026-05-12'
+categories:
+  - "2026"
+  - encuestas electorales
+  - análisis bayesiano
+  - tutorial
+description: 'Desglose detallado de la función sim_escanos_draw del post de escaños andaluces: Dirichlet, ratio provincial y D''Hondt explicados con un ejemplo de juguete.'
+execute:
+  message: false
+  warning: false
+  echo: true
+format:
+  html:
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 9
+    fig-align: center
+    code-fold: false
+knitr:
+  opts_chunk:
+    out.width: 80%
+    collapse: true
+    comment: "#>"
+---
+
+Este post es un apéndice técnico del post
+[¿Mayoría absoluta? Escaños con incertidumbre. Andalucía 2026](https://muestrear-no-es-pecado.netlify.app/2026/05/escanos-andalucia-2026).
+
+La función `sim_escanos_draw()` es el corazón de ese análisis y me costó un
+poco entenderla cuando la escribí. Aquí la disecciono paso a paso con un
+ejemplo de juguete de dos provincias y dos partidos.
+
+## El problema que resuelve
+
+El modelo bayesiano de encuestas nos da **porcentajes regionales**: "el PP
+sacará entre el 45 % y el 52 % en Andalucía". Pero los escaños se reparten
+**por provincia** aplicando D'Hondt. No es lo mismo que el PP saque el 48 %
+concentrado en Sevilla y Málaga que repartido homogéneamente.
+
+La función hace exactamente eso: toma un draw (una muestra del posterior) con
+los porcentajes regionales, los convierte en porcentajes provinciales usando
+los resultados de 2022 como referencia, y aplica D'Hondt en cada provincia.
+
+## Los datos de partida
+
+```{r}
+library(tidyverse)
+library(gtools)   # rdirichlet
+
+partidos_ej <- c("A", "B")
+
+# Un solo draw del modelo bayesiano: A saca 52% regional, B el 48%
+draw_vec <- c(A = 0.52, B = 0.48)
+
+# Resultados reales de 2022 a nivel regional (denominador del ratio)
+regional_2022 <- c(A = 50, B = 50)
+
+# Tabla provincial: cuántos escaños tiene cada provincia
+# y qué % sacó cada partido allí en 2022
+escanos_provs <- tibble(
+  provincia  = c("Norte", "Sur"),
+  escanos    = c(3, 3),
+  A          = c(60, 40),  # % de A en 2022 en cada provincia
+  B          = c(40, 60),  # % de B en 2022
+  votos_cand = c(100000, 150000)
+)
+
+escanos_provs
+```
+
+Norte es tierra de A (60 % en 2022), Sur es tierra de B (60 % en 2022).
+El reto es: dado que hoy el modelo predice A=52 %, ¿cómo se traduce eso en
+cada provincia?
+
+## La función D'Hondt
+
+Antes de entrar en la función principal, la pieza básica:
+
+```{r}
+dhondt <- function(votos, escanos) {
+  result <- setNames(integer(length(votos)), names(votos))
+  for (i in seq_len(escanos)) {
+    ganador <- which.max(votos / (result + 1))
+    result[ganador] <- result[ganador] + 1
+  }
+  result
+}
+```
+
+Funciona así: en cada ronda, cada partido tiene un cociente
+`votos / (escaños_ya_asignados + 1)`. El que tiene el cociente más alto se
+lleva el escaño. Iteramos tantas veces como escaños hay que repartir.
+
+```{r}
+# Ejemplo: A=62%, B=38%, 3 escaños
+# Ronda 1: A=0.62/1=0.62 ← gana → A:1, B:0
+# Ronda 2: A=0.62/2=0.31, B=0.38/1=0.38 ← B gana → A:1, B:1
+# Ronda 3: A=0.62/2=0.31 ← A gana → A:2, B:1
+dhondt(c(A = 0.62, B = 0.38), escanos = 3)
+```
+
+## La función completa
+
+```{r}
+sim_escanos_draw_ej <- function(draw_vec, ref, reg_2022, scale_factor = 1000) {
+
+  escanos_totales <- setNames(integer(length(partidos_ej)), partidos_ej)
+
+  for (i in seq_len(nrow(ref))) {
+
+    # --- Paso 1: proporciones de 2022 en esta provincia ---
+    prov_pct_2022 <- as.numeric(ref[i, partidos_ej]) / 100
+    names(prov_pct_2022) <- partidos_ej
+
+    # --- Paso 2: Dirichlet ---
+    alpha            <- prov_pct_2022 * (ref$votos_cand[i] / scale_factor)
+    prov_pct_sampled <- rdirichlet(1, alpha)[1, ]
+    names(prov_pct_sampled) <- partidos_ej
+
+    # --- Paso 3: ratio provincial vs media regional 2022 ---
+    ratio <- prov_pct_sampled / (reg_2022[partidos_ej] / 100)
+
+    # --- Paso 4: ajuste multiplicativo + normalización ---
+    raw  <- draw_vec[partidos_ej] * ratio
+    norm <- raw / sum(raw)
+
+    # --- Paso 5: D'Hondt ---
+    escanos_totales <- escanos_totales + dhondt(norm, ref$escanos[i])
+  }
+
+  escanos_totales
+}
+```
+
+Ahora desglosamos cada paso para la provincia **Norte** (`i = 1`).
+
+---
+
+## Paso 1 — Proporciones de 2022 en la provincia
+
+```{r}
+i <- 1  # Norte
+
+prov_pct_2022 <- as.numeric(escanos_provs[i, partidos_ej]) / 100
+names(prov_pct_2022) <- partidos_ej
+prov_pct_2022
+```
+
+Simplemente extraemos los resultados históricos de esa provincia y los
+pasamos a escala 0-1. Estos son nuestra "referencia del territorio".
+
+---
+
+## Paso 2 — Distribución Dirichlet: añadir incertidumbre sobre 2022
+
+```{r}
+scale_factor <- 1000
+
+alpha <- prov_pct_2022 * (escanos_provs$votos_cand[i] / scale_factor)
+alpha
+```
+
+`alpha` controla la **concentración** de la Dirichlet. Con Norte y
+`scale_factor=1000`:
+
+$$\alpha = (0.60,\ 0.40) \times \frac{100.000}{1.000} = (60,\ 40)$$
+
+Una Dirichlet con `alpha` grande está muy concentrada alrededor de la media;
+con `alpha` pequeño es muy dispersa.
+
+```{r}
+set.seed(42)
+muestras <- rdirichlet(6, alpha)
+colnames(muestras) <- partidos_ej
+round(muestras, 3)
+```
+
+Cada fila es una posible realización de las proporciones provinciales. Todas
+rondan el 60/40 pero con pequeñas variaciones. Usamos **una** de estas filas
+por draw, lo que introduce la tercera fuente de incertidumbre del modelo.
+
+¿Por qué añadir ruido sobre 2022? Porque los resultados de 2022 son datos
+reales pero no garantizan que el patrón territorial se repita exactamente.
+
+```{r}
+set.seed(42)
+prov_pct_sampled <- rdirichlet(1, alpha)[1, ]
+names(prov_pct_sampled) <- partidos_ej
+prov_pct_sampled
+```
+
+---
+
+## Paso 3 — El ratio: ¿cuánto se desvía esta provincia de la media?
+
+```{r}
+ratio <- prov_pct_sampled / (regional_2022[partidos_ej] / 100)
+ratio
+```
+
+$$\text{ratio}_A = \frac{0.603}{0.50} = 1.206 \quad \text{ratio}_B = \frac{0.397}{0.50} = 0.794$$
+
+El ratio mide el **sesgo territorial**: Norte le da a A un 20 % extra sobre
+su media regional, y le quita un 20 % a B.
+
+Este es el supuesto clave del modelo: asumimos que los sesgos territoriales
+de 2022 se mantienen en 2026. Si Almería votó al PP un 10 % por encima de
+la media regional en 2022, asumimos que seguirá haciéndolo.
+
+---
+
+## Paso 4 — Aplicar el ratio al draw de hoy y normalizar
+
+```{r}
+raw  <- draw_vec[partidos_ej] * ratio
+raw
+```
+
+$$\text{raw}_A = 0.52 \times 1.206 = 0.627 \quad \text{raw}_B = 0.48 \times 0.794 = 0.381$$
+
+`raw` no suma 1. Normalizamos:
+
+```{r}
+norm <- raw / sum(raw)
+norm
+```
+
+$$\text{norm}_A = \frac{0.627}{0.627 + 0.381} \approx 0.622$$
+
+**Interpretación**: el modelo dice que A saca el 52 % regional. En Norte,
+que históricamente le favorece, la estimación sube al 62 %. En Sur, que
+favorece a B, bajaría.
+
+---
+
+## Paso 5 — D'Hondt en esta provincia
+
+```{r}
+dhondt(norm, escanos = escanos_provs$escanos[i])
+```
+
+Con esas proporciones y 3 escaños: A se lleva 2, B se lleva 1. Exactamente
+lo que esperamos en una provincia donde A domina.
+
+Esto se acumula en `escanos_totales` y el bucle repite para Sur.
+
+---
+
+## Resultado final
+
+```{r}
+set.seed(99)
+sim_escanos_draw_ej(draw_vec, escanos_provs, regional_2022, scale_factor = 1000)
+```
+
+A y B se reparten los 6 escaños. La distribución exacta varía con cada draw
+y con cada muestra Dirichlet, de ahí que al repetirlo 12.000 veces obtengamos
+una distribución de escaños en lugar de un único número.
+
+---
+
+## Resumen: las tres fuentes de incertidumbre
+
+El método encadena tres capas de aleatoriedad:
+
+| Fuente | Mecanismo | Qué captura |
+|---|---|---|
+| **Posterior bayesiano** | draws de `brms` | ¿Cuánto vota cada partido a nivel regional? |
+| **Error histórico** | `MASS::mvrnorm` | Las encuestas se equivocan (de forma correlada entre partidos) |
+| **Patrón provincial** | Dirichlet | ¿Se repetirá el mapa territorial de 2022? |
+
+```
+draw regional (A=52%, B=48%)
+        │
+        │  + error histórico (mvrnorm)
+        ▼
+draw ajustado (A=51.8%, B=48.2%)
+        │
+        ├─► × ratio_Norte (Dirichlet 2022)  →  prov_Norte (A≈62%, B≈38%)  →  D'Hondt →  A=2, B=1
+        │
+        └─► × ratio_Sur   (Dirichlet 2022)  →  prov_Sur   (A≈38%, B≈62%)  →  D'Hondt →  A=1, B=2
+                                                                                              │
+                                                                                              ▼
+                                                                                    escanos_totales: A=3, B=3
+```
+
+Repetir esto para cada uno de los ~12.000 draws produce la distribución
+posterior de escaños que aparece en el post principal.
