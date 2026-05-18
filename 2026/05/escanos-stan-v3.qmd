@@ -1,0 +1,667 @@
+---
+title: "Escaños con Stan. Lo que decía Virgilio. Andalucía 2026"
+draft: true
+date: '2026-05-16'
+categories:
+  - "2026"
+  - muestreo
+  - encuestas electorales
+  - análisis bayesiano
+  - Stan
+description: 'Meta-análisis + error histórico + D''Hondt en un único modelo Stan. Error en espacio ILR, umbral 3% provincial y probabilidades de mayoría correctamente condicionadas.'
+execute:
+  message: false
+  warning: false
+  echo: true
+format:
+  html:
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 9
+    fig-align: center
+    code-fold: show
+    code-summary: "Mostrar código"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5ghIJDpPoe3CfHMGu71E6T?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+## Lo que decía Virgilio
+
+En el [post anterior](https://muestrear-no-es-pecado.netlify.app/2026/05/escanos-a-lo-bayesiano)
+hacía la simulación de escaños con tres fuentes de incertidumbre: el posterior del meta-análisis
+de encuestas, un error histórico añadido como normal multivariante en espacio de proporciones, y
+una Dirichlet por provincia. Virgilio Gómez-Rubio me decía que la ñapa del error aditivo en
+proporciones no es lo correcto, que lo suyo es:
+
+1. **Meterlo todo en un modelo bayesiano.**
+2. **Añadir el error en espacio logit**, no en proporciones, para que la suma siempre dé 1
+   sin tener que hacer `pmax(., 0)`.
+
+Pues bien. Aquí está.
+
+## La idea
+
+El modelo anterior tenía dos etapas separadas: primero `brms` para el meta-análisis, luego R
+para añadir el error y simular D'Hondt. El problema es que ese diseño no es realmente bayesiano:
+los draws del meta-análisis se tratan como si fuesen datos, no como incertidumbre que se propaga.
+
+La solución correcta es un único modelo Stan que hace todo de una vez:
+
+```
+Encuestas crudas
+    ↓
+Meta-análisis multinomial jerárquico (empresas como efectos aleatorios)
+    ↓
+Predicción día de elecciones (time = 0, empresa desconocida)
+    ↓
++ Error histórico en espacio ILR       ← aquí está la mejora clave
+    ↓
+Dirichlet provincial + D'Hondt         ← generated quantities
+    ↓
+Distribución posterior de escaños
+```
+
+## ¿Por qué ILR y no simplemente logit?
+
+Para proporciones de **K categorías** que suman 1 no hay un único "logit": hay K-1 grados de
+libertad. La transformación ILR (*Isometric Log-Ratio*) construye una base ortonormal del simplex
+usando contrastes secuenciales de Helmert:
+
+$$z_k = \sqrt{\frac{k}{k+1}}\left(\frac{1}{k}\sum_{j=1}^k \log p_j - \log p_{k+1}\right), \quad k=1,\ldots,K-1$$
+
+El resultado es un vector en $\mathbb{R}^{K-1}$ sin restricciones. La inversa es simplemente un
+softmax sobre $H^\top z$, donde $H$ es la matriz de contraste.
+
+La ventaja sobre ALR (que elige una categoría de referencia arbitraria): las correlaciones en ILR
+reflejan la estructura real del error, no el artefacto de compartir denominador. En la práctica,
+ALR daba correlaciones artificialmente altas (0.87 entre PP y PSOE); con ILR los valores son
+mucho más razonables (-0.37 a 0.45).
+
+## Setup
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(cmdstanr)
+library(lubridate)
+library(ggridges)
+library(ggdist)
+
+fecha_elecciones <- ymd("2026-05-17")
+partidos <- c("pp", "psoe", "vox", "por_andalucia", "adelante", "resto")
+K  <- length(partidos)
+K1 <- K - 1
+
+escanos_prov <- c(
+  almeria = 12, cadiz = 15, cordoba = 12, granada = 13,
+  huelva  = 11, jaen  = 11, malaga  = 17, sevilla = 18
+)
+P <- length(escanos_prov)
+
+colores_esc <- c(
+  "PP"            = "#005999",
+  "PSOE-A"        = "#FF0126",
+  "Vox"           = "#51962A",
+  "Por Andalucía" = "#E51C55",
+  "Adelante A."   = "#8C66F1",
+  "Otros"         = "#aaaaaa"
+)
+nombres_partido <- c(
+  pp = "PP", psoe = "PSOE-A", vox = "Vox",
+  por_andalucia = "Por Andalucía", adelante = "Adelante A.", resto = "Otros"
+)
+orden <- rev(c("PP", "PSOE-A", "Vox", "Por Andalucía", "Adelante A.", "Otros"))
+```
+
+## Matriz ILR
+
+```{r}
+#| label: ilr
+make_ilr_matrix <- function(K) {
+  H <- matrix(0, K - 1, K)
+  for (k in seq_len(K - 1)) {
+    H[k, seq_len(k)] <- sqrt(1 / (k * (k + 1)))
+    H[k, k + 1]      <- -sqrt(k / (k + 1))
+  }
+  H
+}
+
+H_ilr  <- make_ilr_matrix(K)   # (K1 × K)
+Ht_ilr <- t(H_ilr)             # (K  × K1)
+
+norm_p  <- function(v) v / sum(v)
+ilr     <- function(p) as.numeric(H_ilr %*% log(norm_p(p)))
+ilr_inv <- function(z) { lp <- as.numeric(Ht_ilr %*% z); exp(lp) / sum(exp(lp)) }
+
+# Verificación ida y vuelta
+p_test <- c(0.40, 0.25, 0.15, 0.08, 0.05, 0.07)
+stopifnot(max(abs(ilr_inv(ilr(p_test)) - p_test)) < 1e-10)
+```
+
+## Error histórico en ILR (simulado desde conocimiento experto)
+
+No tenemos datos de encuestas históricas en formato limpio para estimar la distribución del error
+directamente. Lo que sí tenemos es conocimiento experto sobre las desviaciones típicas por partido
+y la estructura de correlación entre errores (del post anterior). Lo traducimos al espacio ILR
+mediante el **método delta**: si el error en proporción sigue $\mathcal{N}(0, \Sigma_{\text{prop}})$,
+el error en ILR sigue aproximadamente $\mathcal{N}(0, J\Sigma_{\text{prop}}J^\top)$, donde
+$J_{kj} = H_{kj}/p_j$ es el Jacobiano evaluado en las proporciones esperadas.
+
+```{r}
+#| label: error-ilr
+p_expand      <- c(pp=0.43, psoe=0.24, vox=0.15, por_andalucia=0.08, adelante=0.05, resto=0.07)
+sigma_prop_v1 <- c(pp=0.030, psoe=0.028, vox=0.030, por_andalucia=0.018, adelante=0.015, resto=0.020)
+
+R_v1 <- matrix(c(
+  1.0, -0.3, -0.5, -0.1, -0.1,  0.0,
+ -0.3,  1.0, -0.2,  0.5,  0.4,  0.0,
+ -0.5, -0.2,  1.0, -0.1, -0.1,  0.0,
+ -0.1,  0.5, -0.1,  1.0,  0.6,  0.0,
+ -0.1,  0.4, -0.1,  0.6,  1.0,  0.0,
+  0.0,  0.0,  0.0,  0.0,  0.0,  1.0
+), nrow = 6, byrow = TRUE)
+
+Sigma_prop <- diag(sigma_prop_v1) %*% R_v1 %*% diag(sigma_prop_v1)
+J_ilr      <- H_ilr / rep(p_expand, each = K1)
+Sigma_ilr  <- J_ilr %*% Sigma_prop %*% t(J_ilr)
+
+cat("σ en espacio ILR:\n")
+round(sqrt(diag(Sigma_ilr)), 3)
+
+cat("\nCorrelación en espacio ILR:\n")
+round(cov2cor(Sigma_ilr), 2)
+```
+
+Las correlaciones en ILR (entre -0.37 y 0.45) son mucho más razonables que las que producía ALR
+(hasta 0.87), donde el denominador común inflaba artificialmente todas las correlaciones.
+
+Generamos 20 "elecciones simuladas" desde esta distribución para que el modelo Stan pueda estimar
+los parámetros del error:
+
+```{r}
+set.seed(2847)
+N_sim           <- 20
+hist_errors_ilr <- MASS::mvrnorm(N_sim, mu = rep(0, K1), Sigma = Sigma_ilr)
+colnames(hist_errors_ilr) <- partidos[-K]
+```
+
+## Datos de encuestas
+
+```{r}
+#| label: encuestas
+df_raw <- read_csv(here::here("2026/05/encuestas_andalucia_2026.csv"),
+                   show_col_types = FALSE) |>
+  mutate(fecha = ymd(fecha),
+         time  = as.numeric(fecha - fecha_elecciones))
+
+empresas    <- sort(unique(df_raw$empresa))
+J_emp       <- length(empresas)
+empresa_idx <- match(df_raw$empresa, empresas)
+
+votos_mat <- df_raw |>
+  select(all_of(partidos)) |>
+  mutate(across(everything(), \(x) round(x * df_raw$n / 100))) |>
+  as.matrix()
+
+n_total <- rowSums(votos_mat)
+N       <- nrow(df_raw)
+
+cat(N, "encuestas de", J_emp, "empresas\n")
+cat("Rango temporal:", range(df_raw$time), "días hasta las elecciones\n")
+```
+
+## Datos provinciales
+
+```{r}
+#| label: prov
+ref_2022 <- read_csv(here::here("2026/05/ref_provincial_2022.csv"),
+                     show_col_types = FALSE) |>
+  arrange(match(provincia, names(escanos_prov)))
+
+regional_2022 <- c(pp=43.10, psoe=24.10, vox=13.46,
+                   por_andalucia=7.68, adelante=4.58, resto=7.08) / 100
+
+votos_prov_2022 <- c(almeria=258942, cadiz=511390, cordoba=382994,
+                     granada=360000, huelva=207000,  jaen=247000,
+                     malaga=660000,  sevilla=760000)
+
+ref_prov_mat <- ref_2022 |>
+  select(all_of(partidos)) |>
+  as.matrix() |>
+  apply(1, norm_p) |>
+  t()
+```
+
+## El modelo Stan
+
+El modelo hace tres cosas en un solo bloque:
+
+**1. Meta-análisis** (bloque `model`): regresión logística multinomial con efectos aleatorios por
+empresa en intercepto y pendiente temporal. El partido `resto` es la categoría de referencia
+(log-odds = 0).
+
+**2. Distribución del error histórico** (también en `model`): los errores simulados en ILR
+se modelan como $\mathcal{N}(\mu_{\text{err}}, \Sigma_{\text{err}})$.
+
+**3. D'Hondt** (bloque `generated quantities`): para cada draw MCMC,
+predicción a `time = 0` con empresa desconocida → transformar a ILR → sumar error muestreado →
+softmax inversa → ratio provincial → Dirichlet → D'Hondt con umbral 3%.
+
+```{r}
+#| label: stan-model
+#| code-fold: true
+stan_code <- "
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  int<lower=1> K1;
+  int<lower=1> J;
+  array[N] int<lower=1,upper=J> empresa;
+  vector[N] time;
+  array[N] int n_total;
+  array[N, K] int votos;
+
+  matrix[K1, K] H_ilr;
+  matrix[K, K1] Ht_ilr;
+
+  int<lower=1> N_hist;
+  matrix[N_hist, K1] hist_errors;
+
+  int<lower=1> P;
+  array[P] int seats;
+  matrix[P, K] ref_prov;
+  vector[K] ref_reg;
+  array[P] int votos_prov;
+  int<lower=1> scale_factor;
+  real<lower=0,upper=1> umbral;
+}
+
+parameters {
+  vector[K1] alpha;
+  vector[K1] beta_time;
+  matrix[J, K1] z_int;
+  matrix[J, K1] z_slope;
+  vector<lower=0>[K1] sigma_int;
+  vector<lower=0>[K1] sigma_slope;
+
+  vector[K1] mu_err;
+  vector<lower=0>[K1] sigma_err;
+  cholesky_factor_corr[K1] L_Omega_err;
+}
+
+transformed parameters {
+  matrix[J, K1] u_int   = z_int   .* rep_matrix(sigma_int',   J);
+  matrix[J, K1] u_slope = z_slope .* rep_matrix(sigma_slope', J);
+}
+
+model {
+  alpha       ~ normal(0, 2);
+  beta_time   ~ normal(0, 1);
+  sigma_int   ~ exponential(1);
+  sigma_slope ~ exponential(1);
+  to_vector(z_int)   ~ std_normal();
+  to_vector(z_slope) ~ std_normal();
+
+  mu_err    ~ normal(0, 0.3);
+  sigma_err ~ exponential(2);
+  L_Omega_err ~ lkj_corr_cholesky(2);
+
+  for (i in 1:N) {
+    vector[K] log_odds;
+    for (k in 1:K1)
+      log_odds[k] = alpha[k] + beta_time[k] * time[i]
+                  + u_int[empresa[i], k]
+                  + u_slope[empresa[i], k] * time[i];
+    log_odds[K] = 0;
+    votos[i] ~ multinomial(softmax(log_odds));
+  }
+
+  for (n in 1:N_hist)
+    hist_errors[n] ~ multi_normal_cholesky(
+      mu_err, diag_pre_multiply(sigma_err, L_Omega_err));
+}
+
+generated quantities {
+  vector[K] escanos;
+  vector[K] pi_enc;
+  vector[K] pi_real;
+
+  {
+    vector[K] log_odds_elec;
+    for (k in 1:K1) log_odds_elec[k] = alpha[k];
+    log_odds_elec[K] = 0;
+    pi_enc = softmax(log_odds_elec);
+
+    vector[K1] ilr_enc = H_ilr * log(pi_enc);
+    vector[K1] err     = multi_normal_cholesky_rng(
+      mu_err, diag_pre_multiply(sigma_err, L_Omega_err));
+    pi_real = softmax(Ht_ilr * (ilr_enc + err));
+
+    vector[K] total = rep_vector(0.0, K);
+    for (p in 1:P) {
+      vector[K] raw;
+      for (k in 1:K) raw[k] = pi_real[k] * (ref_prov[p,k] / ref_reg[k]);
+      vector[K] pi_prov = raw / sum(raw);
+
+      vector[K] alpha_dir;
+      for (k in 1:K) alpha_dir[k] = pi_prov[k] * (votos_prov[p] * 1.0 / scale_factor);
+      vector[K] pi_dir = dirichlet_rng(alpha_dir);
+
+      vector[K] pi_valid;
+      for (k in 1:K)
+        pi_valid[k] = (pi_dir[k] >= umbral) ? pi_dir[k] : 0.0;
+      if (sum(pi_valid) == 0) pi_valid = pi_dir;
+      else pi_valid = pi_valid / sum(pi_valid);
+
+      vector[K] result = rep_vector(0.0, K);
+      for (s in 1:seats[p]) {
+        int winner = 1;
+        real best  = pi_valid[1] / (result[1] + 1);
+        for (k in 2:K) {
+          real val = pi_valid[k] / (result[k] + 1);
+          if (val > best) { best = val; winner = k; }
+        }
+        result[winner] += 1;
+      }
+      total += result;
+    }
+    escanos = total;
+  }
+}
+"
+
+stan_file <- here::here("2026/05/escanos_v3_model.stan")
+writeLines(stan_code, stan_file)
+mod <- cmdstan_model(stan_file)
+```
+
+## Ajuste
+
+```{r}
+#| label: fit
+#| cache: false
+stan_data <- list(
+  N           = N,
+  K           = K,
+  K1          = K1,
+  J           = J_emp,
+  empresa     = empresa_idx,
+  time        = df_raw$time,
+  n_total     = as.integer(n_total),
+  votos       = votos_mat,
+  H_ilr       = H_ilr,
+  Ht_ilr      = Ht_ilr,
+  N_hist      = nrow(hist_errors_ilr),
+  hist_errors = hist_errors_ilr,
+  P           = P,
+  seats       = as.integer(escanos_prov),
+  ref_prov    = ref_prov_mat,
+  ref_reg     = regional_2022,
+  votos_prov  = as.integer(votos_prov_2022[names(escanos_prov)]),
+  scale_factor = 1000L,
+  umbral       = 0.03
+)
+
+rds_path <- here::here("2026/05/mod_escanos_v3.rds")
+
+if (!file.exists(rds_path)) {
+  fit <- mod$sample(
+    data            = stan_data,
+    seed            = 2847,
+    chains          = 4,
+    parallel_chains = 4,
+    iter_warmup     = 1000,
+    iter_sampling   = 2000,
+    refresh         = 0,
+    adapt_delta     = 0.95
+  )
+  fit$save_object(rds_path)
+} else {
+  fit <- readRDS(rds_path)
+}
+```
+
+## Diagnósticos
+
+```{r}
+#| label: diagnosticos
+fit$summary(variables = c("alpha", "sigma_int", "mu_err", "sigma_err")) |>
+  select(variable, mean, median, sd, rhat, ess_bulk) |>
+  mutate(across(where(is.numeric), \(x) round(x, 3)))
+```
+
+```{r}
+fit$cmdstan_diagnose()
+```
+
+## Extraer y validar escaños
+
+```{r}
+#| label: escanos
+escanos_draws <- fit$draws(variables = "escanos", format = "df") |>
+  as_tibble() |>
+  select(starts_with("escanos")) |>
+  setNames(partidos)
+
+totales <- rowSums(round(escanos_draws))
+stopifnot(all(totales == 109))
+message(sprintf("✓ Los %d draws suman exactamente 109 escaños.", nrow(escanos_draws)))
+```
+
+## Distribución de escaños
+
+```{r}
+#| label: fig-ridge
+#| fig-height: 4.5
+#| fig-width: 9
+
+resumen <- escanos_draws |>
+  summarise(across(everything(), list(
+    media = mean,
+    lo80  = \(x) quantile(x, 0.10),
+    hi80  = \(x) quantile(x, 0.90)
+  ))) |>
+  pivot_longer(everything(), names_to = c("partido", ".value"), names_sep = "_(?=[^_]+$)") |>
+  mutate(
+    partido = factor(nombres_partido[partido], levels = orden),
+    media   = round(media, 1),
+    lo80    = round(lo80),
+    hi80    = round(hi80)
+  )
+
+ref2022 <- tibble(
+  partido      = factor(c("PP","PSOE-A","Vox","Por Andalucía","Adelante A."), levels = orden),
+  escanos_2022 = c(58, 30, 14, 5, 2)
+)
+
+escanos_draws |>
+  mutate(sim = row_number()) |>
+  pivot_longer(-sim, names_to = "partido", values_to = "escanos") |>
+  mutate(partido = factor(nombres_partido[partido], levels = orden)) |>
+  ggplot(aes(x = escanos, y = partido, fill = partido)) +
+  geom_density_ridges(scale = 0.9, bandwidth = 0.8, alpha = 0.85, color = NA) +
+  geom_segment(
+    data = resumen,
+    aes(x = media, xend = media, y = as.numeric(partido), yend = as.numeric(partido) + 0.9),
+    color = "white", linewidth = 0.8
+  ) +
+  geom_segment(
+    data = ref2022,
+    aes(x = escanos_2022, xend = escanos_2022,
+        y = as.numeric(partido), yend = as.numeric(partido) + 0.9),
+    color = "grey20", linewidth = 0.55, linetype = "dashed"
+  ) +
+  geom_text(data = resumen,
+            aes(x = media, y = partido, label = media),
+            nudge_y = 0.60, fontface = "bold", size = 3.3, color = "grey20") +
+  geom_text(data = resumen,
+            aes(x = lo80, y = partido, label = lo80),
+            nudge_y = 0.45, hjust = 1, nudge_x = -0.5, size = 2.9, color = "grey30") +
+  geom_text(data = resumen,
+            aes(x = hi80, y = partido, label = hi80),
+            nudge_y = 0.45, hjust = 0, nudge_x = 0.5, size = 2.9, color = "grey30") +
+  scale_fill_manual(values = colores_esc, guide = "none") +
+  scale_x_continuous(breaks = seq(0, 70, 5)) +
+  labs(
+    title    = "Distribución posterior de escaños. Andalucía 17-M 2026",
+    subtitle = "Blanco: media · Pequeño: IC 80% · Discontinua: resultado 2022",
+    x = "Escaños", y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(color = "grey45", size = 10),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor   = element_blank(),
+    axis.ticks         = element_blank()
+  )
+```
+
+## ¿Mayoría absoluta?
+
+```{r}
+#| label: mayoria-tabla
+pp  <- round(escanos_draws$pp)
+vox <- round(escanos_draws$vox)
+pvox <- pp + vox
+
+tibble(
+  Escenario         = c("PP mayoría absoluta solo",
+                        "PP + Vox mayoría (PP no llega solo)",
+                        "PP + Vox < 55 (sin mayoría derecha)"),
+  Probabilidad      = c(mean(pp >= 55),
+                        mean(pvox >= 55 & pp < 55),
+                        mean(pvox < 55)),
+  `PP mediana (esc.)` = c(median(pp[pp >= 55]),
+                           median(pp[pvox >= 55 & pp < 55]),
+                           median(pp[pvox < 55]))
+) |>
+  mutate(Probabilidad = scales::percent(Probabilidad, accuracy = 0.1)) |>
+  knitr::kable(align = "lrr")
+```
+
+```{r}
+#| label: fig-mayoria
+#| fig-height: 4.2
+#| fig-width: 9
+
+pi_enc_draws <- fit$draws(variables = "pi_enc", format = "df") |>
+  as_tibble() |>
+  select(starts_with("pi_enc")) |>
+  setNames(partidos)
+
+col_mayoria <- c(
+  "Izquierda"   = "#cc3333",
+  "Sin mayoría" = "#aaaaaa",
+  "PP + Vox"    = "#7ab8d9",
+  "PP solo"     = "#005999"
+)
+
+mayoria_df <- pi_enc_draws |>
+  mutate(
+    ventaja_voto = 100 * ((pp + vox) - (psoe + por_andalucia + adelante)),
+    sim          = row_number()
+  ) |>
+  left_join(
+    escanos_draws |>
+      mutate(
+        sim    = row_number(),
+        pp_r   = round(pp),
+        pvox_r = round(pp + vox),
+        izq_r  = round(psoe + por_andalucia + adelante),
+        scenario = case_when(
+          pp_r   >= 55 ~ "PP solo",
+          pvox_r >= 55 ~ "PP + Vox",
+          izq_r  >= 55 ~ "Izquierda",
+          TRUE         ~ "Sin mayoría"
+        ),
+        scenario = factor(scenario, levels = names(col_mayoria))
+      ) |>
+      select(sim, scenario),
+    by = "sim"
+  )
+
+pct_df <- mayoria_df |> count(scenario) |> mutate(pct = n / sum(n))
+pct    <- setNames(pct_df$pct, as.character(pct_df$scenario))
+
+xann <- function(scen, q = 0.5) {
+  v <- mayoria_df$ventaja_voto[mayoria_df$scenario == scen]
+  if (length(v) == 0) NA_real_ else quantile(v, q)
+}
+
+max_n <- mayoria_df |>
+  mutate(bin = round(ventaja_voto / 0.5) * 0.5) |>
+  count(bin) |> pull(n) |> max()
+
+ann <- function(p, x, y_pct, col, label_name,
+                pct_size = 5.2, name_size = 3.3, gap = 0.13,
+                offset = 0.7, hjust = 0) {
+  if (is.na(x) || is.na(p)) return(list())
+  acc <- ifelse(p < 0.01, 0.1, 1)
+  list(
+    annotate("point", x = x,          y = y_pct,               color = col, size = 3.2, shape = 15),
+    annotate("text",  x = x + offset, y = y_pct,               hjust = hjust, vjust = 0.4,
+             label = scales::percent(p, accuracy = acc), color = col, fontface = "bold", size = pct_size),
+    annotate("text",  x = x + offset, y = y_pct - max_n * gap, hjust = hjust, vjust = 0.4,
+             label = label_name, color = col, size = name_size)
+  )
+}
+
+ggplot(mayoria_df, aes(x = ventaja_voto, fill = scenario)) +
+  geom_histogram(binwidth = 0.5, color = "white", linewidth = 0.08) +
+  ann(pct["PP solo"],   xann("PP solo",  0.97), max_n * 1.38, "#005999", "PP solo",
+      offset = -0.7, hjust = 1) +
+  ann(pct["PP + Vox"],  xann("PP + Vox", 0.03), max_n * 1.38, "#4a9cc4", "PP + Vox") +
+  ann(pct["Izquierda"], min(mayoria_df$ventaja_voto) - 0.5, max_n * 0.20,
+      "#cc3333", "Izquierda", pct_size = 3.8, name_size = 2.9) +
+  scale_fill_manual(values = col_mayoria, guide = "none") +
+  scale_x_continuous(breaks = seq(-20, 60, 10)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.55)),
+                     labels = scales::label_comma()) +
+  labs(
+    title    = "¿Qué probabilidad tiene cada mayoría?",
+    subtitle = "El área de cada color representa la probabilidad del escenario",
+    x = "← Izquierda · Ventaja voto (PP+Vox − PSOE+PorA+AA), pp · Derecha →",
+    y = "Número de simulaciones"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(color = "grey45", size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.y = element_line(color = "grey92"),
+    axis.ticks         = element_blank()
+  )
+```
+
+## Coda
+
+Lo que el [post anterior](https://muestrear-no-es-pecado.netlify.app/2026/05/escanos-a-lo-bayesiano)
+hacía en tres etapas separadas (brms → R para el error → R para D'Hondt) ahora ocurre en un único
+modelo Stan. Las mejoras concretas son:
+
+- **Error en espacio ILR**, no en proporciones: siempre produce vectores válidos del simplex,
+  sin necesidad de `pmax(., 0)` ni renormalización manual.
+- **Correlaciones del error bien calibradas**: ILR no infla artificialmente las correlaciones
+  entre partidos por tener un denominador común.
+- **Umbral electoral del 3%** provincial aplicado antes de D'Hondt.
+- **Probabilidades de mayoría correctamente condicionadas**: P(PP+Vox necesita Vox) excluye
+  explícitamente los casos en que PP ya tiene mayoría solo.
+
+Los supuestos fuertes siguen siendo los mismos de siempre: que el patrón provincial de 2022 se
+mantiene y que sabemos algo sobre cómo se equivocan las encuestas. Lo que ha cambiado es cómo
+propagamos esa incertidumbre.
+
+Actualización post-electoral el 17-M.
