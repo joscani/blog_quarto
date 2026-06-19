@@ -812,3 +812,207 @@ que las empresas encuestadoras hayan acertado con sus hipótesis sobre la
 abstención (que no las sabemos). Yo, con la info que he usado sin
 calentarme mucho la cabeza he intentado tener en cuenta las fuentes de
 incertidumbre.
+
+
+Escaños distribución conjunta 
+
+```{r}
+top_joint <- resultados_escanos |>
+  count(pp_esc, psoe_esc, vox_esc, por_andalucia_esc, adelante_esc, resto_esc, sort = TRUE) |>
+  mutate(
+    prob = n / sum(n),
+    prob_acum = cumsum(prob)
+  )
+
+top_joint |> slice_head(n = 15)
+
+
+joint_80 <- top_joint |>
+  filter(prob_acum <= 0.80)
+
+nrow(joint_80)
+sum(joint_80$prob)
+
+
+resultados_escanos |>
+  count(pp_esc, vox_esc) |>
+  ggplot(aes(x = pp_esc, y = vox_esc, fill = 100 *n/sum(n))) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Distribución conjunta de escaños: PP y Vox",
+    x = "PP",
+    y = "Vox",
+    fill = "%"
+  ) +
+  theme_minimal()
+
+
+resultados_escanos |>
+  count(pp_esc, vox_esc) |>
+  ggplot(aes(x = pp_esc, y = vox_esc, size = n)) +
+  geom_point(alpha = 0.7) +
+  labs(
+    title = "Configuraciones conjuntas PP-Vox",
+    x = "PP",
+    y = "Vox",
+    size = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+resultados_escanos |>
+  mutate(
+    derecha = pp_esc + vox_esc,
+    izquierda = psoe_esc + por_andalucia_esc + adelante_esc
+  ) |>
+  count(derecha, izquierda) |>
+  ggplot(aes(x = derecha, y = izquierda, fill = n)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Distribución conjunta por bloques",
+    x = "Escaños derecha",
+    y = "Escaños izquierda"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+
+ternary_df <- resultados_escanos |>
+  mutate(
+    pp = round(pp_esc),
+    vox = round(vox_esc),
+    izquierda = round(psoe_esc + por_andalucia_esc + adelante_esc),
+    total_3bloques = pp_esc + vox_esc + izquierda,
+    pp_share = pp_esc / total_3bloques,
+    vox_share = vox_esc / total_3bloques,
+    izquierda_share = izquierda / total_3bloques,
+    escenario = case_when(
+      pp >= 55 ~ "PP solo",
+      pp + vox >= 55 ~ "PP + Vox",
+      izquierda >= 55 ~ "Izquierda",
+      TRUE ~ "Sin mayoría"
+    )
+  )
+    
+ggplot(
+  ternary_df,
+  aes(
+    x = pp_share,
+    y = vox_share,
+    z = izquierda_share,
+    color = escenario
+  )
+) +
+  geom_point(alpha = 0.25, size = 1.1) +
+  scale_color_manual(
+    values = c(
+      "PP solo" = "#005999",
+      "PP + Vox" = "#7ab8d9",
+      "Izquierda" = "#cc3333",
+      "Sin mayoría" = "#aaaaaa"
+    )
+  ) +
+  labs(
+    title = "Distribución conjunta de escaños en el simplex",
+    subtitle = "Cada punto es una simulación posterior. Coordenadas normalizadas entre PP, Vox e izquierda",
+    T = "PP",
+    L = "Vox",
+    R = "Izquierda",
+    color = "Escenario"
+  ) +
+  theme_minimal() +
+  # theme_showarrows() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )   
+ 
+
+top_joint |>
+  group_by(pp_esc, vox_esc) |> 
+  summarise(n = sum(n), .groups = "drop") |>
+  ggplot(aes(x = pp_esc, y = vox_esc, fill = n)) +
+  geom_tile(color = "white", linewidth = 0.15) +
+  geom_vline(
+    xintercept = 55,
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  geom_abline(
+    intercept = 55,
+    slope = -1,
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  labs(
+    title = "Mapa de calor posterior: PP vs Vox",
+    subtitle = "Cada celda cuenta cuántos draws posteriores dan esa combinación de escaños",
+    x = "Escaños PP",
+    y = "Escaños Vox",
+    fill = "Frecuencia"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+resultado_real <- tibble(
+  pp_esc = 53,
+  vox_esc = 15
+)
+
+top_joint |>
+  group_by(pp_esc, vox_esc) |> 
+  summarise(n = sum(n), .groups = "drop") |>
+  ggplot(aes(x = pp_esc, y = vox_esc, fill = n)) +
+  geom_tile(color = "white", linewidth = 0.15) +
+  geom_vline(
+    xintercept = 55,
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  geom_abline(
+    intercept = 55,
+    slope = -1,
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  geom_point(
+    data = resultado_real,
+    aes(x = pp_esc, y = vox_esc),
+    inherit.aes = FALSE,
+    shape = 21,
+    size = 4.5,
+    stroke = 1.2,
+    fill = "white",
+    color = "black"
+  ) +
+  geom_text(
+    data = resultado_real,
+    aes(x = pp_esc, y = vox_esc, label = "Resultado real\nPP 53 · Vox 15"),
+    inherit.aes = FALSE,
+    nudge_y = 1.2,
+    size = 3.4,
+    fontface = "bold"
+  ) +
+  labs(
+    title = "Mapa de calor posterior: PP vs Vox",
+    subtitle = "Cada celda cuenta cuántos draws posteriores dan esa combinación de escaños",
+    x = "Escaños PP",
+    y = "Escaños Vox",
+    fill = "Frecuencia"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+```
+
+

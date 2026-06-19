@@ -1,0 +1,275 @@
+---
+title: "Los niveles pequeños también mandan"
+date: '2026-06-08'
+categories:
+  - estadística
+  - modelos mixtos
+  - R
+  - 2026
+description: 'Por qué incluir o ignorar un nivel granular en un modelo mixto cambia las estimaciones de los niveles superiores'
+execute:
+  message: false
+  warning: false
+  echo: true
+  output: true
+format:
+  html:
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: show
+    code-link: true
+    code-summary: "Mostrar código"
+    code-tools: true
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+editor:
+  markdown:
+    wrap: sentence
+---
+
+::: callout-note
+## Listening
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+:::
+
+Tienes un modelo mixto con estructura jerárquica: provincias, municipios, observaciones.
+Ajustas el modelo solo con el nivel provincia.
+Una provincia te sale con una estimación muy extrema que no cuadra con lo que esperas.
+Metes los municipios. La estimación de esa provincia se modera drásticamente. ¿Por qué?
+
+La respuesta tiene que ver con cómo los modelos mixtos reparten la varianza entre niveles.
+Lo que a mí me sorprendió: **el nivel intermedio no solo explica su propia varianza — al añadirlo, cambia cuánto se contrae la estimación del nivel superior, y la magnitud del cambio depende de cuánta heterogeneidad había oculta en ese nivel intermedio**.
+
+## El ejemplo
+
+Simulamos datos con tres niveles: provincia → municipio → observación.
+20 provincias, 20 observaciones por municipio.
+Media nacional: −3.
+
+Dos provincias son de especial interés:
+
+- **Provincia heterogénea** (`prov_het`): su efecto verdadero de provincia es 0 — es una provincia normal. Pero tiene **solo 3 municipios** muy dispares entre sí, con media global de −10, lo que hace que la media bruta de la provincia sea −13. La extremidad viene de los municipios, no de la provincia. El número reducido de municipios (3 frente a 8 del resto) amplifica el problema: menos datos para estimar la media de la provincia y más varianza interna.
+- **Provincia homogénea** (`prov_hom`): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −8.
+
+El resto de provincias tienen 8 municipios, efectos moderados y municipios homogéneos, con medias alrededor de −3.
+
+```{r simulacion}
+library(tidyverse)
+library(lme4)
+
+set.seed(42)
+
+grand_mean  <- -3
+n_prov      <- 20
+n_mun_het   <-  3   # prov_het: pocos municipios
+n_mun_resto <-  8   # resto: más municipios
+n_obs       <- 20
+
+ef_prov <- c(
+   0,                           # prov_het: efecto real = 0
+  -5,                           # prov_hom: efecto real = -5
+  rnorm(n_prov - 2, 0, 0.6)    # resto: moderadas
+)
+
+# prov_het: 3 municipios muy dispares, media = -10  →  media provincia ≈ -13
+ef_mun_het <- c(-35, -10, 15)   # media = -10, sd ≈ 20.2
+
+# prov_hom: 8 municipios compactos  →  media provincia ≈ -8
+ef_mun_hom <- rnorm(n_mun_resto, 0, 0.3)
+
+datos <- bind_rows(
+  # prov_het
+  map_dfr(seq_len(n_mun_het), function(m) {
+    tibble(
+      provincia = "prov_01",
+      municipio = paste0("prov_01_mun_", m),
+      tipo      = "het (efecto real = 0, n_mun = 3, media ≈ -13)",
+      y         = grand_mean + ef_prov[1] + ef_mun_het[m] + rnorm(n_obs, 0, 0.5)
+    )
+  }),
+  # prov_hom y resto
+  map_dfr(2:n_prov, function(p) {
+    n_m  <- n_mun_resto
+    tipo <- if (p == 2) "hom (efecto real = -5, n_mun = 8, media ≈ -8)" else "resto"
+    ef_m <- if (p == 2) ef_mun_hom else rnorm(n_m, 0, 0.3)
+    map_dfr(seq_len(n_m), function(m) {
+      tibble(
+        provincia = paste0("prov_", sprintf("%02d", p)),
+        municipio = paste0("prov_", sprintf("%02d", p), "_mun_", m),
+        tipo      = tipo,
+        y         = grand_mean + ef_prov[p] + ef_m[m] + rnorm(n_obs, 0, 0.5)
+      )
+    })
+  })
+)
+```
+
+Así se ven los municipios dentro de cada provincia de interés:
+
+```{r plot-municipios}
+datos |>
+  filter(provincia %in% c("prov_01", "prov_02")) |>
+  ggplot(aes(x = municipio, y = y)) +
+  geom_jitter(width = 0.1, alpha = 0.3, color = "steelblue") +
+  stat_summary(fun = mean, geom = "point", size = 3, color = "firebrick") +
+  stat_summary(
+    fun = mean, geom = "hline",
+    aes(yintercept = after_stat(y), group = provincia),
+    linetype = "dashed", color = "firebrick"
+  ) +
+  facet_wrap(~tipo, scales = "free_x") +
+  labs(
+    x = NULL, y = "y",
+    title = "Municipios dentro de cada provincia de interés",
+    subtitle = "Puntos rojos = media del municipio  |  línea = media de la provincia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7))
+```
+
+`prov_het` tiene solo 3 municipios: uno en torno a −38, otro en −13 y otro en +12.
+Su media es −13 pero la dispersión interna es enorme y hay poca información para estimar la media de la provincia.
+`prov_hom` tiene 8 municipios, todos apretados alrededor de −8.
+
+## Los dos modelos
+
+```{r modelos}
+mod_sin_mun <- lmer(y ~ 1 + (1 | provincia),                    data = datos)
+mod_con_mun <- lmer(y ~ 1 + (1 | provincia) + (1 | municipio),  data = datos)
+```
+
+## Varianzas estimadas: el mecanismo
+
+```{r varianzas}
+get_var <- function(mod, nivel) {
+  as.data.frame(VarCorr(mod)) |> filter(grp == nivel) |> pull(vcov)
+}
+
+data.frame(
+  componente = c(
+    "sigma2_provincia  (sin municipios)",
+    "sigma2_provincia  (con municipios)",
+    "sigma2_municipio  (con municipios)",
+    "sigma2_residual   (sin municipios)",
+    "sigma2_residual   (con municipios)"
+  ),
+  varianza = c(
+    get_var(mod_sin_mun, "provincia"),
+    get_var(mod_con_mun, "provincia"),
+    get_var(mod_con_mun, "municipio"),
+    attr(VarCorr(mod_sin_mun), "sc")^2,
+    attr(VarCorr(mod_con_mun), "sc")^2
+  )
+)
+```
+
+Esto es lo central:
+
+- **Sin municipios**: `prov_het` aparece con media −13, muy lejos de la media nacional. El modelo interpreta eso como señal real del nivel provincia y estima $\sigma^2_{\text{prov}}$ grande. Con $\sigma^2_{\text{prov}}$ grande, el factor de shrinkage es alto y los BLUPs se contraen poco — `prov_het` se queda cerca de −13.
+
+- **Con municipios**: la heterogeneidad interna de `prov_het` (municipios de −43 a +17) infla $\sigma^2_{\text{mun}}$. El modelo reconoce que gran parte de lo que parecía señal de provincia era en realidad varianza entre municipios. $\sigma^2_{\text{prov}}$ cae. Con $\sigma^2_{\text{prov}}$ más pequeña, el shrinkage aumenta y el BLUP de `prov_het` se contrae mucho más hacia la media nacional.
+
+La fórmula del BLUP de provincia $j$ en el modelo de tres niveles es aproximadamente:
+
+$$\hat{u}_j \approx (\bar{y}_j - \mu) \cdot \frac{\sigma^2_{\text{prov}}}{\sigma^2_{\text{prov}} + \sigma^2_{\text{mun}}/n_{\text{mun},j} + \sigma^2_{\text{resid}}/(n_{\text{mun},j} \cdot n_{\text{obs}})}$$
+
+Hay dos palancas que reducen el reliability ratio y aumentan el shrinkage de `prov_het` en el modelo con municipios:
+
+1. $\sigma^2_{\text{prov}}$ **cae**: la heterogeneidad interna de `prov_het` inflaba $\sigma^2_{\text{prov}}$ en el modelo sin municipios; al incluirlos, esa varianza se reabsorbe en $\sigma^2_{\text{mun}}$.
+2. $n_{\text{mun},j}$ **es pequeño** para `prov_het` (3 frente a 8): con pocos municipios, el denominador crece y el ratio cae más. Una provincia con 3 municipios muy dispersos proporciona mucha menos información sobre el verdadero efecto de esa provincia que una con 8 municipios compactos.
+
+## Predicciones a nivel de provincia
+
+```{r predicciones}
+datos_prov <- datos |> distinct(provincia, tipo) |> arrange(provincia)
+
+preds <- bind_rows(
+  datos_prov |> mutate(
+    pred   = predict(mod_sin_mun, newdata = datos_prov,
+                     re.form = ~(1 | provincia)),
+    modelo = "Sin municipios"
+  ),
+  datos_prov |> mutate(
+    pred   = predict(mod_con_mun, newdata = datos_prov,
+                     re.form = ~(1 | provincia)),
+    modelo = "Con municipios"
+  )
+)
+
+preds |>
+  mutate(
+    provincia = fct_reorder(provincia, pred),
+    forma     = tipo
+  ) |>
+  ggplot(aes(x = pred, y = provincia,
+             color = modelo, shape = forma)) +
+  geom_vline(xintercept = grand_mean, linetype = "dashed", color = "grey50") +
+  geom_point(size = 3, alpha = 0.85,
+             position = position_dodge(width = 0.55)) +
+  scale_color_manual(values = c(
+    "Sin municipios" = "firebrick",
+    "Con municipios" = "steelblue"
+  )) +
+  scale_shape_manual(values = c(
+    "het (efecto real = 0, n_mun = 3, media ≈ -13)" = 17,
+    "hom (efecto real = -5, n_mun = 8, media ≈ -8)" = 15,
+    "resto"                                          = 16
+  )) +
+  labs(
+    x     = "Predicción a nivel provincia  (re.form = ~(1|provincia))",
+    y     = NULL, color = NULL, shape = NULL,
+    title = "Predicciones de provincia: sin vs con municipios",
+    subtitle = "Línea = media nacional (−3)  |  triángulo = het  |  cuadrado = hom"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+```
+
+El triángulo (`prov_het`) se desplaza notablemente entre los dos modelos: sin municipios está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.
+
+El cuadrado (`prov_hom`) apenas se mueve: su extremidad es genuina, los municipios son consistentes, y añadir el nivel municipio no cambia mucho su estimación.
+
+El resto de provincias (círculos) tienen pequeñas variaciones porque su variabilidad interna es baja.
+
+```{r tabla-estimaciones}
+preds |>
+  pivot_wider(names_from = modelo, values_from = pred) |>
+  mutate(
+    media_bruta = map_dbl(provincia, ~ mean(datos$y[datos$provincia == .x])),
+    cambio      = `Con municipios` - `Sin municipios`
+  ) |>
+  arrange(`Sin municipios`) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |>
+  select(provincia, tipo, media_bruta,
+         `Sin municipios`, `Con municipios`, cambio) |>
+  knitr::kable(
+    col.names = c("Provincia", "Tipo", "Media bruta",
+                  "Pred sin mun", "Pred con mun", "Cambio"),
+    caption   = "Predicciones a nivel provincia (re.form = ~(1|provincia))"
+  )
+```
+
+## Por qué no basta con que ambas tengan media −13
+
+Podría parecer que la comparación más limpia sería poner las dos provincias de interés exactamente en −13. Sin embargo, si prov_hom también tiene media −13 con efecto genuino de −10, $\sigma^2_{\text{prov}}$ en el modelo con municipios sigue siendo grande (prov_hom la mantiene inflada), y el shrinkage adicional de prov_het se diluye.
+
+El efecto es máximo cuando **prov_het es la principal responsable de que $\sigma^2_{\text{prov}}$ sea grande** en el modelo sin municipios. Al añadir municipios, esa varianza se reabsorbe, $\sigma^2_{\text{prov}}$ cae, y `prov_het` recibe el impacto completo del shrinkage aumentado.
+
+## Resumen
+
+| Situación | $\sigma^2_{\text{prov}}$ estimada | Shrinkage de la provincia extrema |
+|---|---|---|
+| Sin municipios, prov_het heterogénea | Grande (inflada por prov_het) | Poco — BLUP cerca de media bruta |
+| Con municipios, prov_het heterogénea | Pequeña (heterogeneidad reabsorbida) | Mucho — BLUP se acerca a media nacional |
+| Con o sin municipios, prov_hom homogénea | Similar en ambos modelos | Cambio pequeño |
+
+La moraleja: omitir un nivel intermedio no solo ignora ese nivel — distorsiona las estimaciones del superior. Y la distorsión es mayor cuanto más heterogéneo sea el nivel omitido, porque esa heterogeneidad infla $\sigma^2_{\text{prov}}$ y reduce artificialmente el shrinkage.
