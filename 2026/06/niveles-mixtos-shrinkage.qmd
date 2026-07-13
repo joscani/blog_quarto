@@ -68,20 +68,20 @@ library(lme4)
 
 set.seed(42)
 
-grand_mean  <- -3
-n_prov      <- 20
-n_mun_het   <-  3   # prov_het: pocos municipios
-n_mun_resto <-  8   # resto: más municipios
-n_obs       <- 20
+grand_mean <- -3
+n_prov <- 20
+n_mun_het <- 3 # prov_het: pocos municipios
+n_mun_resto <- 8 # resto: más municipios
+n_obs <- 20
 
 ef_prov <- c(
-   0,                           # prov_het: efecto real = 0
-  -5,                           # prov_hom: efecto real = -5
-  rnorm(n_prov - 2, 0, 0.6)    # resto: moderadas
+  0, # prov_het: efecto real = 0
+  -5, # prov_hom: efecto real = -5
+  rnorm(n_prov - 2, 0, 0.6) # resto: moderadas
 )
 
 # prov_het: 3 municipios muy dispares, media = -10  →  media provincia ≈ -13
-ef_mun_het <- c(-35, -10, 15)   # media = -10, sd ≈ 20.2
+ef_mun_het <- c(-35, -10, 15) # media = -10, sd ≈ 20.2
 
 # prov_hom: 8 municipios compactos  →  media provincia ≈ -8
 ef_mun_hom <- rnorm(n_mun_resto, 0, 0.3)
@@ -92,21 +92,25 @@ datos <- bind_rows(
     tibble(
       provincia = "prov_01",
       municipio = paste0("prov_01_mun_", m),
-      tipo      = "het (efecto real = 0, n_mun = 3, media ≈ -13)",
-      y         = grand_mean + ef_prov[1] + ef_mun_het[m] + rnorm(n_obs, 0, 0.5)
+      tipo = "het (efecto real = 0, n_mun = 3, media ≈ -13)",
+      y = grand_mean + ef_prov[1] + ef_mun_het[m] + rnorm(n_obs, 0, 0.5)
     )
   }),
   # prov_hom y resto
   map_dfr(2:n_prov, function(p) {
-    n_m  <- n_mun_resto
-    tipo <- if (p == 2) "hom (efecto real = -5, n_mun = 8, media ≈ -8)" else "resto"
+    n_m <- n_mun_resto
+    tipo <- if (p == 2) {
+      "hom (efecto real = -5, n_mun = 8, media ≈ -8)"
+    } else {
+      "resto"
+    }
     ef_m <- if (p == 2) ef_mun_hom else rnorm(n_m, 0, 0.3)
     map_dfr(seq_len(n_m), function(m) {
       tibble(
         provincia = paste0("prov_", sprintf("%02d", p)),
         municipio = paste0("prov_", sprintf("%02d", p), "_mun_", m),
-        tipo      = tipo,
-        y         = grand_mean + ef_prov[p] + ef_m[m] + rnorm(n_obs, 0, 0.5)
+        tipo = tipo,
+        y = grand_mean + ef_prov[p] + ef_m[m] + rnorm(n_obs, 0, 0.5)
       )
     })
   })
@@ -122,13 +126,16 @@ datos |>
   geom_jitter(width = 0.1, alpha = 0.3, color = "steelblue") +
   stat_summary(fun = mean, geom = "point", size = 3, color = "firebrick") +
   stat_summary(
-    fun = mean, geom = "hline",
+    fun = mean,
+    geom = "hline",
     aes(yintercept = after_stat(y), group = provincia),
-    linetype = "dashed", color = "firebrick"
+    linetype = "dashed",
+    color = "firebrick"
   ) +
   facet_wrap(~tipo, scales = "free_x") +
   labs(
-    x = NULL, y = "y",
+    x = NULL,
+    y = "y",
     title = "Municipios dentro de cada provincia de interés",
     subtitle = "Puntos rojos = media del municipio  |  línea = media de la provincia"
   ) +
@@ -143,8 +150,8 @@ Su media es −13 pero la dispersión interna es enorme y hay poca información 
 ## Los dos modelos
 
 ```{r modelos}
-mod_sin_mun <- lmer(y ~ 1 + (1 | provincia),                    data = datos)
-mod_con_mun <- lmer(y ~ 1 + (1 | provincia) + (1 | municipio),  data = datos)
+mod_sin_mun <- lmer(y ~ 1 + (1 | provincia), data = datos)
+mod_con_mun <- lmer(y ~ 1 + (1 | provincia) + (1 | municipio), data = datos)
 ```
 
 ## Varianzas estimadas: el mecanismo
@@ -193,40 +200,52 @@ Hay dos palancas que reducen el reliability ratio y aumentan el shrinkage de `pr
 datos_prov <- datos |> distinct(provincia, tipo) |> arrange(provincia)
 
 preds <- bind_rows(
-  datos_prov |> mutate(
-    pred   = predict(mod_sin_mun, newdata = datos_prov,
-                     re.form = ~(1 | provincia)),
-    modelo = "Sin municipios"
-  ),
-  datos_prov |> mutate(
-    pred   = predict(mod_con_mun, newdata = datos_prov,
-                     re.form = ~(1 | provincia)),
-    modelo = "Con municipios"
-  )
+  datos_prov |>
+    mutate(
+      pred = predict(
+        mod_sin_mun,
+        newdata = datos_prov,
+        re.form = ~ (1 | provincia)
+      ),
+      modelo = "Sin municipios"
+    ),
+  datos_prov |>
+    mutate(
+      pred = predict(
+        mod_con_mun,
+        newdata = datos_prov,
+        re.form = ~ (1 | provincia)
+      ),
+      modelo = "Con municipios"
+    )
 )
 
 preds |>
   mutate(
     provincia = fct_reorder(provincia, pred),
-    forma     = tipo
+    forma = tipo
   ) |>
-  ggplot(aes(x = pred, y = provincia,
-             color = modelo, shape = forma)) +
+  ggplot(aes(x = pred, y = provincia, color = modelo, shape = forma)) +
   geom_vline(xintercept = grand_mean, linetype = "dashed", color = "grey50") +
-  geom_point(size = 3, alpha = 0.85,
-             position = position_dodge(width = 0.55)) +
-  scale_color_manual(values = c(
-    "Sin municipios" = "firebrick",
-    "Con municipios" = "steelblue"
-  )) +
-  scale_shape_manual(values = c(
-    "het (efecto real = 0, n_mun = 3, media ≈ -13)" = 17,
-    "hom (efecto real = -5, n_mun = 8, media ≈ -8)" = 15,
-    "resto"                                          = 16
-  )) +
+  geom_point(size = 3, alpha = 0.85, position = position_dodge(width = 0.55)) +
+  scale_color_manual(
+    values = c(
+      "Sin municipios" = "firebrick",
+      "Con municipios" = "steelblue"
+    )
+  ) +
+  scale_shape_manual(
+    values = c(
+      "het (efecto real = 0, n_mun = 3, media ≈ -13)" = 17,
+      "hom (efecto real = -5, n_mun = 8, media ≈ -8)" = 15,
+      "resto" = 16
+    )
+  ) +
   labs(
-    x     = "Predicción a nivel provincia  (re.form = ~(1|provincia))",
-    y     = NULL, color = NULL, shape = NULL,
+    x = "Predicción a nivel provincia  (re.form = ~(1|provincia))",
+    y = NULL,
+    color = NULL,
+    shape = NULL,
     title = "Predicciones de provincia: sin vs con municipios",
     subtitle = "Línea = media nacional (−3)  |  triángulo = het  |  cuadrado = hom"
   ) +
@@ -245,16 +264,28 @@ preds |>
   pivot_wider(names_from = modelo, values_from = pred) |>
   mutate(
     media_bruta = map_dbl(provincia, ~ mean(datos$y[datos$provincia == .x])),
-    cambio      = `Con municipios` - `Sin municipios`
+    cambio = `Con municipios` - `Sin municipios`
   ) |>
   arrange(`Sin municipios`) |>
   mutate(across(where(is.numeric), \(x) round(x, 2))) |>
-  select(provincia, tipo, media_bruta,
-         `Sin municipios`, `Con municipios`, cambio) |>
+  select(
+    provincia,
+    tipo,
+    media_bruta,
+    `Sin municipios`,
+    `Con municipios`,
+    cambio
+  ) |>
   knitr::kable(
-    col.names = c("Provincia", "Tipo", "Media bruta",
-                  "Pred sin mun", "Pred con mun", "Cambio"),
-    caption   = "Predicciones a nivel provincia (re.form = ~(1|provincia))"
+    col.names = c(
+      "Provincia",
+      "Tipo",
+      "Media bruta",
+      "Pred sin mun",
+      "Pred con mun",
+      "Cambio"
+    ),
+    caption = "Predicciones a nivel provincia (re.form = ~(1|provincia))"
   )
 ```
 
