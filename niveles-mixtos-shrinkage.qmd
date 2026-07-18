@@ -37,14 +37,17 @@ editor:
 ::: callout-note
 ## Listening
 
-<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+
 </iframe>
 :::
 
 Tienes un modelo mixto con estructura jerárquica: provincias, municipios, observaciones.
 Ajustas el modelo solo con el nivel provincia.
 Una provincia te sale con una estimación muy extrema que no cuadra con lo que esperas.
-Metes los municipios. La estimación de esa provincia se modera drásticamente. ¿Por qué?
+Metes los municipios.
+La estimación de esa provincia se modera drásticamente.
+¿Por qué?
 
 La respuesta tiene que ver con cómo los modelos mixtos reparten la varianza entre niveles.
 Lo que a mí me sorprendió: **el nivel intermedio no solo explica su propia varianza — al añadirlo, cambia cuánto se contrae la estimación del nivel superior, y la magnitud del cambio depende de cuánta heterogeneidad había oculta en ese nivel intermedio**.
@@ -181,9 +184,14 @@ data.frame(
 
 Esto es lo central:
 
-- **Sin municipios**: `prov_het` aparece con media −13, muy lejos de la media nacional. El modelo interpreta eso como señal real del nivel provincia y estima $\sigma^2_{\text{prov}}$ grande. Con $\sigma^2_{\text{prov}}$ grande, el factor de shrinkage es alto y los BLUPs se contraen poco — `prov_het` se queda cerca de −13.
+- **Sin municipios**: `prov_het` aparece con media −13, muy lejos de la media nacional.
+  El modelo interpreta eso como señal real del nivel provincia y estima $\sigma^2_{\text{prov}}$ grande.
+  Con $\sigma^2_{\text{prov}}$ grande, el factor de shrinkage es bajo y los BLUPs se contraen poco — `prov_het` se queda cerca de −13.
 
-- **Con municipios**: la heterogeneidad interna de `prov_het` (municipios de −43 a +17) infla $\sigma^2_{\text{mun}}$. El modelo reconoce que gran parte de lo que parecía señal de provincia era en realidad varianza entre municipios. $\sigma^2_{\text{prov}}$ cae. Con $\sigma^2_{\text{prov}}$ más pequeña, el shrinkage aumenta y el BLUP de `prov_het` se contrae mucho más hacia la media nacional.
+- **Con municipios**: la heterogeneidad interna de `prov_het` (municipios de −43 a +17) infla $\sigma^2_{\text{mun}}$.
+  El modelo reconoce que gran parte de lo que parecía señal de provincia era en realidad varianza entre municipios.
+  $\sigma^2_{\text{prov}}$ cae.
+  Con $\sigma^2_{\text{prov}}$ más pequeña, el shrinkage aumenta y el BLUP de `prov_het` se contrae mucho más hacia la media nacional.
 
 La fórmula del BLUP de provincia $j$ en el modelo de tres niveles es aproximadamente:
 
@@ -191,8 +199,8 @@ $$\hat{u}_j \approx (\bar{y}_j - \mu) \cdot \frac{\sigma^2_{\text{prov}}}{\sigma
 
 Hay dos palancas que reducen el reliability ratio y aumentan el shrinkage de `prov_het` en el modelo con municipios:
 
-1. $\sigma^2_{\text{prov}}$ **cae**: la heterogeneidad interna de `prov_het` inflaba $\sigma^2_{\text{prov}}$ en el modelo sin municipios; al incluirlos, esa varianza se reabsorbe en $\sigma^2_{\text{mun}}$.
-2. $n_{\text{mun},j}$ **es pequeño** para `prov_het` (3 frente a 8): con pocos municipios, el denominador crece y el ratio cae más. Una provincia con 3 municipios muy dispersos proporciona mucha menos información sobre el verdadero efecto de esa provincia que una con 8 municipios compactos.
+1.  $\sigma^2_{\text{prov}}$ **cae**: la heterogeneidad interna de `prov_het` inflaba $\sigma^2_{\text{prov}}$ en el modelo sin municipios; al incluirlos, esa varianza se reabsorbe en $\sigma^2_{\text{mun}}$.
+2.  $n_{\text{mun},j}$ **es pequeño** para `prov_het` (3 frente a 8): con pocos municipios, el denominador crece y el ratio cae más. Una provincia con 3 municipios muy dispersos proporciona mucha menos información sobre el verdadero efecto de esa provincia que una con 8 municipios compactos.
 
 ## Predicciones a nivel de provincia
 
@@ -291,16 +299,19 @@ preds |>
 
 ## Por qué no basta con que ambas tengan media −13
 
-Podría parecer que la comparación más limpia sería poner las dos provincias de interés exactamente en −13. Sin embargo, si prov_hom también tiene media −13 con efecto genuino de −10, $\sigma^2_{\text{prov}}$ en el modelo con municipios sigue siendo grande (prov_hom la mantiene inflada), y el shrinkage adicional de prov_het se diluye.
+Podría parecer que la comparación más limpia sería poner las dos provincias de interés exactamente en −13.
+Sin embargo, si prov_hom también tiene media −13 con efecto genuino de −10, $\sigma^2_{\text{prov}}$ en el modelo con municipios sigue siendo grande (prov_hom la mantiene inflada), y el shrinkage adicional de prov_het se diluye.
 
-El efecto es máximo cuando **prov_het es la principal responsable de que $\sigma^2_{\text{prov}}$ sea grande** en el modelo sin municipios. Al añadir municipios, esa varianza se reabsorbe, $\sigma^2_{\text{prov}}$ cae, y `prov_het` recibe el impacto completo del shrinkage aumentado.
+El efecto es máximo cuando **prov_het es la principal responsable de que** $\sigma^2_{\text{prov}}$ sea grande en el modelo sin municipios.
+Al añadir municipios, esa varianza se reabsorbe, $\sigma^2_{\text{prov}}$ cae, y `prov_het` recibe el impacto completo del shrinkage aumentado.
 
 ## Resumen
 
 | Situación | $\sigma^2_{\text{prov}}$ estimada | Shrinkage de la provincia extrema |
-|---|---|---|
+|------------------------|------------------------|------------------------|
 | Sin municipios, prov_het heterogénea | Grande (inflada por prov_het) | Poco — BLUP cerca de media bruta |
 | Con municipios, prov_het heterogénea | Pequeña (heterogeneidad reabsorbida) | Mucho — BLUP se acerca a media nacional |
 | Con o sin municipios, prov_hom homogénea | Similar en ambos modelos | Cambio pequeño |
 
-La moraleja: omitir un nivel intermedio no solo ignora ese nivel — distorsiona las estimaciones del superior. Y la distorsión es mayor cuanto más heterogéneo sea el nivel omitido, porque esa heterogeneidad infla $\sigma^2_{\text{prov}}$ y reduce artificialmente el shrinkage.
+La moraleja: omitir un nivel intermedio no solo ignora ese nivel — distorsiona las estimaciones del superior.
+Y la distorsión es mayor cuanto más heterogéneo sea el nivel omitido, porque esa heterogeneidad infla $\sigma^2_{\text{prov}}$ y reduce artificialmente el shrinkage.
