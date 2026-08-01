@@ -39,7 +39,7 @@ Note
 <p>Dos provincias son de especial interés:</p>
 <ul>
 <li><p><strong>Provincia heterogénea</strong> (<code>prov_het</code>): su efecto verdadero de provincia es 0 — es una provincia normal. Pero tiene <strong>solo 3 municipios</strong> muy dispares entre sí, con media global de −10, lo que hace que la media bruta de la provincia sea −13. (-3 dela media nacional más -10 derivada de lo que ha salido en sus municipios) La extremidad viene de los municipios, no de la provincia. El número reducido de municipios (3 frente a 8 del resto) amplifica el problema: menos datos para estimar la media de la provincia y más varianza interna.</p></li>
-<li><p><strong>Provincia homogénea</strong> (<code>prov_hom</code>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −8.</p></li>
+<li><p><strong>Provincia homogénea</strong> (<code>prov_hom</code>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −4.</p></li>
 </ul>
 <p>El resto de provincias tienen 8 municipios, efectos moderados y municipios homogéneos, con medias alrededor de −3.</p>
 <div class="cell">
@@ -1498,7 +1498,7 @@ font-style: inherit;">(</span>width <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.55</span><span class="op" style="color: #5E5E5E;
+font-style: inherit;">0.2</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">)</span><span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -1557,7 +1557,7 @@ background-color: null;
 font-style: inherit;">17</span>,</span>
 <span>    <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"hom (efecto real = -5, n_mun = 8, media ≈ -8)"</span> <span class="op" style="color: #5E5E5E;
+font-style: inherit;">"hom (efecto real = -5, n_mun = 8, media ≈ -4)"</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
 background-color: null;
@@ -1645,7 +1645,7 @@ font-style: inherit;">)</span></span></code></pre></div></div>
 </div>
 </div>
 </div>
-<p>El triángulo (<code>prov_het</code>) se desplaza notablemente entre los dos modelos: sin municipios está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</p>
+<p>El triángulo (<code>prov_het</code>) se desplaza notablemente entre los dos modelos: sin municipios (azul) está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</p>
 <p>El cuadrado (<code>prov_hom</code>) apenas se mueve: su extremidad es genuina, los municipios son consistentes, y añadir el nivel municipio no cambia mucho su estimación.</p>
 <p>El resto de provincias (círculos) tienen pequeñas variaciones porque su variabilidad interna es baja.</p>
 <div class="cell">

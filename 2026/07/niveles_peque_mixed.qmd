@@ -71,7 +71,7 @@ Pero tiene **solo 3 municipios** muy dispares entre sí, con media global de −
 La extremidad viene de los municipios, no de la provincia.
 El número reducido de municipios (3 frente a 8 del resto) amplifica el problema: menos datos para estimar la media de la provincia y más varianza interna.
 
-- **Provincia homogénea** (`prov_hom`): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −8.
+- **Provincia homogénea** (`prov_hom`): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −4.
 
 El resto de provincias tienen 8 municipios, efectos moderados y municipios homogéneos, con medias alrededor de −3.
 
@@ -260,14 +260,14 @@ preds |>
              color = modelo, shape = forma)) +
   geom_vline(xintercept = grand_mean, linetype = "dashed", color = "grey50") +
   geom_point(size = 3, alpha = 0.85,
-             position = position_dodge(width = 0.55)) +
+             position = position_dodge(width = 0.2)) +
   scale_color_manual(values = c(
     "Sin municipios" = "firebrick",
     "Con municipios" = "steelblue"
   )) +
   scale_shape_manual(values = c(
     "het (efecto real = 0, n_mun = 3, media ≈ -13)" = 17,
-    "hom (efecto real = -5, n_mun = 8, media ≈ -8)" = 15,
+    "hom (efecto real = -5, n_mun = 8, media ≈ -4)" = 15,
     "resto"                                          = 16
   )) +
   labs(
@@ -280,7 +280,7 @@ preds |>
   theme(legend.position = "bottom", legend.direction = "vertical")
 ```
 
-El triángulo (`prov_het`) se desplaza notablemente entre los dos modelos: sin municipios está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.
+El triángulo (`prov_het`) se desplaza notablemente entre los dos modelos: sin municipios (azul) está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.
 
 El cuadrado (`prov_hom`) apenas se mueve: su extremidad es genuina, los municipios son consistentes, y añadir el nivel municipio no cambia mucho su estimación.
 

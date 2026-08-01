@@ -449,7 +449,7 @@ Note
 <p>Dos provincias son de especial interés:</p>
 <ul>
 <li><p><strong>Provincia heterogénea</strong> (<code>prov_het</code>): su efecto verdadero de provincia es 0 — es una provincia normal. Pero tiene <strong>solo 3 municipios</strong> muy dispares entre sí, con media global de −10, lo que hace que la media bruta de la provincia sea −13. (-3 dela media nacional más -10 derivada de lo que ha salido en sus municipios) La extremidad viene de los municipios, no de la provincia. El número reducido de municipios (3 frente a 8 del resto) amplifica el problema: menos datos para estimar la media de la provincia y más varianza interna.</p></li>
-<li><p><strong>Provincia homogénea</strong> (<code>prov_hom</code>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −8.</p></li>
+<li><p><strong>Provincia homogénea</strong> (<code>prov_hom</code>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −4.</p></li>
 </ul>
 <p>El resto de provincias tienen 8 municipios, efectos moderados y municipios homogéneos, con medias alrededor de −3.</p>
 <div class="cell">
@@ -654,14 +654,14 @@ Note
 <span>             color <span class="op">=</span> <span class="va">modelo</span>, shape <span class="op">=</span> <span class="va">forma</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">grand_mean</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">"grey50"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, alpha <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>             position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html">position_dodge</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.55</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>             position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html">position_dodge</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Sin municipios"</span> <span class="op">=</span> <span class="st">"firebrick"</span>,</span>
 <span>    <span class="st">"Con municipios"</span> <span class="op">=</span> <span class="st">"steelblue"</span></span>
 <span>  <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_shape_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"het (efecto real = 0, n_mun = 3, media ≈ -13)"</span> <span class="op">=</span> <span class="fl">17</span>,</span>
-<span>    <span class="st">"hom (efecto real = -5, n_mun = 8, media ≈ -8)"</span> <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>    <span class="st">"hom (efecto real = -5, n_mun = 8, media ≈ -4)"</span> <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>    <span class="st">"resto"</span>                                          <span class="op">=</span> <span class="fl">16</span></span>
 <span>  <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span></span>
@@ -679,7 +679,7 @@ Note
 </div>
 </div>
 </div>
-<p>El triángulo (<code>prov_het</code>) se desplaza notablemente entre los dos modelos: sin municipios está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</p>
+<p>El triángulo (<code>prov_het</code>) se desplaza notablemente entre los dos modelos: sin municipios (azul) está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</p>
 <p>El cuadrado (<code>prov_hom</code>) apenas se mueve: su extremidad es genuina, los municipios son consistentes, y añadir el nivel municipio no cambia mucho su estimación.</p>
 <p>El resto de provincias (círculos) tienen pequeñas variaciones porque su variabilidad interna es baja.</p>
 <div class="cell">
@@ -1458,7 +1458,7 @@ Note
 <span id="cb11-71"><a href="#cb11-71" aria-hidden="true" tabindex="-1"></a>La extremidad viene de los municipios, no de la provincia.</span>
 <span id="cb11-72"><a href="#cb11-72" aria-hidden="true" tabindex="-1"></a>El número reducido de municipios (3 frente a 8 del resto) amplifica el problema: menos datos para estimar la media de la provincia y más varianza interna.</span>
 <span id="cb11-73"><a href="#cb11-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-74"><a href="#cb11-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Provincia homogénea** (<span class="in">`prov_hom`</span>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −8.</span>
+<span id="cb11-74"><a href="#cb11-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Provincia homogénea** (<span class="in">`prov_hom`</span>): su efecto verdadero de provincia es −5 — genuinamente por debajo de la media. Tiene 8 municipios compactos y homogéneos. Media bruta: −4.</span>
 <span id="cb11-75"><a href="#cb11-75" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-76"><a href="#cb11-76" aria-hidden="true" tabindex="-1"></a>El resto de provincias tienen 8 municipios, efectos moderados y municipios homogéneos, con medias alrededor de −3.</span>
 <span id="cb11-77"><a href="#cb11-77" aria-hidden="true" tabindex="-1"></a></span>
@@ -1646,14 +1646,14 @@ Note
 <span id="cb11-265"><a href="#cb11-265" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> modelo, <span class="at">shape =</span> forma)) <span class="sc">+</span></span>
 <span id="cb11-266"><a href="#cb11-266" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> grand_mean, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"grey50"</span>) <span class="sc">+</span></span>
 <span id="cb11-267"><a href="#cb11-267" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>,</span>
-<span id="cb11-268"><a href="#cb11-268" aria-hidden="true" tabindex="-1"></a>             <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.55</span>)) <span class="sc">+</span></span>
+<span id="cb11-268"><a href="#cb11-268" aria-hidden="true" tabindex="-1"></a>             <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.2</span>)) <span class="sc">+</span></span>
 <span id="cb11-269"><a href="#cb11-269" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(</span>
 <span id="cb11-270"><a href="#cb11-270" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Sin municipios"</span> <span class="ot">=</span> <span class="st">"firebrick"</span>,</span>
 <span id="cb11-271"><a href="#cb11-271" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Con municipios"</span> <span class="ot">=</span> <span class="st">"steelblue"</span></span>
 <span id="cb11-272"><a href="#cb11-272" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
 <span id="cb11-273"><a href="#cb11-273" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(</span>
 <span id="cb11-274"><a href="#cb11-274" aria-hidden="true" tabindex="-1"></a>    <span class="st">"het (efecto real = 0, n_mun = 3, media ≈ -13)"</span> <span class="ot">=</span> <span class="dv">17</span>,</span>
-<span id="cb11-275"><a href="#cb11-275" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hom (efecto real = -5, n_mun = 8, media ≈ -8)"</span> <span class="ot">=</span> <span class="dv">15</span>,</span>
+<span id="cb11-275"><a href="#cb11-275" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hom (efecto real = -5, n_mun = 8, media ≈ -4)"</span> <span class="ot">=</span> <span class="dv">15</span>,</span>
 <span id="cb11-276"><a href="#cb11-276" aria-hidden="true" tabindex="-1"></a>    <span class="st">"resto"</span>                                          <span class="ot">=</span> <span class="dv">16</span></span>
 <span id="cb11-277"><a href="#cb11-277" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
 <span id="cb11-278"><a href="#cb11-278" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
@@ -1666,7 +1666,7 @@ Note
 <span id="cb11-285"><a href="#cb11-285" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, <span class="at">legend.direction =</span> <span class="st">"vertical"</span>)</span>
 <span id="cb11-286"><a href="#cb11-286" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb11-287"><a href="#cb11-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-288"><a href="#cb11-288" aria-hidden="true" tabindex="-1"></a>El triángulo (<span class="in">`prov_het`</span>) se desplaza notablemente entre los dos modelos: sin municipios está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</span>
+<span id="cb11-288"><a href="#cb11-288" aria-hidden="true" tabindex="-1"></a>El triángulo (<span class="in">`prov_het`</span>) se desplaza notablemente entre los dos modelos: sin municipios (azul) está cerca de su media bruta (−13); con municipios se acerca bastante a la media nacional porque el modelo ahora sabe que esa extremidad era ruido de municipio, no señal de provincia.</span>
 <span id="cb11-289"><a href="#cb11-289" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-290"><a href="#cb11-290" aria-hidden="true" tabindex="-1"></a>El cuadrado (<span class="in">`prov_hom`</span>) apenas se mueve: su extremidad es genuina, los municipios son consistentes, y añadir el nivel municipio no cambia mucho su estimación.</span>
 <span id="cb11-291"><a href="#cb11-291" aria-hidden="true" tabindex="-1"></a></span>
