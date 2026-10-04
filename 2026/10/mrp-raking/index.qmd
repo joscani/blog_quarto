@@ -1458,6 +1458,84 @@ Algunas cosas que se ven:
 - **Andalucía** sigue la tendencia nacional: el PP baja del 36,0 % al 30,6 % y el PSOE del 33,0 % al 25,4 %, mientras VOX sube del 15,1 % al 19,3 %. OTROS sube al 16,6 %: ahí están Adelante Andalucía, Se Acabó la Fiesta y el voto en blanco.
 - **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 25 %. En Andalucía, con 534, el PP va del 28,6 % al 32,4 %.
 
+### ¿Y si quitamos la M? Efectos fijos
+
+Para aislar lo que aporta la M, la sustituyo por un multinomial de efectos fijos — el de la primera parte del post, pero ya con el recuerdo y los doce partidos — y postestratifico con la misma tabla y la misma participación. Si la M no aportara nada, las dos estimaciones coincidirían.
+
+```{r modelo-fijos-12}
+mod_fijos <- multinom(
+  voto ~ sexo + edad + edu + rec + ccaa,
+  data = dat,
+  trace = FALSE,
+  maxit = 500
+)
+
+theta_fijos <- predict(mod_fijos, newdata = post, type = "probs")
+
+# ceros estructurales, igual que con el MRP
+theta_fijos <- theta_fijos * mascara
+theta_fijos <- theta_fijos / rowSums(theta_fijos)
+
+# la misma participación, con su media posterior
+w_fijos <- post$N * colMeans(t_cal)
+
+est_fijos <- 100 * colSums(theta_fijos * w_fijos) / sum(w_fijos)
+```
+
+A nivel nacional, los dos métodos salen casi clavados:
+
+```{r comparacion-fijos}
+comparacion |>
+  mutate(fijos = est_fijos[partido]) |>
+  select(partido, bruto, pesos_cis, fijos, mrp, cis_publicado) |>
+  gt(rowname_col = "partido") |>
+  cols_label(
+    bruto = "Bruto",
+    pesos_cis = "Pesos CIS",
+    fijos = "Efectos fijos",
+    mrp = "MRP",
+    cis_publicado = "CIS publicado"
+  ) |>
+  fmt_number(decimals = 1, locale = "es") |>
+  sub_missing(missing_text = "—") |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(columns = c(fijos, mrp))
+  )
+```
+
+A nivel nacional el trabajo lo hace la P: la tabla de postestratificación corrige los márgenes, y el modelo solo reparte dentro de cada celda. Con 3.128 entrevistas, cómo se estime ese reparto pesa poco al sumar.
+
+Por comunidad, en cambio, la diferencia es grande:
+
+```{r fijos-ccaa}
+est_fijos_ccaa <- map(ccaa_reg, function(cc) {
+  i <- post$ccaa == cc
+  tibble(
+    ccaa = cc,
+    partido = voto_lv,
+    fijos = 100 * colSums(theta_fijos[i, ] * w_fijos[i]) / sum(w_fijos[i]),
+    mrp = 100 * colMeans(mrp_ccaa_draws[[cc]])
+  )
+}) |>
+  bind_rows() |>
+  filter(fijos >= 1 | mrp >= 1 | (partido == "AC" & ccaa == "Cataluña")) |>
+  mutate(partido = if_else(partido == "SUMAR", "SUMAR y aliados", partido)) |>
+  arrange(ccaa, desc(fijos))
+
+est_fijos_ccaa |>
+  gt(groupname_col = "ccaa", rowname_col = "partido") |>
+  cols_label(fijos = "Efectos fijos", mrp = "MRP") |>
+  tab_spanner("% de voto", columns = c(fijos, mrp)) |>
+  fmt_number(decimals = 1, locale = "es")
+```
+
+- **Donde hay pocas entrevistas, el modelo fijo se cree el ruido.** Canarias: VOX 20,5 % (MRP: 16,5) y Coalición Canaria 3,0 % (MRP: 5,6). Galicia: PP 38,8 % (MRP: 35,1) y SUMAR 3,8 % (MRP: 6,0). Navarra: OTROS 23,8 % (MRP: 20,2). Es el efecto Melilla de la primera parte del post, esta vez con consecuencias en la estimación.
+- **En Cataluña pasa lo contrario.** El PP fijo sale en un 12,1 %, frente al 15,2 % del MRP: sin multinivel, la transferencia PSOE→PP es la local (2,7 %), no la casi nacional (5,7 %), y el PP catalán cae al bruto de la encuesta (12,0 %). Es la contrapartida del pooling que discutíamos arriba.
+- **Donde hay datos, coinciden.** Andalucía y el País Vasco, con muchas entrevistas, salen casi igual con los dos métodos.
+
+Dos avisos: los efectos fijos no dan intervalos (son estimaciones puntuales), y en las celdas sin datos extrapolan coeficientes, lo que a nivel nacional se compensa pero por comunidad puede morder. La M no es gratis — en Cataluña añade unos 3 puntos al PP — pero es la que compra estabilidad donde hay pocas entrevistas.
+
 ### Jugando con la posterior
 
 Hasta aquí he resumido cada posterior con su media y un intervalo. Pero tengo mucho más: 500 escenarios completos y coherentes entre sí. En cada draw, los doce partidos suman 100 %. Así que cualquier pregunta sobre combinaciones de partidos se responde contando en cuántos draws se cumple.

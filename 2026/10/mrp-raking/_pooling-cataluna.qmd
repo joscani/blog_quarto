@@ -1,0 +1,110 @@
+---
+title: "El pooling de ccaa × recuerdo y el PP en Cataluña"
+date: '2026-10-04'
+description: 'Nota de análisis complementaria al post de MRP: cuántos puntos de PP catalán vienen del partial pooling de la interacción ccaa:rec, cuantificados con un contrafactual sin refit.'
+format:
+  html:
+    toc: true
+execute:
+  echo: true
+---
+
+Nota complementaria al post [MRP y raking: postestratificar sin tener la conjunta](index.html). Allí, el aviso 5 reconoce que el PP sale en Cataluña por encima del 23-J y de la propia encuesta catalana, y lo atribuye en parte al *partial pooling* de la interacción `ccaa:rec`. Esta nota cuantifica cuántos puntos de PP catalán son pooling.
+
+## La pregunta
+
+En el MRP del post, el PP sale en Cataluña en un 15,2 % (13,8 a 16,7), por encima del 13,2 % del 23-J y del 12,0 % bruto de la encuesta catalana. El diagnóstico del post: con 4 casos de 146, el modelo no se cree que la transferencia PSOE→PP en Cataluña (2,7 %) sea distinta de la nacional (6,8 %), y aplica casi la nacional.
+
+## El diagnóstico previo
+
+Tres números del modelo ajustado (cacheado en `datos/mod_mrp.rds`):
+
+- El efecto aleatorio de `Cataluña_PSOE` sobre `muPSOE` — por donde entra la transferencia PSOE→PP — sale 0,07 (IC 95 %: −0,12 a 0,40): contraído casi a 0.
+- El dato bruto: en Cataluña, de los 146 que recuerdan votar al PSOE, el 2,7 % pasaría ahora al PP y el 76,7 % repetiría; en el conjunto de España, 6,8 % y 75,4 %.
+- La desviación típica de `ccaa:rec` para `muPSOE` sale 0,11 con una prior `exponential(1)`: la verosimilitud la domina. La contracción del efecto concreto viene de la estructura multinivel (135 niveles, la mayoría casi sin datos), no de la prior.
+
+La vía directa era reajustar con una prior más ancha (`exponential(0.5)`) en las sd de `ccaa:rec`. Cuesta una compilación y un muestreo completos (~10 minutos) y, con la sd dominada por los datos, tenía poco recorrido precisamente para `muPSOE`. En su lugar, contrafactual a posteriori.
+
+## El contrafactual, sin refit
+
+Sobre los 500 draws de la posterior y los pesos de postestratificación ($N_j t_j$) del post: para cada grupo de recuerdo con datos en Cataluña, sustituyo el share que el modelo da al PP (y al VOX) dentro del grupo por el share local observado, con incertidumbre por remuestreo binomial. Los grupos sin datos locales conservan la predicción del modelo, que es lo que haría el pooling ahí. Es un contrafactual de primer orden: no hay refit, hay sustitución de shares columna a columna.
+
+```{r contrafactual}
+#| eval: false
+# Necesita los objetos que deja 05_mrp.R: dat, post, ep (500 draws x
+# 4.470 celdas x 12 partidos) y W (500 x 4.470, los pesos N_j * t_j).
+
+i_cat   <- which(post$ccaa == "Cataluña")
+W_cat   <- W[, i_cat, drop = FALSE]
+rec_cat <- as.character(post$rec[i_cat])
+wtot    <- rowSums(W_cat)
+
+loc <- dat |> filter(ccaa == "Cataluña") |> count(rec, voto, name = "n")
+cnt <- xtabs(n ~ rec + voto, loc) # rec x voto en Cataluña
+
+grupos <- unique(rec_cat)
+set.seed(4721)
+
+cf <- list()
+for (p in c("PP", "VOX")) {
+  cf[[p]] <- list(
+    modelo = matrix(0, 500, length(grupos), dimnames = list(NULL, grupos)),
+    local  = matrix(0, 500, length(grupos), dimnames = list(NULL, grupos))
+  )
+}
+
+for (r in grupos) {
+  i_r <- which(rec_cat == r)
+  W_r <- W_cat[, i_r, drop = FALSE]
+  n_r <- sum(cnt[r, ])
+  for (p in c("PP", "VOX")) {
+    cf[[p]]$modelo[, r] <- 100 * rowSums(W_r * ep[, i_cat, ][, i_r, p]) / wtot
+    if (n_r > 0) {
+      b <- rbinom(500, n_r, cnt[r, p] / n_r) / n_r
+      cf[[p]]$local[, r] <- 100 * (rowSums(W_r) / wtot) * b
+    } else {
+      cf[[p]]$local[, r] <- cf[[p]]$modelo[, r]
+    }
+  }
+}
+
+# totales por partido: media e intervalo del contrafactual
+tibble(
+  partido = c("PP", "VOX"),
+  modelo = sapply(c("PP", "VOX"), function(p) mean(rowSums(cf[[p]]$modelo))),
+  local = sapply(c("PP", "VOX"), function(p) mean(rowSums(cf[[p]]$local))),
+  q05 = sapply(c("PP", "VOX"), function(p) quantile(rowSums(cf[[p]]$local), .05)),
+  q95 = sapply(c("PP", "VOX"), function(p) quantile(rowSums(cf[[p]]$local), .95))
+)
+```
+
+## Resultados
+
+Contribución de cada grupo de recuerdo a los puntos de PP y VOX en Cataluña: la columna "modelo" es la del MRP, la de "local" el contrafactual sin pooling (IC 90 % por remuestreo binomial).
+
+| Grupo (recuerdo 2023) | n | PP modelo | PP local | IC 90 % | VOX modelo | VOX local | IC 90 % |
+|---|---|---|---|---|---|---|---|
+| PP | 54 | 7,9 | 7,7 | 6,5–8,8 | 1,9 | 2,7 | 1,6–3,7 |
+| PSOE | 146 | 1,5 | 0,7 | 0,2–1,3 | 0,7 | 0,5 | 0,2–1,1 |
+| VOX | 28 | 0,5 | 0,7 | 0,0–1,3 | 4,6 | 4,0 | 3,1–4,9 |
+| SUMAR | 45 | 0,1 | 0,0 | 0,0–0,0 | 0,0 | 0,0 | 0,0–0,0 |
+| ERC | 65 | 0,3 | 0,0 | 0,0–0,0 | 0,3 | 0,3 | 0,0–0,7 |
+| JUNTS | 38 | 0,4 | 0,2 | 0,0–0,6 | 0,1 | 0,0 | 0,0–0,0 |
+| OTROS | 23 | 0,5 | 0,3 | 0,0–0,7 | 0,2 | 0,2 | 0,0–0,5 |
+| ABST | 47 | 3,5 | 2,9 | 1,2–4,6 | 2,9 | 3,6 | 1,9–5,4 |
+| NO_PODIA | 12 | 0,4 | 0,0 | 0,0–0,0 | 0,9 | 0,4 | 0,0–1,1 |
+| **TOTAL** | 458 | **15,2** | **12,5** | **10,3–14,8** | **11,7** | **11,7** | **9,3–14,2** |
+
+La columna "modelo" del total reproduce el 15,2 % y el 11,7 % del MRP en Cataluña: el contrafactual está calibrado contra la estimación del post.
+
+## Lectura
+
+- Sin pooling, el PP catalán baja de 15,2 % a **12,5 %** (IC 90 %: 10,3–14,8): el pooling añade unos 2,7 puntos. El contrafactual aterriza entre el bruto de la encuesta (12,0 %) y el 23-J (13,2 %).
+- Los puntos vienen sobre todo de tres sitios: la transferencia PSOE→PP aplicada a escala nacional (Δ 0,8 puntos), los abstencionistas de 2023 (Δ 0,6) y los nuevos votantes (Δ 0,4, con solo 12 casos).
+- Para VOX el efecto neto es nulo (11,7 % en ambos): lo que gana en unos grupos lo pierde en otros (gana 0,7 en los votantes del PP de 2023, pierde 0,7 en los abstencionistas).
+
+## Avisos
+
+1. El contrafactual es de primer orden: sustituye shares, no refit. El resto de partidos conserva la predicción del modelo, así que las doce columnas ya no suman 100 exacto; los números solo valen para las columnas PP y VOX.
+2. Trata el patrón local como verdad, con su incertidumbre muestral (remuestreo binomial de las cuentas locales). No incorpora la incertidumbre del modelo en los grupos sin datos.
+3. La comparación del post con un modelo de efectos fijos postestratificado apunta en la misma dirección: sin multinivel, el PP catalán sale 12,1 %.
