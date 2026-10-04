@@ -14,16 +14,19 @@ cis   <- readRDS(file.path(dir_datos, "cis_imputado.rds"))
 tabla <- readRDS(file.path(dir_datos, "tabla_postestratificacion.rds"))
 tg    <- readRDS(file.path(dir_datos, "targets.rds"))
 
-voto_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS")
+source("2026/10/mrp-raking/00_partidos.R")   # partidos_lv, rec_lv, territorio
+voto_lv <- partidos_lv
 edu_lv  <- c("baja", "media", "alta")
-rec_lv  <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS", "ABST", "NO_PODIA")
 
 # La estimación del CIS para este mismo estudio, sobre voto válido, para
 # tenerla al lado. Está en datos/3577_Estimacion.pdf.
 cis_publicado <- tibble::tibble(
   partido = voto_lv,
-  cis = c(25.5, 31.0, 16.6, 5.7,
-          3.7 + 2.5 + 1.8 + 1.3 + 0.7 + 0.7 + 0.7 + 0.2 + 0.1 + 8.6 + 1.0)
+  # SUMAR incluye a Podemos, como en 00_partidos.R.
+  # OTROS = Se Acabó la Fiesta + UPN + otros partidos + en blanco
+  cis = c(PP = 25.5, PSOE = 31.0, VOX = 16.6, SUMAR = 5.7 + 3.7,
+          ERC = 2.5, JUNTS = 0.7, BILDU = 1.3, PNV = 0.7, BNG = 0.7, CCA = 0.2,
+          OTROS = 1.8 + 0.1 + 8.6 + 1.0)[voto_lv]
 )
 
 cat("== intención recodificada (voto válido) ==\n")
@@ -35,15 +38,27 @@ cat("\nmuestra utilizable:", nrow(dat), "de", nrow(cis), "\n")
 # ---------------------------------------------------------------------------
 # 2. Modelo multinivel
 # ---------------------------------------------------------------------------
-# Se agrega por celda y se usa la multinomial con trials(): hay 6 categorías
-# y muchas combinaciones repetidas, así que no tiene sentido tratar cada
-# entrevista por separado.
+# Se agrega por celda y se usa la multinomial con trials(): hay muchas
+# combinaciones repetidas, así que no tiene sentido tratar cada entrevista
+# por separado.
+#
+# Los partidos regionales llevan un offset: 0 donde se presentan y -20 donde
+# no. Así su probabilidad fuera de su comunidad es prácticamente 0 y esos
+# ceros estructurales no arrastran hacia abajo el efecto de su comunidad.
 
 celdas_enc <- dat %>%
   count(ccaa, sexo, edad, edu, rec, voto) %>%
   pivot_wider(names_from = voto, values_from = n, values_fill = 0)
 celdas_enc$y <- as.matrix(celdas_enc[, voto_lv])
 celdas_enc$n <- rowSums(celdas_enc$y)
+
+con_offsets <- function(d) {
+  for (p in names(territorio)) {
+    d[[paste0("off_", p)]] <- ifelse(d$ccaa %in% territorio[[p]], 0, -20)
+  }
+  d
+}
+celdas_enc <- con_offsets(celdas_enc)
 
 cat("celdas con datos:", nrow(celdas_enc), "\n")
 
@@ -53,10 +68,19 @@ priors <- Reduce(`+`, lapply(paste0("mu", voto_lv[-1]), function(dp) {
     prior_string("exponential(1)", class = "sd", dpar = dp)
 }))
 
+f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa)"
+f_partidos <- lapply(voto_lv[-1], function(p) {
+  offset <- if (p %in% names(territorio)) paste0(" + offset(off_", p, ")") else ""
+  as.formula(paste0("mu", p, " ~ ", f_comun, offset))
+})
+formula_mrp <- do.call(bf, c(list(as.formula(paste("y | trials(n) ~", f_comun))),
+                             f_partidos))
+
 mod <- brm(
-  y | trials(n) ~ sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa),
+  formula_mrp,
   data = celdas_enc, family = multinomial(), prior = priors,
-  chains = 4, iter = 2000, refresh = 0, silent = 2,
+  chains = 4, iter = 2000, refresh = 0, silent = 2, seed = 2026,
+  control = list(adapt_delta = 0.95),
   file = file.path(dir_datos, "mod_mrp")
 )
 print(mod, digits = 2)
@@ -69,12 +93,24 @@ post <- as.data.frame.table(tabla, responseName = "N") %>%
   filter(N > 1e-6) %>%
   mutate(edu = factor(edu, levels = edu_lv),
          rec = factor(rec, levels = rec_lv),
-         n = 1)
+         n = 1) %>%
+  con_offsets()
 
 cat("\nceldas de la tabla con población:", nrow(post), "\n")
 
+set.seed(2026)   # los mismos 500 draws que en el post
 ep <- posterior_epred(mod, newdata = post, allow_new_levels = TRUE, ndraws = 500)
 # ep: draws x celdas x categorías
+
+# Ceros estructurales exactos: el offset deja casi a 0 a los partidos
+# regionales fuera de su territorio, pero no siempre a 0 exacto (fuera de su
+# comunidad el efecto de ccaa solo lo informa la prior). Se anulan y se
+# renormaliza cada celda.
+mascara <- mascara_territorio(post$ccaa, voto_lv)
+for (d in seq_len(dim(ep)[1])) {
+  ep[d, , ] <- ep[d, , ] * mascara
+  ep[d, , ] <- ep[d, , ] / rowSums(ep[d, , ])
+}
 
 agrega <- function(ep, N, grupo = NULL) {
   # devuelve draws x categorías (o draws x grupo x categorías)

@@ -13,7 +13,7 @@ tg  <- readRDS(file.path(dir_datos, "targets.rds"))
 ccaa_lv <- levels(cis$ccaa)
 edad_lv <- levels(cis$edad)
 edu_lv  <- c("baja", "media", "alta")
-rec_lv  <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS", "ABST", "NO_PODIA")
+source("2026/10/mrp-raking/00_partidos.R")   # partidos_lv, rec_lv, territorio
 
 # ---------------------------------------------------------------------------
 # 1. El recuerdo oculto
@@ -42,6 +42,10 @@ falta <- is.na(cis_mod$rec)
 set.seed(2026)
 if (any(falta)) {
   p_imp <- predict(ajuste_imp, newdata = cis_mod[falta, ], type = "probs")
+  # Ceros estructurales: un partido regional no se pudo votar fuera de su
+  # comunidad. Se anula esa probabilidad y se renormaliza cada fila.
+  p_imp <- p_imp * mascara_territorio(cis_mod$ccaa[falta], colnames(p_imp))
+  p_imp <- p_imp / rowSums(p_imp)
   sorteo <- apply(p_imp, 1, function(p) sample(colnames(p_imp), 1, prob = p))
   cis_mod$rec[falta] <- factor(sorteo, levels = rec_lv)
 }
@@ -78,6 +82,12 @@ i18 <- which(dn$edad == "18-20")
 inp <- which(dn$rec == "NO_PODIA")
 semilla[, , i18, , -inp] <- 0
 semilla[, , -i18, , inp] <- 0
+
+# Y los partidos regionales fuera de su comunidad. Los objetivos ya valen 0
+# ahí, pero ponerlos en la semilla deja claro de dónde salen esos ceros.
+for (p in names(territorio)) {
+  semilla[!dn$ccaa %in% territorio[[p]], , , , p] <- 0
+}
 
 cat("ceros estructurales añadidos:", sum(semilla == 0), "celdas\n")
 

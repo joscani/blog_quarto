@@ -12,7 +12,7 @@ ccaa_cod <- read_csv(file.path(dir_datos, "ccaa_codigos.csv"),
 ccaa_lv <- ccaa_cod$ccaa
 edad_lv <- c("18-20", "21-24", "25-34", "35-44", "45-54", "55-64", "65+")
 edu_lv  <- c("baja", "media", "alta")
-rec_lv  <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS", "ABST", "NO_PODIA")
+source("2026/10/mrp-raking/00_partidos.R")   # partidos_lv, rec_lv, territorio
 
 # ---------------------------------------------------------------------------
 # A. Resultados del 23-J por CCAA  ->  marginal de recuerdo
@@ -36,6 +36,12 @@ agrupa_siglas <- function(siglas) {
     grepl("^PSOE$|^PSC$|PSdeG|^PSE-EE|^PSIB|^PSN-PSOE|^PSOE-", siglas) ~ "PSOE",
     siglas == "VOX" ~ "VOX",
     grepl("SUMAR", siglas) ~ "SUMAR",   # incluye MÉS PER MALLORCA-...-SUMAR
+    siglas == "ERC" ~ "ERC",
+    siglas == "JxCAT - JUNTS" ~ "JUNTS",
+    siglas == "EH Bildu" ~ "BILDU",
+    siglas == "EAJ-PNV" ~ "PNV",
+    siglas == "B.N.G." ~ "BNG",
+    siglas == "CCa" ~ "CCA",
     TRUE ~ "OTROS"
   )
 }

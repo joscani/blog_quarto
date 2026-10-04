@@ -57,6 +57,7 @@ Uso el barómetro del CIS de septiembre (estudio 3577). La descarga y la prepara
 
 Los scripts están en el [repositorio del blog](https://github.com/joscani/blog_quarto/tree/master/2026/10/mrp-raking). Se ejecutan en este orden:
 
+0. [`00_partidos.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/00_partidos.R): no se ejecuta solo. Define los partidos, sus territorios y la recodificación de las etiquetas del CIS, y lo cargan los demás scripts.
 1. [`01_descarga.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/01_descarga.R): descarga la población del INE (ECP y EPA) y los resultados del 23-J.
 2. [`02_harmoniza.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/02_harmoniza.R): recodifica la encuesta del CIS y la deja con las mismas categorías que el INE y el Ministerio del Interior.
 3. [`03_targets.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/03_targets.R): construye los objetivos de población para el raking.
@@ -97,7 +98,22 @@ library(nnet)
 library(gt)
 
 dir_datos <- here::here("2026/10/mrp-raking/datos")
-voto_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS")
+voto_lv <- c(
+  "PP", "PSOE", "VOX", "SUMAR",
+  "ERC", "JUNTS", "BILDU", "PNV", "BNG", "CCA",
+  "OTROS"
+)
+voto5_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS") # para la primera parte
+
+# Comunidades en las que se presenta cada partido regional (23-J)
+territorio <- list(
+  ERC = "Cataluña",
+  JUNTS = "Cataluña",
+  BILDU = c("País Vasco", "Navarra"),
+  PNV = "País Vasco",
+  BNG = "Galicia",
+  CCA = "Canarias"
+)
 
 cis <- readRDS(file.path(dir_datos, "cis_imputado.rds"))
 
@@ -119,17 +135,41 @@ dat |>
 
 El recuerdo de voto es lo que más afecta a la intención, pero para ejemplificar mejor lo que hace mejor un modelo multinivel vs uno clásico lo voy a eliminar en esta primera parte del post
 
+::: callout-note
+## Cómo agrupo los partidos
+
+Tanto en la intención de voto (`voto`) como en el recuerdo (`rec`) uso los mismos grupos:
+
+- **PP**, **PSOE** y **VOX**.
+- **SUMAR**, que en realidad es **SUMAR y aliados**: Sumar, Podemos, IU, Compromís, Más Madrid y CHA. Es decir, los partidos que fueron juntos en la candidatura de Sumar el 23-J. Así el recuerdo y la intención miden lo mismo.
+- Los nacionalistas y regionalistas, cada uno por separado: **ERC** y **JUNTS** (Cataluña), **BILDU** (País Vasco y Navarra), **PNV** (País Vasco), **BNG** (Galicia) y **CCA** (Coalición Canaria).
+- **OTROS**: el resto de partidos (Se Acabó la Fiesta, PACMA, CUP, UPN…) y el voto en blanco.
+
+Los partidos regionales solo se pueden votar en su comunidad. Las pocas respuestas de fuera de su territorio (por ejemplo, alguien en Baleares que dice ERC) las paso a OTROS.
+
+El recuerdo tiene además dos categorías: `ABST` (se abstuvo) y `NO_PODIA` (tenía menos de 18 años en julio de 2023).
+:::
+
 
 ### No se llega a tener datos de todas las combinaciones
 
-Si cruzo comunidad, sexo, edad y estudios salen 19 × 2 × 7 × 3 = `r 19 * 2 * 7 * 3` combinaciones posibles o celdas, para entendernos. Veamos cuántas personas hay en cada celda con datos:
+Si cruzo comunidad, sexo, edad y estudios salen 19 × 2 × 7 × 3 = `r 19 * 2 * 7 * 3` combinaciones posibles o celdas, para entendernos. Veamos cuántas personas hay en cada celda con datos.
+
+En esta primera parte agrupo los partidos regionales dentro de OTROS y me quedo con cinco categorías. Para ver qué hace un modelo multinivel no hacen falta más, y los gráficos se leen mejor:
+
+```{r dat-dem}
+dat_dem <- dat |>
+  mutate(voto = fct_other(voto, keep = voto5_lv[-5], other_level = "OTROS"))
+
+count(dat_dem, voto)
+```
 
 ```{r celdas}
-celdas_dem <- dat |>
+celdas_dem <- dat_dem |>
   count(ccaa, sexo, edad, edu, voto) |>
   pivot_wider(names_from = voto, values_from = n, values_fill = 0)
 
-celdas_dem$y <- as.matrix(celdas_dem[, voto_lv])
+celdas_dem$y <- as.matrix(celdas_dem[, voto5_lv])
 celdas_dem$n <- rowSums(celdas_dem$y)
 
 nrow(celdas_dem)
@@ -158,7 +198,7 @@ Do modelos multinomiales con las mismas variables. Lo único que cambia es cómo
 ```{r modelo-fijos}
 mod_fe <- multinom(
   voto ~ sexo + edad + edu + ccaa,
-  data = dat,
+  data = dat_dem,
   trace = FALSE,
   maxit = 500
 )
@@ -167,16 +207,20 @@ mod_fe <- multinom(
 El modelo multinivel se ajusta sobre los datos agregados por celda, con `trials(n)`. Da lo mismo que ajustarlo sobre cada persona y es mucho más rápido. Ver [post antiguo](https://muestrear-no-es-pecado.es/2021/06/04/big-data-para-pobres-iii-bayesiano/index.html)
 
 ```{r priors}
-priors <- Reduce(
-  `+`,
-  lapply(paste0("mu", voto_lv[-1]), function(dp) {
-    prior_string("normal(0, 1.5)", class = "Intercept", dpar = dp) +
-      prior_string("normal(0, 1)", class = "b", dpar = dp) +
-      prior_string("exponential(1)", class = "sd", dpar = dp)
-  })
-)
+# Las mismas priors para cada partido (cada uno es un "mu" respecto al PP)
+priors_multinom <- function(partidos) {
+  Reduce(
+    `+`,
+    lapply(paste0("mu", partidos[-1]), function(dp) {
+      prior_string("normal(0, 1.5)", class = "Intercept", dpar = dp) +
+        prior_string("normal(0, 1)", class = "b", dpar = dp) +
+        prior_string("exponential(1)", class = "sd", dpar = dp)
+    })
+  )
+}
 
-priors
+priors_dem <- priors_multinom(voto5_lv)
+priors_dem
 ```
 
 ```{r modelo-multinivel}
@@ -185,13 +229,15 @@ mod_dem <- brm(
   y | trials(n) ~ sexo + (1 | edad) + (1 | edu) + (1 | ccaa),
   data = celdas_dem,
   family = multinomial(),
-  prior = priors,
+  prior = priors_dem,
   chains = 4,
+  cores = 4,
   iter = 2000,
   refresh = 0,
   silent = 2,
   control = list(adapt_delta = 0.95),
   backend = "cmdstanr",
+  seed = 2026,
   file = file.path(dir_datos, "mod_sin_rec")
 )
 ```
@@ -214,7 +260,7 @@ efectos_fe <- as_tibble(coef_fe, rownames = "partido") |>
   ungroup()
 
 re_ccaa <- ranef(mod_dem)$ccaa
-efectos_ml <- map_dfr(voto_lv[-1], function(p) {
+efectos_ml <- map_dfr(voto5_lv[-1], function(p) {
   tibble(
     partido = p,
     ccaa = rownames(re_ccaa),
@@ -225,7 +271,7 @@ efectos_ml <- map_dfr(voto_lv[-1], function(p) {
 
 efectos <- bind_rows(efectos_fe, efectos_ml) |>
   left_join(n_ccaa |> mutate(ccaa = as.character(ccaa)), by = "ccaa") |>
-  mutate(partido = factor(partido, levels = voto_lv[-1]))
+  mutate(partido = factor(partido, levels = voto5_lv[-1]))
 
 efectos |>
   filter(ccaa %in% c("Ceuta", "Melilla")) |>
@@ -233,9 +279,11 @@ efectos |>
   pivot_wider(names_from = modelo, values_from = efecto)
 ```
 
-En Ceuta y Melilla no hay **ningún** votante de SUMAR entre las 33 entrevistas. El modelo de efectos fijos hace lo que le pedimos: busca el coeficiente que mejor ajusta esos datos. Y el que mejor ajusta un 0 es "menos infinito". Se queda en −8,8 y −10,7 porque el optimizador se para. El multinivel no se cree que un 0 de 16 signifique que en Ceuta nadie vota a SUMAR, y deja el efecto cerca de 0.
+En Melilla no hay **ningún** votante de SUMAR entre sus 17 entrevistas. El modelo de efectos fijos hace lo que le pedimos: busca el coeficiente que mejor ajusta esos datos. Y el que mejor ajusta un 0 es "menos infinito". Se queda en −9,8 porque el optimizador se para. El multinivel no se cree que un 0 de 17 signifique que en Melilla nadie vota a SUMAR, y deja el efecto cerca de 0.
 
-Lo vemos para todas las comunidades, ordenadas por tamaño muestral. Recorto el eje horizontal para que no se coman el gráfico los valores de Ceuta y Melilla.
+Ceuta tiene el problema contrario: 7 de sus 16 entrevistados votarían a VOX. Con efectos fijos, su efecto en VOX es 1,33. El multinivel lo deja en 0,09.
+
+Lo vemos para todas las comunidades, ordenadas por tamaño muestral. Recorto el eje horizontal para que no se coma el gráfico el valor de Melilla.
 
 ```{r plot-efectos}
 #| fig-height: 6
@@ -293,7 +341,7 @@ efectos |>
   cols_align("center", -entrevistas)
 ```
 
-Cuantas menos entrevistas, más contracción: más de un 90 % en Ceuta y Melilla, menos de la mitad en las comunidades con más de 200 entrevistas. El modelo decide cuánto contraer cada efecto con dos cosas:
+Cuantas menos entrevistas, más contracción: casi un 90 % en Ceuta y Melilla, y la mitad en las comunidades con más de 200 entrevistas. El modelo decide cuánto contraer cada efecto con dos cosas:
 
 1. **Cuántos datos tiene la comunidad.** Con pocas entrevistas, su estimación propia es poco fiable y el modelo se fía más de la media.
 2. **Cuánto varían las comunidades entre sí.** Es la desviación típica de los efectos de comunidad, y también la estima el modelo.
@@ -302,7 +350,7 @@ Cuantas menos entrevistas, más contracción: más de un 90 % en Ceuta y Melilla
 VarCorr(mod_dem)$ccaa$sd |> round(2)
 ```
 
-En OTROS la desviación típica es la mayor, 0,63. Las comunidades difieren de verdad en el voto a partidos regionales, y el modelo deja que se separen más.
+En OTROS la desviación típica es la mayor, 0,71. Las comunidades difieren de verdad en el voto a partidos regionales, y el modelo deja que se separen más.
 
 ### Y en una celda concreta
 
@@ -345,19 +393,19 @@ bind_rows(
   as_tibble(pred_ml) |> mutate(celda = nombre_celda, modelo = "multinivel")
 ) |>
   arrange(celda) |>
-  mutate(across(all_of(voto_lv), ~ 100 * .x)) |>
+  mutate(across(all_of(voto5_lv), ~ 100 * .x)) |>
   gt(groupname_col = "celda", rowname_col = "modelo") |>
-  tab_spanner("% de voto predicho", columns = all_of(voto_lv)) |>
-  fmt_number(all_of(voto_lv), decimals = 1, locale = "es") |>
+  tab_spanner("% de voto predicho", columns = all_of(voto5_lv)) |>
+  fmt_number(all_of(voto5_lv), decimals = 1, locale = "es") |>
   tab_style(
     style = cell_text(weight = "bold"),
     locations = cells_body(columns = c(VOX, SUMAR))
   )
 ```
 
-Las diferencias son grandes. En Ceuta, 7 de las 16 personas entrevistadas votarían a VOX. El modelo de efectos fijos se lo cree del todo y le da a VOX un 34 % en la primera celda y un 59 % en la segunda. Y SUMAR sale con un 0 % exacto en las dos, por ese −8,8. El multinivel modera los dos extremos: VOX baja al 12 % y al 27 %, y SUMAR sube al 3,5 % y al 6,2 %.
+Las diferencias son grandes. El modelo de efectos fijos se cree del todo los 7 votantes de VOX de 16 entrevistas, y le da a VOX un 35 % en la primera celda y un 59 % en la segunda. El multinivel lo modera: VOX baja al 12 % y al 27 %.
 
-¿Cuál está bien? No lo sabemos, porque en esas celdas no hay nadie. Pero un 0 % de SUMAR en cualquier rincón de Ceuta, sacado de 16 entrevistas, no es creíble.
+¿Cuál está bien? No lo sabemos, porque en esas celdas no hay nadie. Pero un 59 % de VOX en una celda sin datos, sacado de 16 entrevistas de toda Ceuta, no es creíble.
 
 Cuando sumemos cientos de celdas en la postestratificación, esos ceros y esos extremos se acumulan. Por eso la M de MRP es multinivel.
 
@@ -482,6 +530,12 @@ orden <- c(
   "PSOE",
   "VOX",
   "SUMAR",
+  "ERC",
+  "JUNTS",
+  "BILDU",
+  "PNV",
+  "BNG",
+  "CCA",
   "OTROS",
   "ABST",
   "NO_PODIA"
@@ -521,10 +575,10 @@ marginales |>
 Lo que salta a la vista:
 
 - **Estudios.** Es la desviación más grande. En la encuesta, el 64,5 % tiene estudios altos. En la población, el 34,2 %. Las personas con estudios bajos son el 42,5 % de la población y solo el 14,0 % de la encuesta. Es un patrón conocido: quien tiene más estudios contesta más a las encuestas.
-- **Recuerdo de voto.** En la encuesta, el 29,2 % dice que votó al PSOE en 2023. En el censo, el PSOE sacó votos equivalentes al 21,1 %. Y solo el 11,9 % dice que se abstuvo, frente al 28,2 % real. SUMAR y OTROS también salen por encima.
+- **Recuerdo de voto.** Ojo, aquí hablo de lo que la gente dice que **votó en 2023**, no de lo que votaría ahora. En la encuesta, el 29,5 % dice que votó al PSOE en 2023. En el censo, el PSOE sacó votos equivalentes al 21,1 %. Y solo el 12,4 % dice que se abstuvo, frente al 28,2 % real. SUMAR y OTROS también salen por encima.
 - **Edad y sexo.** Hay desviaciones, pero pequeñas: faltan jóvenes de 18 a 24 años y mayores de 65.
 
-Los pesos del CIS arreglan bien los estudios, la edad y el sexo. Pero **no arreglan el recuerdo de voto**: con los pesos, el PSOE sigue en un 30,5 % y la abstención en un 15,0 %, muy lejos del 21,1 % y el 28,2 % de las urnas.
+Los pesos del CIS arreglan bien los estudios, la edad y el sexo. Pero **no arreglan el recuerdo de voto**: con los pesos, el PSOE sigue en un 31,0 % y la abstención en un 15,6 %, muy lejos del 21,1 % y el 28,2 % de las urnas.
 
 Por comunidad, las desviaciones vienen del diseño:
 
@@ -637,7 +691,7 @@ Es exactamente la misma. El raking cambia los totales y respeta las asociaciones
 
 ### Raking con cinco variables
 
-Con las cinco variables la idea es la misma, pero la semilla tiene 19 × 2 × 7 × 3 × 7 = 5.586 celdas, y la encuesta tiene 4.018 entrevistas:
+Con las cinco variables la idea es la misma, pero la semilla tiene 19 × 2 × 7 × 3 × 13 = 10.374 celdas, y la encuesta tiene 4.018 entrevistas:
 
 ```{r semilla-5d}
 semilla_enc <- xtabs(~ ccaa + sexo + edad + edu + rec, cis)
@@ -646,7 +700,7 @@ dn <- dimnames(semilla_enc)
 mean(semilla_enc == 0)
 ```
 
-El 71 % de las celdas de la semilla están vacías. Y el IPF solo multiplica: una celda que empieza a 0 se queda a 0. Si uso la encuesta tal cual, la tabla dirá que en la población no hay nadie en esas celdas, y casi todas tienen gente. Así que mezclo la encuesta con una tabla uniforme, a partes iguales:
+El 84 % de las celdas de la semilla están vacías. Y el IPF solo multiplica: una celda que empieza a 0 se queda a 0. Si uso la encuesta tal cual, la tabla dirá que en la población no hay nadie en esas celdas, y casi todas tienen gente. Así que mezclo la encuesta con una tabla uniforme, a partes iguales:
 
 ```{r semilla-suavizada}
 alpha <- 0.5
@@ -656,7 +710,12 @@ semilla <- alpha *
   (1 - alpha) * semilla_enc / sum(semilla_enc)
 ```
 
-Hay celdas que sí tienen que valer 0: son los **ceros estructurales**. Quien tiene hoy 18-20 años no pudo votar el 23-J, así que su recuerdo es siempre `NO_PODIA`. Y quien tiene más de 20 años no puede estar en `NO_PODIA`. Los pongo a mano y el IPF los respeta:
+Hay celdas que sí tienen que valer 0: son los **ceros estructurales**. Hay dos tipos:
+
+1. **Por edad.** Quien tiene hoy 18-20 años no pudo votar el 23-J, así que su recuerdo es siempre `NO_PODIA`. Y quien tiene más de 20 años no puede estar en `NO_PODIA`.
+2. **Por territorio.** Nadie pudo votar a ERC fuera de Cataluña, ni al BNG fuera de Galicia.
+
+Los pongo a mano y el IPF los respeta:
 
 ```{r ceros-estructurales}
 i18 <- which(dn$edad == "18-20")
@@ -664,6 +723,10 @@ inp <- which(dn$rec == "NO_PODIA")
 
 semilla[,, i18, , -inp] <- 0 # 18-20 con cualquier recuerdo que no sea NO_PODIA
 semilla[,, -i18, , inp] <- 0 # NO_PODIA con más de 20 años
+
+for (p in names(territorio)) {
+  semilla[!dn$ccaa %in% territorio[[p]], , , , p] <- 0 # partido fuera de su comunidad
+}
 
 mean(semilla == 0)
 ```
@@ -705,7 +768,7 @@ Cuanta más información conjunta dan las fuentes, menos tiene que inventar el r
 | ccaa × sexo | ECP y EPA |
 | ccaa × edad | ECP |
 | ccaa × edu | EPA |
-| ccaa × rec | 23-J |
+| ccaa × rec | 23-J (más los ceros de territorio) |
 | sexo × edad | ECP |
 | sexo × edu | EPA |
 | sexo × rec | encuesta |
@@ -754,7 +817,7 @@ tibble(
   fmt_number(decimals = 0, locale = "es")
 ```
 
-Cuadra. Esta es la **tabla de postestratificación sintética**: la población estimada de cada una de las 5.586 celdas. "Sintética" porque no la ha medido nadie, la he fabricado con tres tablas reales y la estructura de la encuesta.
+Cuadra. Esta es la **tabla de postestratificación sintética**: la población estimada de cada una de las 10.374 celdas. "Sintética" porque no la ha medido nadie, la he fabricado con tres tablas reales y la estructura de la encuesta.
 
 Para usarla con el modelo la paso a data frame, con una fila por celda, y quito las celdas a 0, que son los ceros estructurales:
 
@@ -767,13 +830,13 @@ nrow(post)
 head(post)
 ```
 
-Quedan 4.218 celdas con población. Las 1.368 que faltan son los ceros estructurales. Cada fila es una celda y `N` es cuánta gente hay en ella. La columna `n = 1` la necesita `brms` para predecir, porque el modelo tiene `trials(n)`: con `n = 1` la predicción es una probabilidad por partido.
+Quedan 4.470 celdas con población. Las 5.904 que faltan son los ceros estructurales. Cada fila es una celda y `N` es cuánta gente hay en ella. La columna `n = 1` la necesita `brms` para predecir, porque el modelo tiene `trials(n)`: con `n = 1` la predicción es una probabilidad por partido.
 
 ## Juntando la M y la P
 
 ### El modelo completo
 
-Ahora sí, el modelo lleva el recuerdo de voto. Es el mismo modelo multinivel de la primera parte con un efecto aleatorio más, `(1 | rec)`, y ajustado sobre las celdas de las cinco variables.
+Ahora sí, el modelo lleva el recuerdo de voto y los once partidos. Es el mismo modelo multinivel de la primera parte con un efecto aleatorio más, `(1 | rec)`, y ajustado sobre las celdas de las cinco variables.
 
 Primero agrego la encuesta por celda:
 
@@ -827,17 +890,56 @@ DT::datatable(
 
 Esa es la forma que pide `brms` para un modelo multinomial con datos agregados. En la fórmula, `y | trials(n)` significa: en cada celda hay `n` personas, y `y` dice cuántas eligen cada categoría. Es la versión multinomial de la binomial con `éxitos | trials(n)`.
 
+Queda un detalle: los partidos regionales. Si ajusto el modelo tal cual, el modelo ve que en 18 comunidades nadie vota a ERC y lo trata como información: el efecto de comunidad de ERC tiene una media muy negativa, y el *partial pooling* acerca Cataluña a esa media. Es decir, **subestimaría a ERC justo donde se presenta**.
+
+Pero esos ceros no son información sobre ERC, son ceros estructurales. Los meto en el modelo con un **offset**: para cada partido regional, una columna que vale 0 en las comunidades donde se presenta y −20 en las demás. Se suma al predictor lineal de ese partido, así que fuera de su territorio su probabilidad queda multiplicada por $e^{-20} \approx 2 \cdot 10^{-9}$. Es decir, prácticamente cero. Luego veremos que no siempre, y cómo se arregla.
+
+```{r offsets}
+con_offsets <- function(d) {
+  for (p in names(territorio)) {
+    d[[paste0("off_", p)]] <- ifelse(d$ccaa %in% territorio[[p]], 0, -20)
+  }
+  d
+}
+
+celdas_enc <- con_offsets(celdas_enc)
+
+celdas_enc |>
+  filter(ccaa %in% c("Cataluña", "Andalucía")) |>
+  distinct(ccaa, across(starts_with("off_")))
+```
+
+`brms` permite una fórmula distinta para cada partido (cada `mu`). Todos llevan los mismos efectos, y los regionales además su offset:
+
+```{r formula-mrp}
+f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa)"
+
+f_partidos <- lapply(voto_lv[-1], function(p) {
+  offset <- if (p %in% names(territorio)) paste0(" + offset(off_", p, ")") else ""
+  as.formula(paste0("mu", p, " ~ ", f_comun, offset))
+})
+
+formula_mrp <- do.call(
+  bf,
+  c(list(as.formula(paste("y | trials(n) ~", f_comun))), f_partidos)
+)
+formula_mrp
+```
+
 ```{r modelo-completo}
 mod <- brm(
-  y | trials(n) ~ sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa),
+  formula_mrp,
   data = celdas_enc,
   family = multinomial(),
-  prior = priors,
+  prior = priors_multinom(voto_lv),
   chains = 4,
+  cores = 4,
   iter = 2000,
   refresh = 0,
   silent = 2,
+  control = list(adapt_delta = 0.95),
   backend = "cmdstanr",
+  seed = 2026,
   file = file.path(dir_datos, "mod_mrp")
 )
 ```
@@ -850,11 +952,13 @@ Tomo la primera fila de la tabla de postestratificación:
 post[1, ]
 ```
 
-Es una celda: hombres de Andalucía, de 21 a 24 años, con estudios bajos, que votaron al PP en el 23-J. Según la tabla sintética hay unas 10.655 personas así. Eso es su $N_j$.
+Es una celda: hombres de Andalucía, de 21 a 24 años, con estudios bajos, que votaron al PP en el 23-J. Según la tabla sintética hay unas 7.689 personas así. Eso es su $N_j$.
 
 El modelo toma de esa fila las variables `ccaa`, `sexo`, `edad`, `edu` y `rec`, y predice la probabilidad de votar a cada partido. Pero no da una sola predicción. Es un modelo bayesiano, así que tengo 4.000 muestras de la posterior (4 cadenas × 1.000 iteraciones). Me quedo con 500, que bastan:
 
 ```{r epred}
+post <- con_offsets(post) # la tabla también necesita los offsets
+
 set.seed(2026)
 ep <- posterior_epred(mod, newdata = post, ndraws = 500)
 
@@ -864,8 +968,35 @@ dim(ep)
 `ep` es un array de tres dimensiones:
 
 1. **500 draws** de la posterior.
-2. **4.218 celdas**, una por fila de `post`.
-3. **5 partidos**.
+2. **4.470 celdas**, una por fila de `post`.
+3. **11 partidos**.
+
+Antes de seguir, los ceros estructurales. El offset deja la probabilidad de cada partido regional fuera de su territorio en casi 0, pero no siempre en 0 exacto. Fuera de Cataluña ningún dato informa del efecto de comunidad de ERC, así que el modelo lo saca de la distribución común. En algún draw ese efecto sale tan grande que compensa el −20 del offset:
+
+```{r fugas}
+mascara <- sapply(voto_lv, function(p) {
+  if (p %in% names(territorio)) {
+    as.numeric(post$ccaa %in% territorio[[p]])
+  } else {
+    rep(1, nrow(post))
+  }
+})
+
+# Probabilidad máxima de cada partido regional fuera de su territorio
+fuga <- apply(ep, c(2, 3), max) * (1 - mascara)
+round(apply(fuga[, names(territorio)], 2, max), 4)
+```
+
+Así que en cada draw pongo esas probabilidades a 0 exacto y renormalizo cada celda para que siga sumando 1:
+
+```{r ceros-exactos}
+for (d in seq_len(dim(ep)[1])) {
+  ep[d, , ] <- ep[d, , ] * mascara
+  ep[d, , ] <- ep[d, , ] / rowSums(ep[d, , ])
+}
+
+max(apply(ep, c(2, 3), max) * (1 - mascara))
+```
 
 Las cinco primeras muestras para la primera celda:
 
@@ -888,7 +1019,7 @@ Ahora multiplico por la $N_j$ de la celda. Así obtengo cuántas personas de esa
 round(theta_1 * post$N[1])
 ```
 
-De los 10.655 hombres jóvenes andaluces con estudios bajos que votaron al PP, unos 7.600 lo seguirían votando y unos 2.300 se irían a VOX.
+De los 7.689 hombres jóvenes andaluces con estudios bajos que votaron al PP, unos 5.400 lo seguirían votando y unos 1.700 se irían a VOX. Los partidos regionales salen con 0 exacto: en Andalucía no se presentan.
 
 La postestratificación es hacer esto en las 4.218 celdas, sumar y dividir entre la población total. Para un solo draw, el primero:
 
@@ -899,7 +1030,7 @@ round(votantes_draw1)
 round(100 * votantes_draw1 / sum(post$N), 1)
 ```
 
-`ep[1, , ]` es una matriz de 4.218 celdas × 5 partidos. Al multiplicarla por `post$N`, cada fila se multiplica por la población de su celda. `colSums` suma por partido. Esa es exactamente la fórmula $\sum_j N_j \theta_j / \sum_j N_j$.
+`ep[1, , ]` es una matriz de 4.470 celdas × 11 partidos. Al multiplicarla por `post$N`, cada fila se multiplica por la población de su celda. `colSums` suma por partido. Esa es exactamente la fórmula $\sum_j N_j \theta_j / \sum_j N_j$.
 
 Y para tener la incertidumbre, repito lo mismo en cada uno de los 500 draws:
 
@@ -926,12 +1057,20 @@ Ya está. Eso es MRP: 500 estimaciones de la intención de voto en toda la pobla
 Lo comparo con la intención de voto bruta de la encuesta, con la ponderada con los pesos del CIS y con la estimación que publicó el CIS para este barómetro:
 
 ```{r comparacion}
+# Estimación del CIS (página 3 de 3577_Estimacion.pdf), agrupada como aquí:
+# SUMAR = SUMAR + Podemos; OTROS = SALF + UPN + otros partidos + en blanco
 cis_publicado <- c(
   PP = 25.5,
   PSOE = 31.0,
   VOX = 16.6,
-  SUMAR = 5.7,
-  OTROS = 21.3
+  SUMAR = 5.7 + 3.7,
+  ERC = 2.5,
+  JUNTS = 0.7,
+  BILDU = 1.3,
+  PNV = 0.7,
+  BNG = 0.7,
+  CCA = 0.2,
+  OTROS = 1.8 + 0.1 + 8.6 + 1.0
 )
 
 comparacion <- est_mrp |>
@@ -945,6 +1084,7 @@ comparacion <- est_mrp |>
   select(partido, bruto, pesos_cis, mrp, q05, q95, cis_publicado)
 
 comparacion |>
+  mutate(partido = if_else(partido == "SUMAR", "SUMAR y aliados", partido)) |>
   gt(rowname_col = "partido") |>
   cols_merge(c(q05, q95), pattern = "{1} – {2}") |>
   cols_label(
@@ -975,7 +1115,14 @@ comparacion |>
       levels = c("bruto", "pesos_cis", "mrp", "cis_publicado"),
       labels = c("bruto", "pesos CIS", "MRP", "CIS publicado")
     ),
-    partido = factor(partido, levels = rev(voto_lv)),
+    partido = factor(
+      partido,
+      levels = rev(voto_lv),
+      labels = rev(c(
+        "PP", "PSOE", "VOX", "SUMAR y aliados",
+        "ERC", "Junts", "EH Bildu", "PNV", "BNG", "CC", "OTROS"
+      ))
+    ),
     q05 = if_else(metodo == "MRP", q05, NA_real_),
     q95 = if_else(metodo == "MRP", q95, NA_real_)
   ) |>
@@ -1004,14 +1151,156 @@ Donde más se nota es en el PSOE:
 | Bruto | 28,4 % |
 | Pesos del CIS | 30,6 % |
 | CIS publicado | 31,0 % |
-| MRP | 24,5 % (23,0 a 26,0) |
+| MRP | 24,2 % (22,9 a 25,7) |
 
-El MRP le quita unos 6 puntos respecto a lo que publicó el CIS. Mi interpretación es que viene del recuerdo de voto. En la encuesta, el 29,2 % dice que votó al PSOE en 2023, y en las urnas fue el 21,1 % del electorado. Los pesos del CIS no lo corrigen. Al postestratificar con la tabla sintética, cada celda de votantes del PSOE en 2023 pesa lo que pesa en la población, no lo que pesa en la encuesta. El PP y VOX suben un poco por el mismo motivo, y SUMAR baja.
+El MRP le quita unos 7 puntos respecto a lo que publicó el CIS. Mi interpretación es que viene del recuerdo de voto. En la encuesta, el 29,5 % dice que votó al PSOE en 2023, y en las urnas fue el 21,1 % del electorado. Los pesos del CIS no lo corrigen. Al postestratificar con la tabla sintética, cada celda de votantes del PSOE en 2023 pesa lo que pesa en la población, no lo que pesa en la encuesta. El PP y VOX suben un poco por el mismo motivo, y SUMAR baja.
 
-Dos avisos antes de sacar conclusiones:
+La otra diferencia grande está en OTROS: 14,5 % en bruto, 11,5 % en la estimación del CIS y 17,5 % con MRP. Son dos efectos distintos:
+
+1. **Bruto frente al CIS.** El 4,2 % del voto válido de la encuesta es voto en blanco, y el CIS lo deja en un 1,0 % en su estimación (página 3 del PDF de la estimación). Eso explica casi toda la diferencia. Aquí no hay "cocina", así que el blanco se queda como lo dice la gente.
+2. **MRP frente al bruto.** Quien se abstuvo en 2023 y ahora dice que votaría, se va mucho a OTROS: un 33 % según el modelo. En la encuesta esos abstencionistas son el 7,5 % de los que declaran voto válido. En la tabla de postestratificación son el 28,2 % del electorado. Al darles su peso real, OTROS sube.
+
+El punto 2 tiene trampa, y la cuento en los avisos del final.
+
+### Por comunidad
+
+El CIS no publica estimaciones por comunidad, y con razón: con 61 entrevistas en Navarra o 133 en el País Vasco, el voto bruto no dice gran cosa. El MRP sí puede: cada comunidad toma prestada información del resto para todo lo que no es propio de ella, y la tabla de postestratificación pone el peso de cada celda. Aquí es donde se nota tener a los partidos regionales separados.
+
+Hago la misma cuenta $\sum_j N_j \theta_j / \sum_j N_j$, pero solo con las celdas de cada comunidad. Al lado pongo el resultado del 23-J como referencia, no como la verdad: es de hace tres años.
+
+```{r mrp-ccaa}
+ccaa_reg <- c("Cataluña", "País Vasco", "Navarra", "Galicia", "Canarias")
+
+# La misma cuenta que para España, pero solo con las celdas de cada comunidad
+mrp_ccaa_draws <- map(ccaa_reg, function(cc) {
+  i <- post$ccaa == cc
+  apply(ep[, i, ], 1, function(p) colSums(p * post$N[i]) / sum(post$N[i])) |>
+    t()
+}) |>
+  set_names(ccaa_reg)
+
+# Referencia: el 23-J en cada comunidad, sobre votos emitidos
+res_23j <- tg$rec_ccaa |>
+  filter(ccaa %in% ccaa_reg, !rec %in% c("ABST", "NO_PODIA")) |>
+  group_by(ccaa) |>
+  mutate(pct_23j = 100 * N / sum(N)) |>
+  ungroup() |>
+  transmute(ccaa = as.character(ccaa), partido = as.character(rec), pct_23j)
+
+est_ccaa <- imap_dfr(mrp_ccaa_draws, function(d, cc) {
+  tibble(
+    ccaa = cc,
+    partido = voto_lv,
+    mrp = 100 * colMeans(d),
+    q05 = 100 * apply(d, 2, quantile, 0.05),
+    q95 = 100 * apply(d, 2, quantile, 0.95)
+  )
+}) |>
+  left_join(res_23j, by = c("ccaa", "partido")) |>
+  mutate(pct_23j = replace_na(pct_23j, 0)) |>
+  filter(mrp >= 1 | pct_23j >= 1) |>
+  left_join(
+    dat |> count(ccaa, name = "entrevistas") |> mutate(ccaa = as.character(ccaa)),
+    by = "ccaa"
+  ) |>
+  mutate(
+    partido = if_else(partido == "SUMAR", "SUMAR y aliados", partido),
+    grupo = paste0(ccaa, " (", entrevistas, " entrevistas)")
+  )
+
+est_ccaa |>
+  select(grupo, partido, mrp, q05, q95, pct_23j) |>
+  gt(groupname_col = "grupo", rowname_col = "partido") |>
+  cols_merge(c(q05, q95), pattern = "{1} – {2}") |>
+  cols_label(
+    mrp = "MRP",
+    q05 = "Intervalo 90 %",
+    pct_23j = "23-J"
+  ) |>
+  tab_spanner("% de voto", columns = everything()) |>
+  fmt_number(decimals = 1, locale = "es") |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(columns = mrp)
+  ) |>
+  tab_footnote("23-J: porcentaje sobre votos emitidos (OTROS incluye blanco y nulo).")
+```
+
+Algunas cosas que se ven:
+
+- **Los partidos regionales salen cerca del 23-J donde hay datos.** EH Bildu en el País Vasco (24,1 % frente a 23,8 %), BNG en Galicia (9,9 % frente a 9,4 %) y ERC en Cataluña (11,4 % frente a 13,0 %).
+- **Otros salen bastante por debajo**: PNV (19,3 % frente a 23,9 %), Junts (6,4 % frente a 11,1 %) y Coalición Canaria (4,8 % frente a 11,2 %). No sé si es un cambio real o un límite del modelo. Con 19 votantes del PNV o 6 de CC en la encuesta, el modelo tiene poco con lo que trabajar.
+- **VOX y OTROS salen por encima del 23-J en todas.** Es la tendencia nacional de la encuesta. El modelo solo tiene un efecto de comunidad por partido, así que el cambio respecto a 2023 se reparte de forma parecida en todas las comunidades.
+- **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 27 %. En Cataluña, con 458, los intervalos son mucho más estrechos.
+
+### Jugando con la posterior
+
+Hasta aquí he resumido cada posterior con su media y un intervalo. Pero tengo mucho más: 500 escenarios completos y coherentes entre sí. En cada draw, los once partidos suman 100 %. Así que cualquier pregunta sobre combinaciones de partidos se responde contando en cuántos draws se cumple.
+
+Por ejemplo, el bloque PP + VOX. Sumo los dos partidos **draw a draw** y miro su distribución:
+
+```{r prob-bloques}
+pp_vox <- 100 * (mrp_draws[, "PP"] + mrp_draws[, "VOX"])
+
+c(
+  "PP + VOX > 45 %" = mean(pp_vox > 45),
+  "PP + VOX > 50 %" = mean(pp_vox > 50),
+  "PSOE > PP" = mean(mrp_draws[, "PSOE"] > mrp_draws[, "PP"]),
+  "VOX > 20 %" = mean(mrp_draws[, "VOX"] > 0.20)
+)
+```
+
+```{r plot-pp-vox}
+tibble(pp_vox = pp_vox) |>
+  ggplot(aes(x = pp_vox)) +
+  geom_histogram(bins = 40, fill = "steelblue", color = "white") +
+  geom_vline(xintercept = c(45, 50), linetype = "dashed", color = "firebrick") +
+  labs(
+    x = "PP + VOX (% sobre voto válido)",
+    y = "Draws",
+    title = "Distribución posterior del bloque PP + VOX",
+    subtitle = "500 draws del MRP. Líneas en el 45 % y el 50 %"
+  ) +
+  theme_minimal()
+```
+
+El bloque PP + VOX se mueve entre el 41 % y el 47 % en los 500 draws, con media en el 43,6 %. La probabilidad de que pase del 45 % es del 10 %. La de que pase del 50 % es 0: ningún draw llega. La de que el PSOE quede por delante del PP es del 3 %.
+
+Fíjate en que esto **no** se puede hacer con los intervalos de cada partido por separado. El intervalo de PP + VOX no es la suma de los dos intervalos, porque cuando el PP sube, VOX suele bajar: la correlación entre sus draws es de −0,37. En cada draw esa relación ya está dentro.
+
+Lo mismo sirve por comunidad. Con los draws de cada comunidad puedo preguntar quién gana cada duelo:
+
+```{r prob-ccaa}
+duelo <- function(cc, a, b) {
+  mean(mrp_ccaa_draws[[cc]][, a] > mrp_ccaa_draws[[cc]][, b])
+}
+
+tribble(
+  ~comunidad, ~a, ~b,
+  "Cataluña", "ERC", "JUNTS",
+  "Cataluña", "PSOE", "ERC",
+  "País Vasco", "PNV", "BILDU",
+  "Navarra", "BILDU", "PP",
+  "Galicia", "BNG", "PSOE",
+  "Canarias", "CCA", "VOX"
+) |>
+  mutate(probabilidad = pmap_dbl(list(comunidad, a, b), duelo)) |>
+  gt(groupname_col = "comunidad") |>
+  cols_merge(c(a, b), pattern = "{1} > {2}") |>
+  cols_label(a = "Pregunta", probabilidad = "Probabilidad") |>
+  fmt_percent(probabilidad, decimals = 0, locale = "es")
+```
+
+En Cataluña, ERC queda por delante de Junts en el 99 % de los draws, y el PSOE por delante de ERC en todos. En el País Vasco, el MRP ve a EH Bildu por delante del PNV: el PNV solo gana en el 19 % de los draws. En Navarra, Bildu supera al PP en el 66 %, que es casi tirar una moneda.
+
+### Antes de sacar conclusiones
+
+Cuatro avisos:
 
 1. La estimación publicada por el CIS no es solo ponderar. Lleva su propia "cocina": cómo reparte a los indecisos, qué hace con quien no contesta, etc. Aquí no hay nada de eso, porque todo se calcula sobre voto válido declarado.
 2. No hay elecciones con las que comparar, así que no puedo decir qué estimación acierta más. Lo que sí puedo decir es que el MRP usa más información de la población, el recuerdo de voto, y que esa información corrige una desviación grande de la muestra.
+3. **Todo el electorado vota.** El modelo estima la intención entre quienes declaran un voto válido, y la postestratificación la aplica a todo el electorado, abstencionistas incluidos. Es decir, supone que en cada celda vota todo el mundo, y con la misma intención que quien contesta. Por eso los abstencionistas de 2023 pesan tanto y suben OTROS. Una estimación electoral en serio necesitaría además un modelo de participación: la probabilidad de que cada celda vaya a votar.
+4. Las probabilidades de la posterior son **optimistas**. Solo recogen la incertidumbre del modelo: tratan la tabla del raking como si fuera exacta, y no incluyen el sesgo de la propia encuesta ni lo que harán los indecisos. Además son porcentajes de voto, no escaños: pasar del 50 % de los votos no es lo mismo que tener mayoría absoluta. Y con 500 draws, una probabilidad de 0 % quiere decir "menos de 1 entre 500", no "imposible".
 
 
 Pues hasta otra, y que ustedes voten libres, cuando se pueda. 

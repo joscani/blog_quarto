@@ -51,37 +51,23 @@ recod_edu <- function(nivel) {
 }
 edu_lv <- c("baja", "media", "alta")
 
-# Recuerdo de voto. Las candidaturas pequeñas y regionales van a "otros":
-# el objetivo del post es la mecánica, no el detalle de cada partido.
+# Partidos: la definición común está en 00_partidos.R (partidos_lv, rec_lv,
+# territorio y la recodificación de etiquetas del CIS).
+source("2026/10/mrp-raking/00_partidos.R")
+
+# Recuerdo de voto. El blanco y el nulo van a OTROS, como en los resultados.
 recod_partido <- function(x) {
-  x <- as.character(x)
-  case_when(
-    x == "PP" ~ "PP",
-    x == "PSOE" ~ "PSOE",
-    x == "VOX" ~ "VOX",
-    x == "Sumar" ~ "SUMAR",
-    x %in% c("N.C.", "N.R.", "N.P.") ~ NA_character_,
-    TRUE ~ "OTROS"   # ERC, Junts, Bildu, PNV, BNG, CCa, PACMA, UPN, blanco, nulo
-  )
+  recod_cis_partido(x, no_validos = c("N.C.", "N.R.", "N.P."))
 }
-rec_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS", "ABST", "NO_PODIA")
 
 # La intención de voto, que es lo que se quiere estimar. Se mide sobre voto
 # válido, que es la base en la que el CIS publica su estimación: quedan fuera
 # la abstención declarada, el voto nulo, los indecisos y los que no contestan.
 # Repartir a los indecisos es la "cocina", y es otro asunto.
-voto_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS")
+voto_lv <- partidos_lv
 recod_voto <- function(x) {
-  x <- as.character(x)
-  case_when(
-    x == "PP" ~ "PP",
-    x == "PSOE" ~ "PSOE",
-    x == "VOX" ~ "VOX",
-    x == "Sumar" ~ "SUMAR",
-    x %in% c("No sabe todavía", "N.C.", "N.R.", "N.P.",
-             "No votaría", "Voto nulo") ~ NA_character_,
-    TRUE ~ "OTROS"   # resto de candidaturas y voto en blanco
-  )
+  recod_cis_partido(x, no_validos = c("No sabe todavía", "N.C.", "N.R.", "N.P.",
+                                      "No votaría", "Voto nulo"))
 }
 
 cis <- cis_raw %>%
@@ -101,6 +87,19 @@ cis <- cis_raw %>%
   ) %>%
   left_join(ccaa_cod %>% select(ccaa, cod_cis), by = "cod_cis") %>%
   mutate(ccaa = factor(ccaa, levels = ccaa_lv))
+
+# Un partido regional fuera de su comunidad no se puede votar (p. ej., ERC en
+# Baleares). Esas respuestas van a OTROS.
+fuera <- function(p, ccaa) !is.na(p) & !se_presenta(p, ccaa)
+cat("\n== respuestas fuera de territorio (van a OTROS) ==\n")
+cat("intención:", sum(fuera(cis$voto, cis$ccaa)),
+    " recuerdo:", sum(fuera(cis$partido_rec, cis$ccaa)), "\n")
+cis <- cis %>%
+  mutate(
+    voto = factor(ifelse(fuera(voto, ccaa), "OTROS", as.character(voto)), levels = voto_lv),
+    partido_rec = ifelse(fuera(partido_rec, ccaa), "OTROS", partido_rec),
+    intencion = ifelse(fuera(intencion, ccaa), "OTROS", intencion)
+  )
 
 # El recuerdo combina dos variables del CIS: participación y, para quien
 # votó, el partido. Quien no tenía edad en 2023 es una categoría propia.
