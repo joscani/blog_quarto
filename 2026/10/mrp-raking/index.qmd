@@ -1157,13 +1157,7 @@ t_draws <- posterior_epred(mod_part, newdata = post, ndraws = 500)
 dim(t_draws)
 ```
 
-`t_draws` tiene la probabilidad de votar de cada celda en cada draw: 500 × 4.470. En bruto, el 78 % de los entrevistados dice que irá a votar seguro, y el 23-J votó el 70 % de los residentes. Pero en bruto los abstencionistas pesan poco, porque contestan menos encuestas. Si aplico el modelo sobre la tabla de postestratificación, donde cada grupo pesa lo que pesa en la población:
-
-```{r participacion-sin-calibrar}
-sum(colMeans(t_draws) * post$N) / sum(post$N)
-```
-
-Sale casi exactamente la participación del 23-J: la postestratificación ya corrige casi todo el exceso. Aun así la **calibro**, porque con otra encuesta podría no cuadrar tan bien. En cada draw desplazo el intercepto, en escala logit, hasta que la participación total sea la del 23-J entre los residentes en España. Las diferencias entre celdas se mantienen: solo cambia el nivel.
+`t_draws` tiene la probabilidad de votar de cada celda en cada draw: 500 × 4.470. La calibro al 70,4 % de participación del 23-J entre residentes, desplazando el intercepto en escala logit en cada draw. Aquí apenas cambia nada (sin calibrar sale un 70,3 %), porque la postestratificación por recuerdo ya corrige casi todo el exceso de participación de la encuesta; con otra encuesta podría no ser así.
 
 ```{r calibracion}
 rec_pob <- tg$rec_ccaa |>
@@ -1174,7 +1168,11 @@ participacion_23j <- with(
   rec_pob,
   sum(N[!rec %in% c("ABST", "NO_PODIA")]) / sum(N[rec != "NO_PODIA"])
 )
-participacion_23j
+
+c(
+  objetivo = participacion_23j,
+  sin_calibrar = sum(colMeans(t_draws) * post$N) / sum(post$N)
+)
 
 calibra <- function(p, N, objetivo) {
   f <- function(delta) sum(N * plogis(qlogis(p) + delta)) / sum(N) - objetivo
