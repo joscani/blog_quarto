@@ -3,14 +3,18 @@
 # SUMAR agrupa a todos los partidos de la coalición del 23-J, Podemos
 # incluido. Los nacionalistas y regionalistas van cada uno por su lado.
 partidos_lv <- c("PP", "PSOE", "VOX", "SUMAR",
-                 "ERC", "JUNTS", "BILDU", "PNV", "BNG", "CCA", "OTROS")
-rec_lv <- c(partidos_lv, "ABST", "NO_PODIA")
+                 "ERC", "JUNTS", "AC", "BILDU", "PNV", "BNG", "CCA", "OTROS")
+
+# Aliança Catalana (AC) no se presentó a las generales del 23-J, así que no
+# existe en el recuerdo de voto.
+rec_lv <- c(setdiff(partidos_lv, "AC"), "ABST", "NO_PODIA")
 
 # Comunidades en las que se presenta cada partido regional (23-J). Fuera de
 # ellas su probabilidad es un cero estructural.
 territorio <- list(
   ERC   = "Cataluña",
   JUNTS = "Cataluña",
+  AC    = "Cataluña",
   BILDU = c("País Vasco", "Navarra"),
   PNV   = "País Vasco",
   BNG   = "Galicia",
@@ -37,7 +41,8 @@ mascara_territorio <- function(ccaa, partidos = partidos_lv) {
 # Etiquetas del CIS -> partidos_lv. Lo que no se reconoce va a OTROS.
 sumar_cis <- c("Sumar", "Podemos", "Unidas Podemos", "IU", "Compromís",
                "Más Madrid", "CHA")
-regionales_cis <- c(ERC = "ERC", JUNTS = "Junts", BILDU = "EH Bildu",
+regionales_cis <- c(ERC = "ERC", JUNTS = "Junts", AC = "Aliança Catalana",
+                    BILDU = "EH Bildu",
                     PNV = "EAJ-PNV", BNG = "BNG", CCA = "CCa")
 
 recod_cis_partido <- function(x, no_validos) {

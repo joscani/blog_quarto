@@ -85,7 +85,7 @@ semilla[, , -i18, , inp] <- 0
 
 # Y los partidos regionales fuera de su comunidad. Los objetivos ya valen 0
 # ahí, pero ponerlos en la semilla deja claro de dónde salen esos ceros.
-for (p in names(territorio)) {
+for (p in intersect(names(territorio), dn$rec)) {
   semilla[!dn$ccaa %in% territorio[[p]], , , , p] <- 0
 }
 

@@ -77,7 +77,8 @@ dir_datos <- "2026/10/mrp-raking/datos"
 url_base <- "https://github.com/joscani/blog_quarto/releases/download/mrp-raking-datos/"
 ficheros <- c(
   "cis_recodificado.rds", "cis_imputado.rds", "targets.rds",
-  "tabla_postestratificacion.rds", "mod_sin_rec.rds", "mod_mrp.rds"
+  "tabla_postestratificacion.rds", "mod_sin_rec.rds", "mod_mrp.rds",
+  "mod_participacion.rds"
 )
 
 dir.create(dir_datos, recursive = TRUE, showWarnings = FALSE)
@@ -99,8 +100,17 @@ library(gt)
 
 dir_datos <- here::here("2026/10/mrp-raking/datos")
 voto_lv <- c(
-  "PP", "PSOE", "VOX", "SUMAR",
-  "ERC", "JUNTS", "BILDU", "PNV", "BNG", "CCA",
+  "PP",
+  "PSOE",
+  "VOX",
+  "SUMAR",
+  "ERC",
+  "JUNTS",
+  "AC",
+  "BILDU",
+  "PNV",
+  "BNG",
+  "CCA",
   "OTROS"
 )
 voto5_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS") # para la primera parte
@@ -109,6 +119,7 @@ voto5_lv <- c("PP", "PSOE", "VOX", "SUMAR", "OTROS") # para la primera parte
 territorio <- list(
   ERC = "Cataluña",
   JUNTS = "Cataluña",
+  AC = "Cataluña",
   BILDU = c("País Vasco", "Navarra"),
   PNV = "País Vasco",
   BNG = "Galicia",
@@ -142,7 +153,8 @@ Tanto en la intención de voto (`voto`) como en el recuerdo (`rec`) uso los mism
 
 - **PP**, **PSOE** y **VOX**.
 - **SUMAR**, que en realidad es **SUMAR y aliados**: Sumar, Podemos, IU, Compromís, Más Madrid y CHA. Es decir, los partidos que fueron juntos en la candidatura de Sumar el 23-J. Así el recuerdo y la intención miden lo mismo.
-- Los nacionalistas y regionalistas, cada uno por separado: **ERC** y **JUNTS** (Cataluña), **BILDU** (País Vasco y Navarra), **PNV** (País Vasco), **BNG** (Galicia) y **CCA** (Coalición Canaria).
+- Los nacionalistas y regionalistas, cada uno por separado: **ERC**, **JUNTS** y **AC** (Aliança Catalana) en Cataluña, **BILDU** (País Vasco y Navarra), **PNV** (País Vasco), **BNG** (Galicia) y **CCA** (Coalición Canaria).
+- Aliança Catalana no se presentó a las generales del 23-J, así que solo está en la intención, no en el recuerdo.
 - **OTROS**: el resto de partidos (Se Acabó la Fiesta, PACMA, CUP, UPN…) y el voto en blanco.
 
 Los partidos regionales solo se pueden votar en su comunidad. Las pocas respuestas de fuera de su territorio (por ejemplo, alguien en Baleares que dice ERC) las paso a OTROS.
@@ -724,7 +736,8 @@ inp <- which(dn$rec == "NO_PODIA")
 semilla[,, i18, , -inp] <- 0 # 18-20 con cualquier recuerdo que no sea NO_PODIA
 semilla[,, -i18, , inp] <- 0 # NO_PODIA con más de 20 años
 
-for (p in names(territorio)) {
+# AC no existe en el recuerdo, así que solo los partidos que sí están en rec
+for (p in intersect(names(territorio), dn$rec)) {
   semilla[!dn$ccaa %in% territorio[[p]], , , , p] <- 0 # partido fuera de su comunidad
 }
 
@@ -836,7 +849,7 @@ Quedan 4.470 celdas con población. Las 5.904 que faltan son los ceros estructur
 
 ### El modelo completo
 
-Ahora sí, el modelo lleva el recuerdo de voto y los once partidos. Es el mismo modelo multinivel de la primera parte con un efecto aleatorio más, `(1 | rec)`, y ajustado sobre las celdas de las cinco variables.
+Ahora sí, el modelo lleva el recuerdo de voto y los doce partidos. Es el mismo modelo multinivel de la primera parte con dos efectos aleatorios más, `(1 | rec)` y `(1 | ccaa:rec)`, y ajustado sobre las celdas de las cinco variables.
 
 Primero agrego la encuesta por celda:
 
@@ -909,13 +922,21 @@ celdas_enc |>
   distinct(ccaa, across(starts_with("off_")))
 ```
 
+Otro detalle: la **interacción entre comunidad y recuerdo**. Con efectos solo aditivos, el efecto de comunidad sube o baja un partido por igual en todos los grupos de recuerdo. Así que el modelo aplicaría en todas partes las transferencias de voto nacionales: cuántos votantes del PSOE en 2023 se van ahora al PP, cuántos abstencionistas se van a VOX… Y eso no es igual en Cataluña que en Madrid. En la encuesta, solo el 2,7 % de los votantes catalanes del PSOE en 2023 votaría ahora al PP, frente al 6,8 % en el conjunto de España.
+
+Por eso añado `(1 | ccaa:rec)`: un efecto aleatorio para cada combinación de comunidad y recuerdo. Con partial pooling, como en la primera parte: donde hay datos (146 votantes catalanes del PSOE), el modelo se acerca a lo que dice la encuesta local. Donde no los hay, se queda cerca del patrón nacional.
+
 `brms` permite una fórmula distinta para cada partido (cada `mu`). Todos llevan los mismos efectos, y los regionales además su offset:
 
 ```{r formula-mrp}
-f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa)"
+f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa) + (1 | ccaa:rec)"
 
 f_partidos <- lapply(voto_lv[-1], function(p) {
-  offset <- if (p %in% names(territorio)) paste0(" + offset(off_", p, ")") else ""
+  offset <- if (p %in% names(territorio)) {
+    paste0(" + offset(off_", p, ")")
+  } else {
+    ""
+  }
   as.formula(paste0("mu", p, " ~ ", f_comun, offset))
 })
 
@@ -960,7 +981,9 @@ El modelo toma de esa fila las variables `ccaa`, `sexo`, `edad`, `edu` y `rec`, 
 post <- con_offsets(post) # la tabla también necesita los offsets
 
 set.seed(2026)
-ep <- posterior_epred(mod, newdata = post, ndraws = 500)
+# Algunas combinaciones comunidad x recuerdo no tienen ninguna entrevista
+# (p. ej., Melilla_ABST). Su efecto sale de la distribución común.
+ep <- posterior_epred(mod, newdata = post, ndraws = 500, allow_new_levels = TRUE)
 
 dim(ep)
 ```
@@ -969,7 +992,7 @@ dim(ep)
 
 1. **500 draws** de la posterior.
 2. **4.470 celdas**, una por fila de `post`.
-3. **11 partidos**.
+3. **12 partidos**.
 
 Antes de seguir, los ceros estructurales. El offset deja la probabilidad de cada partido regional fuera de su territorio en casi 0, pero no siempre en 0 exacto. Fuera de Cataluña ningún dato informa del efecto de comunidad de ERC, así que el modelo lo saca de la distribución común. En algún draw ese efecto sale tan grande que compensa el −20 del offset:
 
@@ -1019,7 +1042,7 @@ Ahora multiplico por la $N_j$ de la celda. Así obtengo cuántas personas de esa
 round(theta_1 * post$N[1])
 ```
 
-De los 7.689 hombres jóvenes andaluces con estudios bajos que votaron al PP, unos 5.400 lo seguirían votando y unos 1.700 se irían a VOX. Los partidos regionales salen con 0 exacto: en Andalucía no se presentan.
+De los 7.689 hombres jóvenes andaluces con estudios bajos que votaron al PP, unos 5.500 lo seguirían votando y unos 1.600 se irían a VOX. Los partidos regionales salen con 0 exacto: en Andalucía no se presentan.
 
 La postestratificación es hacer esto en las 4.218 celdas, sumar y dividir entre la población total. Para un solo draw, el primero:
 
@@ -1030,15 +1053,161 @@ round(votantes_draw1)
 round(100 * votantes_draw1 / sum(post$N), 1)
 ```
 
-`ep[1, , ]` es una matriz de 4.470 celdas × 11 partidos. Al multiplicarla por `post$N`, cada fila se multiplica por la población de su celda. `colSums` suma por partido. Esa es exactamente la fórmula $\sum_j N_j \theta_j / \sum_j N_j$.
+`ep[1, , ]` es una matriz de 4.470 celdas × 12 partidos. Al multiplicarla por `post$N`, cada fila se multiplica por la población de su celda. `colSums` suma por partido. Esa es exactamente la fórmula $\sum_j N_j \theta_j / \sum_j N_j$.
 
 Y para tener la incertidumbre, repito lo mismo en cada uno de los 500 draws:
 
 ```{r p-todos-draws}
-mrp_draws <- apply(ep, 1, function(p) colSums(p * post$N) / sum(post$N)) |>
+mrp_draws_todos <- apply(ep, 1, function(p) colSums(p * post$N) / sum(post$N)) |>
   t()
 
-dim(mrp_draws)
+dim(mrp_draws_todos)
+
+est_todos <- tibble(
+  partido = voto_lv,
+  mrp = 100 * colMeans(mrp_draws_todos),
+  q05 = 100 * apply(mrp_draws_todos, 2, quantile, 0.05),
+  q95 = 100 * apply(mrp_draws_todos, 2, quantile, 0.95)
+)
+
+est_todos |> mutate(across(-partido, ~ round(.x, 1)))
+```
+
+Eso ya es MRP: 500 estimaciones de la intención de voto en toda la población, de las que saco la media y un intervalo al 90 %. Pero lleva un supuesto escondido que conviene sacar a la luz.
+
+### ¿Quién va a votar?
+
+La fórmula $\sum_j N_j \theta_j / \sum_j N_j$ supone que **todo el electorado vota**. Y $\theta_j$ es la intención de quienes declaran un voto válido. Así que estoy suponiendo que en cada celda vota todo el mundo, y con la misma intención que quien contesta.
+
+Donde más se nota es en quienes se abstuvieron en 2023. Lo veo en Cataluña: cuántos puntos de PP y de VOX aporta cada grupo de recuerdo a la estimación de la comunidad.
+
+```{r diag-cataluna}
+theta_media <- apply(ep, c(2, 3), mean) # theta de cada celda (media de los draws)
+i_cat <- post$ccaa == "Cataluña"
+
+post[i_cat, ] |>
+  mutate(
+    pp = theta_media[i_cat, "PP"] * N,
+    vox = theta_media[i_cat, "VOX"] * N
+  ) |>
+  group_by(rec) |>
+  summarise(N = sum(N), pp = sum(pp), vox = sum(vox)) |>
+  mutate(
+    peso = 100 * N / sum(N),
+    puntos_pp = 100 * pp / sum(N),
+    puntos_vox = 100 * vox / sum(N)
+  ) |>
+  filter(peso > 0.5) |>
+  select(rec, peso, puntos_pp, puntos_vox) |>
+  gt(rowname_col = "rec") |>
+  cols_label(
+    peso = "% del electorado",
+    puntos_pp = "Puntos de PP",
+    puntos_vox = "Puntos de VOX"
+  ) |>
+  fmt_number(decimals = 1, locale = "es") |>
+  tab_style(
+    style = cell_fill(color = "#fde0dd"),
+    locations = cells_body(rows = rec == "ABST")
+  )
+```
+
+Los abstencionistas de 2023 son un tercio del electorado catalán, y la fórmula los cuenta enteros como votantes. Aportan más puntos al PP (6,1) que los propios votantes del PP en 2023 (5,9), y más a VOX (5,3) que los votantes de VOX (3,5). No es que voten mal: es que la mayoría de ellos no va a votar.
+
+Hace falta una **T** en el MRP: un modelo de participación. La encuesta pregunta la probabilidad de ir a votar, de 0 a 10 (`PROBVOTO`). Me quedo con quien dice 10, "con toda seguridad iría a votar":
+
+```{r prob-voto}
+cis |>
+  filter(!is.na(vota_seguro)) |>
+  group_by(rec) |>
+  summarise(entrevistas = n(), seguro = mean(vota_seguro)) |>
+  gt(rowname_col = "rec") |>
+  cols_label(entrevistas = "Entrevistas", seguro = "Seguro que vota") |>
+  fmt_percent(seguro, decimals = 0, locale = "es") |>
+  fmt_number(entrevistas, decimals = 0, locale = "es")
+```
+
+Entre quienes votaron en 2023 a PP, PSOE, VOX o SUMAR, lo dice entre el 84 % y el 90 %. Entre los abstencionistas, el 38 %. Con esa variable ajusto otro modelo multinivel, binomial, con las mismas variables y sobre las 4.018 entrevistas, no solo las de voto válido:
+
+```{r modelo-participacion}
+celdas_part <- cis |>
+  filter(!is.na(vota_seguro)) |>
+  group_by(ccaa, sexo, edad, edu, rec) |>
+  summarise(vota = sum(vota_seguro), n = n(), .groups = "drop")
+
+mod_part <- brm(
+  vota | trials(n) ~ sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa),
+  data = celdas_part,
+  family = binomial(),
+  prior = prior(normal(0, 1.5), class = "Intercept") +
+    prior(normal(0, 1), class = "b") +
+    prior(exponential(1), class = "sd"),
+  chains = 4,
+  cores = 4,
+  iter = 2000,
+  refresh = 0,
+  silent = 2,
+  backend = "cmdstanr",
+  seed = 2026,
+  file = file.path(dir_datos, "mod_participacion")
+)
+
+set.seed(2026)
+t_draws <- posterior_epred(mod_part, newdata = post, ndraws = 500)
+dim(t_draws)
+```
+
+`t_draws` tiene la probabilidad de votar de cada celda en cada draw: 500 × 4.470. En bruto, el 78 % de los entrevistados dice que irá a votar seguro, y el 23-J votó el 70 % de los residentes. Pero en bruto los abstencionistas pesan poco, porque contestan menos encuestas. Si aplico el modelo sobre la tabla de postestratificación, donde cada grupo pesa lo que pesa en la población:
+
+```{r participacion-sin-calibrar}
+sum(colMeans(t_draws) * post$N) / sum(post$N)
+```
+
+Sale casi exactamente la participación del 23-J: la postestratificación ya corrige casi todo el exceso. Aun así la **calibro**, porque con otra encuesta podría no cuadrar tan bien. En cada draw desplazo el intercepto, en escala logit, hasta que la participación total sea la del 23-J entre los residentes en España. Las diferencias entre celdas se mantienen: solo cambia el nivel.
+
+```{r calibracion}
+rec_pob <- tg$rec_ccaa |>
+  group_by(rec) |>
+  summarise(N = sum(N))
+
+participacion_23j <- with(
+  rec_pob,
+  sum(N[!rec %in% c("ABST", "NO_PODIA")]) / sum(N[rec != "NO_PODIA"])
+)
+participacion_23j
+
+calibra <- function(p, N, objetivo) {
+  f <- function(delta) sum(N * plogis(qlogis(p) + delta)) / sum(N) - objetivo
+  delta <- uniroot(f, c(-10, 10))$root
+  plogis(qlogis(p) + delta)
+}
+
+t_cal <- t(apply(t_draws, 1, calibra, N = post$N, objetivo = participacion_23j))
+
+# Participación calibrada por recuerdo de voto
+post |>
+  mutate(t = colMeans(t_cal)) |>
+  group_by(rec) |>
+  summarise(participacion = sum(t * N) / sum(N)) |>
+  gt(rowname_col = "rec") |>
+  fmt_percent(participacion, decimals = 0, locale = "es")
+```
+
+Ahora la postestratificación pondera cada celda por los que **votan**, $N_j t_j$, y no por todos los que hay:
+
+$$
+\hat\theta = \frac{\sum_j N_j \, t_j \, \theta_j}{\sum_j N_j \, t_j}
+$$
+
+En código es lo mismo de antes con otros pesos, y en cada draw uso su propia $t_j$:
+
+```{r p-con-participacion}
+w <- sweep(t_cal, 2, post$N, "*") # draws x celdas: N_j * t_j
+
+mrp_draws <- sapply(seq_len(nrow(w)), function(d) {
+  colSums(ep[d, , ] * w[d, ]) / sum(w[d, ])
+}) |>
+  t()
 
 est_mrp <- tibble(
   partido = voto_lv,
@@ -1047,10 +1216,22 @@ est_mrp <- tibble(
   q95 = 100 * apply(mrp_draws, 2, quantile, 0.95)
 )
 
-est_mrp |> mutate(across(-partido, ~ round(.x, 1)))
+est_todos |>
+  select(partido, todos = mrp) |>
+  left_join(est_mrp |> select(partido, votan = mrp), by = "partido") |>
+  mutate(diferencia = votan - todos) |>
+  gt(rowname_col = "partido") |>
+  cols_label(
+    todos = "Si votara todo el mundo",
+    votan = "Con participación",
+    diferencia = "Diferencia"
+  ) |>
+  fmt_number(decimals = 1, locale = "es")
 ```
 
-Ya está. Eso es MRP: 500 estimaciones de la intención de voto en toda la población, de las que saco la media y un intervalo al 90 %.
+Con la participación, OTROS baja más de 3 puntos. Los abstencionistas de 2023 que ahora dicen que votarían eligen mucho OTROS, pero solo votan en un 38 %. El PP sube 2 puntos y el PSOE algo más de 1, porque sus votantes de 2023 son los que más repiten.
+
+A partir de aquí, todas las estimaciones usan el modelo de participación.
 
 ### ¿Cuánto cambia?
 
@@ -1066,6 +1247,7 @@ cis_publicado <- c(
   SUMAR = 5.7 + 3.7,
   ERC = 2.5,
   JUNTS = 0.7,
+  AC = NA, # el CIS la incluye en "Otros partidos"
   BILDU = 1.3,
   PNV = 0.7,
   BNG = 0.7,
@@ -1096,6 +1278,7 @@ comparacion |>
   ) |>
   tab_spanner("% sobre voto válido", columns = everything()) |>
   fmt_number(decimals = 1, locale = "es") |>
+  sub_missing(missing_text = "—") |>
   tab_style(
     style = list(cell_text(weight = "bold"), cell_fill(color = "#fde0dd")),
     locations = cells_body(columns = mrp)
@@ -1119,8 +1302,18 @@ comparacion |>
       partido,
       levels = rev(voto_lv),
       labels = rev(c(
-        "PP", "PSOE", "VOX", "SUMAR y aliados",
-        "ERC", "Junts", "EH Bildu", "PNV", "BNG", "CC", "OTROS"
+        "PP",
+        "PSOE",
+        "VOX",
+        "SUMAR y aliados",
+        "ERC",
+        "Junts",
+        "Aliança Catalana",
+        "EH Bildu",
+        "PNV",
+        "BNG",
+        "CC",
+        "OTROS"
       ))
     ),
     q05 = if_else(metodo == "MRP", q05, NA_real_),
@@ -1151,30 +1344,31 @@ Donde más se nota es en el PSOE:
 | Bruto | 28,4 % |
 | Pesos del CIS | 30,6 % |
 | CIS publicado | 31,0 % |
-| MRP | 24,2 % (22,9 a 25,7) |
+| MRP | 25,4 % (24,2 a 26,5) |
 
-El MRP le quita unos 7 puntos respecto a lo que publicó el CIS. Mi interpretación es que viene del recuerdo de voto. En la encuesta, el 29,5 % dice que votó al PSOE en 2023, y en las urnas fue el 21,1 % del electorado. Los pesos del CIS no lo corrigen. Al postestratificar con la tabla sintética, cada celda de votantes del PSOE en 2023 pesa lo que pesa en la población, no lo que pesa en la encuesta. El PP y VOX suben un poco por el mismo motivo, y SUMAR baja.
+El MRP le quita casi 6 puntos respecto a lo que publicó el CIS. Mi interpretación es que viene del recuerdo de voto. En la encuesta, el 29,5 % dice que votó al PSOE en 2023, y en las urnas fue el 21,1 % del electorado. Los pesos del CIS no lo corrigen. Al postestratificar con la tabla sintética, cada celda de votantes del PSOE en 2023 pesa lo que pesa en la población, no lo que pesa en la encuesta. El PP y VOX suben un poco por el mismo motivo, y SUMAR baja.
 
-La otra diferencia grande está en OTROS: 14,5 % en bruto, 11,5 % en la estimación del CIS y 17,5 % con MRP. Son dos efectos distintos:
+La otra diferencia grande está en OTROS: 14,2 % en bruto y 14,1 % con MRP, frente al 11,5 % de la estimación del CIS. Aquí hay dos efectos que conviene separar:
 
 1. **Bruto frente al CIS.** El 4,2 % del voto válido de la encuesta es voto en blanco, y el CIS lo deja en un 1,0 % en su estimación (página 3 del PDF de la estimación). Eso explica casi toda la diferencia. Aquí no hay "cocina", así que el blanco se queda como lo dice la gente.
-2. **MRP frente al bruto.** Quien se abstuvo en 2023 y ahora dice que votaría, se va mucho a OTROS: un 33 % según el modelo. En la encuesta esos abstencionistas son el 7,5 % de los que declaran voto válido. En la tabla de postestratificación son el 28,2 % del electorado. Al darles su peso real, OTROS sube.
+2. **MRP con y sin participación.** Quien se abstuvo en 2023 y ahora dice que votaría se va mucho a OTROS: un 33 % según el modelo. Si votara todo el mundo, esos abstencionistas pesarían el 28,2 % del electorado y OTROS subiría al 17,4 %. Con el modelo de participación votan en un 38 %, y OTROS vuelve al 14,1 %.
 
-El punto 2 tiene trampa, y la cuento en los avisos del final.
 
 ### Por comunidad
 
 El CIS no publica estimaciones por comunidad, y con razón: con 61 entrevistas en Navarra o 133 en el País Vasco, el voto bruto no dice gran cosa. El MRP sí puede: cada comunidad toma prestada información del resto para todo lo que no es propio de ella, y la tabla de postestratificación pone el peso de cada celda. Aquí es donde se nota tener a los partidos regionales separados.
 
-Hago la misma cuenta $\sum_j N_j \theta_j / \sum_j N_j$, pero solo con las celdas de cada comunidad. Al lado pongo el resultado del 23-J como referencia, no como la verdad: es de hace tres años.
+Hago la misma cuenta $\sum_j N_j t_j \theta_j / \sum_j N_j t_j$, pero solo con las celdas de cada comunidad. Al lado pongo el resultado del 23-J como referencia, no como la verdad: es de hace tres años.
 
 ```{r mrp-ccaa}
 ccaa_reg <- c("Cataluña", "País Vasco", "Navarra", "Galicia", "Canarias")
 
-# La misma cuenta que para España, pero solo con las celdas de cada comunidad
+# La misma cuenta que para España (con participación), solo con las celdas de cada comunidad
 mrp_ccaa_draws <- map(ccaa_reg, function(cc) {
   i <- post$ccaa == cc
-  apply(ep[, i, ], 1, function(p) colSums(p * post$N[i]) / sum(post$N[i])) |>
+  sapply(seq_len(nrow(w)), function(d) {
+    colSums(ep[d, i, ] * w[d, i]) / sum(w[d, i])
+  }) |>
     t()
 }) |>
   set_names(ccaa_reg)
@@ -1197,10 +1391,19 @@ est_ccaa <- imap_dfr(mrp_ccaa_draws, function(d, cc) {
   )
 }) |>
   left_join(res_23j, by = c("ccaa", "partido")) |>
-  mutate(pct_23j = replace_na(pct_23j, 0)) |>
-  filter(mrp >= 1 | pct_23j >= 1) |>
+  mutate(
+    pct_23j = replace_na(pct_23j, 0),
+    pct_23j = if_else(partido == "AC", NA_real_, pct_23j) # no se presentó
+  ) |>
+  filter(
+    mrp >= 1 |
+      replace_na(pct_23j, 0) >= 1 |
+      (partido == "AC" & ccaa == "Cataluña")
+  ) |>
   left_join(
-    dat |> count(ccaa, name = "entrevistas") |> mutate(ccaa = as.character(ccaa)),
+    dat |>
+      count(ccaa, name = "entrevistas") |>
+      mutate(ccaa = as.character(ccaa)),
     by = "ccaa"
   ) |>
   mutate(
@@ -1219,23 +1422,31 @@ est_ccaa |>
   ) |>
   tab_spanner("% de voto", columns = everything()) |>
   fmt_number(decimals = 1, locale = "es") |>
+  sub_missing(missing_text = "—") |>
   tab_style(
     style = cell_text(weight = "bold"),
     locations = cells_body(columns = mrp)
   ) |>
-  tab_footnote("23-J: porcentaje sobre votos emitidos (OTROS incluye blanco y nulo).")
+  tab_footnote(
+    "23-J: porcentaje sobre votos emitidos (OTROS incluye blanco y nulo). Aliança Catalana no se presentó."
+  )
 ```
 
 Algunas cosas que se ven:
 
-- **Los partidos regionales salen cerca del 23-J donde hay datos.** EH Bildu en el País Vasco (24,1 % frente a 23,8 %), BNG en Galicia (9,9 % frente a 9,4 %) y ERC en Cataluña (11,4 % frente a 13,0 %).
-- **Otros salen bastante por debajo**: PNV (19,3 % frente a 23,9 %), Junts (6,4 % frente a 11,1 %) y Coalición Canaria (4,8 % frente a 11,2 %). No sé si es un cambio real o un límite del modelo. Con 19 votantes del PNV o 6 de CC en la encuesta, el modelo tiene poco con lo que trabajar.
-- **VOX y OTROS salen por encima del 23-J en todas.** Es la tendencia nacional de la encuesta. El modelo solo tiene un efecto de comunidad por partido, así que el cambio respecto a 2023 se reparte de forma parecida en todas las comunidades.
-- **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 27 %. En Cataluña, con 458, los intervalos son mucho más estrechos.
+- **Los partidos regionales salen cerca del 23-J donde hay datos.** EH Bildu en el País Vasco (24,4 % frente a 23,8 %), BNG en Galicia (10,9 % frente a 9,4 %) y ERC en Cataluña (12,2 % frente a 13,0 %).
+- **Otros salen bastante por debajo**: PNV (18,8 % frente a 23,9 %), Junts (6,4 % frente a 11,1 %) y Coalición Canaria (5,6 % frente a 11,2 %). No sé si es un cambio real o un límite del modelo. Con 19 votantes del PNV o 6 de CC en la encuesta, el modelo tiene poco con lo que trabajar.
+- **Aliança Catalana** sale en un 1,7 % en Cataluña (0,9 % a 2,8 %). No se presentó el 23-J, así que no hay referencia, y en la encuesta solo 7 de los 458 entrevistados catalanes dicen que la votarían. Dos de ellos votaron a Junts en 2023. Con tan pocos casos, la estimación es poco más que un orden de magnitud.
+- **VOX y OTROS salen por encima del 23-J en todas, y el PP sube en Cataluña y el País Vasco.** Esto es lo que menos me creo. En Cataluña, el PP sale en un 15,2 % (13,8 % a 16,7 %), cuando en el 23-J sacó un 13,2 % y en la encuesta bruta catalana tiene un 12,0 %. Hay dos motivos:
+  1. **La encuesta.** De los 47 abstencionistas catalanes de 2023 que declaran voto, 7 votarían al PP y 9 a VOX. Aun votando solo en un 38 %, son el 18,6 % de los votantes catalanes.
+  2. **El pooling.** La interacción comunidad × recuerdo sale pequeña para los partidos grandes: el modelo no ve diferencias regionales claras en las transferencias de voto. Así que, por ejemplo, a los votantes catalanes del PSOE en 2023 les aplica una transferencia al PP del 5,7 %, cerca de la nacional (6,8 %), aunque en la encuesta catalana sea del 2,7 %. Son 4 personas de 146, y el modelo no se fía de tan poco.
+
+  Ninguna de las dos cosas es un error del modelo: hace lo que tiene que hacer con estos datos. Pero es un buen recordatorio de que el MRP no saca información de donde no la hay.
+- **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 25 %. En Cataluña, con 458, los intervalos son mucho más estrechos.
 
 ### Jugando con la posterior
 
-Hasta aquí he resumido cada posterior con su media y un intervalo. Pero tengo mucho más: 500 escenarios completos y coherentes entre sí. En cada draw, los once partidos suman 100 %. Así que cualquier pregunta sobre combinaciones de partidos se responde contando en cuántos draws se cumple.
+Hasta aquí he resumido cada posterior con su media y un intervalo. Pero tengo mucho más: 500 escenarios completos y coherentes entre sí. En cada draw, los doce partidos suman 100 %. Así que cualquier pregunta sobre combinaciones de partidos se responde contando en cuántos draws se cumple.
 
 Por ejemplo, el bloque PP + VOX. Sumo los dos partidos **draw a draw** y miro su distribución:
 
@@ -1264,9 +1475,9 @@ tibble(pp_vox = pp_vox) |>
   theme_minimal()
 ```
 
-El bloque PP + VOX se mueve entre el 41 % y el 47 % en los 500 draws, con media en el 43,6 %. La probabilidad de que pase del 45 % es del 10 %. La de que pase del 50 % es 0: ningún draw llega. La de que el PSOE quede por delante del PP es del 3 %.
+El bloque PP + VOX se mueve entre el 43 % y el 48 % en los 500 draws, con media en el 45,6 %. La probabilidad de que pase del 45 % es del 83 %. La de que pase del 50 % es 0: ningún draw llega. Que el PSOE quede por delante del PP solo pasa en 1 de los 500 draws.
 
-Fíjate en que esto **no** se puede hacer con los intervalos de cada partido por separado. El intervalo de PP + VOX no es la suma de los dos intervalos, porque cuando el PP sube, VOX suele bajar: la correlación entre sus draws es de −0,37. En cada draw esa relación ya está dentro.
+Fíjate en que esto **no** se puede hacer con los intervalos de cada partido por separado. El intervalo de PP + VOX no es la suma de los dos intervalos, porque cuando el PP sube, VOX suele bajar: la correlación entre sus draws es de −0,58. En cada draw esa relación ya está dentro.
 
 Lo mismo sirve por comunidad. Con los draws de cada comunidad puedo preguntar quién gana cada duelo:
 
@@ -1276,13 +1487,14 @@ duelo <- function(cc, a, b) {
 }
 
 tribble(
-  ~comunidad, ~a, ~b,
-  "Cataluña", "ERC", "JUNTS",
-  "Cataluña", "PSOE", "ERC",
-  "País Vasco", "PNV", "BILDU",
-  "Navarra", "BILDU", "PP",
-  "Galicia", "BNG", "PSOE",
-  "Canarias", "CCA", "VOX"
+  ~comunidad   , ~a      , ~b      ,
+  "Cataluña"   , "ERC"   , "JUNTS" ,
+  "Cataluña"   , "AC"    , "JUNTS" ,
+  "Cataluña"   , "PSOE"  , "ERC"   ,
+  "País Vasco" , "PNV"   , "BILDU" ,
+  "Navarra"    , "BILDU" , "PP"    ,
+  "Galicia"    , "BNG"   , "PSOE"  ,
+  "Canarias"   , "CCA"   , "VOX"
 ) |>
   mutate(probabilidad = pmap_dbl(list(comunidad, a, b), duelo)) |>
   gt(groupname_col = "comunidad") |>
@@ -1291,16 +1503,17 @@ tribble(
   fmt_percent(probabilidad, decimals = 0, locale = "es")
 ```
 
-En Cataluña, ERC queda por delante de Junts en el 99 % de los draws, y el PSOE por delante de ERC en todos. En el País Vasco, el MRP ve a EH Bildu por delante del PNV: el PNV solo gana en el 19 % de los draws. En Navarra, Bildu supera al PP en el 66 %, que es casi tirar una moneda.
+En Cataluña, ERC queda por delante de Junts en casi todos los draws, y el PSOE por delante de ERC en todos. Aliança Catalana no supera a Junts en ningún draw: con esta encuesta, todavía queda lejos. En el País Vasco, el MRP ve a EH Bildu por delante del PNV: el PNV solo gana en el 12 % de los draws. En Navarra, Bildu supera al PP en el 55 %: es tirar una moneda.
 
 ### Antes de sacar conclusiones
 
-Cuatro avisos:
+Cinco avisos:
 
 1. La estimación publicada por el CIS no es solo ponderar. Lleva su propia "cocina": cómo reparte a los indecisos, qué hace con quien no contesta, etc. Aquí no hay nada de eso, porque todo se calcula sobre voto válido declarado.
 2. No hay elecciones con las que comparar, así que no puedo decir qué estimación acierta más. Lo que sí puedo decir es que el MRP usa más información de la población, el recuerdo de voto, y que esa información corrige una desviación grande de la muestra.
-3. **Todo el electorado vota.** El modelo estima la intención entre quienes declaran un voto válido, y la postestratificación la aplica a todo el electorado, abstencionistas incluidos. Es decir, supone que en cada celda vota todo el mundo, y con la misma intención que quien contesta. Por eso los abstencionistas de 2023 pesan tanto y suben OTROS. Una estimación electoral en serio necesitaría además un modelo de participación: la probabilidad de que cada celda vaya a votar.
+3. **La participación es un supuesto.** La calibro para que el total sea el del 23-J, y uso "seguro que vota" (10 en la escala) como medida. Si en las próximas elecciones la participación fuera muy distinta, o se movilizara un grupo concreto, las estimaciones cambiarían. Y la incertidumbre de esa calibración no está en los intervalos.
 4. Las probabilidades de la posterior son **optimistas**. Solo recogen la incertidumbre del modelo: tratan la tabla del raking como si fuera exacta, y no incluyen el sesgo de la propia encuesta ni lo que harán los indecisos. Además son porcentajes de voto, no escaños: pasar del 50 % de los votos no es lo mismo que tener mayoría absoluta. Y con 500 draws, una probabilidad de 0 % quiere decir "menos de 1 entre 500", no "imposible".
+5. **El MRP no saca información de donde no la hay.** El PP sale en Cataluña por encima del 23-J y de la propia encuesta catalana. Parte viene de lo que declaran los pocos abstencionistas catalanes de la encuesta, y parte del pooling: con 4 casos de 146, el modelo no se cree que las transferencias de voto en Cataluña sean distintas de las del resto de España. El partial pooling protege de las celdas con pocos datos, pero también puede tapar diferencias reales cuando hay pocos datos para verlas.
 
 
 Pues hasta otra, y que ustedes voten libres, cuando se pueda. 

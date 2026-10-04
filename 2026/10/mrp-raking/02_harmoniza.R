@@ -83,6 +83,10 @@ cis <- cis_raw %>%
     partido_rec = recod_partido(as_factor(RECUVOTOG)),
     intencion = recod_partido(as_factor(INTENCIONG)),
     ideol = ifelse(as.numeric(ESCIDEOL) %in% 1:10, as.numeric(ESCIDEOL), NA),
+    # Probabilidad declarada de ir a votar (0-10). Para el modelo de
+    # participación uso "10 = con toda seguridad iría a votar".
+    prob_voto = ifelse(as.numeric(PROBVOTO) %in% 0:10, as.numeric(PROBVOTO), NA),
+    vota_seguro = as.integer(prob_voto == 10),
     peso = as.numeric(PESO)
   ) %>%
   left_join(ccaa_cod %>% select(ccaa, cod_cis), by = "cod_cis") %>%
@@ -98,7 +102,10 @@ cis <- cis %>%
   mutate(
     voto = factor(ifelse(fuera(voto, ccaa), "OTROS", as.character(voto)), levels = voto_lv),
     partido_rec = ifelse(fuera(partido_rec, ccaa), "OTROS", partido_rec),
-    intencion = ifelse(fuera(intencion, ccaa), "OTROS", intencion)
+    intencion = ifelse(fuera(intencion, ccaa), "OTROS", intencion),
+    # La intención solo se usa como predictor del recuerdo en 04_raking.R.
+    # Aliança Catalana no existía en 2023, así que ahí va con OTROS.
+    intencion = ifelse(intencion == "AC", "OTROS", intencion)
   )
 
 # El recuerdo combina dos variables del CIS: participación y, para quien

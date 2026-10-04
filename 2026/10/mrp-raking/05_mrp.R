@@ -25,7 +25,7 @@ cis_publicado <- tibble::tibble(
   # SUMAR incluye a Podemos, como en 00_partidos.R.
   # OTROS = Se Acabó la Fiesta + UPN + otros partidos + en blanco
   cis = c(PP = 25.5, PSOE = 31.0, VOX = 16.6, SUMAR = 5.7 + 3.7,
-          ERC = 2.5, JUNTS = 0.7, BILDU = 1.3, PNV = 0.7, BNG = 0.7, CCA = 0.2,
+          ERC = 2.5, JUNTS = 0.7, AC = NA, BILDU = 1.3, PNV = 0.7, BNG = 0.7, CCA = 0.2,
           OTROS = 1.8 + 0.1 + 8.6 + 1.0)[voto_lv]
 )
 
@@ -68,7 +68,7 @@ priors <- Reduce(`+`, lapply(paste0("mu", voto_lv[-1]), function(dp) {
     prior_string("exponential(1)", class = "sd", dpar = dp)
 }))
 
-f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa)"
+f_comun <- "sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa) + (1 | ccaa:rec)"
 f_partidos <- lapply(voto_lv[-1], function(p) {
   offset <- if (p %in% names(territorio)) paste0(" + offset(off_", p, ")") else ""
   as.formula(paste0("mu", p, " ~ ", f_comun, offset))
@@ -112,24 +112,57 @@ for (d in seq_len(dim(ep)[1])) {
   ep[d, , ] <- ep[d, , ] / rowSums(ep[d, , ])
 }
 
-agrega <- function(ep, N, grupo = NULL) {
-  # devuelve draws x categorías (o draws x grupo x categorías)
-  if (is.null(grupo)) {
-    num <- apply(ep, c(1, 3), function(p) sum(p * N))
-    return(num / sum(N))
+# Participación: binomial multinivel sobre "seguro que vota" (PROBVOTO = 10),
+# calibrado para que la participación total sea la del 23-J (residentes).
+celdas_part <- cis %>%
+  filter(!is.na(vota_seguro)) %>%
+  group_by(ccaa, sexo, edad, edu, rec) %>%
+  summarise(vota = sum(vota_seguro), n = n(), .groups = "drop")
+
+mod_part <- brm(
+  vota | trials(n) ~ sexo + (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa),
+  data = celdas_part, family = binomial(),
+  prior = prior(normal(0, 1.5), class = "Intercept") +
+    prior(normal(0, 1), class = "b") + prior(exponential(1), class = "sd"),
+  chains = 4, iter = 2000, refresh = 0, silent = 2, seed = 2026,
+  file = file.path(dir_datos, "mod_participacion")
+)
+
+set.seed(2026)   # los mismos draws que en el post
+t_draws <- posterior_epred(mod_part, newdata = post, ndraws = 500)
+
+rec_pob <- tg$rec_ccaa %>% group_by(rec) %>% summarise(N = sum(N))
+participacion_23j <- with(rec_pob,
+  sum(N[!rec %in% c("ABST", "NO_PODIA")]) / sum(N[rec != "NO_PODIA"]))
+
+calibra <- function(p, N, objetivo) {
+  f <- function(delta) sum(N * plogis(qlogis(p) + delta)) / sum(N) - objetivo
+  plogis(qlogis(p) + uniroot(f, c(-10, 10))$root)
+}
+t_cal <- t(apply(t_draws, 1, calibra, N = post$N, objetivo = participacion_23j))
+W <- sweep(t_cal, 2, post$N, "*")   # draws x celdas: N_j * t_j
+
+cat("\nparticipación sin calibrar:",
+    round(sum(colMeans(t_draws) * post$N) / sum(post$N), 3),
+    " objetivo:", round(participacion_23j, 3), "\n")
+
+agrega <- function(ep, W, grupo = NULL) {
+  # W: pesos de cada celda en cada draw. Devuelve draws x categorías
+  # (o draws x grupo x categorías).
+  una <- function(idx) {
+    t(sapply(seq_len(dim(ep)[1]), function(d) {
+      colSums(ep[d, idx, ] * W[d, idx]) / sum(W[d, idx])
+    }))
   }
+  if (is.null(grupo)) return(una(seq_len(dim(ep)[2])))
   lv <- levels(grupo)
   out <- array(NA_real_, c(dim(ep)[1], length(lv), dim(ep)[3]),
                dimnames = list(NULL, lv, dimnames(ep)[[3]]))
-  for (g in lv) {
-    idx <- which(grupo == g)
-    out[, g, ] <- apply(ep[, idx, , drop = FALSE], c(1, 3),
-                        function(p) sum(p * N[idx])) / sum(N[idx])
-  }
+  for (g in lv) out[, g, ] <- una(which(grupo == g))
   out
 }
 
-mrp_nac <- agrega(ep, post$N)
+mrp_nac <- agrega(ep, W)
 est_mrp <- tibble(
   partido = voto_lv,
   mrp = colMeans(mrp_nac) * 100,
@@ -219,7 +252,7 @@ print(as.data.frame(est_mrp %>% mutate(across(-partido, ~round(.x, 1)))),
       row.names = FALSE)
 
 # Por comunidad: donde el MRP debería lucir
-mrp_ccaa <- agrega(ep, post$N, post$ccaa)
+mrp_ccaa <- agrega(ep, W, post$ccaa)
 est_ccaa <- apply(mrp_ccaa, c(2, 3), mean) * 100
 
 cat("\n== MRP por CCAA (%) ==\n")
@@ -230,5 +263,5 @@ saveRDS(list(comparacion = comparacion, est_mrp = est_mrp,
         file.path(dir_datos, "estimaciones.rds"))
 cat("\nguardado estimaciones.rds\n")
 # Por comunidad: donde el MRP debería lucir
-mrp_edu <- agrega(ep, post$N, post$edu)
+mrp_edu <- agrega(ep, W, post$edu)
 est_edu <- apply(mrp_edu, c(2, 3), mean) * 100
