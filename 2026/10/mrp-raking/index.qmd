@@ -984,7 +984,12 @@ post <- con_offsets(post) # la tabla también necesita los offsets
 set.seed(2026)
 # Algunas combinaciones comunidad x recuerdo no tienen ninguna entrevista
 # (p. ej., Melilla_ABST). Su efecto sale de la distribución común.
-ep <- posterior_epred(mod, newdata = post, ndraws = 500, allow_new_levels = TRUE)
+ep <- posterior_epred(
+  mod,
+  newdata = post,
+  ndraws = 500,
+  allow_new_levels = TRUE
+)
 
 dim(ep)
 ```
@@ -1045,7 +1050,7 @@ round(theta_1 * post$N[1])
 
 De los 7.689 hombres jóvenes andaluces con estudios bajos que votaron al PP, unos 5.500 lo seguirían votando y unos 1.600 se irían a VOX. Los partidos regionales salen con 0 exacto: en Andalucía no se presentan.
 
-La postestratificación es hacer esto en las 4.218 celdas, sumar y dividir entre la población total. Para un solo draw, el primero:
+La postestratificación es hacer esto en las 4.470 celdas, sumar y dividir entre la población total. Para un solo draw, el primero:
 
 ```{r p-un-draw}
 votantes_draw1 <- colSums(ep[1, , ] * post$N) # suma de N_j * theta_j
@@ -1059,7 +1064,9 @@ round(100 * votantes_draw1 / sum(post$N), 1)
 Y para tener la incertidumbre, repito lo mismo en cada uno de los 500 draws:
 
 ```{r p-todos-draws}
-mrp_draws_todos <- apply(ep, 1, function(p) colSums(p * post$N) / sum(post$N)) |>
+mrp_draws_todos <- apply(ep, 1, function(p) {
+  colSums(p * post$N) / sum(post$N)
+}) |>
   t()
 
 dim(mrp_draws_todos)
@@ -1360,7 +1367,14 @@ El CIS no publica estimaciones por comunidad, y con razón: con 61 entrevistas e
 Hago la misma cuenta $\sum_j N_j t_j \theta_j / \sum_j N_j t_j$, pero solo con las celdas de cada comunidad. Al lado pongo el resultado del 23-J como referencia, no como la verdad: es de hace tres años.
 
 ```{r mrp-ccaa}
-ccaa_reg <- c("Andalucía", "Cataluña", "País Vasco", "Navarra", "Galicia", "Canarias")
+ccaa_reg <- c(
+  "Andalucía",
+  "Cataluña",
+  "País Vasco",
+  "Navarra",
+  "Galicia",
+  "Canarias"
+)
 
 # La misma cuenta que para España (con participación), solo con las celdas de cada comunidad
 mrp_ccaa_draws <- map(ccaa_reg, function(cc) {
@@ -1511,7 +1525,8 @@ Y una pregunta que en Andalucía tiene su miga: ¿suman PP y VOX más de la mita
 
 ```{r prob-andalucia}
 pp_vox_and <- 100 *
-  (mrp_ccaa_draws[["Andalucía"]][, "PP"] + mrp_ccaa_draws[["Andalucía"]][, "VOX"])
+  (mrp_ccaa_draws[["Andalucía"]][, "PP"] +
+    mrp_ccaa_draws[["Andalucía"]][, "VOX"])
 
 c(
   media = mean(pp_vox_and),
