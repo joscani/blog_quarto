@@ -35,6 +35,7 @@ Creo que este post puede ser muy útil a todo aquel que trabaje con encuestas y 
 
 
 
+
 ::: callout-note
 ## Listening
 
@@ -1354,12 +1355,12 @@ La otra diferencia grande está en OTROS: 14,2 % en bruto y 14,1 % con MRP, fren
 
 ### Por comunidad
 
-El CIS no publica estimaciones por comunidad, y con razón: con 61 entrevistas en Navarra o 133 en el País Vasco, el voto bruto no dice gran cosa. El MRP sí puede: cada comunidad toma prestada información del resto para todo lo que no es propio de ella, y la tabla de postestratificación pone el peso de cada celda. Aquí es donde se nota tener a los partidos regionales separados.
+El CIS no publica estimaciones por comunidad, y con razón: con 61 entrevistas en Navarra o 133 en el País Vasco, el voto bruto no dice gran cosa. El MRP sí puede: cada comunidad toma prestada información del resto para todo lo que no es propio de ella, y la tabla de postestratificación pone el peso de cada celda. Aquí es donde se nota tener a los partidos regionales separados. Añado también Andalucía, la comunidad con más entrevistas (534) y sin partidos regionales separados, como contraste.
 
 Hago la misma cuenta $\sum_j N_j t_j \theta_j / \sum_j N_j t_j$, pero solo con las celdas de cada comunidad. Al lado pongo el resultado del 23-J como referencia, no como la verdad: es de hace tres años.
 
 ```{r mrp-ccaa}
-ccaa_reg <- c("Cataluña", "País Vasco", "Navarra", "Galicia", "Canarias")
+ccaa_reg <- c("Andalucía", "Cataluña", "País Vasco", "Navarra", "Galicia", "Canarias")
 
 # La misma cuenta que para España (con participación), solo con las celdas de cada comunidad
 mrp_ccaa_draws <- map(ccaa_reg, function(cc) {
@@ -1440,7 +1441,8 @@ Algunas cosas que se ven:
   2. **El pooling.** La interacción comunidad × recuerdo sale pequeña para los partidos grandes: el modelo no ve diferencias regionales claras en las transferencias de voto. Así que, por ejemplo, a los votantes catalanes del PSOE en 2023 les aplica una transferencia al PP del 5,7 %, cerca de la nacional (6,8 %), aunque en la encuesta catalana sea del 2,7 %. Son 4 personas de 146, y el modelo no se fía de tan poco.
 
   Ninguna de las dos cosas es un error del modelo: hace lo que tiene que hacer con estos datos. Pero es un buen recordatorio de que el MRP no saca información de donde no la hay.
-- **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 25 %. En Cataluña, con 458, los intervalos son mucho más estrechos.
+- **Andalucía** sigue la tendencia nacional: el PP baja del 36,0 % al 30,6 % y el PSOE del 33,0 % al 25,4 %, mientras VOX sube del 15,1 % al 19,3 %. OTROS sube al 16,6 %: ahí están Adelante Andalucía, Se Acabó la Fiesta y el voto en blanco.
+- **Los intervalos reflejan los datos.** En Navarra, con 61 entrevistas, EH Bildu va del 13 % al 25 %. En Andalucía, con 534, el PP va del 28,6 % al 32,4 %.
 
 ### Jugando con la posterior
 
@@ -1486,6 +1488,8 @@ duelo <- function(cc, a, b) {
 
 tribble(
   ~comunidad   , ~a      , ~b      ,
+  "Andalucía"  , "PP"    , "PSOE"  ,
+  "Andalucía"  , "VOX"   , "PSOE"  ,
   "Cataluña"   , "ERC"   , "JUNTS" ,
   "Cataluña"   , "AC"    , "JUNTS" ,
   "Cataluña"   , "PSOE"  , "ERC"   ,
@@ -1501,7 +1505,21 @@ tribble(
   fmt_percent(probabilidad, decimals = 0, locale = "es")
 ```
 
-En Cataluña, ERC queda por delante de Junts en casi todos los draws, y el PSOE por delante de ERC en todos. Aliança Catalana no supera a Junts en ningún draw: con esta encuesta, todavía queda lejos. En el País Vasco, el MRP ve a EH Bildu por delante del PNV: el PNV solo gana en el 12 % de los draws. En Navarra, Bildu supera al PP en el 55 %: es tirar una moneda.
+En Cataluña, ERC queda por delante de Junts en casi todos los draws, y el PSOE por delante de ERC en todos. Aliança Catalana no supera a Junts en ningún draw: con esta encuesta, todavía queda lejos. En el País Vasco, el MRP ve a EH Bildu por delante del PNV: el PNV solo gana en el 12 % de los draws. En Navarra, Bildu supera al PP en el 55 %: es tirar una moneda. En Andalucía, el PP queda por delante del PSOE en el 99,6 % de los draws, y VOX solo supera al PSOE en 2 de 500.
+
+Y una pregunta que en Andalucía tiene su miga: ¿suman PP y VOX más de la mitad de los votos?
+
+```{r prob-andalucia}
+pp_vox_and <- 100 *
+  (mrp_ccaa_draws[["Andalucía"]][, "PP"] + mrp_ccaa_draws[["Andalucía"]][, "VOX"])
+
+c(
+  media = mean(pp_vox_and),
+  "P(PP + VOX > 50 %)" = mean(pp_vox_and > 50)
+)
+```
+
+El bloque PP + VOX se queda en el 49,9 % de media, y pasa del 50 % en el 48 % de los draws: una moneda al aire. Ojo, que esto es intención de voto en unas generales, no en unas autonómicas, y son votos, no escaños.
 
 ### Antes de sacar conclusiones
 
