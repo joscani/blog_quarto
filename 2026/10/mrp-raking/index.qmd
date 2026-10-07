@@ -64,12 +64,13 @@ Los scripts están en el [repositorio del blog](https://github.com/joscani/blog_
 3. [`03_targets.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/03_targets.R): construye los objetivos de población para el raking.
 4. [`04_raking.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/04_raking.R): imputa el recuerdo de voto que falta y hace el raking. Genera la tabla de postestratificación.
 5. [`05_mrp.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/05_mrp.R): el modelo y la postestratificación del post, en un script, más una comparación con el raking clásico de pesos.
+6. [`06_xgboost.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/06_xgboost.R): lo mismo que el 05, pero con un xgboost en vez del modelo multinivel de `brms`. Necesita que el 05 haya corrido (lee `estimaciones.rds`) y tener `xgboost` instalado.
 
 Antes de empezar:
 
 - Descarga los microdatos del estudio 3577 desde la web del CIS y guarda `3577.sav` en `datos/`. El script no los descarga.
 - Ejecuta los scripts desde la raíz del repositorio. Las rutas son relativas a ella.
-- Paquetes: `ineapir`, `infoelectoral`, `haven`, `mipfp`, `nnet`, `survey`, `brms` y `cmdstanr`.
+- Paquetes: `ineapir`, `infoelectoral`, `haven`, `mipfp`, `nnet`, `survey`, `brms`, `cmdstanr` y `xgboost`.
 
 Si no quieres ejecutar los scripts, los ficheros que lee el post, incluidos los modelos ya ajustados, están en [esta release](https://github.com/joscani/blog_quarto/releases/tag/mrp-raking-datos). Para bajarlos todos a `datos/`:
 
@@ -1624,5 +1625,112 @@ Cinco avisos:
 4. Las probabilidades de la posterior son **optimistas**. Solo recogen la incertidumbre del modelo: tratan la tabla del raking como si fuera exacta, y no incluyen el sesgo de la propia encuesta ni lo que harán los indecisos. Además son porcentajes de voto, no escaños: pasar del 50 % de los votos no es lo mismo que tener mayoría absoluta. Y con 500 draws, una probabilidad de 0 % quiere decir "menos de 1 entre 500", no "imposible".
 5. **El MRP no saca información de donde no la hay.** El PP sale en Cataluña por encima del 23-J y de la propia encuesta catalana. Parte viene de lo que declaran los pocos abstencionistas catalanes de la encuesta, y parte del pooling: con 4 casos de 146, el modelo no se cree que las transferencias de voto en Cataluña sean distintas de las del resto de España. El partial pooling protege de las celdas con pocos datos, pero también puede tapar diferencias reales cuando hay pocos datos para verlas.
 
+
+## ¿Y en vez de brms, un xgboost?
+
+Última pregunta, y razonable: si al final lo que hace el MRP es predecir en cada celda y ponderar por la población, ¿no valdría cualquier modelo de clasificación? ¿No valdría un xgboost? Lo he probado: la misma tabla de postestratificación y la misma participación, y en el sitio del multinivel, un clasificador multiclase con gradient boosting sobre las mismas cinco variables. La versión completa está en [`06_xgboost.R`](https://github.com/joscani/blog_quarto/blob/master/2026/10/mrp-raking/06_xgboost.R); aquí, la parte que cambia:
+
+```{r xgboost}
+library(xgboost)
+
+set.seed(2026)
+dtrain <- xgb.DMatrix(
+  model.matrix(~ sexo + edad + edu + rec + ccaa, dat)[, -1],
+  label = as.integer(dat$voto) - 1
+)
+
+params <- list(
+  objective = "multi:softprob",
+  num_class = length(voto_lv),
+  eval_metric = "mlogloss",
+  eta = 0.1,
+  max_depth = 3,
+  min_child_weight = 5,
+  subsample = 0.8,
+  colsample_bytree = 0.8
+)
+
+cv <- xgb.cv(
+  params,
+  dtrain,
+  nrounds = 500,
+  nfold = 5,
+  early_stopping_rounds = 20,
+  verbose = 0
+)
+mod_xgb <- xgb.train(
+  params,
+  dtrain,
+  nrounds = which.min(cv$evaluation_log$test_mlogloss_mean)
+)
+
+p <- predict(
+  mod_xgb,
+  xgb.DMatrix(model.matrix(~ sexo + edad + edu + rec + ccaa, post)[, -1])
+)
+theta_xgb <- if (is.matrix(p)) p else matrix(p, nrow = nrow(post), byrow = TRUE)
+colnames(theta_xgb) <- voto_lv
+
+# ceros estructurales y pesos: lo mismo que con los efectos fijos
+theta_xgb <- theta_xgb * mascara
+theta_xgb <- theta_xgb / rowSums(theta_xgb)
+
+est_xgb <- 100 * colSums(theta_xgb * w_fijos) / sum(w_fijos)
+```
+
+A nivel nacional, sale casi lo mismo que con el MRP:
+
+```{r comparacion-xgb}
+comparacion |>
+  mutate(fijos = est_fijos[partido], xgb = est_xgb[partido]) |>
+  select(partido, bruto, pesos_cis, fijos, xgb, mrp, cis_publicado) |>
+  gt(rowname_col = "partido") |>
+  cols_label(
+    bruto = "Bruto",
+    pesos_cis = "Pesos CIS",
+    fijos = "Efectos fijos",
+    xgb = "XGBoost",
+    mrp = "MRP",
+    cis_publicado = "CIS publicado"
+  ) |>
+  fmt_number(decimals = 1, locale = "es") |>
+  sub_missing(missing_text = "—") |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(columns = c(fijos, xgb, mrp))
+  )
+```
+
+La P sigue haciendo el trabajo: corrige los márgenes y el modelo solo reparte dentro de cada celda, así que con 3.128 entrevistas da casi igual cómo se estime ese reparto. (Por cierto: las variables que más usan los árboles son `recPSOE`, `recSUMAR` y `recVOX`. El recuerdo manda.) Donde se nota la diferencia es por comunidad:
+
+```{r xgb-ccaa}
+est_xgb_ccaa <- map(ccaa_reg, function(cc) {
+  i <- post$ccaa == cc
+  tibble(
+    ccaa = cc,
+    partido = voto_lv,
+    xgb = 100 * colSums(theta_xgb[i, ] * w_fijos[i]) / sum(w_fijos[i]),
+    mrp = 100 * colMeans(mrp_ccaa_draws[[cc]])
+  )
+}) |>
+  bind_rows() |>
+  filter(xgb >= 1 | mrp >= 1 | (partido == "AC" & ccaa == "Cataluña")) |>
+  mutate(partido = if_else(partido == "SUMAR", "SUMAR y aliados", partido)) |>
+  arrange(ccaa, desc(xgb))
+
+est_xgb_ccaa |>
+  gt(groupname_col = "ccaa", rowname_col = "partido") |>
+  cols_label(xgb = "XGBoost", mrp = "MRP") |>
+  tab_spanner("% de voto", columns = c(xgb, mrp)) |>
+  fmt_number(decimals = 1, locale = "es")
+```
+
+Dos problemas de fondo, y uno que no lo es tanto:
+
+- **El xgboost no ve lo que no está en los datos.** El multinivel toma prestada información: con 19 entrevistas del PNV en el País Vasco, el efecto de comunidad sale de la distribución común y el PNV se mantiene en un 18,8 %. El xgboost no tiene nada que tomar prestado: con 19 casos casi nunca emite esa clase, y el PNV se desploma al 1,9 %. Lo mismo BILDU en Navarra (8,2 % frente a 19,0 %) y CC en Canarias (0,2 % frente a 5,6 %); AC, con 7 casos en toda la encuesta, desaparece (0,0 % nacional). Y cuando hay datos pero son ruidosos, se los cree todos: VOX 21,2 % en Canarias (MRP: 16,5 %) o PP 24,5 % en Navarra (MRP: 18,5 %). Los árboles particionan y no interpolan: es el efecto Melilla de la primera parte, sin red de seguridad.
+- **El xgboost no da una posterior.** Da un número por partido y ya está: sin intervalos, sin draws. Todo el apartado de jugar con la posterior — la P(PP + VOX > 45 %), los duelos por comunidad, la correlación de −0,58 entre PP y VOX — no tiene equivalente. Se puede hacer bootstrapping de la encuesta y refit por réplica, pero eso mide la variabilidad muestral, no la incertidumbre del modelo, y cada réplica exige su propia validación cruzada. Y en cada draw del MRP los doce partidos suman 100 %: la incertidumbre es conjunta.
+- **Pero en Cataluña sale mejor parado que el MRP.** El PP con xgboost es un 12,8 %, en la misma zona que los efectos fijos (12,1 %) y el bruto de la encuesta (12,0 %), frente al 15,2 % del MRP. El pooling no es gratis; es solo que con esta encuesta compra más de lo que cuesta.
+
+Antes de cerrar, una vía que aquí no he explorado. Todo el modelo de voto usa cinco variables porque son las que se pueden postestratificar: las que define la tabla. Pero el modelo no tiene por qué limitarse a ellas. Con más información a nivel individual —ingresos, tamaño del municipio, si se vive en pareja, religiosidad…— se podría ajustar el modelo sobre los individuos, usando pesos derivados de la tabla de postestratificación: a cada entrevistado, el peso de su celda en la población, $N_j$ dividido por las entrevistas que esa celda tiene en la encuesta. El modelo aprendería con una muestra que ya pesa como la población, y podría exprimir variables que el raking no cruza; con variables relevantes, las predicciones dentro de cada celda mejorarían, sobre todo donde hay pocos casos. Y ojo: nada de esto es exclusivo del xgboost. El multinivel se puede ajustar igual de individuos ponderados, llevando en la fórmula las cinco variables de la tabla (como efectos aleatorios) y todas las demás como efectos fijos. La diferencia entre xgboost y multinivel no está en el nivel al que se ajustan, sino en cómo tratan las combinaciones sin datos.
 
 Pues hasta otra, y que ustedes voten libres, cuando se pueda. 
