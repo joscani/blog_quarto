@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MRP y raking: postestratificar sin tener la conjunta</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MRP y raking: postestratificar sin tener la
+conjunta</h1>
+<p class="subtitle">Cómo sacar más jugo a una encuesta del CIS con un
+modelo multinivel, una tabla de población fabricada a mano y la
+posterior completa</p>
+</header>
+<p>Esta es la versión corta. El post completo, con todo el código en R,
+está en el blog: <a
+href="https://muestrear-no-es-pecado.netlify.app/2026/10/mrp-raking/">MRP
+y raking: postestratificar sin tener la conjunta</a>. Los scripts y los
+datos para reproducirlo están enlazados allí.</p>
+<h2 id="la-idea">La idea</h2>
+<p>MRP son las siglas de <em>Multilevel Regression and
+Poststratification</em>. Son dos pasos:</p>
+<ol type="1">
+<li><strong>Un modelo multinivel</strong> que predice la intención de
+voto según la comunidad, el sexo, la edad, los estudios y el recuerdo de
+voto.</li>
+<li><strong>La postestratificación</strong>: aplicar esas predicciones a
+la población real, sabiendo cuánta gente hay en cada combinación de esas
+variables.</li>
+</ol>
+<p>Lo he probado con el barómetro del CIS de septiembre de 2026 (estudio
+3577): 4.018 entrevistas, de las que 3.128 declaran un voto válido.</p>
+<h2 id="primero-la-m-por-qué-multinivel">Primero la M: por qué
+multinivel</h2>
+<p>Si cruzo comunidad, sexo, edad y estudios salen 798 combinaciones. A
+cada una la llamo <strong>celda</strong>. Solo 544 tienen alguna
+entrevista, y 230 de ellas tienen una o dos personas. Por comunidad pasa
+lo mismo: Ceuta tiene 16 entrevistas, Melilla 17 y Andalucía 534.</p>
+<p>Comparo dos modelos con las mismas variables:</p>
+<ul>
+<li><strong>Efectos fijos</strong>: cada comunidad tiene su coeficiente
+y se estima solo con sus datos.</li>
+<li><strong>Multinivel</strong>: los coeficientes de las comunidades
+salen de una distribución común, y el modelo estima cuánto varían entre
+sí. Es el <em>partial pooling</em>.</li>
+</ul>
+<p><img src="01-efectos-ccaa.png" /></p>
+<p>En Melilla no hay ningún votante de SUMAR entre sus 17 entrevistas.
+El modelo de efectos fijos busca el coeficiente que mejor ajusta un 0,
+que es “menos infinito”, y se queda en −9,8 porque el optimizador se
+para. El multinivel no se cree que un 0 de 17 signifique que en Melilla
+nadie vota a SUMAR, y deja el efecto cerca de 0.</p>
+<p>Y no contrae todo por igual. Las comunidades con 20 entrevistas o
+menos se acercan a la media en torno a un 90 %; las que tienen más de
+200, en torno a un 50 %. Cuantos menos datos, más se fía el modelo del
+conjunto.</p>
+<h2 id="la-encuesta-no-se-parece-a-la-población">La encuesta no se
+parece a la población</h2>
+<p><img src="02-encuesta-vs-poblacion.png" /></p>
+<p>Dos desviaciones saltan a la vista:</p>
+<ul>
+<li><strong>Estudios.</strong> En la encuesta, el 64,5 % tiene estudios
+altos. En la población, el 34,2 %.</li>
+<li><strong>Recuerdo de voto.</strong> En la encuesta, el 29,5 % dice
+que votó al PSOE en 2023, cuando el PSOE sacó votos equivalentes al 21,1
+% del censo. Y solo el 12,4 % dice que se abstuvo, frente al 28,2 %
+real.</li>
+</ul>
+<p>Los pesos del CIS corrigen bien los estudios, la edad y el sexo. El
+recuerdo de voto, no: con sus pesos, el PSOE sigue en el 31,0 % y la
+abstención en el 15,6 %.</p>
+<h2 id="la-p-postestratificar">La P: postestratificar</h2>
+<p>La postestratificación es una media ponderada. Para cada celda
+<em>j</em> tengo la predicción del modelo, θⱼ, y cuánta gente hay en
+ella, Nⱼ:</p>
+<blockquote>
+<p>θ̂ = Σ Nⱼ · θⱼ / Σ Nⱼ</p>
+</blockquote>
+<p>El problema es que necesito saber cuánta gente hay en cada
+combinación de comunidad × sexo × edad × estudios × recuerdo de voto, y
+<strong>esa tabla no existe</strong>. Lo que sí hay son tablas por
+separado:</p>
+<ul>
+<li>sexo × edad × comunidad (Estadística Continua de Población del
+INE),</li>
+<li>estudios × sexo × comunidad (EPA),</li>
+<li>recuerdo de voto × comunidad (resultados del 23-J).</li>
+</ul>
+<p>Con ellas fabrico la tabla conjunta mediante <strong>raking</strong>
+(IPF). Parto de la tabla cruzada de la propia encuesta y la reescalo una
+y otra vez hasta que cuadra con las tres tablas oficiales. El raking
+cambia los totales, pero respeta las asociaciones de la encuesta en todo
+lo que las fuentes oficiales no cruzan.</p>
+<p>Hay celdas que tienen que valer 0 sí o sí: son los <strong>ceros
+estructurales</strong>. Quien tiene hoy 18-20 años no pudo votar el
+23-J. Y nadie pudo votar a ERC fuera de Cataluña, ni al BNG fuera de
+Galicia.</p>
+<h2 id="los-partidos-regionales">Los partidos regionales</h2>
+<p>En el modelo final hay doce partidos: PP, PSOE, VOX, SUMAR y aliados
+(con Podemos, IU, Compromís…), ERC, Junts, Aliança Catalana, EH Bildu,
+PNV, BNG, Coalición Canaria y OTROS.</p>
+<p>Los regionales tienen truco. Si ajusto el modelo tal cual, ve que en
+18 comunidades nadie vota a ERC, lo toma como información y, por el
+partial pooling, <strong>subestima a ERC justo en Cataluña</strong>. La
+solución es meter los ceros estructurales dentro del modelo con un
+<em>offset</em>: un −20 en el predictor de cada partido regional fuera
+de su comunidad. Y en la postestratificación los pongo a 0 exacto.</p>
+<h2 id="quién-va-a-votar">¿Quién va a votar?</h2>
+<p>La fórmula de arriba supone que <strong>todo el electorado
+vota</strong>. Y en la tabla de población, los abstencionistas de 2023
+son casi un tercio. En Cataluña, contados enteros, aportaban más puntos
+al PP y a VOX que los propios votantes de esos partidos.</p>
+<p>Así que añado un segundo modelo multinivel, de
+<strong>participación</strong>, a partir de la pregunta del CIS sobre la
+probabilidad de ir a votar. Me quedo con quien dice “10, con toda
+seguridad”. Lo dice entre el 84 % y el 90 % de quienes votaron a los
+partidos grandes en 2023, y solo el 38 % de los abstencionistas. La
+postestratificación pasa a ponderar por los que votan:</p>
+<blockquote>
+<p>θ̂ = Σ Nⱼ · tⱼ · θⱼ / Σ Nⱼ · tⱼ</p>
+</blockquote>
+<p>donde tⱼ es la probabilidad de votar de cada celda.</p>
+<p><img src="04-participacion.png" /></p>
+<p>Con la participación, OTROS baja más de 3 puntos: los abstencionistas
+que ahora dicen que votarían eligen mucho OTROS, pero votan poco.</p>
+<h2 id="el-resultado">El resultado</h2>
+<p><img src="06-tabla-comparacion.png" /></p>
+<p><img src="05-comparacion-metodos.png" /></p>
+<p>Donde más se nota es en el PSOE: 31,0 % en la estimación del CIS y
+25,4 % con MRP. Mi interpretación es que viene del recuerdo de voto: la
+encuesta tiene muchos más votantes del PSOE en 2023 de los que hubo, los
+pesos del CIS no lo corrigen, y la postestratificación sí.</p>
+<h2 id="por-comunidad">Por comunidad</h2>
+<p>El CIS no publica estimaciones por comunidad, y con razón: con 61
+entrevistas en Navarra o 133 en el País Vasco, el voto bruto no dice
+gran cosa. El MRP sí puede, porque cada comunidad toma prestada
+información del resto.</p>
+<p><img src="07-tabla-ccaa.png" /></p>
+<p>Hay cosas que cuadran, como EH Bildu en el País Vasco o el BNG en
+Galicia, cerca del 23-J. Y otras que me creo menos, como el PP por
+encima del 23-J en Cataluña: 15,2 % frente a 13,2 %. Parte viene de lo
+que declaran los pocos abstencionistas catalanes de la encuesta, y parte
+del pooling: el modelo no ve diferencias regionales claras en las
+transferencias de voto, así que aplica en Cataluña unas parecidas a las
+nacionales. El partial pooling protege de las celdas con pocos datos,
+pero también puede tapar diferencias reales cuando hay pocos datos para
+verlas.</p>
+<h2 id="jugando-con-la-posterior">Jugando con la posterior</h2>
+<p>Lo mejor de hacerlo bayesiano es que no tengo una estimación, sino
+500 escenarios completos y coherentes entre sí. Cualquier pregunta se
+responde contando en cuántos se cumple.</p>
+<p><img src="08-pp-vox.png" /></p>
+<p><img src="09-tabla-probabilidades.png" /></p>
+<p>El bloque PP + VOX pasa del 45 % en el 83 % de los escenarios, y no
+llega al 50 % en ninguno. En Andalucía, en cambio, PP + VOX pasa del 50
+% en el 48 % de los escenarios: una moneda al aire.</p>
+<p>Esto no se puede hacer con los intervalos de cada partido por
+separado: cuando el PP sube, VOX suele bajar (la correlación entre sus
+escenarios es de −0,58), y en cada escenario esa relación ya está
+dentro.</p>
+<h2 id="antes-de-sacar-conclusiones">Antes de sacar conclusiones</h2>
+<ul>
+<li><strong>El CIS cocina y yo no.</strong> Aquí no hay reparto de
+indecisos: todo se calcula sobre el voto válido declarado.</li>
+<li><strong>No hay elecciones con las que comparar</strong>, así que no
+puedo decir qué estimación acierta más.</li>
+<li><strong>La participación es un supuesto</strong>, calibrado a la del
+23-J.</li>
+<li><strong>Las probabilidades son optimistas</strong>: solo recogen la
+incertidumbre del modelo, no el sesgo de la encuesta. Y son votos, no
+escaños.</li>
+<li><strong>El MRP no saca información de donde no la hay.</strong></li>
+</ul>
+<p>Todo el código, paso a paso, en el <a
+href="https://muestrear-no-es-pecado.netlify.app/2026/10/mrp-raking/">post
+completo del blog</a>.</p>
+</body>
+</html>
