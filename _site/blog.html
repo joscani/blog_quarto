@@ -52,7 +52,97 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="site_libs/bootstrap/bootstrap-dark-df07115ad9f15e2ef3479c789e6873c8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <link href="site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
-<link rel="alternate" type="application/rss+xml" title="Muestrear no es pecado" href="blog.xml" data-external="1"></head><body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script>
+
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-date','listing-title','listing-reading-time','listing-description','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      page: 25,
+    pagination: { item: "<li class='page-item'><a class='page page-link' href='#'></a></li>" },
+      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="alternate" type="application/rss+xml" title="Muestrear no es pecado" href="blog.xml" data-external="1"></head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -214,98 +304,7 @@ ul.task-list li input[type="checkbox"] {
     } else {
       toggleColorMode(false);
     }
-  </script><p><link href="index-styles.css" rel="stylesheet"></p>
-<script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
-  "language": {
-    "search-no-results-text": "No results",
-    "search-matching-documents-text": "matching documents",
-    "search-copy-link-title": "Copy link to search",
-    "search-hide-matches-text": "Hide additional matches",
-    "search-more-match-text": "more match in this document",
-    "search-more-matches-text": "more matches in this document",
-    "search-clear-button-title": "Clear",
-    "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit",
-    "search-label": "Search"
-  }
-}</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-reading-time','listing-description','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      page: 25,
-    pagination: { item: "<li class='page-item'><a class='page page-link' href='#'></a></li>" },
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
   </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-
-
-
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
@@ -387,23 +386,7 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Archive</h1>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<header id="title-block-header" class="quarto-title-block"></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
@@ -411,7 +394,6 @@ window.Quarto = {
     <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(129)</span></div><div class="category" data-category="MjAxOQ==">2019 <span class="quarto-category-count">(9)</span></div><div class="category" data-category="MjAyMA==">2020 <span class="quarto-category-count">(18)</span></div><div class="category" data-category="MjAyMQ==">2021 <span class="quarto-category-count">(22)</span></div><div class="category" data-category="MjAyMg==">2022 <span class="quarto-category-count">(17)</span></div><div class="category" data-category="MjAyMw==">2023 <span class="quarto-category-count">(18)</span></div><div class="category" data-category="MjAyNA==">2024 <span class="quarto-category-count">(18)</span></div><div class="category" data-category="MjAyNQ==">2025 <span class="quarto-category-count">(15)</span></div><div class="category" data-category="MjAyNg==">2026 <span class="quarto-category-count">(9)</span></div><div class="category" data-category="YWdpbGU=">agile <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUMzJTgxbGdlYnJh">Álgebra <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YW1pc3RhZA==">amistad <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YW4lQzMlQTFsaXNpcyUyMGJheWVzaWFubw==">análisis bayesiano <span class="quarto-category-count">(20)</span></div><div class="category" data-category="YXBp">api <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUMzJUExcmJvbGVz">árboles <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QVdT">AWS <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YXdz">aws <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YmlnJTIwZGF0YQ==">big data <span class="quarto-category-count">(5)</span></div><div class="category" data-category="YmlnZGF0YQ==">bigdata <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YnJtcw==">brms <span class="quarto-category-count">(2)</span></div><div class="category" data-category="QyUyQiUyQg==">C++ <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Y2FjaGl0b3M=">cachitos <span class="quarto-category-count">(16)</span></div><div class="category" data-category="Y2F0Ym9vc3Q=">catboost <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2F0ZWclQzMlQjNyaWNhcw==">categóricas <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2F1c2FsJTIwaW5mZXJlbmNl">causal inference <span class="quarto-category-count">(7)</span></div><div class="category" data-category="Y2llbmNpYSUyMGRlJTIwZGF0b3M=">ciencia de datos <span class="quarto-category-count">(17)</span></div><div class="category" data-category="Q29tdW5pZGFk">Comunidad <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y29ycmVzcG9uZGVuY2lhcw==">correspondencias <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Y3Vycm8=">curro <span class="quarto-category-count">(1)</span></div><div class="category" data-category="RGF0YSUyMFNjaWVuY2U=">Data Science <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZG9ja2Vy">docker <span class="quarto-category-count">(2)</span></div><div class="category" data-category="ZW1wcmVzYXM=">empresas <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZW5jdWVzdGFz">encuestas <span class="quarto-category-count">(2)</span></div><div class="category" data-category="ZW5jdWVzdGFzJTIwZWxlY3RvcmFsZXM=">encuestas electorales <span class="quarto-category-count">(6)</span></div><div class="category" data-category="ZXN0YWQlQzMlQURzdGljYQ==">estadística <span class="quarto-category-count">(77)</span></div><div class="category" data-category="RXN0YWQlQzMlQURzdGljYQ==">Estadística <span class="quarto-category-count">(5)</span></div><div class="category" data-category="ZXN0YWQlQzMlQURzdGljY2E=">estadísticca <span class="quarto-category-count">(1)</span></div><div class="category" data-category="RXhwbGljYXRpdmlkYWQ=">Explicatividad <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZmFjdG9yaWFs">factorial <span class="quarto-category-count">(3)</span></div><div class="category" data-category="ZmFjdG9yaXphY2klQzMlQjNu">factorización <span class="quarto-category-count">(2)</span></div><div class="category" data-category="ZnVsbCUyMGx1eHVyeSUyMGJheWVz">full luxury bayes <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Z2lz">gis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z3IlQzMlQTFmaWNvcw==">gráficos <span class="quarto-category-count">(2)</span></div><div class="category" data-category="aDJv">h2o <span class="quarto-category-count">(4)</span></div><div class="category" data-category="SHVtb3I=">Humor <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SUE=">IA <span class="quarto-category-count">(2)</span></div><div class="category" data-category="aW1wdXRhY2klQzMlQjNu">imputación <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SW5mZXJlbmNpYSUyMGNhdXNhbA==">Inferencia causal <span class="quarto-category-count">(2)</span></div><div class="category" data-category="aW5mZXJlbmNpYSUyMGNhdXNhbA==">inferencia causal <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SW52ZXN0aWdhY2klQzMlQjNuJTIwb3BlcmF0aXZh">Investigación operativa <span class="quarto-category-count">(2)</span></div><div class="category" data-category="SnVsaWE=">Julia <span class="quarto-category-count">(6)</span></div><div class="category" data-category="bGludXg=">linux <span class="quarto-category-count">(18)</span></div><div class="category" data-category="bWFjaGluZSUyMGxlYXJuaW5n">machine learning <span class="quarto-category-count">(4)</span></div><div class="category" data-category="TWFya2V0aW5n">Marketing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TUw=">ML <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TUxK">MLJ <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bWxyMw==">mlr3 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bW9kZWxvcyUyMG1peHRvcw==">modelos mixtos <span class="quarto-category-count">(7)</span></div><div class="category" data-category="TVJQ">MRP <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bXVlc3RyZW8=">muestreo <span class="quarto-category-count">(10)</span></div><div class="category" data-category="TmVvdmlt">Neovim <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bmV3cw==">news <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bm1m">nmf <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bnVtcHlybw==">numpyro <span class="quarto-category-count">(1)</span></div><div class="category" data-category="b2J2aWVkYWRlcw==">obviedades <span class="quarto-category-count">(1)</span></div><div class="category" data-category="b2Ny">ocr <span class="quarto-category-count">(17)</span></div><div class="category" data-category="cGVuc2FtaWVudG9z">pensamientos <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cG9sJUMzJUE5bWljYQ==">polémica <span class="quarto-category-count">(19)</span></div><div class="category" data-category="cHJvZHVjY2lvbg==">produccion <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHl0aG9u">python <span class="quarto-category-count">(9)</span></div><div class="category" data-category="cXVhcnRv">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Ug==">R <span class="quarto-category-count">(43)</span></div><div class="category" data-category="cg==">r <span class="quarto-category-count">(2)</span></div><div class="category" data-category="UiUyMHB5dGhvbg==">R python <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cmFuZ2Vy">ranger <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cm9jaw==">rock <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UnVzdA==">Rust <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UzM=">S3 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2Npa2l0LWxlYXJu">scikit-learn <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2hpbnk=">shiny <span class="quarto-category-count">(2)</span></div><div class="category" data-category="c29jaW9sb2clQzMlQURh">sociología <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c29mdHdhcmU=">software <span class="quarto-category-count">(2)</span></div><div class="category" data-category="c3Bhcms=">spark <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c3Bzcw==">spss <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c3Fs">sql <span class="quarto-category-count">(1)</span></div><div class="category" data-category="U3Rhbg==">Stan <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dGV4dG1pbmluZw==">textmining <span class="quarto-category-count">(16)</span></div><div class="category" data-category="dGlkeW1vZGVscw==">tidymodels <span class="quarto-category-count">(3)</span></div><div class="category" data-category="dGllbXBvcyUyMG1vZGVybm9z">tiempos modernos <span class="quarto-category-count">(2)</span></div><div class="category" data-category="d2Vicg==">webr <span class="quarto-category-count">(1)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
-
 
 
 
@@ -433,128 +415,7 @@ window.Quarto = {
 
 
 
-<div class="grid">
-<div id="bio-pic" class="g-col-12 g-col-md-6">
-<p><img src="profile2.jpg" class="img-fluid"></p>
-</div>
-<div id="about-me-text" class="g-col-12 g-col-md-6">
-<section id="hola-a-todos" class="level1">
-<h1>Hola a todos</h1>
-<p>Soy José Luis Cañadas Reche, científico de datos (o estadístico que sabe algo de programación )</p>
-<p>Me puedes encontrar en</p>
-<ul>
-<li><a href="https://github.com/joscani">GitHub</a></li>
-<li><a href="https://bsky.app/profile/joscani.muestrear-no-es-pecado.es">Bluesky</a></li>
-<li><a href="https://twitter.com/joscani">Twitter</a></li>
-<li><a href="https://fosstodon.org/@joscani">Fosstodon</a>.</li>
-</ul>
 </section>
-</div>
-<p>º ::: {.g-col-12 .g-col-md-5 .g-start-md-2} # Blogs: Últimos post y enlaces a blog antiguo y nuevo</p>
-<section id="mrp-y-raking-postestratificar-sin-tener-la-conjunta" class="level5">
-<h5 class="anchored" data-anchor-id="mrp-y-raking-postestratificar-sin-tener-la-conjunta"><a href="2026/10/mrp-raking/index.html"><strong>MRP y raking: postestratificar sin tener la conjunta</strong></a></h5>
-</section>
-<section id="los-niveles-pequeños-también-mandan" class="level5">
-<h5 class="anchored" data-anchor-id="los-niveles-pequeños-también-mandan"><a href="2026/07/niveles_peque_mixed.html"><strong>Los niveles pequeños también mandan</strong></a></h5>
-</section>
-<section id="mayoría-absoluta-escaños-bayesian-way.-andalucía-2026" class="level5">
-<h5 class="anchored" data-anchor-id="mayoría-absoluta-escaños-bayesian-way.-andalucía-2026"><a href="2026/05/escanos_a_lo_bayesiano.html"><strong>¿Mayoría absoluta? Escaños, Bayesian way. Andalucía 2026</strong></a></h5>
-</section>
-<section id="meta-análisis.-agregando-encuestas-iii.-elecciones-andaluzas-2026" class="level4">
-<h4 class="anchored" data-anchor-id="meta-análisis.-agregando-encuestas-iii.-elecciones-andaluzas-2026"><a href="2026/05/meta-analisis-andalucia.html"><strong>Meta-análisis. Agregando encuestas III. Elecciones andaluzas 2026</strong></a></h4>
-<section id="construyendo-un-simulador-de-encuestas-con-claude-code" class="level5">
-<h5 class="anchored" data-anchor-id="construyendo-un-simulador-de-encuestas-con-claude-code"><a href="2026/03/sim_encuestas_claude_code.html"><strong>Construyendo un simulador de encuestas con Claude Code</strong></a></h5>
-</section>
-<section id="cachitos-2025.-tercera-parte.-the-hard-way" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2025.-tercera-parte.-the-hard-way"><a href="2026/nochevieja-cachitos-2025/cachitos_2025_tercera_parte.html"><strong>Cachitos 2025. Tercera parte. The hard way</strong></a></h5>
-</section>
-<section id="cachitos-2025.-segunda-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2025.-segunda-parte"><a href="2026/nochevieja-cachitos-2025/cachitos_2025_segunda_parte.html"><strong>Cachitos 2025. Segunda parte</strong></a></h5>
-</section>
-<section id="cachitos-2025.-primera-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2025.-primera-parte"><a href="2026/nochevieja-cachitos-2025/cachitos_2025_primera_parte.html"><strong>Cachitos 2025. Primera parte</strong></a></h5>
-</section>
-<section id="submuestrear-sigue-siendo-pecado" class="level5">
-<h5 class="anchored" data-anchor-id="submuestrear-sigue-siendo-pecado"><a href="2025/05/submuestrear_bis_fixed.html"><strong>Submuestrear sigue siendo pecado</strong></a></h5>
-</section>
-<section id="submuestrear-a-veces-no-es-pecado" class="level5">
-<h5 class="anchored" data-anchor-id="submuestrear-a-veces-no-es-pecado"><a href="2025/05/submuestrear_bis.html"><strong>Submuestrear (a veces) no es pecado</strong></a></h5>
-</section>
-<section id="área-de-aplicación" class="level5">
-<h5 class="anchored" data-anchor-id="área-de-aplicación"><a href="2025/05/aoa.html"><strong>Área de aplicación</strong></a></h5>
-</section>
-<section id="para-qué-usar-scikit-learn-si-puedes-reinventarlo-mal-en-tres-sprints" class="level5">
-<h5 class="anchored" data-anchor-id="para-qué-usar-scikit-learn-si-puedes-reinventarlo-mal-en-tres-sprints"><a href="2025/04/frameworks.html"><strong>¿Para qué usar scikit-learn si puedes reinventarlo mal en tres sprints?</strong></a></h5>
-</section>
-<section id="submuestrar-si-es-pecado" class="level5">
-<h5 class="anchored" data-anchor-id="submuestrar-si-es-pecado"><a href="2025/03/submuestrear.html"><strong>Submuestrar si es pecado</strong></a></h5>
-</section>
-<section id="auc-en-sql" class="level5">
-<h5 class="anchored" data-anchor-id="auc-en-sql"><a href="2025/03/auc_sql.html"><strong>AUC en SQL</strong></a></h5>
-</section>
-<section id="error-irreducible" class="level5">
-<h5 class="anchored" data-anchor-id="error-irreducible"><a href="2025/02/error_irreducible.html"><strong>Error irreducible</strong></a></h5>
-</section>
-<section id="trucos.parte-1.-submodel-trick" class="level5">
-<h5 class="anchored" data-anchor-id="trucos.parte-1.-submodel-trick"><a href="2025/02/tricks.html"><strong>Trucos.Parte 1. Submodel trick</strong></a></h5>
-</section>
-<section id="cachitos-2024.tercera-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2024.tercera-parte"><a href="2025/01/nochevieja-cachitos-2024/cachitos_2024_tercera_parte.html"><strong>Cachitos 2024.Tercera parte</strong></a></h5>
-</section>
-<section id="cachitos-2024.segunda-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2024.segunda-parte"><a href="2025/01/nochevieja-cachitos-2024/cachitos_2024_segunda_parte.html"><strong>Cachitos 2024.Segunda parte</strong></a></h5>
-</section>
-<section id="cachitos-2024.primera-parte" class="level5">
-<h5 class="anchored" data-anchor-id="cachitos-2024.primera-parte"><a href="2025/01/nochevieja-cachitos-2024/cachitos_2024_primera_parte.html"><strong>Cachitos 2024.Primera parte</strong></a></h5>
-</section>
-<section id="orbital.ayuda-en-entornos-hostiles" class="level5">
-<h5 class="anchored" data-anchor-id="orbital.ayuda-en-entornos-hostiles"><a href="2024/11/orbital_entornos_hostiles.html"><strong>Orbital.¿Ayuda en entornos hostiles?</strong></a></h5>
-</section>
-<section id="el-bueno-el-feo-y-el-bayesiano" class="level5">
-<h5 class="anchored" data-anchor-id="el-bueno-el-feo-y-el-bayesiano"><a href="2024/09/god_and_bad_confounders.html"><strong>El bueno, el feo y el bayesiano</strong></a></h5>
-</section>
-<section id="predictores-a-nivel-de-grupo" class="level5">
-<h5 class="anchored" data-anchor-id="predictores-a-nivel-de-grupo"><a href="2024/08/predictores_nivel_grupo_inf_causal.html"><strong>Predictores a nivel de grupo</strong></a></h5>
-</section>
-<section id="meta-análisis-europeas" class="level5">
-<h5 class="anchored" data-anchor-id="meta-análisis-europeas"><a href="2024/06/meta-analisis-europeas.html"><strong>Meta-análisis europeas</strong></a></h5>
-</section>
-<section id="marketing-mix-modelling-estilo-compadre" class="level5">
-<h5 class="anchored" data-anchor-id="marketing-mix-modelling-estilo-compadre"><a href="2024/06/mmm_estilo_compadre.html"><strong>Marketing mix modelling estilo compadre</strong></a></h5>
-</section>
-<section id="ensalada-no-saludable" class="level5">
-<h5 class="anchored" data-anchor-id="ensalada-no-saludable"><a href="2024/05/Ensalada_no_saludable.html"><strong>Ensalada no saludable</strong></a></h5>
-</section>
-<section id="métricas-de-un-modelo-h2o-con-quarto" class="level5">
-<h5 class="anchored" data-anchor-id="métricas-de-un-modelo-h2o-con-quarto"><a href="2024/04/metricas_modelo_con_quarto.html"><strong>Métricas de un modelo h2o con quarto</strong></a></h5>
-</section>
-<section id="ya-vendrán-tiempos-mejores" class="level5">
-<h5 class="anchored" data-anchor-id="ya-vendrán-tiempos-mejores"><a href="2024/04/tiempos_mejores.html"><strong>Ya vendrán tiempos mejores</strong></a></h5>
-</section>
-<section id="lujuria-e-intervención" class="level5">
-<h5 class="anchored" data-anchor-id="lujuria-e-intervención"><a href="2024/03/lujuria_e_intervencion.html"><strong>Lujuria e intervención</strong></a></h5>
-</section>
-<section id="jornadas-hispalenses" class="level5">
-<h5 class="anchored" data-anchor-id="jornadas-hispalenses"><a href="2024/03/jornadas2024.html"><strong>Jornadas Hispalenses</strong></a></h5>
-</section>
-<section id="nomenclatura" class="level5">
-<h5 class="anchored" data-anchor-id="nomenclatura"><a href="2024/02/nomenclatura.html"><strong>Nomenclatura</strong></a></h5>
-</section>
-</section>
-</div>
-</section>
-<section id="investigación-operativa" class="level1 g-col-12 g-col-md-5 g-start-md-2">
-<h1>Investigación operativa</h1>
-<section id="ejemplo-simple" class="level5">
-<h5 class="anchored" data-anchor-id="ejemplo-simple"><a href="2022/06/21/io-parte-1/">Ejemplo simple</a></h5>
-<p>Ejemplo simple de como usar Julia, R y python para investigación operativa</p>
-</section>
-<section id="localización-indios-y-jefes" class="level5">
-<h5 class="anchored" data-anchor-id="localización-indios-y-jefes"><a href="2022/08/01/indios-y-jefes-io-al-servicio-del-mal/">Localización: Indios y jefes</a></h5>
-<p>Asignar <em>localizaciones</em> según demanda y diferentes restricciones. Un problema usual</p>
-</section>
-</section>
-<p>:::</p>
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="listing-actions-group">
