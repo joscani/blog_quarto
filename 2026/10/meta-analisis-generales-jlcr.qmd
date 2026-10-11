@@ -485,6 +485,37 @@ estimaciones |>
   )
 ```
 
+### El ajuste del modelo 2
+
+El modelo 2 es un multinomial condicional de las 8 subceldas del BLOQUE (Junts, ERC, PNV,
+EH Bildu, BNG, CC, UPN y RESTO), con `trials` igual a los votos totales del bloque de cada
+encuesta, no a su muestra completa: solo aprende cómo se reparte *dentro* del bloque. Lleva la
+misma familia de priors que el modelo 1 (Normal(0, 2) en log-odds, Exponential(1) para las sd),
+pero dos diferencias importantes:
+
+- **No lleva efecto casa**: en su ventana (desde junio de 2025) solo hay un puñado de casas que
+  reporten los 7 regionales, casi todas ElectoPanel. Un efecto aleatorio con 2-3 niveles y ese
+  desbalance sería ruido, no información; la composición se modela como tendencia temporal común.
+- **La ventana es larga** (jun 2025 →) a diferencia del modelo 1 (jul 2026 →): con 14 encuestas
+  en tres meses no hay de dónde colgar una tendencia, así que de momento le dejamos el histórico.
+
+```{r}
+mod_b <- ajustar_bloque(refit = TRUE)
+formula(mod_b)
+```
+
+```{r}
+s_b <- summary(mod_b)
+as.data.frame(s_b$fixed) |>
+  tibble::rownames_to_column("param") |>
+  select(param, Estimate, Est.Error, Rhat, Bulk_ESS, Tail_ESS) |>
+  mutate(across(where(is.numeric), \(x) round(x, 3)))
+```
+
+Ojo a la parametrización: la primera subcelda, **Junts, es la referencia** del multinomial, así
+que los coeficientes son log-odds de cada regional frente a Junts y las pendientes de `time`
+describen cómo cambia ese reparto interno con el tiempo.
+
 ## De voto a escaños
 
 Vamos a la parte chunga, como el título de la canción de Tabletom que he puesto al principio. 
