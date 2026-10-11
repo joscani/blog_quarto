@@ -1,0 +1,799 @@
+---
+title: "Meta-análisis. Agregando encuestas IV. Generales 2026 (con escaños)"
+date: '2026-10-10'
+categories:
+  - "2026"
+  - muestreo
+  - encuestas electorales
+  - análisis bayesiano
+  - brms
+description: 'Meta-análisis bayesiano de encuestas para las generales, con rescate a mano de partidos regionales, modelo en cascada y simulación de escaños con D''Hondt, umbral del 3% provincial y validación exacta contra el 23J.'
+execute:
+  message: false
+  warning: false
+  echo: true
+format:
+  html:
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+    code-fold: show
+    code-summary: "Show the code"
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<!-- Pon aquí tu canción, que para eso es tu blog:
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/XXXXX?utm_source=generator" width="100%" height="250" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+</iframe>
+-->
+:::
+
+## Nota previa del "autor" humano
+
+Este post no se ha generado solito, pero casi. He ido construyendo el pipeline con glm 5.3 (Posit
+Assistant) paso a paso: el scraping de [ciento76](https://www.ciento76.es/encuestas), la fusión con
+electomanía y prensa, el meta-análisis y la simulación de escaños. Pero hay una parte que la IA no
+pudo hacer: **leer artículos a mano para cazar los porcentajes de los partidos regionales**. Eso ha
+sido yo, con el periódico en una mano y el CSV en la otra. Tiempo total: una tarde entera. La IA,
+segundos. El periodismo de datos manual, insustituible. De momento.
+
+## Introducción
+
+Ya lo hice para las [generales de julio de 2023](https://muestrear-no-es-pecado.es/2023/metanalisis),
+para las [europeas de junio de 2024](https://muestrear-no-es-pecado.es/2024/06/meta-analisis-europeas)
+y para las [andaluzas de mayo de 2026](https://muestrear-no-es-pecado.es/2026/05/meta-analisis-andalucia).
+Toca repetir el ejercicio para las elecciones al Congreso del **29 de noviembre de 2026**
+
+Pero esta vez hay una pega gorda que no tenía en Andalucía: en unas generales hay **partidos
+regionales**. ERC, Junts, PNV, EH Bildu, BNG, CC, UPN... Y la mayoría de las encuestas no los
+desglosan: te dan PP, PSOE, Vox, Sumar, Podemos, SALF y "otros", y a correr. Sin los regionales no
+puedes repartir escaños con D'Hondt, que es lo mismo que decir que no puedes hablar de mayorías.
+
+Así que este post tiene cuatro actos:
+
+1. **Agregamos encuestas** a nivel nacional (lo de siempre, casi).
+2. **Rescatamos los regionales** de donde se puede, a mano si hace falta.
+3. **Modelamos las series** con brms: dos modelos, uno para los grandes y otro condicional para
+   los regionales, que se componen al final.
+4. **Traducimos voto a escaños** provincia por provincia, con umbral del 3% y D'Hondt, validamos
+   el invento reproduciendo el 23J exactamente y añadimos el error histórico de las encuestas.
+
+Todo esto es **solo por diversión**. No soy experto en predicción electoral. Para algo serio habría
+que modelar mucho más (la corrección de sesgos por casa con datos reales que aquí solo apuntamos
+con el error histórico del Acto 4, y calibrada por encuestadora).
+
+## Acto 1: los datos
+
+La fuente principal es la tabla de encuestas de [ciento76](https://www.ciento76.es/encuestas),
+que scrapeo con un pipeline propio (`descargar_encuestas_ciento76.R`). Encima de eso, un script
+(`preparar_meta.R`) construye los datasets del meta-análisis.
+
+```{r}
+library(tidyverse)
+library(DT)
+library(brms)
+library(tidybayes)
+
+source(here::here("2026/10/preparar_meta.R"))
+```
+
+```{=html}
+<script>
+// barra de desplazamiento horizontal duplicada sobre cada DataTable
+// (la nativa de scrollX solo aparece abajo; esta la sincroniza arriba)
+(function() {
+  function addTopScrollbar(el) {
+    const body = el.querySelector(".dataTables_scrollBody");
+    if (!body || body.dataset.topbar) return;
+    body.dataset.topbar = "true";
+    const bar = document.createElement("div");
+    bar.style.cssText = "height:14px;overflow-x:auto;overflow-y:hidden;margin-bottom:2px;";
+    const inner = document.createElement("div");
+    inner.style.height = "1px";
+    bar.appendChild(inner);
+    const sync = () => { inner.style.width = body.scrollWidth + "px"; bar.style.display = body.scrollWidth > body.clientWidth ? "block" : "none"; };
+    body.parentNode.insertBefore(bar, body);
+    bar.addEventListener("scroll", () => { body.scrollLeft = bar.scrollLeft; });
+    body.addEventListener("scroll", () => { bar.scrollLeft = body.scrollLeft; });
+    new ResizeObserver(sync).observe(body);
+    sync();
+  }
+  new MutationObserver(() =>
+    document.querySelectorAll(".dataTables_wrapper").forEach(addTopScrollbar)
+  ).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+```
+
+```{r}
+enc <- read_csv(
+  here::here("./encuestas_con_partidos_regionales.csv"),
+  show_col_types = FALSE
+) |>
+  mutate(fecha = parse_fecha_campo(Campo)) |>
+  filter(!is.na(fecha), fecha >= fecha_inicio_grande)
+
+enc |>
+  select(
+    Encuestadora,
+    Campo,
+    PP,
+    PSOE,
+    VOX,
+    Sumar,
+    Podemos,
+    SALF,
+    Junts,
+    ERC,
+    PNV,
+    `EH Bildu`,
+    BNG,
+    CC,
+    UPN,
+    regionales_completos
+  ) |>
+  datatable(options = list(scrollX = TRUE))
+```
+
+Fíjate en la columna `regionales_completos`: es `FALSE` en la mayoría. ¿De dónde salen los
+regionales cuando están? De tres sitios:
+
+- **electomanía**: publican la tabla completa de cada encuesta, scrapeo el render de Datawrapper.
+- **prensa**: algunos artículos publican la tabla completa; la extraigo con LLM y reviso a mano.
+- **yo**: lo que no sale en ningún lado, se va a buscar leyendo artículos. Así conseguí los
+  regionales de IMOP, SocioMétrica, Data10 y NC Report de esta semana.
+
+::: callout-note
+**Anécdota de rescate manual**: el artículo de NC Report daba los regionales pero no SALF. Con
+todo el resto conocido, a SALF + otros le quedaban 5.2 puntos. SALF no aparecía, así que la
+imputé con la media de los tres sondeos contemporáneos que sí la publicaban (1.9, 2.2 y 1.4 →
+1.8), marcada en el CSV como ESTIMADO para no confundirla con dato observado. El pipeline está
+diseñado para esto: los parches manuales se congelan y el scraper nunca los sobrescribe.
+:::
+
+### La arquitectura en cascada
+
+Modelar 13 categorías de golpe (los 5 grandes + SALF + 7 regionales + resto) con las encuestas
+que tenemos es invitar a problemas: pocas encuestas reportan todo, y las que sí son casi todas
+de la misma casa. La solución es una **cascada** de dos modelos:
+
+- **Modelo 1 (el grande)**: multinomial de 6 categorías — PP, PSOE, VOX, SUMAR (= Sumar + Podemos),
+  SALF y **BLOQUE** (todo lo demás). Entran todas las encuestas que reportan los 6 principales.
+- **Modelo 2 (la composición)**: multinomial condicional de 8 subceldas dentro del BLOQUE —
+  Junts, ERC, PNV, EH Bildu, BNG, CC, UPN y RESTO. Solo entran las encuestas completas.
+
+En la simulación, cada muestra del posterior del modelo 1 fija el tamaño del BLOQUE y se
+reparte con la composición del modelo 2.
+Resultado: 13 valores que suman 100 con la distribución conservada.
+
+```{r}
+meta_g <- read_csv(
+  here::here("2026/10/encuestas_meta_grande.csv"),
+  show_col_types = FALSE
+)
+meta_b <- read_csv(
+  here::here("2026/10/encuestas_meta_bloque.csv"),
+  show_col_types = FALSE
+)
+
+cat("Modelo 1:", n_distinct(meta_g$encuestadora, meta_g$campo), "encuestas\n")
+cat("Modelo 2:", n_distinct(meta_b$encuestadora, meta_b$campo), "encuestas\n")
+```
+
+### El encaje de los dos modelos, con un ejemplo de juguete
+
+La parte menos obvia del invento es cómo se pegan los dos modelos. Vale la pena
+pararse un minuto, porque ahí está el truco entero.
+
+**Qué entrena el modelo 2.** Es un multinomial *condicional*: el `trials` de su
+fórmula no es la muestra completa de la encuesta, sino los votos totales del
+BLOQUE en esa encuesta. Por ejemplo, una encuesta con n = 1.000 y un bloque del
+11% entra al modelo 2 como 110 votos repartidos en 8 celdas:
+
+```{r}
+# una encuesta con n = 1.000 y BLOQUE = 11% entra al modelo 2 así:
+encuesta <- c(
+  ERC = 42,
+  Junts = 18,
+  PNV = 13,
+  EH_Bildu = 15,
+  BNG = 8,
+  CC = 5,
+  UPN = 2,
+  RESTO = 7
+)
+sum(encuesta) # <- el trials del modelo 2: los votos del bloque, no la muestra
+```
+
+El modelo 2 ni sabe ni le importa cuánto pesa el bloque: solo aprende en qué
+proporción se reparte *dentro* de él (y cómo deriva con el tiempo). El peso del
+bloque lo estima el modelo 1, que ve muchas más encuestas. Una muestra del modelo 2
+es, a efectos prácticos, un vector de proporciones condicionales como este:
+
+```{r}
+c2 <- encuesta / sum(encuesta)
+round(c2, 2)
+```
+
+**Cómo se pegan.** En la simulación, cada muestra del modelo 1 aporta el *tamaño*
+del BLOQUE y una muestra del modelo 2 aporta su *composición* interna. Se
+multiplican y ya:
+
+```{r}
+# una muestra (inventada) del modelo 1: los 6 grandes
+d1 <- c(
+  PP = 32.6,
+  PSOE = 27.1,
+  VOX = 19.2,
+  SUMAR = 8.0,
+  SALF = 1.8,
+  BLOQUE = 11.3
+)
+
+bloque <- unname(d1["BLOQUE"])
+draw13 <- c(d1[1:5], bloque * c2)
+round(draw13, 1)
+sum(draw13)
+```
+
+Trece categorías que suman 100. La incertidumbre del *tamaño* del bloque viene
+del modelo 1, la del *reparto interno* del modelo 2. En el código esto es una
+línea, en `extraer_shares13()`:
+
+```r
+out <- cbind(shares[, 1:5], shares[, 6] * bloque_comp) * sc
+```
+
+**La letra pequeña.** Las muestras de los dos modelos se generan por separado y
+se emparejan por índice: se asume que el tamaño del bloque y su composición
+interna no están correlacionadas. Un modelo único de 13 categorías las acoplaría
+si en la realidad lo estuvieran, pero es justo lo que no podemos ajustar: solo
+pocas encuestas reportan las 13 y casi todas de la misma casa. La cascada cambia
+un modelo imposible por dos modelos estrechos componibles, y la distribución se conserva
+sin reconciliaciones.
+
+## Acto 2: la ventana temporal (y el peso de ElectoPanel)
+
+Mi primer intento tenía 185 encuestas y yo me asusté: ¿no es demasiado? Pues la respuesta
+interesante es que **el número no era el problema; la composición sí**:
+
+| Ventana | M1 (encuestas, casas) | M2 (encuestas, casas) | % ElectoPanel M1 / M2 |
+|---|---|---|---|
+| Todo (jun 25 →) | 185, 22 | 68, 7 | 38% / **84%** |
+| Desde jul 2026 | 40, 16 | 14, 7 | 35% / 43% |
+
+: Cifras de los datasets antes de las exclusiones que explico a continuación.
+
+ElectoPanel es un panel continuo de electomanía con releases muy frecuentes: sus 71 encuestas no
+son 71 informaciones independientes. Y en el modelo 2 (el del bloque) era el **84% del dataset**,
+porque casi es la única casa que reporta los regionales de forma sistemática.
+
+De ahí sale una decisión asimétrica. **ElectoPanel queda fuera del modelo 1**, donde sobran
+encuestas de otras casas y un panel con un tercio del peso solo metería inercia. **En el modelo 2
+se queda**, porque sin él la composición del bloque se estimaría con un puñado de encuestas.
+Del modelo 1 también sale **el CIS**: su estimación de voto es metodológicamente distinta y sus
+muestras enormes lo harían dominar el ajuste (lo trataré aparte, con sus microdatos). Y una
+encuesta de InvyMark se cae porque no publica el tamaño muestral. Con la ventana desde julio:
+40 encuestas − 14 de ElectoPanel − 2 del CIS − 1 sin n = **23 encuestas de 14 casas** en el
+modelo 1.
+
+Además hay una razón de fondo: se espera que **octubre y noviembre muevan el tablero** (va a
+llegar una ola de encuestas). La data de 2025 informa de una carrera que ya no existe. Así que
+el modelo 1 se ajusta solo con encuestas de campo desde **julio de 2026**. Al modelo 2 le dejamos
+la ventana larga por ahora (con 14 encuestas no hay mucho donde elegir).
+
+::: callout-warning
+Esto es un juicio de valor disfrazado de decisión técnica. Si me equivoco y el tablero no se
+mueve, he tirado información. Si acierto, he evitado arrastrar inercia de medio año. La
+comparación entre ambas ventanas la dejo como ejercicio al lector (o para el post de
+después de las elecciones).
+:::
+
+## Acto 3: el modelo
+
+Todo el ajuste del modelo 1 vive en `ajustar_grande()` (en `ajustar_meta.R`). Antes del código,
+qué hace.
+
+**Los datos.** Cada encuesta se convierte en conteos: el porcentaje de cada una de las 6
+categorías por el tamaño muestral publicado, redondeado. Una encuesta de 1.000 entrevistas con el
+PP al 33% aporta 330 "votos" al PP. Es una ficción útil, porque las estimaciones de voto vienen
+cocinadas y no son respuestas crudas, pero hace que una encuesta grande pese más que una pequeña,
+que es lo que queremos.
+
+**El modelo.** Un multinomial con el PP como categoría de referencia. Para cada una de las otras
+cinco categorías $k$ (PSOE, VOX, SUMAR, SALF y BLOQUE), el log-odds frente al PP en la encuesta
+$i$, hecha por la casa $h$, es:
+
+$$
+\log \frac{\pi_{k,i}}{\pi_{PP,i}} = \alpha_k + \beta_k \, t_i + u_{k,h},
+\qquad u_{k,h} \sim \mathcal{N}(0, \sigma_k)
+$$
+
+- $t_i$ son los días desde el 1 de julio de 2026 (fecha final del trabajo de campo), así que
+  $\alpha_k$ es el nivel de cada categoría ese día.
+- $\beta_k$ es una tendencia lineal, común a todas las casas.
+- $u_{k,h}$ es el **efecto casa**: el sesgo constante de cada encuestadora con cada categoría.
+  Al ser jerárquico, las casas con una sola encuesta se encogen hacia 0 y las que publican a
+  menudo dejan ver su sesgo. Es independiente entre categorías: brms no los correlaciona salvo
+  que se le pida.
+
+Los priors son Normal(0, 2) para $\alpha_k$ y $\beta_k$ en escala log-odds y Exponential(1) para
+$\sigma_k$. Para una pendiente por día, Normal(0, 2) es prácticamente plano: mandan los datos.
+
+**Lo que asume.** Los efectos casa están centrados en 0, así que el modelo estima *la media de
+las encuestadoras*, no el resultado real. Si todas se equivocan en la misma dirección, no tiene
+forma de verlo. Corregir eso exige calibrar con elecciones pasadas, que es lo que en la
+introducción dije que no hago.
+
+**Cambio respecto a Andalucía.** Allí el efecto casa era `(time | encuestadora)`: cada casa con
+su propia deriva. Con una ventana de tres meses y la mayoría de casas con una o dos encuestas,
+esa pendiente por casa no se puede aprender (la domina el prior), y en una comparación con
+holdout las dos estructuras predecían igual. Me quedo con la más simple.
+
+**El muestreo.** 4 cadenas de 4.000 iteraciones (1.000 de warmup) con cmdstanr, 12.000 muestras
+del posterior en total. Dos ajustes aprendidos a base de errores: `init = 0`, porque con valores
+iniciales aleatorios las cadenas no llegaban a arrancar, y `adapt_delta = 0.95` con
+`max_treedepth = 12`. El modelo se reajusta en cada render (`refit = TRUE`) porque iré metiendo
+encuestas conforme avance el mes.
+
+```{r}
+source(here::here("2026/10/ajustar_meta.R"))
+```
+
+```{r}
+# mod_g <- ajustar_grande()
+mod_g <- ajustar_grande(refit = TRUE)
+formula(mod_g)
+```
+
+```{r}
+s <- summary(mod_g)
+
+# diagnósticos para el texto: efectos fijos + sd de los efectos casa
+conv <- rbind(s$fixed, s$random$encuestadora)
+rhat_max <- max(conv$Rhat)
+ess_min <- min(conv$Bulk_ESS, conv$Tail_ESS)
+n_div <- sum(subset(nuts_params(mod_g), Parameter == "divergent__")$Value)
+
+as.data.frame(s$fixed) |>
+  tibble::rownames_to_column("param") |>
+  select(param, Estimate, Est.Error, Rhat, Bulk_ESS, Tail_ESS) |>
+  mutate(across(where(is.numeric), \(x) round(x, 3)))
+```
+
+Convergencia: Rhat máximo de `r round(rhat_max, 3)`, ESS mínimo de `r round(ess_min)` y
+`r n_div` transiciones divergentes, contando también las desviaciones típicas de los efectos
+casa, que son las que peor mezclan.
+
+Las pendientes de `time` son el parámetro menos legible del ajuste, así que las traduzco a lo
+único que importa: cuánto cambia cada categoría entre hoy y el día E, con la casa en su media
+(`re_formula = NA`).
+
+```{r}
+fecha_hoy <- Sys.Date()
+dias_e <- as.numeric(as.Date("2026-11-29") - fecha_hoy)
+
+pred_tend <- bind_rows(
+  tibble(
+    time = as.numeric(fecha_hoy - as.Date("2026-07-01")),
+    etiqueta = "hoy",
+    n = 1
+  ),
+  tibble(
+    time = as.numeric(as.Date("2026-11-29") - as.Date("2026-07-01")),
+    etiqueta = "diaE",
+    n = 1
+  )
+) |>
+  add_epred_draws(mod_g, ndraws = 4000, re_formula = NA) |>
+  ungroup() |>
+  mutate(.epred = .epred * 100)
+
+tendencia <- pred_tend |>
+  select(.draw, .category, etiqueta, .epred) |>
+  pivot_wider(names_from = etiqueta, values_from = .epred) |>
+  mutate(cambio_pp = diaE - hoy) |>
+  group_by(.category) |>
+  median_qi(cambio_pp) |>
+  rename(
+    partido = .category,
+    cambio = cambio_pp,
+    ic_low = .lower,
+    ic_high = .upper
+  )
+
+# intervalos al 95% que no cruzan el 0 (cambios "fiables")
+n_signif <- sum(tendencia$ic_low > 0 | tendencia$ic_high < 0)
+
+tendencia |>
+  mutate(across(where(is.numeric), \(x) round(x, 2)))
+```
+
+El cambio mediano más grande entre hoy y el día E es de
+`r round(max(abs(tendencia$cambio)), 1)` puntos y
+`r ifelse(n_signif == 0, "ningún", n_signif)` intervalo al 95% se separa del 0: **el modelo ve
+una carrera plana desde julio**. O sea, que PP, PSOE y demás están (según las encuestas) donde
+estaban en verano.
+
+### Estimación para el día de las elecciones
+
+Tratamos el día E como una "encuesta" nueva con `time` de la fecha electoral y casa desconocida:
+
+```{r}
+time_e <- as.numeric(as.Date("2026-11-29") - as.Date("2026-07-01"))
+
+estimaciones <- tibble(
+  encuestadora = "votaciones_29nov",
+  time = time_e,
+  n = 1
+) |>
+  add_epred_draws(mod_g, ndraws = 4000, allow_new_levels = TRUE) |>
+  rename(partido = .category, estim = .epred) |>
+  ungroup() |>
+  mutate(estim = estim * 100)
+
+estimaciones |>
+  group_by(partido) |>
+  summarise(
+    mediana = median(estim),
+    low = quantile(estim, 0.05),
+    high = quantile(estim, 0.95)
+  ) |>
+  mutate(across(mediana:high, \(x) round(x, 2)))
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+colores <- c(
+  "PP" = "#005999",
+  "PSOE" = "#FF0126",
+  "VOX" = "#51962A",
+  "SUMAR" = "#A00B85",
+  "SALF" = "#00C3B6",
+  "BLOQUE" = "grey50"
+)
+
+estimaciones |>
+  filter(partido != "BLOQUE") |>
+  ggplot(aes(x = estim, fill = partido)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = colores) +
+  labs(
+    title = "Meta-análisis generales 2026. Estimación día de las elecciones",
+    subtitle = paste0(
+      "Modelo 1: ",
+      nrow(mod_g$data),
+      " encuestas, ",
+      n_distinct(mod_g$data$encuestadora),
+      " casas, ventana jul-oct 2026"
+    ),
+    x = "Porcentaje estimado",
+    y = "Densidad"
+  )
+```
+
+## Acto 4: de voto a escaños
+
+Aquí viene lo divertido. Un porcentaje nacional no te dice cuántos escaños gana nadie: en España
+se reparte **provincia a provincia** con D'Hondt, con un **umbral legal del 3%** de los votos
+válidos de cada circunscripción (LOREG art. 163), y Ceuta y Melilla eligen un diputado cada una
+por mayoría simple.
+
+### El truco de la distribución provincial
+
+Mismo truco que en Andalucía, pero con referencia del 23J: si en 2023 ERC sacó en Barcelona un
+6.5 veces su media nacional, asumo que ese desvío se mantiene. Formalmente:
+
+$$\tilde{\pi}_{k,p} = \pi_k \cdot r_{k,p}, \qquad r_{k,p} = \frac{\pi^{23J}_{k,p}}{\pi^{23J}_{k}}$$
+
+y luego normalizo dentro de cada provincia. **Supuesto heroico**, lo sé: es exactamente el tipo de
+supuesto que las encuestas con muestra provincial desmontarían. Pero es lo que hay.
+
+::: callout-note
+**El caso SALF**: "Se Acabó La Fiesta" se registró en 2024, así que en el 23J **no existía**. No
+hay manera de sacar su geografía de esa referencia. Su patrón provincial lo tomo de las
+**Europeas de junio de 2024**, su única cita con las urnas. 803.545 votos y 3
+escaños, que en el Congreso se reparten muy mal para un partido así.
+:::
+
+### El ruido Dirichlet, con Granada de ejemplo
+
+Si aplicara los ratios del 23J tal cual, la geografía de 2026 sería un calco exacto de la de
+2023 y toda la incertidumbre de los escaños vendría del voto nacional. No me lo creo: el desvío
+de Granada respecto a la media no va a ser exactamente el mismo. Así que en cada muestra de la
+simulación cada provincia usa unos ratios ligeramente distintos, sorteados alrededor de los del
+23J. Veamos cómo con Granada (7 diputados).
+
+Esto es lo que la referencia guarda para Granada (solo las familias que se presentan allí):
+
+```{r}
+source(here::here("2026/10/simular_escanos.R"))
+
+ref13 |>
+  filter(provincia == "Granada", ratio > 0) |>
+  select(familia, votos, pct_prov, pct_nac, ratio) |>
+  arrange(desc(pct_prov)) |>
+  mutate(across(where(is.double), \(x) round(x, 2)))
+```
+
+El PP sacó en Granada un 37.3% frente al 33.3% nacional: ratio 1.12. VOX, un 16.3 frente a un
+12.5: ratio 1.30. Si una muestra del posterior da al PP un 32.6% nacional, Granada le asigna
+de partida 32.6 × 1.12 ≈ 36.5% (antes de normalizar la provincia para que sume 100). Los
+regionales no aparecen porque su ratio en Granada es 0: ERC no se presenta allí, y siguen a 0 en
+cualquier muestra.
+
+**La idea: volver a votar el 23J en Granada, pero con 500 votantes.** El ratio es un cociente,
+el porcentaje provincial entre el porcentaje nacional, y el ruido solo toca el numerador. En cada muestra
+sustituyo los porcentajes provinciales del 23J por unos "re-sorteados", los que saldrían si se
+repitiera aquella elección en Granada con unos 500 votantes en lugar de 500.000. Ese re-sorteo
+es una Dirichlet centrada en los porcentajes del 23J y con concentración igual a los votos totales de
+la provincia entre 1.000:
+
+$$
+\boldsymbol{\pi}^{(s)}_p \sim \text{Dirichlet}\left(\frac{V_p}{1000}\,\boldsymbol{\pi}^{23J}_p\right),
+\qquad
+r^{(s)}_{k,p} = r_{k,p} \cdot \frac{\pi^{(s)}_{k,p}}{\pi^{23J}_{k,p}}
+$$
+
+donde $V_p$ son los votos de la provincia. En esperanza la Dirichlet devuelve los porcentajes
+del 23J, así que en media el ratio no cambia: lo único que añade es dispersión. Cinco muestras
+para Granada:
+
+```{r}
+granada <- prov_datos |> filter(codigo_provincia == 18)
+
+set.seed(6137)
+d <- gtools::rdirichlet(5, granada$alpha13[[1]])
+ratios <- t(granada$ratio13[[1]] * t(d) / granada$pct23[[1]])
+
+tibble(familia = fams13, ratio_23j = granada$ratio13[[1]]) |>
+  bind_cols(as_tibble(t(ratios), .name_repair = \(x) {
+    paste0("muestra_", 1:5)
+  })) |>
+  filter(ratio_23j > 0) |>
+  mutate(across(where(is.double), \(x) round(x, 2)))
+```
+
+Cada columna es una geografía posible de Granada. El PP oscila entre 1.02 y 1.21 alrededor de su
+1.12; SUMAR, entre 0.66 y 1.20 alrededor de 0.94. Las familias pequeñas se mueven más en términos
+relativos (RESTO llega a 1.00 desde 0.59), igual que en una encuesta pequeña el error relativo es
+mayor para los partidos con poco voto.
+
+**¿Por qué la concentración depende de los votos de la provincia?** Porque así la incertidumbre
+escala con la información: cuantos más votos reales hay detrás de un patrón provincial, más
+fiable es y menos ruido merece. El PP tiene el mismo ratio en Granada y en Soria, pero no la misma
+dispersión:
+
+```{r}
+ruido_ratio <- function(prov, familia = "PP", n = 5000) {
+  pd <- prov_datos |>
+    filter(
+      codigo_provincia == prov_ref$codigo_provincia[prov_ref$provincia == prov]
+    )
+  i <- match(familia, fams13)
+  d <- gtools::rdirichlet(n, pd$alpha13[[1]])
+  r <- pd$ratio13[[1]][i] * d[, i] / pd$pct23[[1]][i]
+  tibble(
+    provincia = prov,
+    diputados = pd$escanos,
+    votantes_equivalentes = sum(pd$alpha13[[1]]),
+    ratio_23j = pd$ratio13[[1]][i],
+    media = mean(r),
+    sd = sd(r)
+  )
+}
+
+set.seed(6137)
+bind_rows(ruido_ratio("Granada"), ruido_ratio("Soria")) |>
+  mutate(across(where(is.double), \(x) round(x, 2)))
+```
+
+Las dos provincias están centradas en 1.12, pero Granada (unos 520 "votantes equivalentes") tiene
+una desviación típica de 0.07 y Soria (unos 52) de 0.20, unas tres veces más, como corresponde a
+una muestra diez veces menor. Y es en las provincias pequeñas, donde reparten 2 o 3 escaños, donde
+ese ruido decide si un partido entra o se queda fuera.
+
+Dos avisos. El divisor de 1.000 es un mando de incertidumbre que fijé yo (lo heredo de
+Andalucía), no sale de ningún dato: con 500 la geografía bailaría más y con 5.000 casi nada.
+Y en el código esto es el `mult` dentro de `una()` en `simular_escanos.R`; todo lo demás (la
+muestra nacional y la composición del bloque) viene de los posteriors de los dos modelos.
+
+### El error histórico de las encuestas
+
+Todo lo anterior da por buena la palabra de las encuestas: los posteriors reflejan lo que dicen,
+la Dirichlet reparte geográficamente. Pero hay una pieza que falta: las encuestas pueden
+equivocarse **en bloque**, todas en la misma dirección, y ningún meta-análisis puede verlo,
+porque solo ve encuestas. En Andalucía metí a mano una matriz de "cómo se equivocan las casas";
+aquí la calibro con datos.
+
+La receta: para cada elección pasada, comparo el resultado real con la media de las encuestas
+cuyo trabajo de campo terminó en los últimos días de campaña — **124 encuestas** de las cinco
+últimas generales, sacadas de los anexos de sondeos de Wikipedia (con su fecha de fin de campo,
+que en esas tablas viene en rangos tipo "15–19 Abr") y congeladas en
+`errores_encuestas_historicas.csv`. Quedan fuera los sondeos internos de partidos que también
+publican los anexos: no son estimaciones públicas, y uno mal recogido llegó a falsear toda la
+calibración. Para el PSOE sale esto:
+
+```{r}
+errores_hist <- read_csv(
+  here::here("2026/10/errores_encuestas_historicas.csv"),
+  show_col_types = FALSE
+)
+
+etiquetas <- c(
+  `20d` = "20D-2015",
+  `26j` = "26J-2016",
+  `28a` = "28A-2019",
+  `10n` = "10N-2019",
+  `23j` = "23J-2023"
+)
+
+errores_hist |>
+  group_by(eleccion) |>
+  summarise(encuesta = mean(PSOE), error = mean(e_PSOE), .groups = "drop") |>
+  mutate(real = encuesta + error) |>
+  arrange(match(eleccion, names(etiquetas))) |>
+  mutate(eleccion = etiquetas[eleccion]) |>
+  relocate(eleccion, encuesta, real, error) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |>
+  rename(Elección = eleccion, Encuestas = encuesta, Real = real, Error = error)
+```
+
+Positivo en cuatro de las cinco (el 28A-2019 queda en un ±0). La media de esos errores es la
+base del `mu` de la capa, pero solo conservo lo que aguanta las comprobaciones: de los cuatro
+partidos, el único cuyo sesgo es consistente es **el PSOE (+1.3 puntos: positivo en 4 de 5
+elecciones, y sigue en +1.3 si excluyo el 26J, que solo tiene 2 encuestas)**. Para PP, VOX y
+Sumar el mu cambia de signo según qué elecciones entren, así que lo pongo a 0. A cada muestra
+del posterior se le suma, pues, un error con media +1.3 para el PSOE y 0 para el resto, una
+desviación típica por partido (entre 1.3 y 2.6 puntos) y una correlación PP–VOX de +0.5. El
+BLOQUE absorbe la diferencia para que los porcentajes sigan sumando 100, y SALF se queda fuera: no
+existía antes de 2024 y no tiene historia.
+
+Sobre las correlaciones, la conclusión es la contraria de lo que pusimos a mano en Andalucía.
+Allí inventamos ρ(PP, VOX) = −0.5 pensando en el trasvase de voto útil. Pero el trasvase es
+**dinámica real de campaña** — el voto moviéndose de PP a VOX y viceversa — y eso el modelo ya
+lo captura con las pendientes temporales. La capa de error va sobre otra cosa: cómo se
+equivocan las encuestas el día de la votación. Y ahí los datos dicen lo contrario de la
+intuición: en las tres elecciones con VOX, el error del agregado de PP y el de VOX tienen el
+**mismo signo** (28A: −3.0 y −1.2; 10N: +0.1 y +1.3; 23J: −1.1 y −0.6). Cuando las encuestas se
+pasan con el bloque del PP, se pasan con los dos. La correlación empírica es +0.92, que con
+n = 3 elecciones encogí a +0.5; el resto de correlaciones (PP–PSOE, PSOE–Sumar...) es inestable
+según qué elecciones entren, así que van a 0.
+
+Sobre el impacto: el `mu` no solo ensancha los intervalos, **desplaza la estimación** — el PSOE
+gana unos 5 escaños frente a no aplicar la capa, y la probabilidad de mayoría de PP+VOX baja de
+prácticamente el 100% al 96%. Es una corrección estimada con solo 5 elecciones: mejor que nada,
+peor que calibrar por casa, que sigue pendiente. En el código vive en
+`extraer_shares13(con_error = TRUE)`; la validación del 23J va sin ella.
+
+### El umbral del 3% y las trampas del agregado
+
+Dos detalles que cambiaron el resultado de la validación:
+
+- El **umbral del 3% se aplica por provincia** antes de D'Hondt. Con provincias de 3-5 escaños,
+  el umbral efectivo es mucho mayor que el legal: un partido con el 10% en Soria puede quedarse
+  sin nada. (Matiz legal: los blancos cuentan para el umbral y aquí no se simulan; ~0.5%, despreciable.)
+- El **RESTO** (CUP, PACMA, etc.) como categoría agregada gana **escaños fantasma**: D'Hondt con
+  el agregado le regala diputados que en la realidad ninguna de sus componentes conseguiría.
+  Solución: sus votos van a no representados. Validación obligatoria en la mano.
+
+### Validación: reproducir el 23J
+
+Antes de confiar en el invento, la prueba de fuego: le doy a la simulación los porcentajes
+nacionales reales del 23J y sus ratios de referencia, sin ruido, y debe reproducir los escaños
+oficiales:
+
+```{r}
+v23 <- sim_validacion_23j()
+
+tibble(
+  familia = names(v23),
+  simulado = v23,
+  oficial_23j = c(137, 121, 33, 31, 0, 7, 7, 5, 6, 1, 1, 1, 0)
+)
+```
+
+**Exacto, escaño a escaño, 350 de 350.** (La primera versión fallaba por los escaños fantasma del
+RESTO: 136-120-2 en vez de 137-121-0. Por eso la exclusión del agregado.)
+
+### La simulación
+
+Cada muestra del posterior (voto nacional del modelo 1 + composición del bloque del modelo 2)
+recibe el error histórico de las encuestas, se distribuye por provincias con su ruido Dirichlet,
+se le aplica el umbral del 3% y D'Hondt provincia a provincia. 2.000 muestras en unos segundos:
+
+```{r}
+sim <- simular(n_draws = 2000)
+
+resumen_escanos(sim) |>
+  mutate(across(where(is.numeric), \(x) round(x, 1)))
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+colores_esc <- c(
+  "PP" = "#005999",
+  "PSOE" = "#FF0126",
+  "VOX" = "#51962A",
+  "SUMAR" = "#A00B85",
+  "ERC" = "#F5A21D",
+  "Junts" = "#00E0D1",
+  "EH Bildu" = "#00A56D",
+  "PNV" = "#008141",
+  "BNG" = "#B5C9E4",
+  "CC" = "#D44A20",
+  "UPN" = "#1B4A9B",
+  "SALF" = "#00C3B6",
+  "RESTO" = "grey70"
+)
+
+sim$draws |>
+  pivot_longer(-.draw, names_to = "familia", values_to = "escanos") |>
+  ggplot(aes(x = escanos, y = fct_reorder(familia, escanos), fill = familia)) +
+  # escaños: enteros con muchos empates; el histograma evita el warning del
+  # bandwidth (bw.SJ no encuentra escala en muestras tan discretas) y es más
+  # honesto con datos de conteo. normalize = "groups" escala cada partido a su
+  # fila: sin él, la altura se normaliza con la densidad máxima global (SALF,
+  # con rango 0-1) y los partidos grandes quedan invisibles
+  stat_halfeye(density = "histogram", normalize = "groups", .width = c(0.5, 0.8), alpha = 0.8) +
+  scale_fill_manual(values = colores_esc, guide = "none") +
+  geom_vline(xintercept = 176, linetype = "dashed", color = "red") +
+  labs(
+    title = "Escaños estimados para el 29 de noviembre de 2026",
+    subtitle = "2.000 muestras del meta-análisis + error de encuestas + Dirichlet provincial + umbral 3% + D'Hondt",
+    x = "Escaños",
+    y = NULL
+  )
+```
+
+```{r}
+prob_mayorias(sim) |>
+  mutate(prob = scales::percent(prob, accuracy = 0.1))
+
+# valores para el texto (se recalculan en cada render)
+p_derecha <- prob_mayorias(sim) |>
+  filter(escenario == "PP + VOX >= 176") |>
+  pull(prob)
+p_izquierda <- prob_mayorias(sim) |>
+  filter(escenario == "izquierda >= 176") |>
+  pull(prob)
+mediana_derecha <- median(sim$draws$PP + sim$draws$VOX)
+gap_pp <- 176 - median(sim$draws$PP)
+```
+
+La lectura: con las encuestas con trabajo de campo desde julio (y solo con ellas), **PP + Vox
+tendrían la mayoría con probabilidad `r scales::percent(p_derecha, 0.1)`** — mediana de
+`r mediana_derecha` escaños para la suma — y el PP solo se queda a `r gap_pp` escaños de la
+mayoría. Es la capa de error histórico la que baja esa probabilidad del ~100% que daban los
+posteriors a secas: si las encuestas se vuelven a equivocar como en las últimas cinco
+elecciones, el margen ya no sobra. Nada de esto es una predicción: es una fotografía de lo que
+dicen las encuestas disponibles, con toda la incertidumbre que el modelo es capaz de cuantificar
+y con la que no cuenta nada de lo que puede pasar (y que según todos los indicios va a pasar)
+entre ahora y el día E.
+
+## Coda
+
+Quedan cosas. Las que veo desde aquí:
+
+- El modelo 2 (composición del bloque) sigue con la ventana larga y el 84% de ElectoPanel del
+  principio. Con la ola de octubre-noviembre a la vista, habrá que decidir qué hacer con él.
+- El supuesto heroico del ratio provincial merecería una versión con las encuestas que publican
+  estimaciones por CCAA (ciento76 tiene algunas).
+- La ola de encuestas que viene: el pipeline está listo para tragársela
+  (`preparar_todo(actualizar = TRUE)` → `ajustar_grande(refit = TRUE)` → `simular()`), y la
+  baseline de este post queda guardada para medir cuánto se mueve todo.
+
+Seguiremos el día que salga la próxima encuesta. O la próxima ola.
+
+Feliz sábado.

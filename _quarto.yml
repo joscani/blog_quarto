@@ -1,5 +1,16 @@
 project:
   type: website
+  render:
+    - "*.qmd"
+    - "**/*.qmd"
+    - "!2026/05/escanos-stan-v3.qmd"
+  resources:
+    - "2026/10/*.R"
+    - "descargar_encuestas_ciento76.R"
+
+execute:
+  freeze: auto
+  dir: project
 
 format:
   html:
