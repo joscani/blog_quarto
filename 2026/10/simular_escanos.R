@@ -68,6 +68,10 @@
 #
 # Salidas:
 #   simular(n_draws): lista con draws (tibble .draw x 13 partidos), etc.
+#   simular(..., provincial = TRUE): añade prov_voto y prov_escanos,
+#     arrays draw x provincia x familia (voto = share provincial tras
+#     distribuir el nacional, ANTES del umbral del 3%; escaños = D'Hondt
+#     provincia a provincia), más prov_ref (lookup codigo/provincia/ccaa)
 #   resumen_escanos(sim): mediana + IC por partido
 #   prob_mayorias(sim): P(PP>=176), P(PP+VOX>=176), P(izquierda>=176)
 #   sim_validacion_23j(): con shares del 23J y ratios de la ref sin ruido
@@ -369,7 +373,8 @@ simular <- function(
   resto_compite = FALSE,
   sigma_bloque = 1.5,
   cor_bloque = 0,
-  t_sigma_df = NULL
+  t_sigma_df = NULL,
+  provincial = FALSE
 ) {
   modo_ruido <- match.arg(modo_ruido)
   shares_m <- extraer_shares13(
@@ -427,39 +432,60 @@ simular <- function(
     })
   }
 
+  # salida provincial (opcional): arrays draw x provincia x familia.
+  # El voto se guarda tras repartir el nacional y ANTES del umbral (la
+  # estimación de voto no lo lleva; solo afecta al reparto de escaños)
+  prov_voto <- prov_esc <- NULL
+  if (provincial) {
+    stopifnot(identical(
+      sort(unique(ref13$codigo_provincia)),
+      prov_ref$codigo_provincia
+    ))
+    dims <- list(NULL, prov_ref$provincia, fams13)
+    size <- c(n_draws, nrow(prov_datos), length(fams13))
+    prov_voto <- array(NA_real_, size, dims)
+    prov_esc <- array(0, size, dims)
+  }
+
   una <- function(k) {
-    vapply(
-      seq_len(nrow(prov_datos)),
-      \(i) {
-        pd <- prov_datos[i, ]
-        mult <- if (con_ruido) {
-          if (modo_ruido == "dirichlet") {
-            ifelse(
-              pd$pct23[[1]] > 0,
-              pd$ratio13[[1]] * dir_muestras[[i]][k, ] / pd$pct23[[1]],
-              pd$ratio13[[1]]
-            )
-          } else {
-            pd$ratio13[[1]] * E_prov[[i]][k, ] * rc[k, ]
-          }
+    e_prov <- matrix(0, nrow(prov_datos), length(fams13))
+    if (provincial) {
+      v_prov <- e_prov
+    }
+    for (i in seq_len(nrow(prov_datos))) {
+      pd <- prov_datos[i, ]
+      mult <- if (con_ruido) {
+        if (modo_ruido == "dirichlet") {
+          ifelse(
+            pd$pct23[[1]] > 0,
+            pd$ratio13[[1]] * dir_muestras[[i]][k, ] / pd$pct23[[1]],
+            pd$ratio13[[1]]
+          )
         } else {
-          ifelse(pd$pct23[[1]] > 0, pd$ratio13[[1]], 1)
+          pd$ratio13[[1]] * E_prov[[i]][k, ] * rc[k, ]
         }
-        v <- shares_m[k, ] * mult
-        v <- v / sum(v)
-        v[v < umbral] <- 0
-        # RESTO agregado gana escaños fantasma (partidos pequeños que en la
-        # realidad compiten por separado y casi siempre quedan bajo el umbral);
-        # sus votos se tratan como no representados
-        if (!resto_compite) {
-          v["RESTO"] <- 0
-        }
-        dhondt(v, pd$escanos)
-      },
-      numeric(13)
-    ) |>
-      t() |>
-      colSums()
+      } else {
+        ifelse(pd$pct23[[1]] > 0, pd$ratio13[[1]], 1)
+      }
+      v <- shares_m[k, ] * mult
+      v <- v / sum(v)
+      if (provincial) {
+        v_prov[i, ] <- v
+      }
+      v[v < umbral] <- 0
+      # RESTO agregado gana escaños fantasma (partidos pequeños que en la
+      # realidad compiten por separado y casi siempre quedan bajo el umbral);
+      # sus votos se tratan como no representados
+      if (!resto_compite) {
+        v["RESTO"] <- 0
+      }
+      e_prov[i, ] <- dhondt(v, pd$escanos)
+    }
+    if (provincial) {
+      prov_voto[k, , ] <<- v_prov
+      prov_esc[k, , ] <<- e_prov
+    }
+    colSums(e_prov)
   }
 
   esc <- purrr::map_dfr(seq_len(n_draws), \(k) {
@@ -470,7 +496,7 @@ simular <- function(
   }) |>
     mutate(.draw = seq_len(n_draws), .before = 1)
 
-  list(
+  out <- list(
     draws = esc,
     time = time_obj,
     n_draws = n_draws,
@@ -478,6 +504,12 @@ simular <- function(
     modo_ruido = modo_ruido,
     con_error = con_error
   )
+  if (provincial) {
+    out$prov_voto <- prov_voto
+    out$prov_escanos <- prov_esc
+    out$prov_ref <- prov_ref
+  }
+  out
 }
 
 # ---- resúmenes ---------------------------------------------------------------
