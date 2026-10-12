@@ -20,9 +20,10 @@
 #   Junts | ERC | PNV | EH Bildu | BNG | CC | UPN | RESTO
 #   cell_counts | trials(bloque) ~ time
 #
-#   - Solo encuestas que reportan los 7 regionales (~63, casi todas
-#     ElectoPanel más 40dB y GAD3). Por eso NO lleva efecto casa: con 3
-#     casas el efecto aleatorio sería mostly ruido y la composición del
+#   - Solo encuestas que reportan los 7 regionales (97 de 10 casas tras el
+#     relleno con objetivo176; el CIS queda fuera, igual que en el modelo 1).
+#     Por eso NO lleva efecto casa: ElectoPanel concentra el 63% del peso y
+#     un efecto aleatorio tan desbalanceado sería ruido; la composición del
 #     bloque se modela como tendencia temporal común.
 #   - trials = votos totales del bloque de esa encuesta (no la muestra
 #     completa): es un multinomial condicional, la masa del bloque se
@@ -128,9 +129,9 @@ prep_grande <- function() {
   #
   # ElectoPanel fuera del modelo grande: es un panel continuo de electomanía
   # que suponía el 46% del dataset, no encuestas puntuales independientes.
-  # SIGUE dentro del modelo de composición del bloque (prep_bloque), porque
-  # es la única casa que reporta los 7 regionales de forma sistemática;
-  # sin él el modelo 2 se quedaría con 6 encuestas.
+  # SIGUE dentro del modelo de composición del bloque (prep_bloque): es la
+  # casa con más cobertura regional, aunque desde el relleno con objetivo176
+  # ya no es la única (57 de 97 encuestas, 63% del peso).
   casas_fuera <- c("CIS", "ElectoPanel")
   fuera_cis <- g |>
     filter(encuestadora %in% casas_fuera) |>

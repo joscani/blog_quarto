@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.11" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Meta-análisis. Agregando encuestas IV. Generales 2026 (con escaños)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Meta-análisis. Agregando encuestas IV. Generales 2026
+(con escaños)</h1>
+<p class="subtitle">Meta-análisis bayesiano de encuestas para las
+generales del 29-N: dos modelos en cascada para rescatar a los partidos
+regionales, y D’Hondt provincia a provincia para pasar de voto a
+escaños</p>
+</header>
+<p>Esta es la versión corta. El post completo, con todo el código en R,
+está en el blog: <a
+href="https://muestrear-no-es-pecado.netlify.app/2026/10/meta-analisis-generales-jlcr">Meta-análisis.
+Agregando encuestas IV. Generales 2026 (con escaños)</a>. Los scripts y
+los datos para reproducirlo están enlazados allí.</p>
+<h2 id="el-plan">El plan</h2>
+<p>Ya hice metaanálisis para las generales de 2023 y las europeas de
+2024, y en las andaluzas de mayo añadí la estimación de escaños. Para
+las generales del <strong>29 de noviembre de 2026</strong> el problema
+nuevo es doble: las encuestas nacionales no informan del voto por
+provincia (ni siquiera por comunidad), y la mayoría ni siquiera da
+estimación de los partidos regionales (PNV, BNG, Junts, ERC…), que hacen
+falta para repartir provincia a provincia.</p>
+<p>El plan, en 4 pasos:</p>
+<ol type="1">
+<li><strong>Agregar encuestas</strong> a nivel nacional (fuente: la
+tabla de <a href="https://www.ciento76.es/encuestas">ciento76</a>, 40
+encuestas desde julio de 2026).</li>
+<li><strong>Rescatar los regionales</strong>: scrapeando a electomanía,
+extrayendo tablas de prensa y leyendo artículos a mano.</li>
+<li><strong>Modelar con brms</strong>: dos modelos en cascada.</li>
+<li><strong>Traducir voto a escaños</strong> provincia por provincia,
+con umbral del 3% y D’Hondt.</li>
+</ol>
+<h2 id="dos-modelos-en-cascada">Dos modelos en cascada</h2>
+<p>Si hubiera estimaciones de los 13 partidos en todas las encuestas,
+sería un multinomial de 13 categorías. Como no las hay:</p>
+<ul>
+<li><strong>Modelo 1</strong>: multinomial de 6 categorías — PP, PSOE,
+VOX, SUMAR (Sumar + Podemos), SALF y <strong>BLOQUE</strong> (todo lo
+demás). Entran todas las encuestas que reportan los 6 principales.</li>
+<li><strong>Modelo 2 (la composición)</strong>: multinomial condicional
+de 8 subceldas dentro del BLOQUE — Junts, ERC, PNV, EH Bildu, BNG, CC,
+UPN y RESTO. Solo entran las encuestas completas.</li>
+</ul>
+<p>El modelo 2 aprende cómo se reparte el voto <em>dentro</em> del
+bloque; el modelo 1, cuánto pesa el bloque. En la simulación se
+multiplican muestra a muestra y salen los 13 partidos que suman 100.</p>
+<h2 id="la-ventana-temporal-y-el-peso-de-electopanel">La ventana
+temporal (y el peso de ElectoPanel)</h2>
+<p>El primer intento con 185 encuestas tenía un problema: ElectoPanel,
+un panel continuo con releases muy frecuentes (71 encuestas, que no son
+71 informaciones independientes), acumulaba un tercio del peso en el
+modelo 1 y el <strong>84%</strong> en el modelo 2, porque casi es la
+única casa que reporta los regionales de forma sistemática.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Ventana</th>
+<th>M1 (encuestas, casas)</th>
+<th>M2 (encuestas, casas)</th>
+<th>% ElectoPanel M1 / M2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Todo (jun 25 →)</td>
+<td>185, 22</td>
+<td>68, 7</td>
+<td>38% / <strong>84%</strong></td>
+</tr>
+<tr>
+<td>Desde jul 2026</td>
+<td>40, 16</td>
+<td>14, 7</td>
+<td>35% / 43%</td>
+</tr>
+</tbody>
+</table>
+<p>Decisión discutible pero tomada: <strong>ElectoPanel fuera del modelo
+1</strong> (sobran encuestas de otras casas y un panel con tanto peso
+solo metería inercia), <strong>dentro del modelo 2</strong> (sin él, la
+composición del bloque se estimaría con un puñado de encuestas). El CIS
+también queda fuera del modelo 1, por su cocina electoral; quizá lo meta
+más tarde con una estimación propia a partir de sus microdatos.</p>
+<h2 id="el-modelo-1">El modelo 1</h2>
+<p>Cada encuesta se convierte en conteos: porcentaje por tamaño muestral
+publicado. Un multinomial con el PP de referencia, donde para cada
+categoría
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+el log-odds frente al PP es</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mfrac><msub><mi>π</mi><mrow><mi>k</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>π</mi><mrow><mi>P</mi><mi>P</mi><mo>,</mo><mi>i</mi></mrow></msub></mfrac><mo>=</mo><msub><mi>α</mi><mi>k</mi></msub><mo>+</mo><msub><mi>β</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><msub><mi>t</mi><mi>i</mi></msub><mo>+</mo><msub><mi>u</mi><mrow><mi>k</mi><mo>,</mo><mi>h</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
+\log \frac{\pi_{k,i}}{\pi_{PP,i}} = \alpha_k + \beta_k \, t_i + u_{k,h}
+</annotation></semantics></math></p>
+<p>con
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_i</annotation></semantics></math>
+los días desde el 1 de julio de 2026,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\beta_k</annotation></semantics></math>
+la tendencia diaria común y
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mi>k</mi><mo>,</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">u_{k,h}</annotation></semantics></math>
+el <strong>efecto casa</strong>: el sesgo sistemático de cada
+encuestadora, que con la estructura jerárquica se encoge para las casas
+con pocas encuestas y aflora en las que publican a menudo.</p>
+<p>Asunción clave: los efectos casa están centrados en 0, así que el
+modelo estima <em>la media de las encuestadoras</em>, no el resultado
+real. Si todas se equivocan en la misma dirección, no hay forma de
+verlo. La calibración por casa con elecciones pasadas queda pendiente;
+aquí va una versión tosca agregada (ver abajo).</p>
+<p>Ajuste: 4 cadenas × 4.000 iteraciones con cmdstanr, convergencia
+limpia (Rhat máx. 1.002, 0 divergentes).</p>
+<p><strong>El modelo ve una carrera plana desde julio</strong>: el
+cambio mediano más grande entre hoy y el día E es de 0.6 puntos y ningún
+intervalo al 95% se separa del 0. PP, PSOE y demás están donde estaban
+en verano.</p>
+<p>La estimación para el día de las elecciones (efectos casa en su
+media), con IC al 90%:</p>
+<table>
+<thead>
+<tr>
+<th>partido</th>
+<th>mediana</th>
+<th>IC 90%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP</td>
+<td>32.6</td>
+<td>[31.1, 34.1]</td>
+</tr>
+<tr>
+<td>PSOE</td>
+<td>26.6</td>
+<td>[25.1, 28.1]</td>
+</tr>
+<tr>
+<td>VOX</td>
+<td>19.3</td>
+<td>[18.0, 20.8]</td>
+</tr>
+<tr>
+<td>SUMAR</td>
+<td>8.7</td>
+<td>[7.7, 9.8]</td>
+</tr>
+<tr>
+<td>SALF</td>
+<td>1.6</td>
+<td>[1.2, 2.0]</td>
+</tr>
+<tr>
+<td>BLOQUE (regionales + resto)</td>
+<td>11.2</td>
+<td>[10.2, 12.3]</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="01-estimacion-dia-e.png" alt="fig" />
+<figcaption aria-hidden="true">fig</figcaption>
+</figure>
+<p>El modelo 2 (la composición del bloque) no lleva efecto casa —en su
+ventana casi solo reporta ElectoPanel— y lleva la ventana larga desde
+junio de 2025, porque con 14 encuestas en tres meses no hay de dónde
+colgar una tendencia.</p>
+<h2 id="de-voto-a-escaños">De voto a escaños</h2>
+<p>En España los escaños se reparten <strong>provincia a
+provincia</strong> con D’Hondt y umbral del 3% por circunscripción. Tres
+ingredientes:</p>
+<p><strong>1. El truco de la distribución provincial.</strong> Si en
+2023 ERC sacó en Barcelona 6.5 veces su media nacional, asumo que ese
+desvío se mantiene:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>π</mi><mo accent="true">̃</mo></mover><mrow><mi>k</mi><mo>,</mo><mi>p</mi></mrow></msub><mo>=</mo><msub><mi>π</mi><mi>k</mi></msub><mo>⋅</mo><msub><mi>r</mi><mrow><mi>k</mi><mo>,</mo><mi>p</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\tilde{\pi}_{k,p} = \pi_k \cdot r_{k,p}</annotation></semantics></math>,
+con
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>k</mi><mo>,</mo><mi>p</mi></mrow></msub><annotation encoding="application/x-tex">r_{k,p}</annotation></semantics></math>
+el ratio provincial del 23-J, y luego normalizo dentro de la provincia.
+Excepción: SALF no existía en 2023, así que su geografía sale de las
+Europeas de 2024, su única cita con las urnas.</p>
+<p><strong>2. El ruido Dirichlet.</strong> Si aplicara los ratios del
+23-J tal cual, la geografía de 2026 sería un calco de la de 2023. Así
+que cada provincia “revota” el 23-J con una muestra de ~500 votantes
+equivalentes: una Dirichlet centrada en los porcentajes de 2023 con
+concentración votos/1.000. En media el ratio no cambia; lo que añade es
+dispersión. Granada (520.000 votos) tiene una desviación típica de 0.07
+en su ratio; Soria (52.000), de 0.20. Y es en las provincias pequeñas,
+donde se reparten 2-3 escaños, donde ese ruido decide si un partido
+entra o se queda fuera.</p>
+<p><strong>3. El error histórico de las encuestas.</strong> Comparo
+resultado real con la media de las encuestas de últimos días de campaña
+en las cinco últimas generales (124 encuestas de los anexos de
+Wikipedia). El único sesgo consistente es <strong>el PSOE: +1.3
+puntos</strong> (positivo en 4 de 5 elecciones). A cada muestra se le
+suma un error con esa media, desviaciones típicas de 1.3 a 2.6 puntos
+por partido y una correlación PP–VOX de +0.5: cuando las encuestas se
+pasan con el bloque del PP, se pasan también con VOX (correlación
+empírica +0.92, encogida a +0.5 con n = 3).</p>
+<p>Detalle que aprendí respecto a Andalucía: allí puse ρ(PP, VOX) = −0.5
+pensando en el trasvase de voto útil, pero el trasvase es dinámica de
+campaña y eso ya lo capturan las pendientes temporales del modelo. Esta
+capa va sobre otra cosa: cómo se equivocan <em>en bloque</em> las
+encuestas el día de la votación.</p>
+<p>Y dos trampas del agregado: el umbral del 3% por provincia es mucho
+mayor que el legal en circunscripciones pequeñas, y el RESTO como
+categoría agregada gana escaños fantasma con D’Hondt (sus votos van a no
+representados).</p>
+<p><strong>Validación</strong>: dando a la simulación los porcentajes
+reales del 23-J, reproduce los escaños oficiales exactos, escaño por
+escaño.</p>
+<h2 id="la-simulación">La simulación</h2>
+<p>6.000 muestras: posterior del meta-análisis + error de encuestas +
+Dirichlet provincial + umbral 3% + D’Hondt. Mediana e IC 80%:</p>
+<table>
+<thead>
+<tr>
+<th>partido</th>
+<th>escaños</th>
+<th>IC 80%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP</td>
+<td>131</td>
+<td>[118, 145]</td>
+</tr>
+<tr>
+<td>PSOE</td>
+<td>111</td>
+<td>[100, 121]</td>
+</tr>
+<tr>
+<td>VOX</td>
+<td>66</td>
+<td>[57, 75]</td>
+</tr>
+<tr>
+<td>SUMAR</td>
+<td>17</td>
+<td>[7, 30]</td>
+</tr>
+<tr>
+<td>ERC</td>
+<td>8</td>
+<td>[2, 12]</td>
+</tr>
+<tr>
+<td>EH Bildu</td>
+<td>6</td>
+<td>[2, 9]</td>
+</tr>
+<tr>
+<td>PNV</td>
+<td>4</td>
+<td>[1, 6]</td>
+</tr>
+<tr>
+<td>Junts</td>
+<td>3</td>
+<td>[1, 7]</td>
+</tr>
+<tr>
+<td>BNG</td>
+<td>2</td>
+<td>[0, 5]</td>
+</tr>
+<tr>
+<td>CC</td>
+<td>1</td>
+<td>[0, 3]</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="02-escanos-simulacion.png" alt="fig" />
+<figcaption aria-hidden="true">fig</figcaption>
+</figure>
+<p>La lectura: <strong>PP + VOX tendrían la mayoría con probabilidad
+96.3%</strong> — mediana de 198 escaños para la suma — y el PP solo se
+queda a 45 escaños de la mayoría. Que el PP gobierne solo tiene
+probabilidad 0.0%, y de que sume la izquierda, 2.9%.</p>
+<p>Es la capa de error histórico la que baja esa probabilidad del ~100%
+que daban los posteriors a secas: si las encuestas se vuelven a
+equivocar como en las últimas cinco elecciones, el margen ya no sobra.
+Nada de esto es una predicción: es una fotografía de lo que dicen las
+encuestas disponibles.</p>
+<p>En bloques: el bloque de investidura de 2023 (PSOE + SUMAR + ERC +
+Junts + EH Bildu + PNV + BNG + CC) contra la derecha (PP + VOX + UPN).
+Si las encuestas no se mueven, la aritmética de la anterior legislatura
+no llega para repetir la investidura.</p>
+<figure>
+<img src="03-bloques.png" alt="fig" />
+<figcaption aria-hidden="true">fig</figcaption>
+</figure>
+<h2 id="coda">Coda</h2>
+<ul>
+<li>El modelo 2 sigue con la ventana larga y el 84% de ElectoPanel; con
+la ola de encuestas de octubre-noviembre habrá que decidir qué hacer con
+él</li>
+<li>El supuesto del ratio provincial merecería una versión con las
+encuestas que publican estimaciones por CCAA</li>
+<li>La ola de encuestas que viene: se re-descargan, se reajustan los
+modelos y se vuelve a simular; la baseline de este post queda guardada
+para medir cuánto se mueve todo</li>
+</ul>
+<p>Todo el código, paso a paso, en el <a
+href="https://muestrear-no-es-pecado.netlify.app/2026/10/meta-analisis-generales-jlcr">post
+completo del blog</a>.</p>
+</body>
+</html>

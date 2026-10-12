@@ -1,0 +1,348 @@
+<!--
+PROPUESTA DE SECCIÓN (borrador para revisar; no renderizar todavía).
+Registro didáctico: la prosa cuenta la historia en tres pasos; la maquinaria
+técnica va en callouts plegables (collapse = true) para no asustar al lector.
+
+Dónde encaja: justo después del bullet "El divisor de 1.000 es un mando de
+incertidumbre..." (final de "El ruido Dirichlet, con Granada de ejemplo"),
+antes de "El error histórico de las encuestas". El bullet del dedo se deja
+y esta sección lo retoma: primero comprueba si el ruido está calibrado y
+luego lo sustituye por el shock. Asume tidyverse ya cargado y aquí::here()
+disponible (se añade al final del .qmd, como el resto).
+
+Para coherencia con el resto del post habría que retocar además:
+  - el bullet "El divisor de 1.000 es un mando..." -> añadir "(más abajo lo
+    sustituimos por un número que sale de los datos)"
+  - el coda "El supuesto del ratio provincial aguanta el backtest..." ->
+    referenciar la validación provincial y el efecto PSC
+  - si se traslada a simular_escanos.R (pendiente de decidir), las secciones
+    "La simulación" y "¿De dónde sale la incertidumbre?" cambiarían de cifras
+-->
+<!--
+Borrador autónomo: esta sección ya está integrada en
+meta-analisis-generales-jlcr.qmd (tras "El ruido Dirichlet, con Granada de
+ejemplo"). Este fichero sobra salvo como histórico.
+-->
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+### ¿Cuánto se mueve el mapa? (la pregunta que el divisor contestaba a dedo)
+
+Para pasar del voto nacional al provincial, el truco de siempre: si en 2023
+el PP sacó en Granada un 1.12 veces su media nacional, le asigno ese desvío.
+Y para que el ratio no sea un calco exacto de 2023, le añado ruido: la
+Dirichlet que re-sorteia los porcentajes de la provincia como si se hubieran
+contado con una muestra de 500 personas.
+
+Releyéndolo con calma, ese ruido tiene un problema de concepto. La Dirichlet
+simula **no fiarse del recuento de 2023** — como si Granada fuera una
+encuesta con margen de error. Pero el 23J no es una encuesta: es un recuento.
+Lo conozco al centavo, no hay nada que re-sortear. Lo que de verdad
+desconozco es otra cosa: **si en 2026 Granada seguirá desviándose un 12% del
+nacional**, o si entre medias el mapa se ha movido. Son dos ruidos distintos:
+temblar la foto antigua y que el mapa se desplace. El que decide escaños es
+el segundo, y de ese no tenía ninguna medida — solo el divisor de 1.000,
+puesto a ojo.
+
+### Medir si el ruido está calibrado
+
+La forma de saberlo es el backtest nacional de más abajo, bajando un nivel.
+El backtest nacional ya fabrica, muestra a muestra, el reparto de voto de
+cada provincia — tiene que hacerlo, porque D'Hondt se reparte provincia a
+provincia. Hasta ahora ese reparto se tiraba tras contar escaños. Ahora lo
+guardo y lo comparo con lo que de verdad pasó en esa provincia.
+
+La cuenta queda así: 5 elecciones × los partidos con encuestas × 52
+provincias = 936 celdas. En cada una, la simulación da un rango del voto
+provincial al 90%; la pregunta es si el resultado real cae dentro. Si mis
+rangos fueran honestos, caerían el 90% de las veces. Es la misma lógica que
+la cobertura del backtest nacional (más abajo: 18 celdas) — solo que con 50
+veces más, que es donde vive la información geográfica.
+
+Dos celdas de ejemplo. Granada, 23J, PP: la simulación —que parte del ratio
+del 10N— le daba un IC90 de [32.4, 38.5] y sacó un 37.0. Dentro. Lleida,
+23J, PSOE: le daba [17.1, 20.4] y sacó un 29.5. Fuera por mucho — y no por
+casualidad: entre el 10N y el 23J el PSC se movió en bloque en Cataluña,
+mientras el PSOE bajaba a nivel nacional. Apunta el nombre: **efecto PSC**;
+volveremos a él.
+
+::: {.callout-note collapse="true"}
+## Cómo se hace exactamente
+
+El reparto provincial de cada muestra ya lo calcula el backtest nacional de
+más abajo, antes del umbral y D'Hondt (que no cambian shares de voto, solo
+escaños):
+
+```r
+mult <- ratios[[i]] * dir_m[[i]][k, ] / q23_prov[[i]]
+v <- c(tracked[k, con_datos] * mult, otros_list[[prov_i[i]]])
+v <- v / sum(v)   # <- este reparto provincial es lo que ahora se guarda
+```
+
+La única diferencia es que en vez de tirarlo tras D'Hondt, se compara con el
+resultado real provincial de la elección objetivo (que `infoelectoral` da
+provincia a provincia). La celda de comparación es **elección × partido ×
+provincia**. Misma configuración que el backtest nacional (geografía de la
+elección anterior, mu encogido a la mitad, misma semilla: los draws están
+emparejados). En los CSV y el código la columna se llama `familia`,
+herencia del backtest nacional; en el texto la llamo partido.
+:::
+
+La cuenta global, partido por partido:
+
+```{r}
+#| label: tbl-prov-baseline
+#| tbl-cap: "Cobertura provincial del backtest con el ruido Dirichlet (baseline). Se excluyen las celdas donde el ratio de la referencia es 0 y el modelo predice 0 por construcción."
+prov_celdas <- read_csv(
+  here::here("2026/10/backtest_prov_celdas.csv"),
+  show_col_types = FALSE
+)
+
+cobertura_de <- function(celdas) {
+  con_z <- celdas |>
+    filter(!ref_ratio_cero) |>
+    mutate(z = (real - mediana) / ((q95 - q05) / (2 * qnorm(0.95))))
+  bind_rows(
+    con_z |>
+      group_by(familia) |>
+      summarise(
+        celdas = n(),
+        cobertura = mean(dentro),
+        factor_ruido = sd(z),
+        .groups = "drop"
+      ),
+    con_z |>
+      summarise(
+        familia = "TOTAL",
+        celdas = n(),
+        cobertura = mean(dentro),
+        factor_ruido = sd(z),
+        .groups = "drop"
+      )
+  )
+}
+
+cobertura_de(prov_celdas) |>
+  rename(partido = familia) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2)))
+```
+
+Mis intervalos prometen un 90% y cumplen un 66%. El `factor_ruido` lo dice
+sin rodeo: cuántas veces habría que multiplicar el ruido para que el
+intervalo cubriera lo que promete. En conjunto, **unas dos veces**: la
+geografía real se mueve entre elecciones el doble de lo que el ruido
+Dirichlet admite. Y el problema es de anchura, no de centro: el real cae por
+debajo del intervalo en un 20% de las celdas y por encima en un 16% — el
+modelo no está sesgado, está demasiado confiado.
+
+Por elección, el patrón que delata qué estaba midiendo ese ruido:
+
+```{r}
+prov_celdas |>
+  filter(!ref_ratio_cero) |>
+  group_by(eleccion) |>
+  summarise(cobertura = mean(dentro), .groups = "drop") |>
+  mutate(across(where(is.numeric), \(x) round(x, 2)))
+```
+
+El 10N —repetición de la anterior— sale al 80%, lo mejor de la lista: con
+geografía casi congelada, el ruido actual basta. En las transiciones frescas
+(20D 49%, 28A 62%, 23J 63%) se cae muy por debajo. El ruido Dirichlet estaba
+calibrado —sin saberlo— para el caso más fácil.
+
+### Medir cómo se mueve el mapa: los dos dados
+
+Si el ruido a dedo se equivoca, la pregunta parece "cuánto hay que ensanchar
+el número". Pero hay una mejor: **mídelo directamente**. Entre dos
+elecciones consecutivas, el ratio de un partido en una provincia cambia — de
+1.12 a 1.05, de 0.95 a 1.30. Esa variación se puede medir en las cuatro
+parejas de generales que tengo (20D→26J, 26J→28A, 28A→10N, 10N→23J),
+provincia a provincia.
+
+Al medirla, el movimiento se separa en dos fenómenos que conviene no
+mezclar:
+
+- **A veces una comunidad entera se mueve junta.** El efecto PSC del
+  ejemplo: las cuatro provincias catalanas a la vez. Eso no son cuatro
+  movimientos independientes — es uno solo que golpea en bloque.
+- **A veces una provincia se mueve sola**, por cosas locales.
+
+Dos dados, entonces: un dado por comunidad (cuyo resultado lo cobran todas
+sus provincias a la vez) y un dado por provincia. A estos números los llamo
+$\tau_c$ (comunidad) y $\tau_p$ (provincia), y son —esto es lo importante—
+**dos números por partido que salen de los datos**, no un divisor puesto a
+dedo.
+
+Un matiz que importa: hay que mirar el cambio del ratio, no el del
+porcentaje. Si el % provincial sube un 10% relativo (de 30 a 33) y otro baja
+un 10% (de 30 a 27), en porcentajes parecen cosas distintas; en escala
+logarítmica son +0.10 y −0.10, simétricos. Por eso se mide Δ log r: pasar de
+ratio 1.00 a 1.12 son +0.11, y de 1.00 a 0.90, −0.11. (Y al dividir por el
+porcentaje nacional de la misma elección, el swing uniforme del partido se
+cancela solo: si el PP sube 5 puntos en toda España, nada cambia en el
+ratio.)
+
+Otro matiz: dos de las cuatro transiciones fueron **repeticiones**
+(20D→26J y 28A→10N), y su deriva es 3-5 veces menor — la gente votó casi lo
+mismo que meses antes. Aprender "cuánto se mueve el mapa" de elecciones que
+eran repetición es aprender de las más tranquilas: la misma trampa del
+divisor, pero con matiz científico. Por eso el modelo lleva una dummy de
+repetición, que separa ambos tipos.
+
+::: {.callout-note collapse="true"}
+## El modelo, para quien quiera verlo
+
+Por partido, con $k$ el partido, $t$ la transición y $p$ la provincia:
+
+$$
+\Delta \log r_{k,t,p} = \alpha_k + \delta \, \text{rep}_t + \eta_{k,c(p)} + \varepsilon_{k,p},
+\qquad
+\eta \sim \mathcal{N}(0, \tau_{c,k}), \quad \varepsilon \sim \mathcal{N}(0, \tau_{\text{prov},k})
+$$
+
+Es el mismo truco que el efecto casa del meta-análisis: allá cada
+encuestadora tenía una desviación propia compartida por todas sus encuestas;
+aquí cada comunidad tiene una desviación propia compartida por todas sus
+provincias. En brms, con la respuesta en dos partes —la media y la
+desviación típica, cada una con su propia regresión:
+
+```r
+bf(
+  dlr ~ 0 + partido + repeticion + (0 + partido || codigo_ccaa),
+  sigma ~ 0 + celda_sigma    # celda = partido × {fresca, repetición}
+)
+```
+
+- **La media**: `0 + partido + repeticion` da un intercepto por partido y la
+  dummy de repetición. Las medias de deriva salen diminutas (entre −0.05 y
+  0.00) y el re-centrado las elimina en la simulación; están para que los
+  residuos queden centrados.
+- **`(0 + partido || codigo_ccaa)` es el $\tau_c$**: cada comunidad recibe
+  una desviación por partido, y las cuatro desviaciones de una comunidad son
+  independientes entre sí (la doble barra, sin correlaciones estimadas). La
+  sd de esas desviaciones dentro de cada partido es su $\tau_c$. Es el truco
+  estándar para varianzas por grupo: con `(1 | partido:ccaa)` saldría un
+  único $\tau_c$ para todos los partidos juntos — y VOX se mueve en bloque
+  por comunidad mientras el PP se mueve provincia a provincia.
+- **`sigma ~ 0 + celda_sigma` es el $\tau_p$**: en lmer el residuo tiene una
+  única σ para todo el dataset y la dummy solo podía tocar la media; aquí
+  cada celda partido × tipo de transición lleva su propia varianza y la
+  diferencia sale directa del posterior: PP 0.173 en frescas frente a 0.050
+  en repeticiones; VOX 0.199 frente a 0.063. Para el shock se usa la celda
+  fresca, que es lo que hay que predecir.
+- **Priors**: Normal(0, 1) para las medias (una deriva media de ±1 en
+  log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0,
+  0.2) truncada para las sd de comunidad — mover una comunidad entera ±40%
+  relativo de golpe es lo máximo que me creo, y de paso el prior encoge
+  hacia 0 las τ_c sin datos; y Normal(−2.1, 1) en los log σ, centrada en
+  exp(−2.1) ≈ 0.12, el orden de magnitud razonable de deriva, con margen de
+  0.03 a 0.45.
+- **La incertidumbre de los τ se propaga** igual que más abajo se hará con
+  las σ de la capa de error histórico, que en la simulación se sortean de una
+  t de Student en vez de clavarse: cada muestra toma un draw del posterior y
+  sortea η y ε de $\mathcal{N}(0, \tau^{(k)})$ — una mezcla de normales con
+  colas más gordas que la normal con el τ̂ al centavo.
+
+Diagnósticos: Rhat máximo 1.004, ESS mínimo 789, cero divergentes — 723
+observaciones y una decena de parámetros efectivos no dan para más drama.
+:::
+
+El posterior de los dos dados, por partido:
+
+```{r}
+#| label: tbl-taus
+#| tbl-cap: "Posterior de los taus (mediana e IC90), celda fresca. tau_c = dado de comunidad; tau_p = dado de provincia."
+read_csv(
+  here::here("2026/10/tau_shock_brms.csv"),
+  show_col_types = FALSE
+) |>
+  rename(partido = familia) |>
+  mutate(
+    `tau_c` = str_c(tau_c_med, " [", tau_c_ic05, ", ", tau_c_ic95, "]"),
+    `tau_p` = str_c(tau_p_med, " [", tau_p_ic05, ", ", tau_p_ic95, "]")
+  ) |>
+  select(partido, `tau_c`, `tau_p`)
+```
+
+Tres lecturas. Primera: el τ no depende apenas del tamaño de la provincia —
+la correlación de |Δ log r| con los votos provinciales va de −0.3 a 0. Eso
+desmiente el escalado del ruido Dirichlet, que daba una desviación de 0.06
+en Granada y de 0.01 en Madrid por el mero hecho de tener más votantes: la
+deriva del mapa no sabe de censo. Segunda: el dado de comunidad es pequeño
+en PP (0.04) y PSOE (0.02) y grande en VOX (0.12): el PP se mueve provincia
+a provincia; VOX, en bloque por comunidad. Tercera: las repeticiones
+confirman la dummy — su σ es un tercio del de las frescas.
+
+### Los dados entran en la simulación (y se revalida)
+
+En cada muestra, el ratio del partido $k$ en la provincia $p$ pasa de
+$r_{k,p}$ a
+
+$$
+r^{(s)}_{k,p} = r_{k,p} \cdot \exp\left(\eta_{k,c(p)} + \varepsilon_{k,p}\right)
+$$
+
+— el ratio de 2023 multiplicado por la suma de los dos dados. Y un detalle
+importante: **re-centrado**. Tras exponenciar, cada ratio se divide por su
+media ponderada por votos de la referencia. Sin eso, los dados de comunidad
+—que golpean a muchas provincias a la vez— desplazarían el voto nacional
+implícito por la puerta de atrás: el nacional lo fija la capa de error
+histórico, y la geografía no debería poder tocarlo. Con el ruido
+independiente de la Dirichlet el efecto se compensaba solo entre 52
+provincias; con dados correlacionados ya no.
+
+Aquí vale la pena detenerse, porque explica por qué no bastaba con ensanchar
+la Dirichlet: su ruido es **independiente** entre provincias — cuando
+Granada tiembla a un lado, Soria tiembla al otro, y en el cómputo total se
+cancelan. Pero los fallos reales no se cancelan: cuando el modelo se
+equivoca en Granada, se equivoca en toda la comunidad en la misma dirección.
+Un error correlacionado no se promedia. Por eso un poco de dado-comunidad
+mueve los escaños más que mucho ruido independiente — la misma razón por la
+que la capa de error histórico es tan decisiva en este post: incertidumbre
+que golpea en bloque.
+
+Cada muestra de la simulación lleva además **su propio par de τ sorteado del
+posterior de brms** — lo mismo que la capa de error hará más abajo con sus
+σ: con τ estimados con 1-2 transiciones frescas, tratarlos como conocidos al
+centavo sería la misma trampa.
+
+La revalidación, con las variantes enfrentadas en las mismas 912 celdas (sin
+las de ratio 0):
+
+```{r}
+#| label: tbl-prov-comparacion
+#| tbl-cap: "Cobertura provincial según el ruido: Dirichlet del 23J, shock con τ puntuales y shock con τ del posterior de brms."
+read_csv(
+  here::here("2026/10/backtest_prov_comparacion.csv"),
+  show_col_types = FALSE
+) |>
+  rename(partido = familia) |>
+  filter(partido == "TOTAL" | variante != "dirichlet (baseline)") |>
+  select(-celdas) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |>
+  arrange(variante, partido)
+```
+
+Conclusiones, en orden de importancia:
+
+1. **El shock calibra**: del 66% al 94% de cobertura, con el factor de ruido
+   en 1.0. Y corrige justo el caso que quedó mal con los τ puntuales: VOX
+   pasa del 86% al 93% — su τ_p posterior (0.20 [0.16, 0.25]) mezcla
+   escenarios de deriva baja y alta, y la mezcla cubre.
+2. **La Dirichlet sobra**: superponerla al shock apenas mueve nada (92% →
+   93%, el ancho ni se entera). Su varianza es despreciable junto a la del
+   shock. La sustitución es limpia: **el divisor de 1.000 y su escalado
+   $1/\sqrt{V_p}$ desaparecen**, sustituidos por dos dados por partido que
+   salen de la historia.
+3. **El límite es el efecto PSC**: los tres fallos catalanes del PSOE en el
+   23J siguen fuera incluso con el shock — la deriva catalana de 2023 fue
+   más grande que cualquier dado del PSOE. El shock ensancha; no adivina.
+   Para eso hace falta información de comunidad actual, no historia: las
+   encuestas por CCAA del coda.
+
+Queda pendiente trasladar el shock a `simular()` — ahí los partidos
+regionales (ERC, Junts, PNV...) necesitan sus propios τ, y el divisor de
+1.000 de la producción es el mismo número que aquí se ha jubilado.
