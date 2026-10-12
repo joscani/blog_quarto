@@ -69,9 +69,9 @@ escaños, que en el Congreso se reparten muy mal para un partido así.
 ::: {.callout-note collapse="true"}
 ## Historia: el ruido a dedo (la Dirichlet del divisor 1.000) — pincha para desplegar
 
-En la primera versión, hice como en Andalucía, una dirichlet que moviera un poco la 
+En la primera versión, hice como en Andalucía, una Dirichlet que moviera un poco la
 distribución de voto en cada provincia. La idea es que si, por ejemplo, en Granada
-el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet
+el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet.
 
 $$
 \boldsymbol{\pi}^{(s)}_p \sim \text{Dirichlet}\left(\frac{V_p}{1000}\,\boldsymbol{\pi}^{23J}_p\right),
@@ -148,7 +148,7 @@ querríamos modelar es el cambio de distribución provincial entre unas eleccion
 
 ### ¿Está calibrado ese ruido?
 
-Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90% . 
+Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90%.
 
 Para saber si a nivel provincial pasa lo mismo, procedemos igual y vemos si esos intervalos tienen cobertura del 90% teórico o no. 
 
@@ -159,7 +159,7 @@ del 10N, le daba un IC90 de [32,4; 38,5] y sacó un 37,0. Dentro.
 
 Lleida, 23J, PSOE: le daba [17,1; 20,4] y sacó un 29,5. Fuera por mucho. Y no es
 casualidad: entre el 10N y el 23J el PSC se movió en bloque en Cataluña
-mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (psc) subió mucho, podríamos llamarlo efecto PSC
+mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (PSC) subió mucho, podríamos llamarlo efecto PSC.
 
 ::: {.callout-note collapse="true"}
 
@@ -257,7 +257,7 @@ Pero el efecto no es solo por provincia, a veces el cambio se da en toda una com
 
 Con lo cual, dos efectos: uno por comunidad, cuyo resultado sufren todas sus
 provincias a la vez, y otro por provincia. 
-Los llamo $\tau_c$ (comunidad) y $\tau_p$ (provincia).  Y la idea es estimarlo a partir de los datos de encuestas y elecciones anteriores. 
+Los llamo $\tau_c$ (comunidad) y $\tau_p$ (provincia).  Y la idea es estimarlo a partir de los datos de elecciones anteriores.
 
 Es importante ver el cambio de ratio, es decir cuánto más o cuánto menos se vota un partido en una provincia respecto a toda España, para separar el aumento de voto a un partido (que esto lo mide el modelo), respecto a la composición provincial de como se reparte, que es justo lo que queremos ver en este apartado
 
@@ -266,7 +266,7 @@ Es importante ver el cambio de ratio, es decir cuánto más o cuánto menos se v
 
 ## El modelo, para quien quiera verlo — pincha para desplegar
 
-Por partido, con $k$ el partido, $t$ la transición y $p$ la provincia:
+Para cada partido $k$, transición $t$ y provincia $p$:
 
 $$
 \Delta \log r_{k,t,p} = \alpha_k + \delta \, \text{rep}_t + \eta_{k,c(p)} + \varepsilon_{k,p},
@@ -303,16 +303,16 @@ estimaciones puntuales con lme4 están en [`shock_jerarquico.R`](shock_jerarquic
   estándar para varianzas por grupo: con `(1 | partido:ccaa)` saldría un
   único $\tau_c$ para todos los partidos juntos, y VOX se mueve en bloque
   por comunidad mientras el PP se mueve provincia a provincia.
-- **`sigma ~ 0 + celda_sigma` es el $\tau_p$**: 
-  Cada celda partido × tipo de transición lleva su propia varianza y la
+- **`sigma ~ 0 + celda_sigma` es el $\tau_p$**: cada
+  celda partido × tipo de transición lleva su propia varianza y la
   diferencia sale directa del posterior: PP 0,173 en frescas frente a 0,050
   en repeticiones; VOX 0,199 frente a 0,063.
 - **Priors**: Normal(0, 1) para las medias (una deriva media de ±1 en
-  log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0,
-  0.2) truncada para las sd de comunidad: mover una comunidad entera ±40%
+  log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0; 0,2)
+  truncada para las sd de comunidad: mover una comunidad entera ±40%
   relativo de golpe es lo máximo que me creo, y de paso el prior encoge
-  hacia 0 las τ_c sin datos; y Normal(−2.1, 1) en los log σ, centrada en
-  exp(−2.1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que
+  hacia 0 las τ_c sin datos; y Normal(−2,1; 1) en los log σ, centrada en
+  exp(−2,1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que
   deja, 0,03 a 0,45, es aproximadamente el intervalo central del 80% del
   prior (±1,28 sd en escala log), no ±1 desviación típica.
 - **La incertidumbre de los τ se propaga** igual que más abajo se hará con
@@ -322,7 +322,7 @@ estimaciones puntuales con lme4 están en [`shock_jerarquico.R`](shock_jerarquic
   colas más gordas que la normal con el τ̂ puntual.
 
 Diagnósticos: Rhat máximo 1,004, ESS mínimo 789, cero divergentes (723
-observaciones y una decena de parámetros efectivos no dan para más drama.
+observaciones y una decena de parámetros efectivos no dan para más drama).
 :::
 
 El posterior de los dos efectos, por partido:
@@ -363,8 +363,8 @@ integró a Compromís, Más Madrid y otros, que en 2019 habían concurrido por
 separado (Más País, Más Compromís). 
 
 Su τ sale por ahí algo inflado y, no por casualidad, es
-el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 de las
-otras transiciones.  Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.
+el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 del
+resto de partidos. Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.
 
 ### Los efectos entran en la simulación
 
@@ -447,7 +447,7 @@ Tres conclusiones, por este orden:
    `r round(cob_de("shock brms (draws)", "VOX"))`%. Su τ_p posterior (`r vox_tau_p`) mezcla
    escenarios de deriva baja y alta, y la mezcla cubre.
 2. **La Dirichlet sobra**: superponerla al shock apenas mueve nada
-   (`r round(cob_de("shock brms (draws)"), 1)`% → `r round(100 * masdir$cobertura, 1)`%, el
+   (`r num_es(cob_de("shock brms (draws)"), 1)`% → `r num_es(100 * masdir$cobertura, 1)`%, el
    ancho ni se entera). Su varianza es despreciable junto a la del
    shock. La sustitución es limpia: el divisor de 1.000 y su escalado
    $1/\sqrt{V_p}$ desaparecen, sustituidos por dos efectos por partido que
@@ -590,27 +590,27 @@ errores_hist |>
 Positivo en cuatro de las cinco (el 28A-2019 queda en un ±0). Por lo que he visto, de los cuatro partidos principales,  el único cuyo sesgo es consistente es **el PSOE (+1,3 puntos: positivo en 4 de 5
 elecciones, y sigue en +1,3 si excluyo el 26J, que solo tiene 2 encuestas)**. Pero con cinco
 elecciones la media muestral de ese sesgo es una estimación ruidosa, y lo compruebo con un
-leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción (el
+leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción. El
 28A paga la factura, con sesgo real ~0 y corrección de +1,7 estimada sin él. Así que la aplico
 encogida a la mitad (+0,7): la evidencia apunta a que el sesgo existe, pero cinco elecciones no
-bastan para fijar su tamaño) y el backtest de más abajo, con sus 18 celdas, no distingue entre
+bastan para fijar su tamaño. Y el backtest de más abajo, con sus 18 celdas, no distingue entre
 corregir todo, la mitad o nada; me quedo con la mitad como compromiso.
 
 Para PP, VOX y Sumar el mu cambia de signo según qué elecciones entren, así que su μ va a 0. La
 capa funciona así: a cada muestra del posterior se le suma un error muestreado de una normal
 multivariante con media +0,7 para el PSOE y 0 para el resto y una desviación típica por partido
-de 1,3 a 2,6 puntos (el cuadrado de cuánto se equivocan las encuestas *en conjunto* con cada
-uno. La única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el
-bloque del PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la
-correlación empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable
-con 5 elecciones y va a 0), la conclusión contraria de la que puse a mano en Andalucía: el
+de 1,3 a 2,6 puntos, que es cuánto se equivocan las encuestas *en conjunto* con cada uno. La
+única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el bloque del
+PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la correlación
+empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable con 5
+elecciones y va a 0. Es la conclusión contraria de la que puse a mano en Andalucía: el
 trasvase de voto útil PP–VOX es dinámica de campaña que el modelo ya captura con las pendientes
 temporales, y esto va sobre otra cosa, cómo se equivocan las encuestas el día de la votación.
 
 Tras sumar el error, el vector completo se reescala para que siga sumando 100: cada partido cede
 en proporción a su tamaño. El BLOQUE no carga con el residual (en la primera versión sí:
 absorbía todo el error de los grandes, incluida la corrección del PSOE, sin que ningún dato diga
-que los regionales compensen al PSOE). Recibe en cambio un shock propio $\mathcal{N}(0, 1.5^2)$,
+que los regionales compensen al PSOE). Recibe en cambio un shock propio $\mathcal{N}(0;\, 1{,}5^2)$,
 supuesto explícito: la historia no puede calibrarlo, allí el bloque es el residual de los
 grandes por construcción. SALF se queda fuera: no existía antes de 2024 y no tiene historia.
 
@@ -828,7 +828,7 @@ res_var |>
 ```
 
 La capa de error histórico es, con diferencia, la que más ensancha todo: la desviación típica
-de PP + VOX se dobla (de `r round(v_post$sd, 1)` a `r round(v_err$sd, 1)` escaños) y el IC90 pasa de
+de PP + VOX se dobla (de `r num_es(v_post$sd, 1)` a `r num_es(v_err$sd, 1)` escaños) y el IC90 pasa de
 `r round(v_post$ic90_ancho)` a `r round(v_err$ic90_ancho)`. El ruido provincial por sí solo aporta bastante
 menos: con el shock, el IC90 va de `r round(v_post$ic90_ancho)` a `r round(v_shock$ic90_ancho)`; con la
 Dirichlet jubilada, de `r round(v_post$ic90_ancho)` a `r round(v_dir$ic90_ancho)`. Puede parecer poco, y lo
@@ -838,7 +838,7 @@ frente a la capa de error nacional. Encima del error histórico, el shock suma
 `r round(v_todo$ic90_ancho - v_err$ic90_ancho)` escaños al IC90 (`r round(v_err$ic90_ancho)` → `r round(v_todo$ic90_ancho)`). Dos lecturas más: la mediana baja de
 `r round(v_post$mediana)` a `r round(v_err$mediana)`, que es la corrección al PSOE cobrándose escaños a la
 derecha, y la probabilidad de mayoría apenas se mueve (del `r scales::percent(v_post$p_mayoria, 0.1, decimal.mark = ",")` de los posteriors a secas al
-`r scales::percent(p_derecha, 0.1, decimal.mark = ",")` de la simulación final). Con las encuestas de julio-octubre el colchón sobre los 176 es de
+`r scales::percent(v_todo$p_mayoria, 0.1, decimal.mark = ",")` con todas las capas, la fila «todo» de la tabla; la diferencia con el `r scales::percent(p_derecha, 0.1, decimal.mark = ",")` de la lectura final es ruido de Monte Carlo: aquí 4.000 muestras, allí 6.000). Con las encuestas de julio-octubre el colchón sobre los 176 es de
 `r round(v_todo$mediana - 176)` escaños, y lo que la capa de error hace sobre todo es avisar de que ese
 colchón puede quedarse en la mitad.
 
@@ -916,9 +916,9 @@ bind_rows(
   (`r sum(esc_bt$dentro)` de `r nrow(esc_bt)`) y del `r round(100 * mean(vot_bt$dentro))`% en voto
   (`r sum(vot_bt$dentro)` de `r nrow(vot_bt)`).
 - El error mediano es de `r round(median(abs(esc_bt$mediana - esc_bt$real)))` escaños y
-  `r round(median(abs(vot_bt$mediana - vot_bt$real)), 1)` puntos.
+  `r num_es(median(abs(vot_bt$mediana - vot_bt$real)), 1)` puntos.
 - El peor caso es el `r etiquetas[peor_esc$eleccion]`, la elección con menos encuestas: al
-  `r peor_esc$familia` le doy `r round(peor_esc$mediana)` escaños y sacó `r round(peor_esc$real)`.
+  `r peor_esc$familia` —Unidos Podemos entonces— le doy `r round(peor_esc$mediana)` escaños y sacó `r round(peor_esc$real)`.
 
 ```{r}
 read_csv(

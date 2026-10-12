@@ -517,7 +517,7 @@ Note
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>En la primera versión, hice como en Andalucía, una dirichlet que moviera un poco la distribución de voto en cada provincia. La idea es que si, por ejemplo, en Granada el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet</p>
+<p>En la primera versión, hice como en Andalucía, una Dirichlet que moviera un poco la distribución de voto en cada provincia. La idea es que si, por ejemplo, en Granada el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet.</p>
 <p><span class="math display">\[
 \boldsymbol{\pi}^{(s)}_p \sim \text{Dirichlet}\left(\frac{V_p}{1000}\,\boldsymbol{\pi}^{23J}_p\right),
 \qquad
@@ -613,11 +613,11 @@ r^{(s)}_{k,p} = r_{k,p} \cdot \frac{\pi^{(s)}_{k,p}}{\pi^{23J}_{k,p}}
 </section>
 <section id="está-calibrado-ese-ruido" class="level3">
 <h3 class="anchored" data-anchor-id="está-calibrado-ese-ruido">¿Está calibrado ese ruido?</h3>
-<p>Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90% .</p>
+<p>Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90%.</p>
 <p>Para saber si a nivel provincial pasa lo mismo, procedemos igual y vemos si esos intervalos tienen cobertura del 90% teórico o no.</p>
 <p>Como tenemos 5 elecciones anteriores x partidos con encuestas x 52 provincias salen sobre unas 936 celdas. En cada celda miro si el intervalo contiene el verdadero valor. La cobertura del 90% implicaría que en el 90% de esas celdas el intervalo contuviera al verdadero valor.</p>
 <p>Ejemplo. Granada, 23J, PP: la simulación, que parte del ratio del 10N, le daba un IC90 de [32,4; 38,5] y sacó un 37,0. Dentro.</p>
-<p>Lleida, 23J, PSOE: le daba [17,1; 20,4] y sacó un 29,5. Fuera por mucho. Y no es casualidad: entre el 10N y el 23J el PSC se movió en bloque en Cataluña mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (psc) subió mucho, podríamos llamarlo efecto PSC</p>
+<p>Lleida, 23J, PSOE: le daba [17,1; 20,4] y sacó un 29,5. Fuera por mucho. Y no es casualidad: entre el 10N y el 23J el PSC se movió en bloque en Cataluña mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (PSC) subió mucho, podríamos llamarlo efecto PSC.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -718,7 +718,7 @@ Table&nbsp;1: Cobertura provincial del backtest con el ruido Dirichlet (baseline
 <p>Lo de la aproximación de la Dirichlet era bastante compadre, se queda corta para los cambios que hubo en la realidad.</p>
 <p>Como tenemos datos de elecciones pasadas, podemos intentar medir como ha cambiado la distribución provincial. Algunas elecciones se celebraron con pocos meses de diferencia y, como era de esperar, los ratios provinciales cambiaron poco. Pero las otras sí sirven para ver cuánto se mueve en cada provincia cada partido.</p>
 <p>Pero el efecto no es solo por provincia, a veces el cambio se da en toda una comunidad, como la subida del PSC en Cataluña en 2023, y otras veces el cambio puede ser en alguna provincia concreta sin relación con la comunidad.</p>
-<p>Con lo cual, dos efectos: uno por comunidad, cuyo resultado sufren todas sus provincias a la vez, y otro por provincia. Los llamo <span class="math inline">\(\tau_c\)</span> (comunidad) y <span class="math inline">\(\tau_p\)</span> (provincia). Y la idea es estimarlo a partir de los datos de encuestas y elecciones anteriores.</p>
+<p>Con lo cual, dos efectos: uno por comunidad, cuyo resultado sufren todas sus provincias a la vez, y otro por provincia. Los llamo <span class="math inline">\(\tau_c\)</span> (comunidad) y <span class="math inline">\(\tau_p\)</span> (provincia). Y la idea es estimarlo a partir de los datos de elecciones anteriores.</p>
 <p>Es importante ver el cambio de ratio, es decir cuánto más o cuánto menos se vota un partido en una provincia respecto a toda España, para separar el aumento de voto a un partido (que esto lo mide el modelo), respecto a la composición provincial de como se reparte, que es justo lo que queremos ver en este apartado</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
@@ -732,7 +732,7 @@ Table&nbsp;1: Cobertura provincial del backtest con el ruido Dirichlet (baseline
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Por partido, con <span class="math inline">\(k\)</span> el partido, <span class="math inline">\(t\)</span> la transición y <span class="math inline">\(p\)</span> la provincia:</p>
+<p>Para cada partido <span class="math inline">\(k\)</span>, transición <span class="math inline">\(t\)</span> y provincia <span class="math inline">\(p\)</span>:</p>
 <p><span class="math display">\[
 \Delta \log r_{k,t,p} = \alpha_k + \delta \, \text{rep}_t + \eta_{k,c(p)} + \varepsilon_{k,p},
 \qquad
@@ -747,11 +747,11 @@ Table&nbsp;1: Cobertura provincial del backtest con el ruido Dirichlet (baseline
 <ul>
 <li><strong>La media</strong>: <code>0 + partido + repeticion</code> da un intercepto por partido y la dummy de repetición. Las medias de deriva salen diminutas (entre −0,05 y 0,00) y el re-centrado las elimina en la simulación; están para que los residuos queden centrados.</li>
 <li><strong><code>(0 + partido || codigo_ccaa)</code> es el <span class="math inline">\(\tau_c\)</span></strong>: cada comunidad recibe una desviación por partido, y las cuatro desviaciones de una comunidad son independientes entre sí (la doble barra, sin correlaciones estimadas). La sd de esas desviaciones dentro de cada partido es su <span class="math inline">\(\tau_c\)</span>. Es el truco estándar para varianzas por grupo: con <code>(1 | partido:ccaa)</code> saldría un único <span class="math inline">\(\tau_c\)</span> para todos los partidos juntos, y VOX se mueve en bloque por comunidad mientras el PP se mueve provincia a provincia.</li>
-<li><strong><code>sigma ~ 0 + celda_sigma</code> es el <span class="math inline">\(\tau_p\)</span></strong>: Cada celda partido × tipo de transición lleva su propia varianza y la diferencia sale directa del posterior: PP 0,173 en frescas frente a 0,050 en repeticiones; VOX 0,199 frente a 0,063.</li>
-<li><strong>Priors</strong>: Normal(0, 1) para las medias (una deriva media de ±1 en log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0, 0.2) truncada para las sd de comunidad: mover una comunidad entera ±40% relativo de golpe es lo máximo que me creo, y de paso el prior encoge hacia 0 las τ_c sin datos; y Normal(−2.1, 1) en los log σ, centrada en exp(−2.1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que deja, 0,03 a 0,45, es aproximadamente el intervalo central del 80% del prior (±1,28 sd en escala log), no ±1 desviación típica.</li>
+<li><strong><code>sigma ~ 0 + celda_sigma</code> es el <span class="math inline">\(\tau_p\)</span></strong>: cada celda partido × tipo de transición lleva su propia varianza y la diferencia sale directa del posterior: PP 0,173 en frescas frente a 0,050 en repeticiones; VOX 0,199 frente a 0,063.</li>
+<li><strong>Priors</strong>: Normal(0, 1) para las medias (una deriva media de ±1 en log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0; 0,2) truncada para las sd de comunidad: mover una comunidad entera ±40% relativo de golpe es lo máximo que me creo, y de paso el prior encoge hacia 0 las τ_c sin datos; y Normal(−2,1; 1) en los log σ, centrada en exp(−2,1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que deja, 0,03 a 0,45, es aproximadamente el intervalo central del 80% del prior (±1,28 sd en escala log), no ±1 desviación típica.</li>
 <li><strong>La incertidumbre de los τ se propaga</strong> igual que más abajo se hará con las σ de la capa de error histórico, que en la simulación se muestrean de una t de Student: cada muestra toma un draw del posterior y muestrea η y ε de <span class="math inline">\(\mathcal{N}(0, \tau^{(k)})\)</span>: una mezcla de normales con colas más gordas que la normal con el τ̂ puntual.</li>
 </ul>
-<p>Diagnósticos: Rhat máximo 1,004, ESS mínimo 789, cero divergentes (723 observaciones y una decena de parámetros efectivos no dan para más drama.</p>
+<p>Diagnósticos: Rhat máximo 1,004, ESS mínimo 789, cero divergentes (723 observaciones y una decena de parámetros efectivos no dan para más drama).</p>
 </div>
 </div>
 </div>
@@ -794,7 +794,7 @@ Table&nbsp;2: Posterior de los taus (mediana e IC90), celda fresca. tau_c = efec
 <li><p>El efecto de comunidad sale pequeño en PP (0,04) y PSOE (0,02) y grande en VOX (0,12). El PP se mueve provincia a provincia; VOX, en bloque por comunidad.</p></li>
 </ul>
 <p>Un aviso sobre SUMAR, que conviene tener a la vista: parte de su Δ log r no es geografía, es recomposición de candidaturas. En el ciclo 2015–2016 las confluencias (En Comú, En Marea, Compromís-Podemos) e IU concurrieron por separado en el 20D y juntas como Unidos Podemos en el 26J; en el 23J Sumar integró a Compromís, Más Madrid y otros, que en 2019 habían concurrido por separado (Más País, Más Compromís).</p>
-<p>Su τ sale por ahí algo inflado y, no por casualidad, es el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 de las otras transiciones. Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.</p>
+<p>Su τ sale por ahí algo inflado y, no por casualidad, es el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 del resto de partidos. Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.</p>
 </section>
 <section id="los-efectos-entran-en-la-simulación" class="level3">
 <h3 class="anchored" data-anchor-id="los-efectos-entran-en-la-simulación">Los efectos entran en la simulación</h3>
@@ -878,7 +878,7 @@ Table&nbsp;3: Cobertura provincial según el ruido: Dirichlet del 23J, shock con
 <p>Tres conclusiones, por este orden:</p>
 <ol type="1">
 <li><strong>Calibra</strong>: del 66% al 94% de cobertura, con el factor de ruido en 0,97. Y corrige justo lo que quedó mal con los τ puntuales: VOX pasa del 86% al 93%. Su τ_p posterior (0,195 [0,162; 0,234]) mezcla escenarios de deriva baja y alta, y la mezcla cubre.</li>
-<li><strong>La Dirichlet sobra</strong>: superponerla al shock apenas mueve nada (93.9% → 94.2%, el ancho ni se entera). Su varianza es despreciable junto a la del shock. La sustitución es limpia: el divisor de 1.000 y su escalado <span class="math inline">\(1/\sqrt{V_p}\)</span> desaparecen, sustituidos por dos efectos por partido que salen de la historia.</li>
+<li><strong>La Dirichlet sobra</strong>: superponerla al shock apenas mueve nada (93,9% → 94,2%, el ancho ni se entera). Su varianza es despreciable junto a la del shock. La sustitución es limpia: el divisor de 1.000 y su escalado <span class="math inline">\(1/\sqrt{V_p}\)</span> desaparecen, sustituidos por dos efectos por partido que salen de la historia.</li>
 <li><strong>El límite es el efecto PSC</strong>: los tres fallos catalanes del PSOE en el 23J siguen fuera incluso con este modelo. La deriva catalana de 2023 fue más grande. Para afinar eso hace falta información de comunidad actual, no historia, que serían encuestas a nivel de comunidad autónoma.</li>
 </ol>
 <section id="una-objeción-justa-la-revalidación-es-in-sample" class="level4">
@@ -1018,9 +1018,9 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 23J-2023      28.2  31.7  3.49</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Positivo en cuatro de las cinco (el 28A-2019 queda en un ±0). Por lo que he visto, de los cuatro partidos principales, el único cuyo sesgo es consistente es <strong>el PSOE (+1,3 puntos: positivo en 4 de 5 elecciones, y sigue en +1,3 si excluyo el 26J, que solo tiene 2 encuestas)</strong>. Pero con cinco elecciones la media muestral de ese sesgo es una estimación ruidosa, y lo compruebo con un leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción (el 28A paga la factura, con sesgo real ~0 y corrección de +1,7 estimada sin él. Así que la aplico encogida a la mitad (+0,7): la evidencia apunta a que el sesgo existe, pero cinco elecciones no bastan para fijar su tamaño) y el backtest de más abajo, con sus 18 celdas, no distingue entre corregir todo, la mitad o nada; me quedo con la mitad como compromiso.</p>
-<p>Para PP, VOX y Sumar el mu cambia de signo según qué elecciones entren, así que su μ va a 0. La capa funciona así: a cada muestra del posterior se le suma un error muestreado de una normal multivariante con media +0,7 para el PSOE y 0 para el resto y una desviación típica por partido de 1,3 a 2,6 puntos (el cuadrado de cuánto se equivocan las encuestas <em>en conjunto</em> con cada uno. La única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el bloque del PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la correlación empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable con 5 elecciones y va a 0), la conclusión contraria de la que puse a mano en Andalucía: el trasvase de voto útil PP–VOX es dinámica de campaña que el modelo ya captura con las pendientes temporales, y esto va sobre otra cosa, cómo se equivocan las encuestas el día de la votación.</p>
-<p>Tras sumar el error, el vector completo se reescala para que siga sumando 100: cada partido cede en proporción a su tamaño. El BLOQUE no carga con el residual (en la primera versión sí: absorbía todo el error de los grandes, incluida la corrección del PSOE, sin que ningún dato diga que los regionales compensen al PSOE). Recibe en cambio un shock propio <span class="math inline">\(\mathcal{N}(0, 1.5^2)\)</span>, supuesto explícito: la historia no puede calibrarlo, allí el bloque es el residual de los grandes por construcción. SALF se queda fuera: no existía antes de 2024 y no tiene historia.</p>
+<p>Positivo en cuatro de las cinco (el 28A-2019 queda en un ±0). Por lo que he visto, de los cuatro partidos principales, el único cuyo sesgo es consistente es <strong>el PSOE (+1,3 puntos: positivo en 4 de 5 elecciones, y sigue en +1,3 si excluyo el 26J, que solo tiene 2 encuestas)</strong>. Pero con cinco elecciones la media muestral de ese sesgo es una estimación ruidosa, y lo compruebo con un leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción. El 28A paga la factura, con sesgo real ~0 y corrección de +1,7 estimada sin él. Así que la aplico encogida a la mitad (+0,7): la evidencia apunta a que el sesgo existe, pero cinco elecciones no bastan para fijar su tamaño. Y el backtest de más abajo, con sus 18 celdas, no distingue entre corregir todo, la mitad o nada; me quedo con la mitad como compromiso.</p>
+<p>Para PP, VOX y Sumar el mu cambia de signo según qué elecciones entren, así que su μ va a 0. La capa funciona así: a cada muestra del posterior se le suma un error muestreado de una normal multivariante con media +0,7 para el PSOE y 0 para el resto y una desviación típica por partido de 1,3 a 2,6 puntos, que es cuánto se equivocan las encuestas <em>en conjunto</em> con cada uno. La única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el bloque del PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la correlación empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable con 5 elecciones y va a 0. Es la conclusión contraria de la que puse a mano en Andalucía: el trasvase de voto útil PP–VOX es dinámica de campaña que el modelo ya captura con las pendientes temporales, y esto va sobre otra cosa, cómo se equivocan las encuestas el día de la votación.</p>
+<p>Tras sumar el error, el vector completo se reescala para que siga sumando 100: cada partido cede en proporción a su tamaño. El BLOQUE no carga con el residual (en la primera versión sí: absorbía todo el error de los grandes, incluida la corrección del PSOE, sin que ningún dato diga que los regionales compensen al PSOE). Recibe en cambio un shock propio <span class="math inline">\(\mathcal{N}(0;\, 1{,}5^2)\)</span>, supuesto explícito: la historia no puede calibrarlo, allí el bloque es el residual de los grandes por construcción. SALF se queda fuera: no existía antes de 2024 y no tiene historia.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Show the code</summary>
@@ -1229,7 +1229,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 todo (lo del post)                    196   9.8         32 98.0%</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>La capa de error histórico es, con diferencia, la que más ensancha todo: la desviación típica de PP + VOX se dobla (de 4.6 a 9.3 escaños) y el IC90 pasa de 16 a 30. El ruido provincial por sí solo aporta bastante menos: con el shock, el IC90 va de 16 a 17; con la Dirichlet jubilada, de 16 a 18. Puede parecer poco, y lo es, aunque el shock mueva el voto provincial el triple: el ruido independiente se cancela entre provincias al sumarlas, y lo que no se cancela, el componente de comunidad, es pequeño frente a la capa de error nacional. Encima del error histórico, el shock suma 2 escaños al IC90 (30 → 32). Dos lecturas más: la mediana baja de 198 a 197, que es la corrección al PSOE cobrándose escaños a la derecha, y la probabilidad de mayoría apenas se mueve (del 100,0% de los posteriors a secas al 97,7% de la simulación final). Con las encuestas de julio-octubre el colchón sobre los 176 es de 20 escaños, y lo que la capa de error hace sobre todo es avisar de que ese colchón puede quedarse en la mitad.</p>
+<p>La capa de error histórico es, con diferencia, la que más ensancha todo: la desviación típica de PP + VOX se dobla (de 4,6 a 9,3 escaños) y el IC90 pasa de 16 a 30. El ruido provincial por sí solo aporta bastante menos: con el shock, el IC90 va de 16 a 17; con la Dirichlet jubilada, de 16 a 18. Puede parecer poco, y lo es, aunque el shock mueva el voto provincial el triple: el ruido independiente se cancela entre provincias al sumarlas, y lo que no se cancela, el componente de comunidad, es pequeño frente a la capa de error nacional. Encima del error histórico, el shock suma 2 escaños al IC90 (30 → 32). Dos lecturas más: la mediana baja de 198 a 197, que es la corrección al PSOE cobrándose escaños a la derecha, y la probabilidad de mayoría apenas se mueve (del 100,0% de los posteriors a secas al 98,0% con todas las capas, la fila «todo» de la tabla; la diferencia con el 97,7% de la lectura final es ruido de Monte Carlo: aquí 4.000 muestras, allí 6.000). Con las encuestas de julio-octubre el colchón sobre los 176 es de 20 escaños, y lo que la capa de error hace sobre todo es avisar de que ese colchón puede quedarse en la mitad.</p>
 <p>Un apunte sobre esa capa dominante: sus σ salen de solo 5 elecciones y están estimados con ruido (el IC95 de una sd con n = 5 va de 0,6× a 2,9× el valor estimado) y la versión plug-in los trata como si se conocieran con exactitud. Si en cada muestra se muestrea el propio σ de su posterior (lo mismo que pedirle al error una t de Student con 4 gl, colas más gordas) el IC90 de PP + VOX pasa de ~33 a ~41 escaños y la probabilidad de mayoría de la derecha baja del ~98% al ~95%. Los σ̂ son estables entre elecciones (lo de arriba) y el backtest de más abajo va por ahí: con t₄ su cobertura se va al 100% con IC90 de ~33 escaños (cubre de más), mientras el plug-in se queda en un 83-94%, compatible con el 90% nominal. Así que t₄ vive en <code>simular(t_sigma_df = 4)</code> como sensibilidad, no como default.</p>
 </section>
 <section id="el-backtest-y-si-lo-hubiera-hecho-antes" class="level3">
@@ -1288,8 +1288,8 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <p>¿Qué sale? Pues bastante bien:</p>
 <ul>
 <li>La cobertura de los intervalos al 90% es del 94% en escaños (17 de 18) y del 83% en voto (15 de 18).</li>
-<li>El error mediano es de 7 escaños y 1.3 puntos.</li>
-<li>El peor caso es el 26J-2016, la elección con menos encuestas: al SUMAR le doy 88 escaños y sacó 71.</li>
+<li>El error mediano es de 7 escaños y 1,3 puntos.</li>
+<li>El peor caso es el 26J-2016, la elección con menos encuestas: al SUMAR —Unidos Podemos entonces— le doy 88 escaños y sacó 71.</li>
 </ul>
 <div class="cell">
 <details open="" class="code-fold">
@@ -1956,9 +1956,9 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-71"><a href="#cb23-71" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
 <span id="cb23-72"><a href="#cb23-72" aria-hidden="true" tabindex="-1"></a><span class="fu">## Historia: el ruido a dedo (la Dirichlet del divisor 1.000) — pincha para desplegar</span></span>
 <span id="cb23-73"><a href="#cb23-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-74"><a href="#cb23-74" aria-hidden="true" tabindex="-1"></a>En la primera versión, hice como en Andalucía, una dirichlet que moviera un poco la </span>
+<span id="cb23-74"><a href="#cb23-74" aria-hidden="true" tabindex="-1"></a>En la primera versión, hice como en Andalucía, una Dirichlet que moviera un poco la</span>
 <span id="cb23-75"><a href="#cb23-75" aria-hidden="true" tabindex="-1"></a>distribución de voto en cada provincia. La idea es que si, por ejemplo, en Granada</span>
-<span id="cb23-76"><a href="#cb23-76" aria-hidden="true" tabindex="-1"></a>el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet</span>
+<span id="cb23-76"><a href="#cb23-76" aria-hidden="true" tabindex="-1"></a>el % de voto al PP fue 1,12 veces el % nacional, ahora sea similar, pero con una pequeña perturbación que añado con la Dirichlet.</span>
 <span id="cb23-77"><a href="#cb23-77" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-78"><a href="#cb23-78" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb23-79"><a href="#cb23-79" aria-hidden="true" tabindex="-1"></a>\boldsymbol{\pi}^{(s)}_p \sim \text{Dirichlet}\left(\frac{V_p}{1000}\,\boldsymbol{\pi}^{23J}_p\right),</span>
@@ -2035,7 +2035,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-156"><a href="#cb23-156" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-157"><a href="#cb23-157" aria-hidden="true" tabindex="-1"></a><span class="fu">### ¿Está calibrado ese ruido?</span></span>
 <span id="cb23-158"><a href="#cb23-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-159"><a href="#cb23-159" aria-hidden="true" tabindex="-1"></a>Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90% . </span>
+<span id="cb23-159"><a href="#cb23-159" aria-hidden="true" tabindex="-1"></a>Más abajo hice un backtest nacional, que no es más que utilizar las encuestas previas a las elecciones pasadas, y ver si con la aproximación con la Dirichlet los intervalos de estimación de voto y de escaños a nivel estatal son del 90%.</span>
 <span id="cb23-160"><a href="#cb23-160" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-161"><a href="#cb23-161" aria-hidden="true" tabindex="-1"></a>Para saber si a nivel provincial pasa lo mismo, procedemos igual y vemos si esos intervalos tienen cobertura del 90% teórico o no. </span>
 <span id="cb23-162"><a href="#cb23-162" aria-hidden="true" tabindex="-1"></a></span>
@@ -2046,7 +2046,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-167"><a href="#cb23-167" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-168"><a href="#cb23-168" aria-hidden="true" tabindex="-1"></a>Lleida, 23J, PSOE: le daba <span class="co">[</span><span class="ot">17,1; 20,4</span><span class="co">]</span> y sacó un 29,5. Fuera por mucho. Y no es</span>
 <span id="cb23-169"><a href="#cb23-169" aria-hidden="true" tabindex="-1"></a>casualidad: entre el 10N y el 23J el PSC se movió en bloque en Cataluña</span>
-<span id="cb23-170"><a href="#cb23-170" aria-hidden="true" tabindex="-1"></a>mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (psc) subió mucho, podríamos llamarlo efecto PSC</span>
+<span id="cb23-170"><a href="#cb23-170" aria-hidden="true" tabindex="-1"></a>mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (PSC) subió mucho, podríamos llamarlo efecto PSC.</span>
 <span id="cb23-171"><a href="#cb23-171" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-172"><a href="#cb23-172" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
 <span id="cb23-173"><a href="#cb23-173" aria-hidden="true" tabindex="-1"></a></span>
@@ -2144,7 +2144,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-269"><a href="#cb23-269" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-270"><a href="#cb23-270" aria-hidden="true" tabindex="-1"></a>Con lo cual, dos efectos: uno por comunidad, cuyo resultado sufren todas sus</span>
 <span id="cb23-271"><a href="#cb23-271" aria-hidden="true" tabindex="-1"></a>provincias a la vez, y otro por provincia. </span>
-<span id="cb23-272"><a href="#cb23-272" aria-hidden="true" tabindex="-1"></a>Los llamo $\tau_c$ (comunidad) y $\tau_p$ (provincia).  Y la idea es estimarlo a partir de los datos de encuestas y elecciones anteriores. </span>
+<span id="cb23-272"><a href="#cb23-272" aria-hidden="true" tabindex="-1"></a>Los llamo $\tau_c$ (comunidad) y $\tau_p$ (provincia).  Y la idea es estimarlo a partir de los datos de elecciones anteriores.</span>
 <span id="cb23-273"><a href="#cb23-273" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-274"><a href="#cb23-274" aria-hidden="true" tabindex="-1"></a>Es importante ver el cambio de ratio, es decir cuánto más o cuánto menos se vota un partido en una provincia respecto a toda España, para separar el aumento de voto a un partido (que esto lo mide el modelo), respecto a la composición provincial de como se reparte, que es justo lo que queremos ver en este apartado</span>
 <span id="cb23-275"><a href="#cb23-275" aria-hidden="true" tabindex="-1"></a></span>
@@ -2153,7 +2153,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-278"><a href="#cb23-278" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-279"><a href="#cb23-279" aria-hidden="true" tabindex="-1"></a><span class="fu">## El modelo, para quien quiera verlo — pincha para desplegar</span></span>
 <span id="cb23-280"><a href="#cb23-280" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-281"><a href="#cb23-281" aria-hidden="true" tabindex="-1"></a>Por partido, con $k$ el partido, $t$ la transición y $p$ la provincia:</span>
+<span id="cb23-281"><a href="#cb23-281" aria-hidden="true" tabindex="-1"></a>Para cada partido $k$, transición $t$ y provincia $p$:</span>
 <span id="cb23-282"><a href="#cb23-282" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-283"><a href="#cb23-283" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb23-284"><a href="#cb23-284" aria-hidden="true" tabindex="-1"></a>\Delta \log r_{k,t,p} = \alpha_k + \delta \, \text{rep}_t + \eta_{k,c(p)} + \varepsilon_{k,p},</span>
@@ -2190,16 +2190,16 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-315"><a href="#cb23-315" aria-hidden="true" tabindex="-1"></a>  estándar para varianzas por grupo: con <span class="in">`(1 | partido:ccaa)`</span> saldría un</span>
 <span id="cb23-316"><a href="#cb23-316" aria-hidden="true" tabindex="-1"></a>  único $\tau_c$ para todos los partidos juntos, y VOX se mueve en bloque</span>
 <span id="cb23-317"><a href="#cb23-317" aria-hidden="true" tabindex="-1"></a>  por comunidad mientras el PP se mueve provincia a provincia.</span>
-<span id="cb23-318"><a href="#cb23-318" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**`sigma ~ 0 + celda_sigma` es el $\tau_p$**: </span>
-<span id="cb23-319"><a href="#cb23-319" aria-hidden="true" tabindex="-1"></a>  Cada celda partido × tipo de transición lleva su propia varianza y la</span>
+<span id="cb23-318"><a href="#cb23-318" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**`sigma ~ 0 + celda_sigma` es el $\tau_p$**: cada</span>
+<span id="cb23-319"><a href="#cb23-319" aria-hidden="true" tabindex="-1"></a>  celda partido × tipo de transición lleva su propia varianza y la</span>
 <span id="cb23-320"><a href="#cb23-320" aria-hidden="true" tabindex="-1"></a>  diferencia sale directa del posterior: PP 0,173 en frescas frente a 0,050</span>
 <span id="cb23-321"><a href="#cb23-321" aria-hidden="true" tabindex="-1"></a>  en repeticiones; VOX 0,199 frente a 0,063.</span>
 <span id="cb23-322"><a href="#cb23-322" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Priors**: Normal(0, 1) para las medias (una deriva media de ±1 en</span>
-<span id="cb23-323"><a href="#cb23-323" aria-hidden="true" tabindex="-1"></a>  log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0,</span>
-<span id="cb23-324"><a href="#cb23-324" aria-hidden="true" tabindex="-1"></a>  0.2) truncada para las sd de comunidad: mover una comunidad entera ±40%</span>
+<span id="cb23-323"><a href="#cb23-323" aria-hidden="true" tabindex="-1"></a>  log-ratio sería ×e entre elecciones: en la práctica, plano); Normal(0; 0,2)</span>
+<span id="cb23-324"><a href="#cb23-324" aria-hidden="true" tabindex="-1"></a>  truncada para las sd de comunidad: mover una comunidad entera ±40%</span>
 <span id="cb23-325"><a href="#cb23-325" aria-hidden="true" tabindex="-1"></a>  relativo de golpe es lo máximo que me creo, y de paso el prior encoge</span>
-<span id="cb23-326"><a href="#cb23-326" aria-hidden="true" tabindex="-1"></a>  hacia 0 las τ_c sin datos; y Normal(−2.1, 1) en los log σ, centrada en</span>
-<span id="cb23-327"><a href="#cb23-327" aria-hidden="true" tabindex="-1"></a>  exp(−2.1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que</span>
+<span id="cb23-326"><a href="#cb23-326" aria-hidden="true" tabindex="-1"></a>  hacia 0 las τ_c sin datos; y Normal(−2,1; 1) en los log σ, centrada en</span>
+<span id="cb23-327"><a href="#cb23-327" aria-hidden="true" tabindex="-1"></a>  exp(−2,1) ≈ 0,12, el orden de magnitud razonable de deriva. El margen que</span>
 <span id="cb23-328"><a href="#cb23-328" aria-hidden="true" tabindex="-1"></a>  deja, 0,03 a 0,45, es aproximadamente el intervalo central del 80% del</span>
 <span id="cb23-329"><a href="#cb23-329" aria-hidden="true" tabindex="-1"></a>  prior (±1,28 sd en escala log), no ±1 desviación típica.</span>
 <span id="cb23-330"><a href="#cb23-330" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**La incertidumbre de los τ se propaga** igual que más abajo se hará con</span>
@@ -2209,7 +2209,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-334"><a href="#cb23-334" aria-hidden="true" tabindex="-1"></a>  colas más gordas que la normal con el τ̂ puntual.</span>
 <span id="cb23-335"><a href="#cb23-335" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-336"><a href="#cb23-336" aria-hidden="true" tabindex="-1"></a>Diagnósticos: Rhat máximo 1,004, ESS mínimo 789, cero divergentes (723</span>
-<span id="cb23-337"><a href="#cb23-337" aria-hidden="true" tabindex="-1"></a>observaciones y una decena de parámetros efectivos no dan para más drama.</span>
+<span id="cb23-337"><a href="#cb23-337" aria-hidden="true" tabindex="-1"></a>observaciones y una decena de parámetros efectivos no dan para más drama).</span>
 <span id="cb23-338"><a href="#cb23-338" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb23-339"><a href="#cb23-339" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-340"><a href="#cb23-340" aria-hidden="true" tabindex="-1"></a>El posterior de los dos efectos, por partido:</span>
@@ -2250,8 +2250,8 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-377"><a href="#cb23-377" aria-hidden="true" tabindex="-1"></a>separado (Más País, Más Compromís). </span>
 <span id="cb23-378"><a href="#cb23-378" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-379"><a href="#cb23-379" aria-hidden="true" tabindex="-1"></a>Su τ sale por ahí algo inflado y, no por casualidad, es</span>
-<span id="cb23-380"><a href="#cb23-380" aria-hidden="true" tabindex="-1"></a>el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 de las</span>
-<span id="cb23-381"><a href="#cb23-381" aria-hidden="true" tabindex="-1"></a>otras transiciones.  Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.</span>
+<span id="cb23-380"><a href="#cb23-380" aria-hidden="true" tabindex="-1"></a>el peor calibrado de los cuatro: factor de ruido 1,23 frente al 0,7–1,0 del</span>
+<span id="cb23-381"><a href="#cb23-381" aria-hidden="true" tabindex="-1"></a>resto de partidos. Una parte de su desviación no es por cambio de distribución provincial, sino por la composición de la coalición en el pasado.</span>
 <span id="cb23-382"><a href="#cb23-382" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-383"><a href="#cb23-383" aria-hidden="true" tabindex="-1"></a><span class="fu">### Los efectos entran en la simulación</span></span>
 <span id="cb23-384"><a href="#cb23-384" aria-hidden="true" tabindex="-1"></a></span>
@@ -2334,7 +2334,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-463"><a href="#cb23-463" aria-hidden="true" tabindex="-1"></a>   <span class="in">`r round(cob_de("shock brms (draws)", "VOX"))`</span>%. Su τ_p posterior (<span class="in">`r vox_tau_p`</span>) mezcla</span>
 <span id="cb23-464"><a href="#cb23-464" aria-hidden="true" tabindex="-1"></a>   escenarios de deriva baja y alta, y la mezcla cubre.</span>
 <span id="cb23-465"><a href="#cb23-465" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**La Dirichlet sobra**: superponerla al shock apenas mueve nada</span>
-<span id="cb23-466"><a href="#cb23-466" aria-hidden="true" tabindex="-1"></a>   (<span class="in">`r round(cob_de("shock brms (draws)"), 1)`</span>% → <span class="in">`r round(100 * masdir$cobertura, 1)`</span>%, el</span>
+<span id="cb23-466"><a href="#cb23-466" aria-hidden="true" tabindex="-1"></a>   (<span class="in">`r num_es(cob_de("shock brms (draws)"), 1)`</span>% → <span class="in">`r num_es(100 * masdir$cobertura, 1)`</span>%, el</span>
 <span id="cb23-467"><a href="#cb23-467" aria-hidden="true" tabindex="-1"></a>   ancho ni se entera). Su varianza es despreciable junto a la del</span>
 <span id="cb23-468"><a href="#cb23-468" aria-hidden="true" tabindex="-1"></a>   shock. La sustitución es limpia: el divisor de 1.000 y su escalado</span>
 <span id="cb23-469"><a href="#cb23-469" aria-hidden="true" tabindex="-1"></a>   $1/\sqrt{V_p}$ desaparecen, sustituidos por dos efectos por partido que</span>
@@ -2477,27 +2477,27 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-612"><a href="#cb23-612" aria-hidden="true" tabindex="-1"></a>Positivo en cuatro de las cinco (el 28A-2019 queda en un ±0). Por lo que he visto, de los cuatro partidos principales,  el único cuyo sesgo es consistente es **el PSOE (+1,3 puntos: positivo en 4 de 5</span>
 <span id="cb23-613"><a href="#cb23-613" aria-hidden="true" tabindex="-1"></a>elecciones, y sigue en +1,3 si excluyo el 26J, que solo tiene 2 encuestas)**. Pero con cinco</span>
 <span id="cb23-614"><a href="#cb23-614" aria-hidden="true" tabindex="-1"></a>elecciones la media muestral de ese sesgo es una estimación ruidosa, y lo compruebo con un</span>
-<span id="cb23-615"><a href="#cb23-615" aria-hidden="true" tabindex="-1"></a>leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción (el</span>
+<span id="cb23-615"><a href="#cb23-615" aria-hidden="true" tabindex="-1"></a>leave-one-out: aplicada fuera de muestra, la corrección completa no mejora la predicción. El</span>
 <span id="cb23-616"><a href="#cb23-616" aria-hidden="true" tabindex="-1"></a>28A paga la factura, con sesgo real ~0 y corrección de +1,7 estimada sin él. Así que la aplico</span>
 <span id="cb23-617"><a href="#cb23-617" aria-hidden="true" tabindex="-1"></a>encogida a la mitad (+0,7): la evidencia apunta a que el sesgo existe, pero cinco elecciones no</span>
-<span id="cb23-618"><a href="#cb23-618" aria-hidden="true" tabindex="-1"></a>bastan para fijar su tamaño) y el backtest de más abajo, con sus 18 celdas, no distingue entre</span>
+<span id="cb23-618"><a href="#cb23-618" aria-hidden="true" tabindex="-1"></a>bastan para fijar su tamaño. Y el backtest de más abajo, con sus 18 celdas, no distingue entre</span>
 <span id="cb23-619"><a href="#cb23-619" aria-hidden="true" tabindex="-1"></a>corregir todo, la mitad o nada; me quedo con la mitad como compromiso.</span>
 <span id="cb23-620"><a href="#cb23-620" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-621"><a href="#cb23-621" aria-hidden="true" tabindex="-1"></a>Para PP, VOX y Sumar el mu cambia de signo según qué elecciones entren, así que su μ va a 0. La</span>
 <span id="cb23-622"><a href="#cb23-622" aria-hidden="true" tabindex="-1"></a>capa funciona así: a cada muestra del posterior se le suma un error muestreado de una normal</span>
 <span id="cb23-623"><a href="#cb23-623" aria-hidden="true" tabindex="-1"></a>multivariante con media +0,7 para el PSOE y 0 para el resto y una desviación típica por partido</span>
-<span id="cb23-624"><a href="#cb23-624" aria-hidden="true" tabindex="-1"></a>de 1,3 a 2,6 puntos (el cuadrado de cuánto se equivocan las encuestas *en conjunto* con cada</span>
-<span id="cb23-625"><a href="#cb23-625" aria-hidden="true" tabindex="-1"></a>uno. La única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el</span>
-<span id="cb23-626"><a href="#cb23-626" aria-hidden="true" tabindex="-1"></a>bloque del PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la</span>
-<span id="cb23-627"><a href="#cb23-627" aria-hidden="true" tabindex="-1"></a>correlación empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable</span>
-<span id="cb23-628"><a href="#cb23-628" aria-hidden="true" tabindex="-1"></a>con 5 elecciones y va a 0), la conclusión contraria de la que puse a mano en Andalucía: el</span>
+<span id="cb23-624"><a href="#cb23-624" aria-hidden="true" tabindex="-1"></a>de 1,3 a 2,6 puntos, que es cuánto se equivocan las encuestas *en conjunto* con cada uno. La</span>
+<span id="cb23-625"><a href="#cb23-625" aria-hidden="true" tabindex="-1"></a>única correlación que lleva es PP–VOX a +0,5: cuando las encuestas se pasan con el bloque del</span>
+<span id="cb23-626"><a href="#cb23-626" aria-hidden="true" tabindex="-1"></a>PP, se pasan también con VOX, como ocurrió en las tres elecciones con VOX (la correlación</span>
+<span id="cb23-627"><a href="#cb23-627" aria-hidden="true" tabindex="-1"></a>empírica es +0,92 y con n = 3 la encogí). El resto de correlaciones es inestable con 5</span>
+<span id="cb23-628"><a href="#cb23-628" aria-hidden="true" tabindex="-1"></a>elecciones y va a 0. Es la conclusión contraria de la que puse a mano en Andalucía: el</span>
 <span id="cb23-629"><a href="#cb23-629" aria-hidden="true" tabindex="-1"></a>trasvase de voto útil PP–VOX es dinámica de campaña que el modelo ya captura con las pendientes</span>
 <span id="cb23-630"><a href="#cb23-630" aria-hidden="true" tabindex="-1"></a>temporales, y esto va sobre otra cosa, cómo se equivocan las encuestas el día de la votación.</span>
 <span id="cb23-631"><a href="#cb23-631" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-632"><a href="#cb23-632" aria-hidden="true" tabindex="-1"></a>Tras sumar el error, el vector completo se reescala para que siga sumando 100: cada partido cede</span>
 <span id="cb23-633"><a href="#cb23-633" aria-hidden="true" tabindex="-1"></a>en proporción a su tamaño. El BLOQUE no carga con el residual (en la primera versión sí:</span>
 <span id="cb23-634"><a href="#cb23-634" aria-hidden="true" tabindex="-1"></a>absorbía todo el error de los grandes, incluida la corrección del PSOE, sin que ningún dato diga</span>
-<span id="cb23-635"><a href="#cb23-635" aria-hidden="true" tabindex="-1"></a>que los regionales compensen al PSOE). Recibe en cambio un shock propio $\mathcal{N}(0, 1.5^2)$,</span>
+<span id="cb23-635"><a href="#cb23-635" aria-hidden="true" tabindex="-1"></a>que los regionales compensen al PSOE). Recibe en cambio un shock propio $\mathcal{N}(0;\, 1{,}5^2)$,</span>
 <span id="cb23-636"><a href="#cb23-636" aria-hidden="true" tabindex="-1"></a>supuesto explícito: la historia no puede calibrarlo, allí el bloque es el residual de los</span>
 <span id="cb23-637"><a href="#cb23-637" aria-hidden="true" tabindex="-1"></a>grandes por construcción. SALF se queda fuera: no existía antes de 2024 y no tiene historia.</span>
 <span id="cb23-638"><a href="#cb23-638" aria-hidden="true" tabindex="-1"></a></span>
@@ -2715,7 +2715,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-864"><a href="#cb23-864" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb23-865"><a href="#cb23-865" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-866"><a href="#cb23-866" aria-hidden="true" tabindex="-1"></a>La capa de error histórico es, con diferencia, la que más ensancha todo: la desviación típica</span>
-<span id="cb23-867"><a href="#cb23-867" aria-hidden="true" tabindex="-1"></a>de PP + VOX se dobla (de <span class="in">`r round(v_post$sd, 1)`</span> a <span class="in">`r round(v_err$sd, 1)`</span> escaños) y el IC90 pasa de</span>
+<span id="cb23-867"><a href="#cb23-867" aria-hidden="true" tabindex="-1"></a>de PP + VOX se dobla (de <span class="in">`r num_es(v_post$sd, 1)`</span> a <span class="in">`r num_es(v_err$sd, 1)`</span> escaños) y el IC90 pasa de</span>
 <span id="cb23-868"><a href="#cb23-868" aria-hidden="true" tabindex="-1"></a><span class="in">`r round(v_post$ic90_ancho)`</span> a <span class="in">`r round(v_err$ic90_ancho)`</span>. El ruido provincial por sí solo aporta bastante</span>
 <span id="cb23-869"><a href="#cb23-869" aria-hidden="true" tabindex="-1"></a>menos: con el shock, el IC90 va de <span class="in">`r round(v_post$ic90_ancho)`</span> a <span class="in">`r round(v_shock$ic90_ancho)`</span>; con la</span>
 <span id="cb23-870"><a href="#cb23-870" aria-hidden="true" tabindex="-1"></a>Dirichlet jubilada, de <span class="in">`r round(v_post$ic90_ancho)`</span> a <span class="in">`r round(v_dir$ic90_ancho)`</span>. Puede parecer poco, y lo</span>
@@ -2725,7 +2725,7 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-874"><a href="#cb23-874" aria-hidden="true" tabindex="-1"></a><span class="in">`r round(v_todo$ic90_ancho - v_err$ic90_ancho)`</span> escaños al IC90 (<span class="in">`r round(v_err$ic90_ancho)`</span> → <span class="in">`r round(v_todo$ic90_ancho)`</span>). Dos lecturas más: la mediana baja de</span>
 <span id="cb23-875"><a href="#cb23-875" aria-hidden="true" tabindex="-1"></a><span class="in">`r round(v_post$mediana)`</span> a <span class="in">`r round(v_err$mediana)`</span>, que es la corrección al PSOE cobrándose escaños a la</span>
 <span id="cb23-876"><a href="#cb23-876" aria-hidden="true" tabindex="-1"></a>derecha, y la probabilidad de mayoría apenas se mueve (del <span class="in">`r scales::percent(v_post$p_mayoria, 0.1, decimal.mark = ",")`</span> de los posteriors a secas al</span>
-<span id="cb23-877"><a href="#cb23-877" aria-hidden="true" tabindex="-1"></a><span class="in">`r scales::percent(p_derecha, 0.1, decimal.mark = ",")`</span> de la simulación final). Con las encuestas de julio-octubre el colchón sobre los 176 es de</span>
+<span id="cb23-877"><a href="#cb23-877" aria-hidden="true" tabindex="-1"></a><span class="in">`r scales::percent(v_todo$p_mayoria, 0.1, decimal.mark = ",")`</span> con todas las capas, la fila «todo» de la tabla; la diferencia con el <span class="in">`r scales::percent(p_derecha, 0.1, decimal.mark = ",")`</span> de la lectura final es ruido de Monte Carlo: aquí 4.000 muestras, allí 6.000). Con las encuestas de julio-octubre el colchón sobre los 176 es de</span>
 <span id="cb23-878"><a href="#cb23-878" aria-hidden="true" tabindex="-1"></a><span class="in">`r round(v_todo$mediana - 176)`</span> escaños, y lo que la capa de error hace sobre todo es avisar de que ese</span>
 <span id="cb23-879"><a href="#cb23-879" aria-hidden="true" tabindex="-1"></a>colchón puede quedarse en la mitad.</span>
 <span id="cb23-880"><a href="#cb23-880" aria-hidden="true" tabindex="-1"></a></span>
@@ -2803,9 +2803,9 @@ Table&nbsp;5: Taus de los partidos regionales (dos etapas sobre las transiciones
 <span id="cb23-954"><a href="#cb23-954" aria-hidden="true" tabindex="-1"></a>  (<span class="in">`r sum(esc_bt$dentro)`</span> de <span class="in">`r nrow(esc_bt)`</span>) y del <span class="in">`r round(100 * mean(vot_bt$dentro))`</span>% en voto</span>
 <span id="cb23-955"><a href="#cb23-955" aria-hidden="true" tabindex="-1"></a>  (<span class="in">`r sum(vot_bt$dentro)`</span> de <span class="in">`r nrow(vot_bt)`</span>).</span>
 <span id="cb23-956"><a href="#cb23-956" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>El error mediano es de <span class="in">`r round(median(abs(esc_bt$mediana - esc_bt$real)))`</span> escaños y</span>
-<span id="cb23-957"><a href="#cb23-957" aria-hidden="true" tabindex="-1"></a>  <span class="in">`r round(median(abs(vot_bt$mediana - vot_bt$real)), 1)`</span> puntos.</span>
+<span id="cb23-957"><a href="#cb23-957" aria-hidden="true" tabindex="-1"></a>  <span class="in">`r num_es(median(abs(vot_bt$mediana - vot_bt$real)), 1)`</span> puntos.</span>
 <span id="cb23-958"><a href="#cb23-958" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>El peor caso es el <span class="in">`r etiquetas[peor_esc$eleccion]`</span>, la elección con menos encuestas: al</span>
-<span id="cb23-959"><a href="#cb23-959" aria-hidden="true" tabindex="-1"></a>  <span class="in">`r peor_esc$familia`</span> le doy <span class="in">`r round(peor_esc$mediana)`</span> escaños y sacó <span class="in">`r round(peor_esc$real)`</span>.</span>
+<span id="cb23-959"><a href="#cb23-959" aria-hidden="true" tabindex="-1"></a>  <span class="in">`r peor_esc$familia`</span> —Unidos Podemos entonces— le doy <span class="in">`r round(peor_esc$mediana)`</span> escaños y sacó <span class="in">`r round(peor_esc$real)`</span>.</span>
 <span id="cb23-960"><a href="#cb23-960" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-963"><a href="#cb23-963" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb23-964"><a href="#cb23-964" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(</span>
