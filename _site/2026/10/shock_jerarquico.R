@@ -38,7 +38,11 @@
 
 library(lme4)
 
-construir_dlr <- function(preps) {
+construir_dlr <- function(preps, escala = c("ratio", "logit")) {
+  # escala = "ratio": dlr = Δ log(p_prov/p_nac)  (el shock multiplicativo)
+  # escala = "logit": dlr = Δ [logit(p_prov) - logit(p_nac)]  (el cambio del
+  # log-odds ratio provincia/nación, lo que consume simular(swing = "logit"))
+  escala <- match.arg(escala)
   fams <- c("PP", "PSOE", "VOX", "SUMAR")
   trans <- tribble(
     ~de   , ~a    , ~etiqueta              ,
@@ -73,15 +77,26 @@ construir_dlr <- function(preps) {
       inner_join(
         d_prov |>
           filter(eleccion == de, familia == f) |>
-          select(codigo_provincia, codigo_ccaa, r0 = ratio),
+          select(
+            codigo_provincia,
+            codigo_ccaa,
+            r0 = ratio,
+            p0 = pct_prov,
+            pn0 = pct_nac
+          ),
         d_prov |>
           filter(eleccion == a, familia == f) |>
-          select(codigo_provincia, r1 = ratio),
+          select(codigo_provincia, r1 = ratio, p1 = pct_prov, pn1 = pct_nac),
         by = "codigo_provincia"
       ) |>
         filter(r0 > 0, r1 > 0) |>
         mutate(
-          dlr = log(r1 / r0),
+          dlr = if (escala == "ratio") {
+            log(r1 / r0)
+          } else {
+            (qlogis(p1 / 100) - qlogis(pn1 / 100)) -
+              (qlogis(p0 / 100) - qlogis(pn0 / 100))
+          },
           familia = f,
           etiqueta = etiqueta,
           transition = paste(de, a, sep = "->")

@@ -30,6 +30,16 @@ knitr:
     comment: "#>"
 ---
 
+::: callout-note
+## Actualización del 18 de octubre de 2026
+
+Las cifras de este post cambian respecto a la versión del 12 de octubre por tres motivos:
+
+- La simulación usa el reparto de escaños del Real Decreto 806/2026: Madrid pasa de 37 a 38 diputados y Cádiz de 9 a 8. La validación con el 23J sigue con el reparto de 2023.
+- El modelo incluye 6 encuestas publicadas después del 12 de octubre.
+- La etiqueta del gráfico de escaños es la media redondeada para que la suma sea 350. Antes era la mediana de cada partido, y las medianas no suman 350.
+:::
+
 Esta es la segunda parte del meta-análisis de las generales del **29 de noviembre de 2026**. En
 la [primera parte](https://muestrear-no-es-pecado.es/2026/10/meta-analisis-generales-jlcr/) 
 agregué las encuestas con un modelo bayesiano (brms): un multinomial de 6 categorías para los grandes (con efecto casa y tendencia temporal) y otro condicional para la composición del BLOQUE. El resultado es, muestra a muestra, un vector de 13 porcentajes: PP, PSOE, VOX, SUMAR (= Sumar + Podemos), SALF y el BLOQUE de otros repartido en Junts, ERC, PNV, EH Bildu, BNG, CC, UPN y RESTO.
@@ -41,6 +51,28 @@ library(tidyverse)
 
 source(here::here("2026/10/preparar_meta.R"))
 source(here::here("2026/10/simular_escanos.R"))
+
+# aviso de cache vieja: si un CSV de encuestas es más nuevo que el fit que lo
+# consume, simular() leería un posterior que no ve la última encuesta (los
+# fits se reajustan en el render del post de meta-análisis, o a mano con
+# refit = TRUE). Aquí solo se simula, así que basta con avisar
+purrr::walk2(
+  c(f_grande, f_bloque),
+  c(paste0(f_mod_g, ".rds"), paste0(f_mod_b, ".rds")),
+  \(datos, fit) {
+    if (file.exists(fit) && file.mtime(datos) > file.mtime(fit)) {
+      warning(
+        sprintf(
+          "%s es más nuevo que %s: el posterior no ve la última encuesta; renderiza antes el post de meta-análisis o reajusta con refit = TRUE",
+          basename(datos),
+          basename(fit)
+        ),
+        call. = FALSE,
+        immediate. = TRUE
+      )
+    }
+  }
+)
 ```
 
 ## De voto a escaños
@@ -100,10 +132,10 @@ para quien tiene poco voto.
 granada <- prov_datos |> filter(codigo_provincia == 18)
 
 set.seed(6137)
-d <- gtools::rdirichlet(5, granada$alpha13[[1]])
-ratios <- t(granada$ratio13[[1]] * t(d) / granada$pct23[[1]])
+d <- gtools::rdirichlet(5, granada$alpha_f[[1]])
+ratios <- t(granada$ratio_f[[1]] * t(d) / granada$pct23[[1]])
 
-tibble(partido = fams13, ratio_23j = granada$ratio13[[1]]) |>
+tibble(partido = fams13, ratio_23j = granada$ratio_f[[1]]) |>
   bind_cols(as_tibble(t(ratios), .name_repair = \(x) {
     paste0("muestra_", 1:5)
   })) |>
@@ -122,13 +154,13 @@ ruido_ratio <- function(prov, partido = "PP", n = 5000) {
       codigo_provincia == prov_ref$codigo_provincia[prov_ref$provincia == prov]
     )
   i <- match(partido, fams13)
-  d <- gtools::rdirichlet(n, pd$alpha13[[1]])
-  r <- pd$ratio13[[1]][i] * d[, i] / pd$pct23[[1]][i]
+  d <- gtools::rdirichlet(n, pd$alpha_f[[1]])
+  r <- pd$ratio_f[[1]][i] * d[, i] / pd$pct23[[1]][i]
   tibble(
     provincia = prov,
     diputados = pd$escanos,
-    votantes_equivalentes = sum(pd$alpha13[[1]]),
-    ratio_23j = pd$ratio13[[1]][i],
+    votantes_equivalentes = sum(pd$alpha_f[[1]]),
+    ratio_23j = pd$ratio_f[[1]][i],
     media = mean(r),
     sd = sd(r)
   )
@@ -166,7 +198,7 @@ mientras el PSOE bajaba a nivel nacional. En 2023, el PSOE (PSC) subió mucho, p
 ## Cómo se hace exactamente — pincha para desplegar
 
 El reparto provincial de cada muestra ya lo calcula el backtest nacional de
-más abajo, antes del umbral y D'Hondt (que no cambian shares de voto, solo
+más abajo, antes del umbral y D'Hondt (que no cambian el reparto porcentual del voto, solo
 escaños):
 
 ```r
@@ -317,7 +349,7 @@ estimaciones puntuales con lme4 están en [`shock_jerarquico.R`](shock_jerarquic
   prior (±1,28 sd en escala log), no ±1 desviación típica.
 - **La incertidumbre de los τ se propaga** igual que más abajo se hará con
   las σ de la capa de error histórico, que en la simulación se muestrean de una
-  t de Student: cada muestra toma un draw del posterior y
+  t de Student: cada muestra trae consigo una muestra del posterior de los τ y
   muestrea η y ε de $\mathcal{N}(0, \tau^{(k)})$: una mezcla de normales con
   colas más gordas que la normal con el τ̂ puntual.
 
@@ -380,7 +412,7 @@ O sea, el ratio de 2023 tras sumar los dos efectos en escala logarítmica y expo
 
 Un ejemplo con dos provincias: A pesa el 60% de los votos, B el 40%, y los
 ratios de referencia valen 1,0 en las dos, así que el nacional implícito es
-el que toca. Un draw da exp(η+ε) = 1,10 en la comunidad de A y
+el que toca. Una muestra da exp(η+ε) = 1,10 en la comunidad de A y
 0,95 en la de B. La media ponderada es 0,6·1,10 + 0,4·0,95 = 1,04: sin más,
 la geografía habría dado al partido un +4% de voto nacional, por encima de
 lo que ya decidió la capa de error. Dividiendo cada ratio entre 1,04 (A
@@ -422,8 +454,8 @@ vox_tau_p <- tau_brms |>
   ) |>
   pull(s)
 
-# diagnóstico de doble conteo: la Dirichlet superpuesta al shock (con los
-# draws brms)
+# diagnóstico de doble conteo: la Dirichlet superpuesta al shock (con las
+# muestras del posterior de brms)
 masdir <- read_csv(
   here::here("2026/10/backtest_prov_celdas_shock_mas_dir.csv"),
   show_col_types = FALSE
@@ -626,7 +658,7 @@ tibble(partido = names(error_mu), mu = error_mu, sigma = error_sigma) |>
 # la descomposición de la incertidumbre se calcula AQUÍ porque el texto del
 # impacto cita sus cifras en línea; la sección «¿De dónde sale la
 # incertidumbre?» (más abajo) solo imprime la tabla. Con semilla fija: las
-# cifras deben ser reproducibles entre renders (con 4.000 draws, los
+# cifras deben ser reproducibles entre renders (con 4.000 muestras, los
 # cuantiles se mueven ±1 escaño entre corridas sin semilla)
 desc_var <- function(
   nombre,
@@ -766,11 +798,12 @@ sim$draws |>
     .width = c(0.5, 0.9),
     alpha = 0.8
   ) +
-  # etiqueta con la mediana de cada partido
-  stat_summary(
-    fun = median,
-    geom = "label",
-    aes(label = after_stat(x), fill = NULL),
+  # etiqueta con la media redondeada por resto mayor: las medianas por partido
+  # no suman 350, las medias sí
+  geom_label(
+    data = escanos_resto_mayor(sim) |> filter(partido %in% names(colores_esc)),
+    aes(x = escanos, y = partido, label = escanos),
+    inherit.aes = FALSE,
     size = 3,
     fill = "white"
   ) +
@@ -778,7 +811,7 @@ sim$draws |>
   geom_vline(xintercept = 176, linetype = "dashed", color = "red") +
   labs(
     title = "Escaños estimados para el 29 de noviembre de 2026",
-    subtitle = "6.000 muestras del meta-análisis + error de encuestas + shock provincial + umbral 3% + D'Hondt",
+    subtitle = "6.000 muestras del meta-análisis + error de encuestas + shock provincial + umbral 3% + D'Hondt\nEtiqueta: media de escaños redondeada para que sumen 350",
     x = "Escaños",
     y = NULL
   )
@@ -997,13 +1030,20 @@ bloques(sim$draws) |>
   (`r round(cob_in("20d"))`/`r round(cob_in("28a"))`/`r round(cob_in("23j"))` entre 20D, 28A y 23J), y el 20D (la única geografía que no entra en la calibración) pasa
   del `r round(100 * mean(prov_celdas$dentro[!prov_celdas$ref_ratio_cero & prov_celdas$eleccion == "20d"]))`% al `r round(100 * loto_res$cobertura[loto_res$eleccion == "20d"])`%. Lo que el shock no puede centrar son los movimientos idiosincráticos de
   comunidad (el efecto PSC del 23J); para eso hacen falta las encuestas que publican
-  estimaciones por CCAA (ciento76 tiene algunas).
+  estimaciones por CCAA ([ciento76](https://www.ciento76.es) tiene algunas).
 - El shock ya vive en `simular()` y es el default: los 4 grandes con los τ del posterior de
   brms, los regionales con τ en dos etapas (`tau_regionales.csv`; solo ERC y Junts tienen
   señal de bloque, y UPN la hereda), SALF con el RMS de los cuatro grandes y RESTO sin shock.
   Los totales de escaños apenas se mueven respecto a la Dirichlet jubilada: manda la capa de
   error nacional y el ruido provincial se cancela al sumar provincias. Lo que cambia de verdad
   es el reparto provincial.
+- El mecanismo de reparto se queda como está: ratio × share. Probé en paralelo un swing en odds
+  (la idea del [simulador de ciento76](https://www.ciento76.es/simulador)) con un backtest
+  pareado: cubre algo mejor (96% contra 92%, las 42 celdas discrepantes todas de su lado) con
+  el error medio intacto, pero a costa de intervalos un 60% más anchos — y pasar a logit
+  exigiría además reestimar los τ. No compensa la complejidad; la comparativa completa queda
+  en [`backtest_prov_swing.R`](backtest_prov_swing.R) y el `swing = "logit"` de `simular()`,
+  por si da para un post aparte.
 - La ola de encuestas que viene se atiende con `preparar_todo(actualizar = TRUE)` →
   `ajustar_grande(refit = TRUE)` → `simular()`, y la
   baseline de este post queda guardada para medir cuánto se mueve todo.

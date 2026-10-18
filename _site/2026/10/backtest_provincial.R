@@ -137,9 +137,12 @@ backtest_prov <- function(
   n_mult = 1000,
   kappa = 0.5,
   modo = "dirichlet",
+  swing = "proporcional",
   tau = NULL,
   mapa = NULL
 ) {
+  swing <- match.arg(swing, c("proporcional", "logit"))
+  stopifnot(swing == "proporcional" || modo %in% c("shock", "dirichlet+shock"))
   id <- e$id
   d <- preps[[id]]
   d_ref <- preps[[prev_de[[id]]]]
@@ -265,8 +268,15 @@ backtest_prov <- function(
       distinct(codigo_provincia, w = validos_prov)
     pesos <- pesos_ref$w[match(prov_i, pesos_ref$codigo_provincia)]
     pesos <- pesos / sum(pesos)
-    # E[[j]]: exp(shock) por draw y provincia; rc[[j]]: constante de
-    # re-centrado por draw
+    # E[[j]]: multiplicador (ratio x shock) por draw y provincia; rc[[j]]:
+    # constante de re-centrado por draw. Con swing = "logit" el ratio es
+    # dinámico: la share nacional del draw desplaza la odds de la share
+    # provincial de referencia, partido a partido (los celdas con ratio 0
+    # en la ref siguen con 0); el shock jerárquico entra como log-shock
+    # sumado al log-odds (odds x exp(shock), el mismo multiplicador),
+    # con los tau aún calibrados en log-ratio (recalibrar queda pendiente)
+    p0_m <- do.call(rbind, pct23_prov)
+    nac_ref_pct <- nac_ref$pct[match(con_datos, nac_ref$familia)]
     E <- vector("list", length(con_datos))
     rc <- vector("list", length(con_datos))
     for (j in seq_along(con_datos)) {
@@ -278,10 +288,29 @@ backtest_prov <- function(
         tau_c_k
       eps <- matrix(rnorm(b * length(prov_i)), b, length(prov_i)) *
         tau_p_k
-      Ef <- exp(eta[, ccaa_idx, drop = FALSE] + eps)
-      ratio_f <- vapply(ratios, \(r) r[[j]], numeric(1))
-      E[[j]] <- Ef
-      rc[[j]] <- as.numeric(Ef %*% (pesos * ratio_f))^-1
+      # el log-shock (eta + eps) es lo que se suma al log-odds en logit;
+      # Ef = exp(log_shock) es el multiplicador de la rama proporcional
+      log_shock <- eta[, ccaa_idx, drop = FALSE] + eps
+      Ef <- exp(log_shock)
+      if (swing == "logit") {
+        delta_k <- qlogis(pmin(pmax(tracked[, j] / 100, 1e-6), 1 - 1e-6)) -
+          qlogis(nac_ref_pct[j] / 100)
+        base <- plogis(
+          sweep(
+            sweep(log_shock, 2, qlogis(p0_m[, j] / 100), `+`),
+            1,
+            delta_k,
+            `+`
+          )
+        )
+        # division con suelo: tracked = 0 en algún draw no debe dar Inf
+        Ej <- Ef * 100 * sweep(base, 1, pmax(tracked[, j], 1e-8), `/`)
+      } else {
+        ratio_f <- vapply(ratios, \(r) r[[j]], numeric(1))
+        Ej <- sweep(Ef, 2, ratio_f, `*`)
+      }
+      E[[j]] <- Ej
+      rc[[j]] <- as.numeric(Ej %*% pesos)^-1
     }
   }
 
@@ -310,7 +339,8 @@ backtest_prov <- function(
         mult <- vapply(
           seq_along(con_datos),
           \(j) {
-            m <- ratios[[i]][j] * E[[j]][k, i] * rc[[j]][k]
+            # el ratio (fijo o dinámico del swing logit) va dentro de E
+            m <- E[[j]][k, i] * rc[[j]][k]
             if (usa_dirichlet && q23_prov[[i]][j] > 0) {
               m <- m * dir_m[[i]][k, j] / q23_prov[[i]][j]
             }

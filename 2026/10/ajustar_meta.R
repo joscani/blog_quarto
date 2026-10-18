@@ -41,7 +41,11 @@
 #   cor           -> lkj(1)
 #
 # Detalles de sampling del modelo grande (aprendidos a la leña):
-#   - init = 0: con valores iniciales aleatorios las cadenas no llegan a
+#   - init = 0.1: jitter pequeño (±0,1). Con el aleatorio por defecto (±2)
+#     las cadenas no llegan a arrancar (gradiente no finito en cientos de
+#     reintentos, sobre todo en el modelo del bloque); con 0 exacto arrancaba
+#     bien el grande pero el bloque rebotaba. Con ±0,1, cero rebotes
+#     esperados y las probabilidades parten cerca de uniforme
 #     arrancar (gradiente no finito en cientos de reintentos).
 #   - max_treedepth = 12: con el efecto aleatorio correlacionado de 22
 #     casas, con treedepth 10 el 100% de transiciones pega el límite.
@@ -59,8 +63,11 @@ library(readr)
 options(brms.backend = "cmdstanr")
 
 f_grande <- here::here("2026/10/encuestas_meta_grande.csv")
+# escenario "listas": SUMAR y PODEMOS como categorías separadas (7 categorías)
+f_grande_sep <- here::here("2026/10/encuestas_meta_grande_sep.csv")
 f_bloque <- here::here("2026/10/encuestas_meta_bloque.csv")
 f_mod_g <- here::here("2026/10/mod_meta_grande")
+f_mod_g_sep <- here::here("2026/10/mod_meta_grande_sep")
 f_mod_b <- here::here("2026/10/mod_meta_bloque")
 ref_time <- "2026-07-01" # origen de `time` (inicio de la ventana del modelo 1)
 fecha_elecciones <- "2026-11-29"
@@ -78,8 +85,11 @@ seed_fit <- 7314
 
 # ---- preparación de datos ---------------------------------------------------
 
-prep_grande <- function() {
-  g <- read_csv(f_grande, show_col_types = FALSE) |>
+prep_grande <- function(
+  f_data = f_grande,
+  cats = c("PP", "PSOE", "VOX", "SUMAR", "SALF", "BLOQUE")
+) {
+  g <- read_csv(f_data, show_col_types = FALSE) |>
     mutate(time = as.numeric(fecha - as.Date(ref_time)))
   # encuestas sin tamaño muestral publicado: fuera, como en Andalucía
   # (si no, brms las descarta en silencio)
@@ -154,8 +164,8 @@ prep_grande <- function() {
       values_from = votos
     )
   # trials = suma de conteos (el redondeo puede diferir de `muestra` en ±1)
-  wide$n <- rowSums(wide |> select(PP, PSOE, VOX, SUMAR, SALF, BLOQUE))
-  wide$cell_counts <- with(wide, cbind(PP, PSOE, VOX, SUMAR, SALF, BLOQUE))
+  wide$n <- rowSums(wide |> select(all_of(cats)))
+  wide$cell_counts <- as.matrix(wide[, cats])
   wide
 }
 
@@ -238,8 +248,37 @@ ajustar_grande <- function(refit = FALSE, iter = 4000, warmup = 1000) {
     cores = 4,
     chains = 4,
     seed = seed_fit,
-    init = 0,
+    init = 0.1,
     file = f_mod_g,
+    file_refit = if (refit) "always" else "never",
+    control = list(adapt_delta = 0.95, max_treedepth = 12),
+    refresh = 0
+  )
+}
+
+# Escenario "listas" (SUMAR y PODEMOS separadas, 7 categorías): mismos
+# priors, seed y settings que el modelo unidas. PP sigue siendo la
+# referencia; la primera categoría del dataset, como en el modelo unidas.
+ajustar_grande_sep <- function(refit = FALSE, iter = 4000, warmup = 1000) {
+  cats <- c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", "BLOQUE")
+  dat <- prep_grande(f_grande_sep, cats)
+  form <- brmsformula(cell_counts | trials(n) ~ time + (1 | encuestadora))
+  if (file.exists(paste0(f_mod_g_sep, ".rds")) && !refit) {
+    message("mod_meta_grande_sep ya existe (refit = TRUE para reajustar)")
+    return(invisible(readRDS(paste0(f_mod_g_sep, ".rds"))))
+  }
+  brm(
+    form,
+    dat,
+    multinomial(),
+    prior = priors_multinomial(form, dat),
+    iter = iter,
+    warmup = warmup,
+    cores = 4,
+    chains = 4,
+    seed = seed_fit,
+    init = 0.1,
+    file = f_mod_g_sep,
     file_refit = if (refit) "always" else "never",
     control = list(adapt_delta = 0.95, max_treedepth = 12),
     refresh = 0
@@ -263,6 +302,7 @@ ajustar_bloque <- function(refit = FALSE, iter = 4000, warmup = 1000) {
     cores = 4,
     chains = 4,
     seed = seed_fit,
+    init = 0.1,
     file = f_mod_b,
     file_refit = if (refit) "always" else "never",
     control = list(adapt_delta = 0.95),

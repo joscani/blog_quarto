@@ -52,6 +52,9 @@ library(jsonlite)
 
 f_ref <- here::here("2026/10/ref_provincial_23J.csv")
 f_grande <- here::here("2026/10/encuestas_meta_grande.csv")
+# variante del modelo 1 con SUMAR y PODEMOS como categorías separadas
+# (7 categorías; escenario "listas" del simulador)
+f_grande_sep <- here::here("2026/10/encuestas_meta_grande_sep.csv")
 f_bloque <- here::here("2026/10/encuestas_meta_bloque.csv")
 f_enc <- here::here("encuestas_con_partidos_regionales.csv")
 f_script <- "descargar_encuestas_ciento76.R"
@@ -193,32 +196,45 @@ leer_encuestas_meta <- function(fecha_min = fecha_inicio_bloque) {
   enc
 }
 
-# Modelo 1: todas las encuestas con los 6 principales, 6 categorías
-construir_meta_grande <- function(f_salida = f_grande) {
+# Modelo 1: todas las encuestas con los 6 principales, 6 categorías.
+# separadas = TRUE: SUMAR y PODEMOS como categorías propias (7 categorías,
+# escenario "listas" del simulador). El filtro if_all(principales) ya exige
+# las dos columnas (414 de 415 encuestas las traen), así que la muestra no
+# cambia.
+construir_meta_grande <- function(f_salida = f_grande, separadas = FALSE) {
   dat <- leer_encuestas_meta(fecha_inicio_grande) |>
-    filter(if_all(all_of(principales), ~ !is.na(.x))) |>
-    mutate(
-      SUMAR = Sumar + Podemos,
-      BLOQUE = 100 - (PP + PSOE + VOX + SUMAR + SALF)
-    ) |>
+    filter(if_all(all_of(principales), ~ !is.na(.x)))
+  cats <- c("PP", "PSOE", "VOX", "SUMAR", "SALF", "BLOQUE")
+  if (separadas) {
+    f_salida <- f_grande_sep
+    cats <- c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", "BLOQUE")
+    dat <- dat |>
+      mutate(
+        SUMAR = Sumar,
+        PODEMOS = Podemos,
+        BLOQUE = 100 - (PP + PSOE + VOX + SUMAR + PODEMOS + SALF)
+      )
+  } else {
+    dat <- dat |>
+      mutate(
+        SUMAR = Sumar + Podemos,
+        BLOQUE = 100 - (PP + PSOE + VOX + SUMAR + SALF)
+      )
+  }
+  dat <- dat |>
     select(
       encuestadora = Encuestadora,
       campo = Campo,
       fecha,
       muestra = Muestra,
       enlace,
-      PP,
-      PSOE,
-      VOX,
-      SUMAR,
-      SALF,
-      BLOQUE
+      all_of(cats)
     )
 
   stopifnot(all(dat$BLOQUE >= -1e-8))
   meta <- dat |>
     pivot_longer(
-      c(PP, PSOE, VOX, SUMAR, SALF, BLOQUE),
+      all_of(cats),
       names_to = "categoria",
       values_to = "pct"
     ) |>
@@ -231,7 +247,9 @@ construir_meta_grande <- function(f_salida = f_grande) {
     f_salida,
     ":",
     nrow(dat),
-    "encuestas x 6 categorías =",
+    "encuestas x",
+    length(cats),
+    "categorías =",
     nrow(meta),
     "filas\n"
   )
@@ -521,8 +539,15 @@ cargar_pipeline_encuestas <- function() {
   # (saltándose el bloque exploratorio que re-scrapea la portada)
   lineas <- readLines(f_script)
   ini <- grep("PIPELINE REPRODUCIBLE", lineas)
+  # cabecera (library() y sin_guion()) hasta el bloque exploratorio, que
+  # empieza en `url <- ...`: sin ella, en una sesión limpia (Rscript) faltan
+  # read_html_live y sin_guion
+  fin_cab <- grep("^url <- ", lineas)[1] - 1
+  stopifnot(!is.na(fin_cab), fin_cab < ini)
   eval(
-    parse(text = paste(lineas[ini:length(lineas)], collapse = "\n")),
+    parse(
+      text = paste(c(lineas[1:fin_cab], lineas[ini:length(lineas)]), collapse = "\n")
+    ),
     envir = globalenv()
   )
 }
@@ -536,6 +561,9 @@ preparar_todo <- function(actualizar = FALSE) {
   rellenar_regionales_o176()
   construir_ref_provincial()
   construir_meta_grande()
+  # 7 categorías (SUMAR y PODEMOS separadas): entrada de ajustar_grande_sep()
+  # para los escenarios listas = "separadas" y "mapa" de simular()
+  construir_meta_grande(separadas = TRUE)
   construir_meta_bloque()
 }
 

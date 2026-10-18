@@ -5,6 +5,15 @@ library(readr)
 library(tidyr)
 library(purrr)
 
+# ciento76 marca los datos ausentes con un guion (–, — o -); convertir esas
+# celdas a NA antes de parsear evita los warnings de parse_number (el NA es
+# justo lo que toca para "no hay dato")
+sin_guion <- function(x) {
+  x <- as.character(x)
+  x[grepl("^\\s*[–—-]+\\s*$", x)] <- NA_character_
+  x
+}
+
 # url <- "https://www.ciento76.es/encuestas"
 
 # html <- read_html(url)
@@ -70,7 +79,7 @@ encuestas <- encuestas |>
     across(
       c(Muestra, PP, PSOE, VOX, Sumar, Podemos, SALF),
       ~ parse_number(
-        as.character(.x),
+        sin_guion(.x),
         locale = locale(decimal_mark = ",")
       )
     )
@@ -137,10 +146,13 @@ scrape_ciento76 <- function() {
   stopifnot(length(enlaces) == nrow(enc))
   enc <- enc |> mutate(enlace = enlaces)
   enc |>
+    # desde el 17 oct 2026 ciento76 llama "Frente Amplio" a la columna de
+    # Sumar; el pipeline sigue usando Sumar como nombre interno
+    rename(any_of(c(Sumar = "Frente Amplio"))) |>
     mutate(
       across(
         c(Muestra, PP, PSOE, VOX, Sumar, Podemos, SALF),
-        ~ parse_number(as.character(.x), locale = locale(decimal_mark = ","))
+        ~ parse_number(sin_guion(.x), locale = locale(decimal_mark = ","))
       )
     )
 }
@@ -200,7 +212,7 @@ tabla_dw <- function(id, wait = 5) {
       tibble(
         partido = trimws(as.character(tab[[col_p]])),
         pct = parse_number(
-          as.character(tab[[which.max(pct_cols)]]),
+          sin_guion(tab[[which.max(pct_cols)]]),
           locale = locale(decimal_mark = ",")
         )
       )
@@ -233,7 +245,7 @@ tabla_estatica <- function(url_pagina) {
       tibble(
         partido = trimws(as.character(tab[[col_p]])),
         pct = parse_number(
-          as.character(tab[[which.max(pct_cols)]]),
+          sin_guion(tab[[which.max(pct_cols)]]),
           locale = locale(decimal_mark = ",")
         )
       )

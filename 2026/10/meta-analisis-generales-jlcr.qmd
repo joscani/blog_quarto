@@ -488,7 +488,7 @@ Evaluamos el modelo en el `time` de la fecha electoral con los efectos casa en s
 (`re_formula = NA`): lo que el modelo sabe decir es dónde estaría la media de las encuestadoras
 ese día, y la distancia hasta el resultado real la pone la capa de error histórico de la segunda parte.
 
-Podríamos haber considerado que el día de las elecciones era como una encuesta más hecha por una empresa nueva, y habríamos usado `allow_new_levels`, pero añadiría incertidumbre. Poniendo `re_formula = NA` asumimos que el sesgo de unas empresas se compensan con las de otras. Puede no ser así, pero para eso habría que analizar el error histórico por empresa (que no hago), en la segunda parte vemos error histórico de las encuestas en general. 
+Podríamos haber considerado que el día de las elecciones era como una encuesta más hecha por una empresa nueva, y habríamos usado `allow_new_levels`, pero añadiría incertidumbre. Poniendo `re_formula = NA` asumimos que el sesgo de unas empresas se compensan con las de otras. Puede no ser así, pero para eso habría que analizar el error histórico por empresa (que no hago), en la segunda parte vemos error histórico de las encuestas en general. En la simulación de escaños de la segunda parte la predicción también va con `re_formula = NA` ([`extraer_shares13()`](simular_escanos.R)): el resultado no es una encuesta de nadie, así que el riesgo de que se aparte de la tendencia —el sesgo común del consenso, que en la historia ronda el punto y no se promedia aunque haya treinta casas— no lo lleva el efecto casa sino la capa de error histórico, calibrada exactamente para eso; meter una casa nueva encima duplicaría una varianza que ya está dentro. 
 
 ```{r}
 #| label: tbl-estimacion-nacional
