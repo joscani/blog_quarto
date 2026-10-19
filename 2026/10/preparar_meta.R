@@ -289,7 +289,12 @@ construir_meta_bloque <- function(f_salida = f_bloque) {
       names_to = "subcela",
       values_to = "pct"
     ) |>
-    mutate(votos = round(bloque_votos * pct / 100)) |>
+    # pct es el % sobre el TOTAL del voto (BNG 0,9 %), no dentro del BLOQUE:
+    # los votos salen de la muestra. Antes se multiplicaba por bloque_votos y
+    # los conteos quedaban ~8 veces menores (SocioMétrica 11 oct: 14 votos
+    # del BLOQUE en lugar de 117), con un redondeo que inflaba a los
+    # partidos pequeños. Corregido el 18 oct 2026.
+    mutate(votos = round(muestra * pct / 100)) |>
     arrange(fecha, encuestadora, subcela)
 
   write_csv(meta, f_salida)

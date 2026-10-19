@@ -608,7 +608,11 @@ simular <- function(
   aa_pct_and = 0.0962,
   aa_sd_logit = 0.2,
   aa_caniba_alpha = c(PODEMOS = 4, SUMAR = 4, PSOE = 1),
-  f_mapa = f_mapa_listas
+  f_mapa = f_mapa_listas,
+  # voto nacional ya calculado fuera (matriz n_draws x familias del modelo,
+  # en %, con el error incluido): sustituye a extraer_shares13(). Lo usa
+  # 2026/10/full-bayesian/04_simular.R
+  shares_ext = NULL
 ) {
   modo_ruido <- match.arg(modo_ruido)
   swing <- match.arg(swing)
@@ -667,16 +671,25 @@ simular <- function(
   if (listas == "mapa") {
     fams <- c(fams, "AA")
   }
-  shares_m <- extraer_shares13(
-    n_draws,
-    time_obj,
-    con_error,
-    sigma_bloque,
-    cor_bloque,
-    t_sigma_df,
-    f_antelacion,
-    listas_modelo
-  )
+  if (is.null(shares_ext)) {
+    shares_m <- extraer_shares13(
+      n_draws,
+      time_obj,
+      con_error,
+      sigma_bloque,
+      cor_bloque,
+      t_sigma_df,
+      f_antelacion,
+      listas_modelo
+    )
+  } else {
+    stopifnot(
+      nrow(shares_ext) == n_draws,
+      identical(colnames(shares_ext), fams_modelo),
+      all(abs(rowSums(shares_ext) - 100) < 0.5)
+    )
+    shares_m <- shares_ext
+  }
 
   if (con_ruido && modo_ruido == "dirichlet") {
     # mecanismo antiguo (divisor 1.000), fuera del default: queda como
