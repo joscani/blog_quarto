@@ -33,11 +33,12 @@ knitr:
 ::: callout-note
 ## Actualización del 18 de octubre de 2026
 
-Las cifras de este post cambian respecto a la versión del 12 de octubre por tres motivos:
+Las cifras de este post cambian respecto a la versión del 12 de octubre por cuatro motivos:
 
 - La simulación usa el reparto de escaños del Real Decreto 806/2026: Madrid pasa de 37 a 38 diputados y Cádiz de 9 a 8. La validación con el 23J sigue con el reparto de 2023.
 - El modelo incluye 6 encuestas publicadas después del 12 de octubre.
 - La etiqueta del gráfico de escaños es la media redondeada para que la suma sea 350. Antes era la mediana de cada partido, y las medianas no suman 350.
+- Corregido un error en los datos del modelo 2 (el reparto del BLOQUE entre los partidos regionales): los votos de cada partido se calculaban sobre los votos del BLOQUE en lugar de sobre la muestra, y quedaban unas 8 veces menores. Con conteos tan pequeños, el redondeo inflaba a los partidos pequeños. Afecta sobre todo a los escaños de los partidos regionales.
 :::
 
 Esta es la segunda parte del meta-análisis de las generales del **29 de noviembre de 2026**. En
@@ -326,7 +327,7 @@ estimaciones puntuales con lme4 están en [`shock_jerarquico.R`](shock_jerarquic
 
 - **La media**: `0 + partido + repeticion` da un intercepto por partido y la
   dummy de repetición. Las medias de deriva salen diminutas (entre −0,05 y
-  0,00) y el re-centrado las elimina en la simulación; están para que los
+  0,00) y el recentrado las elimina en la simulación; están para que los
   residuos queden centrados.
 - **`(0 + partido || codigo_ccaa)` es el $\tau_c$**: cada comunidad recibe
   una desviación por partido, y las cuatro desviaciones de una comunidad son
@@ -495,8 +496,8 @@ mismas cuatro elecciones: la validación es in-sample, la misma trampa que el
 sesgo del PSOE antes de su leave-one-out. Así que la repito con un
 **leave-one-transition-out** ([`backtest_prov_loto.R`](backtest_prov_loto.R)):
 reajusto los τ sin la transición de la elección que pruebo (cuatro ajustes
-brms más) y vuelvo a correr el backtest provincial de esa elección, con la
-misma semilla en las dos corridas para que la única diferencia sean los τ.
+brms más) y vuelvo a ejecutar el backtest provincial de esa elección, con la
+misma semilla en las dos ejecuciones para que la única diferencia sean los τ.
 
 ```{r}
 #| label: tbl-loto
@@ -541,7 +542,7 @@ loto_res |>
 ```
 
 La cobertura no se mueve: LOTO e in-sample dan lo mismo en las cuatro
-elecciones (las diferencias entre corridas son del orden de una celda, ruido
+elecciones (las diferencias entre ejecuciones son del orden de una celda, ruido
 de Monte Carlo). Los τ no están sobreajustados a las transiciones que los
 calibran. Y el caso más limpio es el 20D: su geografía viene del 11D, que no
 entra en la calibración, así que ahí la geografía probada es de verdad fuera
@@ -659,7 +660,7 @@ tibble(partido = names(error_mu), mu = error_mu, sigma = error_sigma) |>
 # impacto cita sus cifras en línea; la sección «¿De dónde sale la
 # incertidumbre?» (más abajo) solo imprime la tabla. Con semilla fija: las
 # cifras deben ser reproducibles entre renders (con 4.000 muestras, los
-# cuantiles se mueven ±1 escaño entre corridas sin semilla)
+# cuantiles se mueven ±1 escaño entre ejecuciones sin semilla)
 desc_var <- function(
   nombre,
   con_ruido = TRUE,

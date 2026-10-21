@@ -1,0 +1,136 @@
+// Módulo B: error histórico de las encuestas, jerárquico por elección, con
+// generales (tipo 1) y autonómicas (tipo 2).
+//
+// Encuesta j de la elección e (de tipo g), partido k (PP, PSOE, VOX, SUMAR);
+// el error en logit es z_jk = logit(real_k) - logit(encuesta_jk):
+//   z_jk ~ N(mu_kg + delta_ek + b_hk, sigma_enc_kg)  (solo las k observadas)
+//   b_hk ~ N(0, sigma_b_k): sesgo propio de la casa h (el que repite en
+//   todas sus encuestas, generales y autonómicas), con pooling parcial: una
+//   casa con pocas encuestas se queda cerca de 0
+//   delta_e ~ MVN(0, diag(sigma_g) Omega diag(sigma_g))
+// Generales y autonómicas:
+//   - correlación: una Omega común (LKJ). La versión anterior mezclaba una
+//     Omega de las generales con la de las autonómicas (peso w); la
+//     recuperación con datos simulados (09_recuperacion.R) mostró que ni w
+//     ni la correlación de las generales se aprendían (contracción 0,2) y la
+//     sensibilidad (08_sensibilidad.R) que no movían el resultado: se
+//     simplifica a una común, aprendida sobre todo de las autonómicas.
+//   - escala: log sigma_aut_k ~ N(log s0, tau_s) (patrón común por partido)
+//             sigma_gen_k = sigma_aut_k * exp(gamma) (nivel propio)
+// mu (sesgo sistemático) y sigma_enc (ruido de cada encuesta alrededor del
+// consenso) van por separado en cada tipo.
+// Para unas generales nuevas: error = mu_gen + delta_new (+ la media de b
+// de las casas que publican en 2026: el módulo A estima la media de esas
+// casas, con el mismo peso cada una),
+//   delta_new ~ MVN(0, diag(sigma_gen) Omega diag(sigma_gen)).
+data {
+  int<lower=1> J;
+  int<lower=1> D;
+  int<lower=1> E;
+  matrix[J, D] z;
+  array[J, D] int<lower=0, upper=1> obs;
+  array[J] int<lower=1, upper=E> eleccion;
+  array[E] int<lower=1, upper=2> tipo;
+  int<lower=1> H;
+  array[J] int<lower=1, upper=H> casa;
+  int<lower=1> H26;
+  array[H26] int<lower=0, upper=H> idx26;   // 0: casa sin historia
+  // escalas de los priors (datos: la sensibilidad no obliga a recompilar)
+  real<lower=0> sd_mu;        // mu ~ N(0, sd_mu)
+  real<lower=0> sd_log_s0;    // log s0 ~ N(log 0,1, sd_log_s0)
+  real<lower=0> sd_tau_s;     // tau_s ~ N+(0, sd_tau_s)
+  real<lower=0> sd_gamma;     // gamma ~ N(0, sd_gamma)
+  real<lower=0> sd_enc;       // sigma_enc ~ N+(0, sd_enc)
+  real<lower=0> sd_b;         // sigma_b ~ N+(0, sd_b)
+  real<lower=0> eta_lkj;      // Omega ~ LKJ(eta_lkj)
+  int<lower=0, upper=1> prior_only;
+}
+transformed data {
+  // celdas observadas en formato largo, para vectorizar la verosimilitud.
+  // Los índices son lineales sobre matrices D x (columnas) en column-major:
+  // fila k, columna c -> k + D * (c - 1)
+  int N_obs = 0;
+  for (j in 1:J) {
+    N_obs += sum(obs[j]);
+  }
+  vector[N_obs] z_obs;
+  array[N_obs] int i_tipo;   // en mu y sigma_enc (D x 2)
+  array[N_obs] int i_elec;   // en delta (D x E)
+  array[N_obs] int i_casa;   // en b (D x H)
+  {
+    int n = 0;
+    for (j in 1:J) {
+      for (k in 1:D) {
+        if (obs[j, k]) {
+          n += 1;
+          z_obs[n] = z[j, k];
+          i_tipo[n] = k + D * (tipo[eleccion[j]] - 1);
+          i_elec[n] = k + D * (eleccion[j] - 1);
+          i_casa[n] = k + D * (casa[j] - 1);
+        }
+      }
+    }
+  }
+}
+parameters {
+  matrix[D, 2] mu;
+  matrix[D, E] z_delta;
+  cholesky_factor_corr[D] L_Omega;
+  real log_s0;
+  real<lower=0> tau_s;
+  vector[D] z_s;
+  real gamma;
+  matrix<lower=0>[D, 2] sigma_enc;
+  matrix[D, H] z_b;
+  vector<lower=0>[D] sigma_b;
+}
+transformed parameters {
+  vector[D] sigma_aut = exp(log_s0 + tau_s * z_s);
+  vector[D] sigma_gen = sigma_aut * exp(gamma);
+  matrix[D, D] Omega = multiply_lower_tri_self_transpose(L_Omega);
+  matrix[D, H] b = diag_pre_multiply(sigma_b, z_b);
+  matrix[D, E] delta;
+  for (e in 1:E) {
+    if (tipo[e] == 1) {
+      delta[, e] = diag_pre_multiply(sigma_gen, L_Omega) * z_delta[, e];
+    } else {
+      delta[, e] = diag_pre_multiply(sigma_aut, L_Omega) * z_delta[, e];
+    }
+  }
+}
+model {
+  to_vector(mu) ~ normal(0, sd_mu);
+  to_vector(z_delta) ~ std_normal();
+  L_Omega ~ lkj_corr_cholesky(eta_lkj);
+  // escala común centrada en 0,1 logit (unos 2 puntos con un partido del
+  // 30 %); con sd_log_s0 = 0,5, el 90 % del prior va de 0,04 a 0,23
+  log_s0 ~ normal(log(0.1), sd_log_s0);
+  tau_s ~ normal(0, sd_tau_s);
+  z_s ~ std_normal();
+  gamma ~ normal(0, sd_gamma);
+  to_vector(sigma_enc) ~ normal(0, sd_enc);
+  to_vector(z_b) ~ std_normal();
+  sigma_b ~ normal(0, sd_b);
+  if (!prior_only) {
+    z_obs ~ normal(to_vector(mu)[i_tipo] + to_vector(delta)[i_elec]
+                   + to_vector(b)[i_casa],
+                   to_vector(sigma_enc)[i_tipo]);
+  }
+}
+generated quantities {
+  vector[D] delta_new = multi_normal_cholesky_rng(
+    rep_vector(0, D), diag_pre_multiply(sigma_gen, L_Omega));
+  vector[D] err_new = mu[, 1] + delta_new;
+  // sesgo medio de las casas de 2026 (las que no tienen historia lo sortean
+  // del prior aprendido)
+  vector[D] b26 = rep_vector(0, D);
+  for (h in 1:H26) {
+    if (idx26[h] > 0) {
+      b26 += b[, idx26[h]];
+    } else {
+      b26 += to_vector(normal_rng(rep_vector(0, D), sigma_b));
+    }
+  }
+  b26 /= H26;
+  vector[D] err_new_casa = err_new + b26;
+}

@@ -256,6 +256,62 @@ construir_meta_grande <- function(f_salida = f_grande, separadas = FALSE) {
   invisible(meta)
 }
 
+# Encuestas de casas que no separan toda la categoría de la izquierda:
+# publican PP, PSOE, VOX y el bloque de la izquierda fuera del PSOE
+# (Sumar + Podemos, que es como el modelo de error conoce la historia), y
+# SALF se queda sin observar. Van a un CSV aparte para que el modelo
+# conjunto les dé su propia estructura de celdas (11_datos_conjunto.R) y
+# no contaminen los multinomiales de brms, que exigen las 7 categorías.
+# Si alguna de estas casas publicara el desglose completo, entraría por la
+# vía normal (grande/grande_sep) y aquí se deduplica por (casa, campo).
+# NC Report queda fuera de momento: publica las 7 regionales y solo le
+# falta SALF, así que con las 5 celdas gruesas tiraríamos información que
+# sí tenemos; merecería su propio esquema fino (regionales como celdas +
+# residuo SALF+resto) si algún día compensa.
+casas_agregadas <- c("Sigma Dos", "Winston", "Ateneo del Dato", "Data10")
+f_agregadas <- here::here("2026/10/encuestas_meta_agregadas.csv")
+
+construir_meta_agregadas <- function(
+  f_salida = f_agregadas,
+  f_ref = f_grande_sep
+) {
+  en_grande <- read_csv(f_ref, show_col_types = FALSE) |>
+    distinct(encuestadora, campo)
+  dat <- leer_encuestas_meta(fecha_inicio_grande) |>
+    filter(
+      Encuestadora %in% casas_agregadas,
+      if_all(c(PP, PSOE, VOX, Sumar, Podemos), ~ !is.na(.x)),
+      is.na(SALF)
+    ) |>
+    anti_join(
+      en_grande,
+      by = c("Encuestadora" = "encuestadora", "Campo" = "campo")
+    ) |>
+    transmute(
+      encuestadora = Encuestadora,
+      campo = Campo,
+      fecha,
+      muestra = Muestra,
+      enlace,
+      PP,
+      PSOE,
+      VOX,
+      izq = Sumar + Podemos
+    ) |>
+    arrange(fecha, encuestadora)
+  write_csv(dat, f_salida)
+  cat(
+    "Escrito",
+    f_salida,
+    ":",
+    nrow(dat),
+    "encuestas agregadas de",
+    paste(casas_agregadas, collapse = ", "),
+    "\n"
+  )
+  invisible(dat)
+}
+
 # Modelo 2: composición del BLOQUE, solo encuestas completas (8 subceldas)
 construir_meta_bloque <- function(f_salida = f_bloque) {
   dat <- leer_encuestas_meta() |>
@@ -551,7 +607,10 @@ cargar_pipeline_encuestas <- function() {
   stopifnot(!is.na(fin_cab), fin_cab < ini)
   eval(
     parse(
-      text = paste(c(lineas[1:fin_cab], lineas[ini:length(lineas)]), collapse = "\n")
+      text = paste(
+        c(lineas[1:fin_cab], lineas[ini:length(lineas)]),
+        collapse = "\n"
+      )
     ),
     envir = globalenv()
   )
@@ -569,6 +628,7 @@ preparar_todo <- function(actualizar = FALSE) {
   # 7 categorías (SUMAR y PODEMOS separadas): entrada de ajustar_grande_sep()
   # para los escenarios listas = "separadas" y "mapa" de simular()
   construir_meta_grande(separadas = TRUE)
+  construir_meta_agregadas()
   construir_meta_bloque()
 }
 
