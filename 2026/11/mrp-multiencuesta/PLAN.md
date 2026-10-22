@@ -270,6 +270,8 @@ Participación en `mrp_cis.stan`: binomial de decir "10, seguro que voto", con m
 
 Entradas en git: `datos/celdas_brms.rds`, `celdas_part.rds`, `tabla_post_prov.rds`, `prov_ccaa.rds` y `00_partidos.R`. Con ellas basta para 05b; no hacen falta los microdatos (`descargas/`, fuera de git) salvo para rehacer los pasos 01–03.
 
+Para rehacer 02–03b: release `mrp-multiencuesta-datos` (`encuestas.rds`, `censo_66600.rds`, `targets_prov.rds`, `mun_23j.rds`, `targets.rds`, `tabla_postestratificacion.rds`; la descripción dice dónde copiar cada uno). Bajar con `gh release download mrp-multiencuesta-datos -D <carpeta>`.
+
 1. `renv::restore()` y CmdStan instalado (`cmdstanr::install_cmdstan()`; aquí, 2.40.0).
 2. Desde la raíz del repo: `Rscript 2026/11/mrp-multiencuesta/05b_separado.R prueba 2` (unos 3 min).
 3. `Rscript 2026/11/mrp-multiencuesta/05b_separado.R nuts H > 2026/11/mrp-multiencuesta/datos/log_05b_nuts.txt 2>&1`, con H = hilos por cadena (4 cadenas × H núcleos). Estimado aquí: ~70 min el voto con 3 hilos, ~11 min la participación (deducido de la prueba, sin medir).
