@@ -177,8 +177,27 @@ reescala <- function(d, total_ccaa) {
     mutate(N = N * total) %>% select(-total)
 }
 
-t_sexo_edad_ccaa <- reescala(pob_sexo_edad_ccaa, total_ccaa)
-t_edu_sexo_ccaa  <- reescala(edu_sexo_ccaa, total_ccaa)
+# Corrección (2026-10-21). Reescalar cada target al total de la comunidad no
+# basta: los targets comparten márgenes y tienen que coincidir también en
+# ellos, o el IPF ajusta el último (el recuerdo) y deja los otros sin cuadrar
+# sin avisar. Dos márgenes compartidos:
+#   - 18-20 años es lo mismo que NO_PODIA (ceros estructurales). El bloque de
+#     18-20 se reescala a NO_PODIA y el de 21+ al censo del 23-J. Antes la
+#     tabla tenía 1,69 M de 18-20 frente a 1,48 M del target.
+#   - ccaa x sexo sale de la ECP en un target y de la EPA en el otro. Los
+#     estudios se reescalan dentro de ccaa x sexo a los totales de la ECP.
+t_sexo_edad_ccaa <- pob_sexo_edad_ccaa %>%
+  mutate(bloque = ifelse(edad == "18-20", "NO_PODIA", "censo")) %>%
+  group_by(ccaa, bloque) %>% mutate(N = N / sum(N)) %>% ungroup() %>%
+  left_join(total_ccaa %>% select(ccaa, censo_escrutinio, NO_PODIA), by = "ccaa") %>%
+  mutate(N = N * ifelse(bloque == "NO_PODIA", NO_PODIA, censo_escrutinio)) %>%
+  select(ccaa, sexo, edad, N)
+
+t_edu_sexo_ccaa <- edu_sexo_ccaa %>%
+  group_by(ccaa, sexo) %>% mutate(N = N / sum(N)) %>% ungroup() %>%
+  left_join(t_sexo_edad_ccaa %>% group_by(ccaa, sexo) %>% summarise(tot = sum(N), .groups = "drop"),
+            by = c("ccaa", "sexo")) %>%
+  mutate(N = N * tot) %>% select(-tot)
 
 t_rec_ccaa <- recuerdo_ccaa %>%
   bind_rows(pob_18_20 %>% transmute(ccaa, partido = "NO_PODIA", votos = NO_PODIA)) %>%
