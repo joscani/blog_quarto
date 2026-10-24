@@ -1,24 +1,39 @@
 # Definición común de partidos y territorios. La usan 02, 03, 04 y 05.
 
-# SUMAR agrupa a todos los partidos de la coalición del 23-J, Podemos
-# incluido. Los nacionalistas y regionalistas van cada uno por su lado.
-partidos_lv <- c("PP", "PSOE", "VOX", "SUMAR",
-                 "ERC", "JUNTS", "AC", "BILDU", "PNV", "BNG", "CCA", "OTROS")
+# SUMAR agrupa los partidos de la coalición del 23-J salvo Podemos, que desde
+# el mapa del 29-N compite por su lado (en el recuerdo del 23-J, en cambio, iba
+# dentro de la coalición y no existe como categoría propia). Los nacionalistas
+# y regionalistas van cada uno por su lado.
+partidos_lv <- c(
+  "PP",
+  "PSOE",
+  "VOX",
+  "SUMAR",
+  "PODEMOS",
+  "ERC",
+  "JUNTS",
+  "AC",
+  "BILDU",
+  "PNV",
+  "BNG",
+  "CCA",
+  "OTROS"
+)
 
 # Aliança Catalana (AC) no se presentó a las generales del 23-J, así que no
-# existe en el recuerdo de voto.
-rec_lv <- c(setdiff(partidos_lv, "AC"), "ABST", "NO_PODIA")
+# existe en el recuerdo de voto; Podemos tampoco como categoría propia.
+rec_lv <- c(setdiff(partidos_lv, c("AC", "PODEMOS")), "ABST", "NO_PODIA")
 
 # Comunidades en las que se presenta cada partido regional (23-J). Fuera de
 # ellas su probabilidad es un cero estructural.
 territorio <- list(
-  ERC   = "Cataluña",
+  ERC = "Cataluña",
   JUNTS = "Cataluña",
-  AC    = "Cataluña",
+  AC = "Cataluña",
   BILDU = c("País Vasco", "Navarra"),
-  PNV   = "País Vasco",
-  BNG   = "Galicia",
-  CCA   = "Canarias"
+  PNV = "País Vasco",
+  BNG = "Galicia",
+  CCA = "Canarias"
 )
 
 # TRUE si el partido p se puede votar en la comunidad ccaa
@@ -35,19 +50,38 @@ se_presenta <- function(p, ccaa) {
 
 # Matriz celdas x partidos con 1 donde el partido se presenta y 0 donde no
 mascara_territorio <- function(ccaa, partidos = partidos_lv) {
-  sapply(partidos, function(p) as.numeric(se_presenta(rep(p, length(ccaa)), ccaa)))
+  sapply(partidos, function(p) {
+    as.numeric(se_presenta(rep(p, length(ccaa)), ccaa))
+  })
 }
 
 # Etiquetas del CIS -> partidos_lv. Lo que no se reconoce va a OTROS.
 # El 3582 añade "Frente Amplio" y "Comuns Sumar". "Coalición de izquierdas"
 # ya estaba en el 3577; en el post de octubre iba a OTROS (21 casos).
-sumar_cis <- c("Sumar", "Podemos", "Unidas Podemos", "IU", "Compromís",
-               "Más Madrid", "CHA", "Frente Amplio", "Comuns Sumar",
-               "Coalición de izquierdas",
-               "En Comú Podem", "Por Andalucía")   # aparecen en el CIS 3567
-regionales_cis <- c(ERC = "ERC", JUNTS = "Junts", AC = "Aliança Catalana",
-                    BILDU = "EH Bildu",
-                    PNV = "EAJ-PNV", BNG = "BNG", CCA = "CCa")
+# "En Comú Podem" y "Comuns Sumar" son los Comuns (FA en Cataluña): van con
+# SUMAR. "Podemos" y "Unidas Podemos" son ya categoría propia y van aparte
+# (caso anterior en recod_cis_partido).
+sumar_cis <- c(
+  "Sumar",
+  "IU",
+  "Compromís",
+  "Más Madrid",
+  "CHA",
+  "Frente Amplio",
+  "Comuns Sumar",
+  "Coalición de izquierdas",
+  "En Comú Podem",
+  "Por Andalucía"
+) # aparecen en el CIS 3567
+regionales_cis <- c(
+  ERC = "ERC",
+  JUNTS = "Junts",
+  AC = "Aliança Catalana",
+  BILDU = "EH Bildu",
+  PNV = "EAJ-PNV",
+  BNG = "BNG",
+  CCA = "CCa"
+)
 
 recod_cis_partido <- function(x, no_validos) {
   x <- as.character(x)
@@ -55,6 +89,7 @@ recod_cis_partido <- function(x, no_validos) {
     x == "PP" ~ "PP",
     x == "PSOE" ~ "PSOE",
     x == "VOX" ~ "VOX",
+    x %in% c("Podemos", "Unidas Podemos") ~ "PODEMOS",
     x %in% sumar_cis ~ "SUMAR",
     x %in% no_validos ~ NA_character_,
     TRUE ~ "OTROS"
