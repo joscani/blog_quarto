@@ -19,7 +19,7 @@ Rscript 2026/10/full-bayesian/actualizar_full_bayesian.R
 | Resultados de las 5 generales pasadas | `2026/10/errores_encuestas_historicas.csv` (congelado; lo generó el pipeline de octubre) | leído por `errores_hist()` de `01_datos.R` |
 | Errores en 39 autonómicas (2018-2026) | Scrape de Wikipedia (página "Opinion polling" de cada elección) | `06_scrapear_autonomicas.R` → `errores_autonomicas.csv` |
 | Geografía del 23J (ratio provincia/nación) | `2026/10/ref_provincial_23J_14.csv`, congelado | pipeline de octubre |
-| Mapa de coaliciones de la izquierda (29-N) | `2026/10/coaliciones_izquierda_29N_provincias.csv` | a mano, con las listas del BOE |
+| Mapa de coaliciones de la izquierda (29-N) | `2026/10/coaliciones_izquierda_29N_provincias.csv` | a mano, con las listas del BOE; actualizado el 25 oct con la renuncia de CHA-Frente Amplio en Teruel (regla `sin_fa`: el voto de FA se reparte entre PSOE y fuera) |
 | Shock provincial | `2026/10/mod_tau_shock.rds` y `tau_regionales.csv`, congelados | pipeline de octubre |
 | Composición del BLOQUE en la simulación | Modelo 2 de brms (`mod_meta_bloque.rds`) | `ajustar_bloque()` (ajustar_meta.R) |
 

@@ -36,12 +36,18 @@
 # Uso (desde la raíz del proyecto, para que se active renv):
 #   Rscript 2026/10/frente_amplio_y_adelante_andalucia/escenarios_mapa_29N.R
 #   Rscript 2026/10/frente_amplio_y_adelante_andalucia/escenarios_mapa_29N.R --sin-actualizar
+#   Rscript 2026/10/frente_amplio_y_adelante_andalucia/escenarios_mapa_29N.R --sin-actualizar --sin-refit
+#
+# --sin-refit: se salta el paso 2 (usa los fits en caché de mod_meta_*.rds).
+#   Solo si los fits ya llevan las encuestas de los CSV (con seed fija, el
+#   refit con los mismos datos daría el mismo posterior)
 # ============================================================================
 
 library(purrr)
 
 args <- commandArgs(trailingOnly = TRUE)
 actualizar <- !"--sin-actualizar" %in% args
+sin_refit <- "--sin-refit" %in% args
 n_draws <- 6000
 seed_sim <- 2911
 
@@ -58,12 +64,18 @@ preparar_todo(actualizar = actualizar)
 # ---- 2. modelos ---------------------------------------------------------------
 
 source(here::here("2026/10/simular_escanos.R"))
-log_paso("2a. ajustar_grande(refit = TRUE)")
-invisible(ajustar_grande(refit = TRUE))
-log_paso("2b. ajustar_bloque(refit = TRUE)")
-invisible(ajustar_bloque(refit = TRUE))
-log_paso("2c. ajustar_grande_sep(refit = TRUE)")
-invisible(ajustar_grande_sep(refit = TRUE))
+if (sin_refit) {
+  log_paso(
+    "2. refit de los 3 modelos saltado (--sin-refit): se usan los fits en caché"
+  )
+} else {
+  log_paso("2a. ajustar_grande(refit = TRUE)")
+  invisible(ajustar_grande(refit = TRUE))
+  log_paso("2b. ajustar_bloque(refit = TRUE)")
+  invisible(ajustar_bloque(refit = TRUE))
+  log_paso("2c. ajustar_grande_sep(refit = TRUE)")
+  invisible(ajustar_grande_sep(refit = TRUE))
+}
 
 ult <- readr::read_csv(f_grande_sep, show_col_types = FALSE)
 log_paso(

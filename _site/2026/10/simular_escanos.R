@@ -106,6 +106,13 @@
 #                    u otros) se sortea draw a draw de una Dirichlet con
 #                    transfer_cat_alpha, centrada en 0,65/0,30/0,05 (Podemos
 #                    hace campaña por ERC); se renormaliza a 100;
+#     - sin_fa:      Frente Amplio no se presenta (Teruel: renuncia de
+#                    CHA-Frente Amplio, 21 oct 2026, tras el registro del 16).
+#                    El voto de la familia SUMAR en la provincia se reparte
+#                    draw a draw entre PSOE y fuera (abstención u otros) con
+#                    transfer_fa_alpha, centrada en 0,55/0,45: los votos no
+#                    pasan automáticamente a nadie. (CHA va dentro de RESTO,
+#                    que no compite en D'Hondt.)
 #     - con_aa:      Andalucía con Adelante Andalucía como familia propia
 #                    (la 15ª). Su share andaluza por draw sale de una
 #                    logit-normal centrada en aa_pct_and (el 9,62% de las
@@ -164,9 +171,9 @@ fams14 <- c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", fams_bloque)
 stopifnot(setequal(fams14, unique(ref14$partido)))
 
 # escenario "mapa": regla de cada provincia
-# (separadas, unida, sin_podemos, con_aa)
+# (separadas, unida, sin_podemos, con_aa, sin_fa)
 f_mapa_listas <- here::here("2026/10/coaliciones_izquierda_29N_provincias.csv")
-reglas_mapa <- c("separadas", "unida", "sin_podemos", "con_aa")
+reglas_mapa <- c("separadas", "unida", "sin_podemos", "con_aa", "sin_fa")
 
 # patrón provincial de AA (autonómicas 5/2026): peso relativo de AA en cada
 # provincia andaluza, peso_p = pct AA en p / pct AA andaluz. Es un
@@ -197,7 +204,8 @@ aplicar_regla_mapa <- function(
   regla,
   transfer,
   aa_share = 0,
-  aa_caniba = c(PODEMOS = 0.5, SUMAR = 0.5)
+  aa_caniba = c(PODEMOS = 0.5, SUMAR = 0.5),
+  transfer_fa = 0
 ) {
   if (regla == "unida") {
     v["SUMAR"] <- v["SUMAR"] + v["PODEMOS"]
@@ -207,6 +215,11 @@ aplicar_regla_mapa <- function(
     v[names(transfer)] <- v[names(transfer)] + pod * transfer
     v["PODEMOS"] <- 0
     # la fracción que va a abstención u otros sale del voto válido
+    v <- v / sum(v)
+  } else if (regla == "sin_fa") {
+    fa <- unname(v["SUMAR"])
+    v["PSOE"] <- v["PSOE"] + fa * transfer_fa
+    v["SUMAR"] <- 0
     v <- v / sum(v)
   } else if (regla == "con_aa") {
     # AA entra con su share provincial (patrón de las autonómicas 5/2026).
@@ -605,10 +618,15 @@ simular <- function(
   listas = c("unidas", "separadas", "mapa"),
   provincial = FALSE,
   transfer_cat_alpha = c(ERC = 10, SUMAR = 4.5, fuera = 0.75),
+  transfer_fa_alpha = c(PSOE = 5.5, fuera = 4.5),
   aa_pct_and = 0.0962,
   aa_sd_logit = 0.2,
   aa_caniba_alpha = c(PODEMOS = 4, SUMAR = 4, PSOE = 1),
-  f_mapa = f_mapa_listas
+  f_mapa = f_mapa_listas,
+  # voto nacional ya calculado fuera (matriz n_draws x familias del modelo,
+  # en %, con el error incluido): sustituye a extraer_shares13(). Lo usa
+  # 2026/10/full-bayesian/04_simular.R
+  shares_ext = NULL
 ) {
   modo_ruido <- match.arg(modo_ruido)
   swing <- match.arg(swing)
@@ -617,12 +635,15 @@ simular <- function(
   # provincial al final (aplicar_regla_mapa)
   listas_modelo <- if (listas == "mapa") "separadas" else listas
   regla_prov <- NULL
-  aa_prov_k <- pi_caniba <- pi_cat <- NULL
+  aa_prov_k <- pi_caniba <- pi_cat <- pi_fa <- NULL
   if (listas == "mapa") {
     stopifnot(
       setequal(names(transfer_cat_alpha), c("ERC", "SUMAR", "fuera")),
       all(transfer_cat_alpha >= 0),
       sum(transfer_cat_alpha) > 0,
+      setequal(names(transfer_fa_alpha), c("PSOE", "fuera")),
+      all(transfer_fa_alpha >= 0),
+      sum(transfer_fa_alpha) > 0,
       aa_pct_and > 0,
       aa_pct_and < 1,
       aa_sd_logit >= 0,
@@ -641,6 +662,8 @@ simular <- function(
     colnames(pi_caniba) <- names(aa_caniba_alpha)
     pi_cat <- gtools::rdirichlet(n_draws, transfer_cat_alpha)
     colnames(pi_cat) <- names(transfer_cat_alpha)
+    pi_fa <- gtools::rdirichlet(n_draws, transfer_fa_alpha)
+    colnames(pi_fa) <- names(transfer_fa_alpha)
     # patrón provincial base de AA: normalizado dentro de Andalucía conserva
     # el agregado andaluz (share_p(k) = aa_and_k x w_p / sum w)
     g_aa <- peso_aa[match(prov_datos14$codigo_provincia, names(peso_aa))]
@@ -667,16 +690,25 @@ simular <- function(
   if (listas == "mapa") {
     fams <- c(fams, "AA")
   }
-  shares_m <- extraer_shares13(
-    n_draws,
-    time_obj,
-    con_error,
-    sigma_bloque,
-    cor_bloque,
-    t_sigma_df,
-    f_antelacion,
-    listas_modelo
-  )
+  if (is.null(shares_ext)) {
+    shares_m <- extraer_shares13(
+      n_draws,
+      time_obj,
+      con_error,
+      sigma_bloque,
+      cor_bloque,
+      t_sigma_df,
+      f_antelacion,
+      listas_modelo
+    )
+  } else {
+    stopifnot(
+      nrow(shares_ext) == n_draws,
+      identical(colnames(shares_ext), fams_modelo),
+      all(abs(rowSums(shares_ext) - 100) < 0.5)
+    )
+    shares_m <- shares_ext
+  }
 
   if (con_ruido && modo_ruido == "dirichlet") {
     # mecanismo antiguo (divisor 1.000), fuera del default: queda como
@@ -834,7 +866,8 @@ simular <- function(
           regla_prov[i],
           pi_cat[k, c("ERC", "SUMAR")],
           aa_prov_k[k, i],
-          pi_caniba[k, ]
+          pi_caniba[k, ],
+          transfer_fa = pi_fa[k, "PSOE"]
         )
       }
       if (provincial) {
@@ -907,8 +940,11 @@ escanos_resto_mayor <- function(sim) {
   base <- floor(medias)
   faltan <- round(sum(medias)) - sum(base)
   extra <- rank(-(medias - base), ties.method = "first") <= faltan
-  tibble(partido = names(medias), media = unname(medias),
-         escanos = unname(base + extra))
+  tibble(
+    partido = names(medias),
+    media = unname(medias),
+    escanos = unname(base + extra)
+  )
 }
 
 bloques <- function(d) {

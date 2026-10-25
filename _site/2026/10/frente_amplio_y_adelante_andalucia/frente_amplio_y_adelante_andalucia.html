@@ -510,13 +510,14 @@ Table&nbsp;1: Regla del simulador por comunidad: número de provincias (mapa pro
 </figcaption>
 <div aria-describedby="tbl-mapa-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 4 × 4
+<pre><code># A tibble: 5 × 4
   regla                           comunidades               provincias diputados
   &lt;chr&gt;                           &lt;chr&gt;                          &lt;int&gt;     &lt;dbl&gt;
 1 Lista conjunta (Podemos dentro) C. Valenciana, Canarias            5        48
 2 Podemos con ERC                 Cataluña                           4        48
 3 Con Adelante Andalucía          Andalucía                          8        60
-4 Listas separadas                Aragón, Asturias, Cantab…         35       194</code></pre>
+4 Listas separadas                Aragón, Asturias, Cantab…         34       191
+5 &lt;NA&gt;                            Aragón                             1         3</code></pre>
 </div>
 </div>
 </figure>
@@ -670,11 +671,11 @@ Table&nbsp;3: Escaños por partido y escenario (mediana e IC90). <code>oficial</
   &lt;chr&gt;   &lt;chr&gt;          &lt;chr&gt;          &lt;chr&gt;         
 1 SUMAR   17 [7, 31]     8 [4, 16]      9 [4, 17]     
 2 PODEMOS —              2 [0, 4]       1 [0, 2]      
-3 AA      —              —              3 [2, 6]      
+3 AA      —              —              3 [2, 5]      
 4 ERC     9 [7, 11]      9 [7, 12]      11 [8, 13]    
-5 PSOE    107 [94, 121]  109 [96, 123]  106 [94, 120] 
-6 PP      128 [113, 143] 130 [115, 145] 129 [115, 144]
-7 VOX     67 [57, 77]    68 [58, 78]    68 [58, 78]   </code></pre>
+5 PSOE    107 [94, 121]  109 [96, 123]  107 [94, 120] 
+6 PP      128 [113, 142] 131 [116, 145] 130 [114, 144]
+7 VOX     67 [57, 77]    68 [59, 78]    68 [58, 78]   </code></pre>
 </div>
 </div>
 </figure>
@@ -690,13 +691,13 @@ Table&nbsp;4: Probabilidad de cada mayoría por escenario. Investidura = PSOE, F
   escenario mayoria            prob  
   &lt;chr&gt;     &lt;chr&gt;              &lt;chr&gt; 
 1 unidas    PP solo &gt;= 176     0,0 % 
-2 unidas    PP + VOX &gt;= 176    97,8 %
+2 unidas    PP + VOX &gt;= 176    97,7 %
 3 unidas    investidura &gt;= 176 1,4 % 
 4 separadas PP solo &gt;= 176     0,0 % 
 5 separadas PP + VOX &gt;= 176    99,3 %
 6 separadas investidura &gt;= 176 0,5 % 
 7 oficial   PP solo &gt;= 176     0,0 % 
-8 oficial   PP + VOX &gt;= 176    99,0 %
+8 oficial   PP + VOX &gt;= 176    98,9 %
 9 oficial   investidura &gt;= 176 0,7 % </code></pre>
 </div>
 </div>
@@ -746,7 +747,7 @@ Figure&nbsp;6: Escaños mediana en Andalucía con el escenario oficial: PSOE, el
 <h3 class="anchored" data-anchor-id="cuánto-cuesta-las-coaliciones-acordadas">¿Cuánto cuesta las coaliciones acordadas?</h3>
 <p>Los tres escenarios comparten modelo, simulaciones y semilla; solo cambia la regla provincial. Por eso la diferencia simulación a simulación entre dos escenarios es el efecto de las coaliciones acordadas, sin ruido de simulación entre ellos.</p>
 <p>El mismo voto rinde menos en dos listas que en una. Sumar y Podemos suman 9,0 % del voto nacional (mediana) tanto juntos (<code>unidas</code>) como por separado en toda España (<code>separadas</code>: 6,1 % + 2,8 %). Juntos sacan 17 escaños de mediana; por separado, 8 + 2. El mapa real queda en 9 + 1: para el Frente Amplio y Podemos se parece más a <code>separadas</code> que a <code>unidas</code>.</p>
-<p>Ningún escaño se pierde: D’Hondt reparte siempre los 350. Al pasar de <code>unidas</code> al <code>oficial</code>, el FA pierde 8,2 escaños de media; AA, ERC y Podemos recogen 6,1 y PP y VOX, 2,2.</p>
+<p>Ningún escaño se pierde: D’Hondt reparte siempre los 350. Al pasar de <code>unidas</code> al <code>oficial</code>, el FA pierde 8,2 escaños de media; AA, ERC y Podemos recogen 6,1 y PP y VOX, 2,1.</p>
 <div id="tbl-transicion" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-transicion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -762,16 +763,16 @@ Table&nbsp;5: Escaños medios por partido en <code>unidas</code> y <code>oficial
 3 ERC           8,8                    10,6                   +1,8              
 4 Podemos       0,0                    0,9                    +0,9              
 5 PP            127,9                  129,3                  +1,4              
-6 VOX           66,9                   67,7                   +0,8              
+6 VOX           66,9                   67,7                   +0,7              
 7 PSOE          107,1                  106,7                  −0,4              
-8 PNV, EH Bild… 21,4                   21,8                   +0,3              
+8 PNV, EH Bild… 21,4                   21,8                   +0,4              
 # ℹ abbreviated names: ¹​`unidas (escaños, media)`, ²​`oficial (escaños, media)`</code></pre>
 </div>
 </div>
 </figure>
 </div>
 <p><strong>Método</strong>: <code>escenarios_29N_transicion.csv</code>; cambio = media sobre los 6.000 simulaciones de (escaños en <code>oficial</code> − escaños en <code>unidas</code>). Los cambios suman 0.</p>
-<p>Para los grandes, el efecto es pequeño frente a la incertidumbre del posterior. La probabilidad de la mayoría de PP + VOX se mueve entre el 97,8 % y el 99,3 %.</p>
+<p>Para los grandes, el efecto es pequeño frente a la incertidumbre del posterior. La probabilidad de la mayoría de PP + VOX se mueve entre el 97,7 % y el 99,3 %.</p>
 <div id="tbl-bloques" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-bloques-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -782,12 +783,12 @@ Table&nbsp;6: Escaños medianos de PP, PSOE y de los bloques, y probabilidad de 
 <pre><code># A tibble: 7 × 4
   Indicador                      unidas oficial separadas
   &lt;chr&gt;                          &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;    
-1 PP (escaños, mediana)          128    129     130      
+1 PP (escaños, mediana)          128    130     131      
 2 VOX (escaños, mediana)         67     68      68       
-3 PSOE (escaños, mediana)        107    106     109      
+3 PSOE (escaños, mediana)        107    107     109      
 4 PP + VOX (escaños, mediana)    195    197     199      
 5 Investidura (escaños, mediana) 154    152     150      
-6 P(PP + VOX ≥ 176)              97,8 % 99,0 %  99,3 %   
+6 P(PP + VOX ≥ 176)              97,7 % 98,9 %  99,3 %   
 7 P(investidura ≥ 176)           1,4 %  0,7 %   0,5 %    </code></pre>
 </div>
 </div>
@@ -798,9 +799,9 @@ Table&nbsp;6: Escaños medianos de PP, PSOE y de los bloques, y probabilidad de 
 </section>
 <section id="aa-en-andalucía" class="level3">
 <h3 class="anchored" data-anchor-id="aa-en-andalucía">AA en Andalucía</h3>
-<p>Con el escenario <code>oficial</code>, AA saca 3 escaños de mediana (3,5 de media), con un escaño mediano en Cádiz, Málaga, Sevilla (<a href="#fig-andalucia" class="quarto-xref">Figure&nbsp;6</a>). Su voto mediano en esas provincias es del 14,2 %, 12,7 % y 9,2 %.</p>
+<p>Con el escenario <code>oficial</code>, AA saca 3 escaños de mediana (3,5 de media), con un escaño mediano en Cádiz, Málaga, Sevilla (<a href="#fig-andalucia" class="quarto-xref">Figure&nbsp;6</a>). Su voto mediano en esas provincias es del 14,2 %, 12,8 % y 9,2 %.</p>
 <p>AA vacía primero el RESTO (del 2,0 % al 4,9 % provincial en <code>separadas</code> a 0 en 7 de las ocho provincias) y después come de Podemos y Sumar. Podemos se queda con voto mediano 0 en 5 de las ocho provincias. En Sevilla, el FA pasa del 7,4 % en <code>separadas</code> al 3,1 % en <code>oficial</code>, y Podemos del 2,8 % a 0,0 %. El Frente Amplio andaluz queda a 0 escaños en las ocho provincias (2 en <code>unidas</code>).</p>
-<p>El coste para el PSOE es contenido: −0,3 puntos de voto nacional frente a <code>unidas</code> (27,1 % → 26,7 %, mediana). En escaños andaluces, la suma de medianas provinciales del PSOE es 18 en <code>unidas</code>, 18 en <code>oficial</code> y 19 en <code>separadas</code>. Parte de los escaños de AA sale de voto que antes no competía en D’Hondt.</p>
+<p>El coste para el PSOE es contenido: −0,4 puntos de voto nacional frente a <code>unidas</code> (27,1 % → 26,7 %, mediana). En escaños andaluces, la suma de medianas provinciales del PSOE es 18 en <code>unidas</code>, 18 en <code>oficial</code> y 19 en <code>separadas</code>. Parte de los escaños de AA sale de voto que antes no competía en D’Hondt.</p>
 </section>
 <section id="la-transferencia-catalana" class="level3">
 <h3 class="anchored" data-anchor-id="la-transferencia-catalana">La transferencia catalana</h3>

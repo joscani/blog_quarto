@@ -145,7 +145,11 @@ backtest_eleccion <- function(
   nu = NULL,
   modo = c("shock", "dirichlet"),
   tau = NULL,
-  mapa = NULL
+  mapa = NULL,
+  # voto nacional ya sorteado fuera (matriz b x c(familias con encuestas,
+  # "BLOQUE"), en %, con el error incluido): sustituye al agregado y a la
+  # capa de error plug-in. Lo usa 2026/10/full-bayesian/10_backtest.R
+  tracked_ext = NULL
 ) {
   modo <- match.arg(modo)
   id <- e$id
@@ -164,79 +168,90 @@ backtest_eleccion <- function(
     filter(familia %in% con_datos) |>
     select(familia, real_voto = pct, real_esc = escanos)
 
-  # error del agregado por elección (con MI mapeo, consistente en las 5)
-  errs <- bind_rows(map(elecciones, \(x) {
-    ex <- err |> filter(eleccion == x$id)
-    dx <- preps[[x$id]]
-    tibble(
-      eleccion = x$id,
-      familia = con_datos,
-      e = map_dbl(con_datos, \(f) {
-        if (x$id != id && !any(!is.na(ex[[f]]))) {
-          return(NA_real_)
-        }
-        dx$real_nac$pct[dx$real_nac$familia == f] - mean(ex[[f]], na.rm = TRUE)
-      })
+  if (!is.null(tracked_ext)) {
+    stopifnot(
+      nrow(tracked_ext) == b,
+      identical(colnames(tracked_ext), c(con_datos, "BLOQUE"))
     )
-  }))
-  # mu leave-one-out, sigma con las 5 (su estimación apenas cambia al quitar una)
-  mu_loo <- errs |>
-    filter(eleccion != id) |>
-    group_by(familia) |>
-    summarise(mu = mean(e, na.rm = TRUE), .groups = "drop")
-  sigma_5 <- errs |>
-    group_by(familia) |>
-    summarise(sigma = sd(e, na.rm = TRUE), .groups = "drop")
+    todo <- tracked_ext
+    tracked <- todo[, con_datos, drop = FALSE]
+    mu <- NULL
+    sg <- NULL
+  } else {
+    # error del agregado por elección (con MI mapeo, consistente en las 5)
+    errs <- bind_rows(map(elecciones, \(x) {
+      ex <- err |> filter(eleccion == x$id)
+      dx <- preps[[x$id]]
+      tibble(
+        eleccion = x$id,
+        familia = con_datos,
+        e = map_dbl(con_datos, \(f) {
+          if (x$id != id && !any(!is.na(ex[[f]]))) {
+            return(NA_real_)
+          }
+          dx$real_nac$pct[dx$real_nac$familia == f] - mean(ex[[f]], na.rm = TRUE)
+        })
+      )
+    }))
+    # mu leave-one-out, sigma con las 5 (su estimación apenas cambia al quitar una)
+    mu_loo <- errs |>
+      filter(eleccion != id) |>
+      group_by(familia) |>
+      summarise(mu = mean(e, na.rm = TRUE), .groups = "drop")
+    sigma_5 <- errs |>
+      group_by(familia) |>
+      summarise(sigma = sd(e, na.rm = TRUE), .groups = "drop")
 
-  mu <- kappa *
-    setNames(mu_loo$mu[match(con_datos, mu_loo$familia)], con_datos)
-  sg <- setNames(sigma_5$sigma[match(con_datos, sigma_5$familia)], con_datos)
-  stopifnot(!any(is.na(mu)), !any(is.na(sg)))
+    mu <- kappa *
+      setNames(mu_loo$mu[match(con_datos, mu_loo$familia)], con_datos)
+    sg <- setNames(sigma_5$sigma[match(con_datos, sigma_5$familia)], con_datos)
+    stopifnot(!any(is.na(mu)), !any(is.na(sg)))
 
-  # matriz de correlaciones: solo PP-VOX a +0.5 (las demás a 0), como en producción
-  R <- diag(length(con_datos))
-  dimnames(R) <- list(con_datos, con_datos)
-  if ("PP" %in% con_datos && "VOX" %in% con_datos) {
-    R["PP", "VOX"] <- R["VOX", "PP"] <- 0.5
+    # matriz de correlaciones: solo PP-VOX a +0.5 (las demás a 0), como en producción
+    R <- diag(length(con_datos))
+    dimnames(R) <- list(con_datos, con_datos)
+    if ("PP" %in% con_datos && "VOX" %in% con_datos) {
+      R["PP", "VOX"] <- R["VOX", "PP"] <- 0.5
+    }
+
+    # --- sorteo del agregado: bootstrap de encuestas + multinomial(n_mult) ----
+    # el multinomial va sobre las 5 categorías (con el BLOQUE como residual):
+    # si normalizara solo las familias seguidas, sus shares saldrían
+    # re-escalados a 100 y todas infladas
+    agg <- t(sapply(seq_len(b), \(k) {
+      sel <- sample.int(K, K, replace = TRUE)
+      m <- reduce(
+        map(sel, \(i) {
+          p_i <- as.numeric(enc[i, con_datos])
+          p5 <- c(p_i, 100 - sum(p_i))
+          rmultinom(1, n_mult, p5)[, 1] * 100 / n_mult
+        }),
+        `+`
+      ) /
+        K
+      setNames(m[seq_along(con_datos)], con_datos)
+    }))
+
+    # --- capa de error LOO + shock del BLOQUE + reescalado ---------------------
+    # ojo al sweep: el default de sweep es la RESTA; aquí va la multiplicación
+    # (hubo una versión que restaba sigma y metía un sesgo de -1,3 a -2,6 pp
+    # por partido). Construcción idéntica a la de producción:
+    #   e = mu + (z_corr ⊙ c) ⊙ sigma,  z_corr ~ N(0, R),  c = sqrt(nu/chi2_nu)
+    z <- matrix(rnorm(b * length(con_datos)), b, length(con_datos))
+    zc <- z %*% t(chol(R)) # cov = R, como el mvrnorm de producción
+    # con nu (4 por defecto) cada muestra sortea su propio sigma — los
+    # sigma_hat vienen de 5 elecciones y están estimados con ruido
+    if (!is.null(nu)) {
+      zc <- zc * sqrt(nu / matrix(rchisq(b * length(con_datos), nu), b))
+    }
+    e_err <- sweep(zc, 2, sg, `*`) |> sweep(2, mu, "+")
+    tracked <- pmax(agg + e_err, 0)
+    bloque <- pmax(100 - rowSums(agg) + rnorm(b, 0, 1.5), 0)
+    todo <- cbind(tracked, bloque)
+    todo <- 100 * todo / rowSums(todo)
+    colnames(todo) <- c(con_datos, "BLOQUE")
+    tracked <- todo[, con_datos, drop = FALSE]
   }
-
-  # --- sorteo del agregado: bootstrap de encuestas + multinomial(n_mult) ----
-  # el multinomial va sobre las 5 categorías (con el BLOQUE como residual):
-  # si normalizara solo las familias seguidas, sus shares saldrían
-  # re-escalados a 100 y todas infladas
-  agg <- t(sapply(seq_len(b), \(k) {
-    sel <- sample.int(K, K, replace = TRUE)
-    m <- reduce(
-      map(sel, \(i) {
-        p_i <- as.numeric(enc[i, con_datos])
-        p5 <- c(p_i, 100 - sum(p_i))
-        rmultinom(1, n_mult, p5)[, 1] * 100 / n_mult
-      }),
-      `+`
-    ) /
-      K
-    setNames(m[seq_along(con_datos)], con_datos)
-  }))
-
-  # --- capa de error LOO + shock del BLOQUE + reescalado ---------------------
-  # ojo al sweep: el default de sweep es la RESTA; aquí va la multiplicación
-  # (hubo una versión que restaba sigma y metía un sesgo de -1,3 a -2,6 pp
-  # por partido). Construcción idéntica a la de producción:
-  #   e = mu + (z_corr ⊙ c) ⊙ sigma,  z_corr ~ N(0, R),  c = sqrt(nu/chi2_nu)
-  z <- matrix(rnorm(b * length(con_datos)), b, length(con_datos))
-  zc <- z %*% t(chol(R)) # cov = R, como el mvrnorm de producción
-  # con nu (4 por defecto) cada muestra sortea su propio sigma — los
-  # sigma_hat vienen de 5 elecciones y están estimados con ruido
-  if (!is.null(nu)) {
-    zc <- zc * sqrt(nu / matrix(rchisq(b * length(con_datos), nu), b))
-  }
-  e_err <- sweep(zc, 2, sg, `*`) |> sweep(2, mu, "+")
-  tracked <- pmax(agg + e_err, 0)
-  bloque <- pmax(100 - rowSums(agg) + rnorm(b, 0, 1.5), 0)
-  todo <- cbind(tracked, bloque)
-  todo <- 100 * todo / rowSums(todo)
-  colnames(todo) <- c(con_datos, "BLOQUE")
-  tracked <- todo[, con_datos, drop = FALSE]
 
   # --- geografía: ratios y Dirichlet con la referencia -----------------------
   # d_ref es la elección previa (test del supuesto del ratio) o la propia
@@ -355,9 +370,11 @@ backtest_eleccion <- function(
       v[v < 0.03] <- 0
       h <- dhondt(v, fp$n_diputados[1])
       esc[k, ] <- esc[k, ] + h[con_datos]
-      v_der <- h["PP"] + if ("VOX" %in% con_datos) h["VOX"] else 0
-      derecha[k] <- derecha[k] || (v_der >= 176)
     }
+    # PP + VOX en el total nacional del draw (antes se comparaba con 176 el
+    # reparto de cada provincia, y salía siempre 0)
+    v_der <- esc[k, "PP"] + if ("VOX" %in% con_datos) esc[k, "VOX"] else 0
+    derecha[k] <- v_der >= 176
   }
   esc <- as_tibble(esc)
 
