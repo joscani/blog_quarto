@@ -174,7 +174,7 @@ entre medias. Lo que se queda fuera del full bayesian.
 
 - El paso de votos a escaños (reparto provincial, umbral y D'Hondt), es una "maquinaria" que toma como input la posterior del voto latente o la del voto latente con error, pero a nivel nacional. La proyección  a escaños a nivel de provincia es una metodología ad hoc que ya he explicado, hay otras, por supuesto. Lo bueno, que la incertidumbre de la posterior del voto se propaga en cada simulación. Es lo que se hace en lo que se conoce como *bayesian decision theory*
 
-- Algunos supuestos explícitos que no se me ha ocurrido como meterlo todo en el bayesiano. Como la transferencia del voto   podemos en Cataluña, el punto de partida de Adelante Andalucía o el tamaño de las encuestas antiguas que no lo publicaban. En esos casos, al menos utilizo una priori plausible pero sin verosimilitud. 
+- Algunos supuestos explícitos que no se me ha ocurrido como meterlo todo en el bayesiano. Como la transferencia del voto   podemos en Cataluña, la renuncia del Frente Amplio en Teruel (su voto se reparte entre el PSOE y fuera), el punto de partida de Adelante Andalucía o el tamaño de las encuestas antiguas que no lo publicaban. En esos casos, al menos utilizo una priori plausible pero sin verosimilitud. 
 :::
 
 Esto va en dos posts. Este es el del **voto**: cómo se estima y cuánto puede
@@ -443,22 +443,19 @@ Y en cristiano, línea a línea:
   generales la correlación $\Omega$ y el patrón de los tamaños, con un nivel
   propio ($\gamma$).
 
-### Las celdas: lo que la encuesta dijo, ni más ni menos
+### Las celdas
 
 Ninguna encuesta entra al modelo partido a partido: entra en **celdas**, que
 son agrupaciones de familias. Y la verosimilitud se escribe sobre lo que la
-fuente publicó, ni más ni menos: si publica menos partes, la verosimilitud
-de esas partes es igual de exacta, porque es la probabilidad marginal de los
-totales, no una aproximación.
+fuente publicó, ni más ni menos. 
+
 
 Un ejemplo real, que es el que motivó esto. La última Sigma Dos (El Mundo,
 campo del 1 al 14 de octubre, n = 3.007) no separa a SALF ni a los
-regionales: publica PP, PSOE, VOX y "Frente Amplio + Podemos" juntos, y
-punto. No es el único caso: Winston, Ateneo del Dato y Data10 publican a
-Sumar y Podemos por separado pero tampoco traen SALF; entre las cuatro son
-8 las encuestas que entran por esta vía. Las opciones eran excluir la
-encuesta —tirando la más reciente y con más muestra— o inventarle números.
-El modelo hace una tercera cosa: la encuesta entra con sus celdas propias,
+regionales: publica PP, PSOE, VOX y "Frente Amplio + Podemos" juntos.  
+
+Pasa con más encuestas, las opciones que barajaba eran excluir esas encuestas, o asumir cierto reparto. Pero en el modelo bayesiano en Stan se puede hacer otra cosa, meter cada encuesta con la info que aporta. 
+
 
 | Celda | Lo publicado | Familias del modelo que agrupa |
 |---|---|---|
@@ -470,9 +467,11 @@ El modelo hace una tercera cosa: la encuesta entra con sus celdas propias,
 
 El multinomial sobre esas celdas hace dos cosas a la vez: exige que la suma
 cuadre con lo publicado y es indiferente al reparto interior mientras la
-suma cuadre. Ese reparto lo deciden las demás encuestas —las que sí
-publican a SALF— porque todas miran el mismo voto latente. No hay ninguna
-línea de código que "rellene" el interior de la celda: es la definición
+suma cuadre. 
+
+El reparto se decide en base a lo que aportan otras encuestas. Si varias encuestas tienen la info separada de Sumar y Podemos se aprovecha eso, si otras lo publican junto también se aprovecha esa info. En el primer caso sirve para ver como se reparte y el segundo aporta información de la verosimilitud de la suma de ambos partidos. 
+
+No hay ninguna línea de código que "rellene" el interior de la celda: es la definición
 misma de la distribución posterior. Lo mismo que ya pasaba con el desglose
 regional, que entra condicional al total del BLOQUE: la verosimilitud de una
 encuesta multinomial se factoriza en la de sus grupos y la condicional del
@@ -501,21 +500,14 @@ ag_resto <- bloque_ag$mediana[bloque_ag$bloque == "resto"]
 Con números: en la semana de la encuesta, el modelo lleva a Sumar y Podemos
 un `r num_es(ag_izq)` % juntos (Sigma Dos publicó 10,9) y a SALF, los
 regionales y los otros un `r num_es(ag_resto)` % (Sigma Dos publicó 12,8).
-La encuesta aprieta las dos sumas, y no dice nada del reparto interior:
+La encuesta informa sobre las dos sumas, y no dice nada del reparto interior,
 ese queda a cargo de las encuestas que sí publican cada pieza.
 
-Lo que esta construcción no tolera es el atajo habitual: si antes del modelo
-se compone un consenso y el modelo bebe del consenso, ya no se puede
-recuperar quién era fino y quién era grueso, y la granularidad de cada fuente
-se pierde. Ni la imputación: darle el peso de 3.007 entrevistas a una cifra
-de SALF que nadie midió es meter en el modelo un dato que no existe. Con
-celdas, la encuesta dice lo que dijo — y el modelo se apaña con ello.
 
 Hay un detalle que hace aún más natural el agregado: "Sumar + Podemos" es
 exactamente el nivel de detalle con el que el modelo de error razona sobre
-la historia (las generales de 2015–2023 solo conocen a la izquierda de
-entonces junta). La encuesta con el desglose más pobre entra con el mismo
-grano que el pasado.
+las elecciones anteriores, cuando fueron juntos. (las generales de 2015–2023 solo conocen a la izquierda de
+entonces junta). 
 
 El voto del 29-N, simulación a simulación, es el voto latente de la última
 semana de 2026 más un error sorteado, en logit, para PP, PSOE, Vox y
@@ -524,8 +516,7 @@ Sumar+Podemos. El resto de partidos se reescala para que todo sume 100.
 Y lo mismo dibujado como un DAG, con la notación de los modelos gráficos:
 cada flecha va de un nodo a lo que depende de él. Los círculos grises son
 datos, los blancos son parámetros y los dobles se calculan a partir de sus
-padres. Las placas son los índices: lo que está dentro de "casas h" hay uno
-por casa.
+padres.
 
 ![El modelo conjunto como DAG, en una versión simplificada. A la izquierda, las generales; a la derecha, las autonómicas; en medio, lo que comparten. La sub-placa punteada c = 6 (predicción) espeja la de c ≤ 5 (resultados conocidos). Las flechas punteadas son la cadena del paseo aleatorio, sin dibujar todas las semanas. Cada encuesta i usa el voto latente de su semana, t(i), y el efecto de su casa, h(i). Pulsa para verlo en grande.](dag_modelo.svg){#fig-dag}
 
@@ -559,7 +550,7 @@ Se lee de izquierda a derecha:
   $\boldsymbol{\mu}^{\text{gen}}$ y $\boldsymbol{\mu}^{\text{aut}}$ van cada
   uno en su panel.
 
-Lo que une las encuestas con los resultados es $\mathbf{v}_{c,T}$: el
+Lo que une las encuestas con los resultados reales es $\mathbf{v}_{c,T}$: el
 mismo voto latente que sale de las encuestas es el que se compara con lo que
 se votó. Y lo que une las generales con las autonómicas son $\Omega$ y
 $\boldsymbol{\sigma}^{\text{aut}}$. Por eso es un solo modelo y no varios
@@ -598,9 +589,9 @@ encadenados.
 ## Los priors
 
 Todos en escala logit, centrados en valores razonables y con margen de
-sobra para que manden los datos. Son priors para descartar locuras, no para
-dar la respuesta. Al final del post miro qué aprende el modelo de los datos
-y qué deja casi como dice el prior.
+sobra para que manden los datos. Los priors pueden ser informativos o no, pero siempre han de ser razonables. En este caso los priors se eligen de forma que se descarten cosas imposibles pero que permita variar lo bastante para que los datos (a través de la verosimilitu actúe)
+
+
 
 | Parámetro | Prior | En palabras |
 |---|---|---|
@@ -637,30 +628,10 @@ cat(
 ```
 :::
 
-::: {.callout-note collapse="true"}
-## Por qué un único modelo y no varios encadenados
-
-En octubre las piezas iban por separado: un modelo de brms para la tendencia
-de 2026 y, aparte, una capa de error sacada de las elecciones pasadas.
-Funciona, pero tiene dos pegas:
-
-- **Lo que pasó en otras campañas no ayudaba.** Cuánto se mueve el voto en
-  una campaña, o cuánto ruido tienen las encuestas, se aprendía solo con las
-  encuestas de 2026, que son pocas.
-- **El error se medía contra otra cosa.** El error de las encuestas se
-  calculaba frente a la media de las encuestas de la última semana, pero
-  luego se sumaba a la tendencia del modelo para el día E. Parecidas, no
-  iguales.
-
-En el modelo conjunto, el error se mide frente a la misma cantidad a la que
-después se suma: el voto latente del día de la votación.
-:::
 
 ## El voto latente: lo que diría la media de las casas
 
-Empiezo por la pieza más fácil de contar. Cada semana hay un voto que no
-vemos: el que darían, de media, todas las casas si publicaran esa semana. Lo
-llamo **voto latente**. Y de una semana a la siguiente cambia un poco, al
+Cada semana hay un voto latente, que las "casas" encuestadoras medirián si se hicieran encuestas cada semana. Sería la "media" de las casas.  Y  he supuesto que de una semana a la siguiente cambia un poco, al
 azar:
 
 $$
@@ -668,8 +639,7 @@ $$
 \qquad \omega_{c,t,k} \sim N\big(0,\ \sigma_{c,g(k)}\big)
 $$
 
-Es un **paseo aleatorio**: lo mejor que puedo apostar para la semana que
-viene es lo de esta semana, y la incertidumbre crece con cada semana que
+El supuesto que subyace es  un **paseo aleatorio**, básicamente, es decir que para el voto latente de la semana que viene, sería como el de esta semana más un error aleatorio. La incertidumbre crece con cada semana que
 pasa sin encuestas. ¿Cuánto crece? Lo deciden los datos: $\sigma$ es el
 tamaño típico del paso semanal, en la escala de la softmax.
 
@@ -748,12 +718,7 @@ pp_media_casas <- pp_2026 |>
 ```
 
 Si os fijáis, las encuestas del PP tienden a caer algo por encima de su
-línea. No es un fallo: el voto latente es la media de las **casas**, no la de
-las encuestas. Cada casa pesa lo mismo, publique una encuesta o cinco. En
-2026, la media de las encuestas da al PP un `r num_es(pp_media_enc)` % y la
-media de las casas, un `r num_es(pp_media_casas)` %: las que más publican le
-dan algo más. Y es una decisión, no un descuido: así una casa muy activa no
-impone su sesgo. Vuelvo a esto con las casas.
+línea. No es un fallo: el voto latente es la media de las **casas**, no la de las encuestas. 
 
 ```{r}
 #| label: datos-volatilidad
@@ -774,17 +739,13 @@ kappa <- par_cj |> filter(parametro == "kappa")
 
 ### No hace falta una vida media
 
-Hay agregadores que dan más peso a las encuestas recientes con una regla
-fija, del tipo "una encuesta pierde la mitad de su peso cada dos semanas".
-Aquí no hace falta: la regla sale sola. Una encuesta de hace diez semanas
-dice algo del voto de hace diez semanas; para llegar al de hoy, eso tiene
-que atravesar diez pasos del paseo, y en cada uno pierde precisión. ¿Cuánta?
-Lo dice $\sigma$, que se estima.
+Otra gente que hace este tipo de cosas tienen cosas como dar más peso a las encuestas recientes y que pierda su importancia conforme pasa el tiempo. Algo como "una encuesta pierde la mitad de su peso cada dos semanas".  En mi aproximación no hace falta, la información de una encuesta de  hace 10 semanas para llegar al voto latente de hoy ha tenido que atravesar 10 pasos del paseo aleatorio, y en cada paso pierde precisión. Y esa pérdida de precisión se estima. 
 
-Y en 2026 se pierde muy poca. El paso semanal del PP en esta campaña es de
+
+En 2026 se está viendo que  se pierde muy poca. El paso semanal del PP en esta campaña es de
 `r num_es(v("2026", "PP"), 3)` en logit, que con el PP por el 32 % son unas
 décimas de punto. La cosa apenas se ha movido desde el verano, así que el
-modelo trata las encuestas de julio casi igual que las de octubre.
+modelo trata las encuestas de julio casi igual que las de octubre, si empiezan a salir encuestas dónde varía más las estimaciones de las encuestas, entonces el modelo estimaría una mayor incertidumbre de semana a semana. 
 
 ### Cada campaña tiene su ritmo
 
@@ -822,10 +783,8 @@ su voto, `r num_es(v("26j", "SUMAR"), 2)`, es la mayor de todas), y el
 Vox `r num_es(v("2026", "VOX"), 3)` y Sumar `r num_es(v("2026", "SUMAR"), 3)`.
 
 ¿Y esto por qué importa? Porque entre la última encuesta y el 29-N quedan
-casi siete semanas en las que el modelo solo puede extrapolar. Si les aplicara
-la volatilidad media de todas las campañas, las movidas de 2016 y 2019
-incluidas, la horquilla se abriría bastante más. Con la de 2026, que está
-siendo tranquila, se abre lo justo.
+casi  semanas en las que el modelo solo puede extrapolar. Si les aplicara
+la volatilidad media de todas las campañas, la incertidumbre sería aún mayor. 
 
 ::: {.callout-note collapse="true"}
 ## ¿Y la campaña electoral en sí?
@@ -854,10 +813,10 @@ semanas, % del PP.
 | Casa B | 31 | 31 | 32 |
 | Casa C | 32 | **35** | 33 |
 
-Si la miráis un rato, se ven tres cosas distintas:
+Se ven tres cosas distintas:
 
 1. **La casa A siempre da un punto más que las otras, y la B uno menos.**
-   Pase lo que pase. Eso no es el voto: es la manía de cada casa (su
+   Pase lo que pase. Eso no es el voto: es la "manía" de cada casa (su
    método, su universo, cómo pondera). Es el **efecto casa**.
 2. **En la semana 3, las tres suben un punto a la vez.** Algo que ven todas
    las casas a la vez no es manía de nadie: el voto se ha movido. Es el
@@ -874,18 +833,17 @@ medias y teniendo en cuenta el tamaño de cada encuesta.
 
 Para que esto funcione hace falta que varias casas publiquen en las mismas
 semanas y que cada casa publique varias veces. Una casa con una sola
-encuesta no deja ver su manía, y el modelo la deja cerca de cero.
+encuesta no deja ver su forma de hacer las cosas, y el modelo  deja su efecto "casa" cerca de cero (es decir, al no saber nada de esa casa, la coloca como una casa media)
 
 Pero hay una cosa que esta tabla **no** puede ver: que las tres casas den un
 punto de más a la vez, y siempre. Para la tabla, eso es el voto. Por eso el
 voto latente es la media de las casas, no la verdad. Ese error común solo se
-descubre el día de la votación, y para medirlo hay que mirar al pasado. A
-eso voy en la sección siguiente.
+descubre el día de la votación, y para medirlo hay que mirar al pasado.
 
 ### Las encuestas no son urnas perfectas
 
-Si cada encuesta fuera un sorteo perfecto —sacar 1.000 bolas de una urna
-con un 32 % de bolas azules—, diez encuestas de la misma semana saldrían
+Si cada encuesta fuera un sorteo perfecto , sacar 1.000 bolas de una urna
+con un 32 % de bolas azules, diez encuestas de la misma semana saldrían
 todas a un punto y medio del valor real. Ese es el margen de error de toda
 la vida, el de la **multinomial**, y es lo que usaba en los modelos de
 octubre.
@@ -895,7 +853,7 @@ Pero las encuestas no son sorteos perfectos. Cada una tiene su
 quién consigue llamar esa semana, cómo pondera, qué hace con los que no
 recuerdan a quién votaron…
 
-¿Y por qué importa? Porque el modelo solo tiene dos formas de explicar que
+Porque el modelo solo tiene dos formas de explicar que
 las encuestas no coincidan: el azar del muestreo, que en una encuesta de
 1.000 personas no da para más de un punto y medio, o que el voto se haya
 movido de verdad. Si le digo que las encuestas son sorteos perfectos, todo
@@ -905,8 +863,7 @@ un 35 % y la siguiente un 31 %. Con sorteos perfectos, la única explicación
 es que el PP subió cinco puntos en una semana y bajó cuatro en la
 siguiente. El modelo aprende que el voto es muy nervioso, y cuando luego
 tiene que proyectar casi siete semanas sin encuestas, hasta el 29-N, aplica esos
-nervios y la horquilla se dispara. Me pasó en la primera versión de este
-modelo.
+nervios y la horquilla se dispara. 
 
 La solución es la **Dirichlet-multinomial**, que es justo lo de en medio:
 cada encuesta saca sus bolas de **su propia urna**, una copia algo movida de
@@ -922,7 +879,7 @@ phi <- par_cj |>
 phi_c <- \(c) phi$mediana[phi$partido == c]
 ```
 
-Lo bonito es que $\phi$ no lo pongo yo: lo estima el modelo. ¿Cómo? Mirando
+$\phi$ no lo pongo yo: lo estima el modelo. ¿Cómo? Mirando
 cuánto se separan las encuestas del voto latente y comparándolo con lo que
 daría el sorteo puro, que se sabe porque conocemos el tamaño de cada
 encuesta. Si se separan lo justo, $\phi$ sale muy grande. Si se separan
@@ -940,7 +897,7 @@ y las encuestas se comportan como sorteos perfectos.
 ::: {.callout-tip collapse="true"}
 ## La demo de las urnas
 
-Vamos a simular un poco, que es lo que me gusta. Diez casas hacen una
+Vamos a simular un poco.  Diez casas hacen una
 encuesta de 1.000 personas **la misma semana**, y el PP tiene, de verdad,
 un 32 %. ¿Cuánto deberían parecerse las diez encuestas?
 
@@ -1040,7 +997,7 @@ rebano <- grandes |>
 coc <- \(p) num_es(rebano$cociente[rebano$partido == p], 2)
 ```
 
-Pero en 2026 pasa algo más curioso. Si comparo cuánto se separan las
+Pero en 2026 pasa algo curioso. Si comparo cuánto se separan las
 encuestas de su línea con lo que daría el sorteo puro, en el PSOE y en Vox
 se separan **menos** de lo que permite el azar: el cociente entre las dos
 cosas es `r coc("PSOE")` para el PSOE y `r coc("VOX")` para Vox (1 sería
@@ -1061,7 +1018,7 @@ que cometen todas a la vez, y de eso se encarga la pieza siguiente.
 - **Efecto casa.** Hay un efecto por casa y campaña, y dentro de cada
   campaña suman cero. Así el voto latente es la media de las casas, cada
   una con el mismo peso. Una casa con pocas encuestas tiene un efecto
-  encogido hacia cero (pooling parcial).
+  encogido hacia cero (partial pooling).
 - **Voto latente.** El paseo aleatorio prefiere pasos pequeños: un salto de
   tres puntos que se deshace a la semana siguiente le sale "caro" en el
   prior de la volatilidad, así que el modelo prefiere llamarlo ruido.
@@ -1073,13 +1030,13 @@ que cometen todas a la vez, y de eso se encarga la pieza siguiente.
   de las elecciones pasadas.
 :::
 
-## El error del consenso: lo que fallan todas a la vez
+## El error del consenso
 
 ### Dónde entra la verdad
 
 Las encuestas solas no pueden saber si se equivocan todas a la vez: si todas
 dan un punto de más al PP, para ellas eso es el voto. Para medirlo hace
-falta algo que no sea una encuesta: lo que vota la gente.
+falta algo que no sea una encuesta, lo que se votó de verdad en las elecciones.
 
 De cinco de las seis campañas sabemos cómo acabaron, y ese resultado entra
 en el modelo como un dato más. Es el único sitio por donde entra la verdad,
@@ -1098,8 +1055,9 @@ $$
 De esas comparaciones aprende cómo suele ser el error: si tira hacia un
 lado con algún partido ($\boldsymbol{\mu}$), cuánto suele fallar con cada
 uno ($\boldsymbol{\sigma}$) y si los fallos van juntos ($\Omega$). Y para
-2026, que todavía no ha votado, le suma al voto latente un error sorteado de
-esa misma normal, uno distinto en cada simulación.
+2026, ¿qué hacemos?, pues simplemente estimamos el voto latente y le añadimos un valor aleatorio extraído de la distribución que tenemos estimada de como fue el error en el pasado.  Y eso lo hacemos en cada una de las 4000 posteriores del voto latente, uno distinto en cada "draw" de la posteriori
+
+
 
 ::: {.callout-note collapse="true"}
 ## Dos detalles sobre cómo se mide el error
@@ -1139,7 +1097,7 @@ elecciones aunque los partidos cambien de tamaño.
 
 ### Por qué contra el voto latente
 
-En octubre medía el error de las encuestas contra la media de las encuestas
+En el primer post de metanálisis medía el error de las encuestas contra la media de las encuestas
 de la última semana, y luego lo sumaba a la tendencia del modelo. Parece lo
 mismo, pero no lo es: en la media de las encuestas, la casa que más publica
 pesa más; en el voto latente, todas las casas pesan igual.
@@ -1155,7 +1113,7 @@ Ahora el error se mide contra el voto latente de las campañas pasadas,
 hecho con las mismas reglas que el de 2026. Y como todo se estima a la vez,
 el resultado también ayuda a situar el voto latente de las campañas
 antiguas, que a veces tenían pocas encuestas, y la duda que queda entra en
-el error. El modelo no se cree más listo de lo que es.
+el error.
 :::
 
 ### Lo que aprende
@@ -1244,11 +1202,7 @@ fallo con el PP y el de Vox van en direcciones opuestas
 (`r num_es(om_v("VOX-PP"), 2)`), Vox y PSOE también
 (`r num_es(om_v("VOX-PSOE"), 2)`), y el fallo con el PP y el del PSOE no va
 junto (`r num_es(om_v("PSOE-PP"), 2)`, que también es aprender: sus fallos
-van cada uno por su lado). Las tres casillas que implican a Sumar + Podemos
-quedan casi
-como las deja el prior: cinco generales y un partido que no está en las
-autonómicas no dan para más. De dónde sale el patrón PP–Vox es justo lo que
-cuenta la sección siguiente.
+van cada uno por su lado). 
 
 ## Lo que enseñan las autonómicas
 
@@ -1276,25 +1230,17 @@ gamma <- par_cj |> filter(parametro == "gamma")
 
 Salen dos cosas claras. La primera: $\gamma$ es
 `r num_es(gamma$mediana, 2)`, prácticamente cero. Las generales fallan más o
-menos lo mismo que las autonómicas, cosa que la verdad no esperaba. La
-segunda, la más interesante: la correlación entre el fallo con el PP y el
+menos lo mismo que las autonómicas. 
+La segunda, es interesante: la correlación entre el fallo con el PP y el
 fallo con Vox, la -0,50 de la tabla de arriba. Cuando las encuestas se pasan
 con el PP, se quedan cortas con Vox, y al revés.
 
-Ojo con cómo se lee esto. No dice que PP y Vox se peleen por los mismos
-votantes: eso es otra cosa. Dice que las encuestas se equivocan al
-**repartir** el voto entre los dos, aunque se acerquen más con la suma. Una
-explicación posible es el recuerdo de voto: si una casa pondera mal a los
-que votaron al PP y ahora votan a Vox, se equivoca con los dos a la vez y en
-direcciones opuestas. Pero eso es una hipótesis mía: el modelo solo ve que
-pasa.
+Ojo,  No dice que PP y Vox se peleen por los mismos
+votantes. Dice que las encuestas se equivocan al
+**repartir** el voto entre los dos, aunque se acerquen más con la suma. 
 
-Y dos límites. Sumar no está en las autonómicas (sus equivalentes cambian de
-nombre y de socios en cada comunidad), así que sus correlaciones las pone
-casi el prior. Y Vox, cuando tiene menos del 3 % del voto, no cuenta: en
-logit, los fallos de un partido tan pequeño se disparan.
 
-## Las manías de las casas, frente al resultado
+## Las "manías" de las casas, frente al resultado
 
 ```{r}
 #| label: tabla-casas
@@ -1392,11 +1338,6 @@ con el peso que tenga cada uno. Es decir, si las encuestas se quedan cortas
 con el espacio a la izquierda del PSOE, se quedan cortas con los dos en
 proporción.
 
-Y de los partidos regionales y de SALF no tengo historia: entre 2015 y 2019,
-el "resto" era sobre todo Ciudadanos. Así que no les pongo error propio:
-cuando el error mueve a los grandes, el resto se ajusta en proporción para
-que todo sume cien. Es un supuesto, y en la segunda parte miro si cambia
-algún escaño.
 
 ## El voto del 29-N
 
@@ -1474,9 +1415,7 @@ ggplot(voto_draws, aes(x = pct, y = partido, fill = partido)) +
 ```
 
 Es el voto latente de la última semana de 2026 más el error del consenso,
-simulación a simulación. Con esto ya puedo adelantaros los escaños, aunque
-cómo se pasa de votos a escaños (provincia a provincia, con el mapa de
-listas ya confirmado y D'Hondt) lo cuento en la segunda parte:
+simulación a simulación. Teniendo el voto estimado (el latente más el error histórico), podemos meter toda la movida de como repartir los escaños, que ya he contado en post anteriores. 
 
 ```{r}
 #| label: escanos-adelanto
@@ -1515,25 +1454,6 @@ encuestas que quedan hasta el 29-N. La de la suma de PP y Vox es más
 estrecha en proporción, por la correlación negativa: cuando las encuestas
 fallan con uno, suelen fallar al revés con el otro.
 
-Sobre esa correlación, un matiz honesto: sale negativa porque el patrón lo
-traen las autonómicas (39 elecciones, frente a las cinco generales), y en
-esas cinco el error de PP y Vox correlacionaba al revés (+0,9). Con cinco
-generales no hay Omega propia que estimar, pero el efecto se puede medir a
-posteriori: con los mismos draws de voto latente y cambiando solo la
-correlación con la que se sortea el error, forzar la de las generales
-(+0,5) baja la probabilidad de mayoría de PP y Vox del `r pct_es(p_cj)` al
-`r pct_es(p_om_vox)`. Cambia la cifra, no el desenlace.
-
-Fíjate en lo que acaban de hacer las dos comprobaciones: no hay reajuste
-ninguno. `err_new` es `mu_gen` más un sorteo de la Omega, draw a draw, así
-que la posteriori se puede interrogar sin volver a muestrear: la ablación
-de arriba es no sortear el error; esto es sortearlo con otra correlación.
-Cualquier pieza admite el mismo trato, y en la segunda parte lo uso para
-jugar con alianzas.
-
-Y ojo, que el modelo solo sabe lo que
-publican las casas: no sabe cómo cocina cada una ni cuál es su muestra
-efectiva. Y un `r pct_es(p_cj)` no es un 100 %.
 
 ## ¿Nos lo creemos?
 
@@ -1579,9 +1499,7 @@ knitr::kable(
 )
 ```
 
-El pipeline de octubre fallaba en voto más de lo que prometía: tres de
-quince fuera, cuando un intervalo del 90 % debería fallar una o dos. El
-modelo nuevo falla una vez, a cambio de horquillas más anchas. El fallo es el PP
+Este modelo modelo nuevo falla una vez, a cambio de horquillas más anchas. El fallo es el PP
 del `r toupper(fallo$eleccion[1])`: sacó `r fallo$real[1]` escaños y el
 modelo daba entre `r fallo$q05[1]` y `r fallo$q95[1]`.
 
@@ -1590,7 +1508,7 @@ resultado, 0 si cae en el centro y 1 si cae en el borde. En un intervalo
 bien calibrado ronda 0,49. En voto, el modelo nuevo está casi clavado; en
 escaños, un pelín prudente.
 
-Y el caso que más me gusta: en 2023, cuando casi todo el mundo daba por
+En 2023, cuando casi todo el mundo daba por
 hecha la mayoría de PP y Vox, el modelo, con lo que se sabía la víspera, le
 habría dado un `r pct_es(bt_m$p_pp_vox_176[bt_m$eleccion == "23j"])`. Una
 moneda al aire. Sumaron `r bt_m$real_pp_vox[bt_m$eleccion == "23j"]`.
@@ -1599,7 +1517,7 @@ Con cuatro elecciones, esto dice que el modelo no está mal calibrado, no
 que sea perfecto. Y hay una cosa que el backtest no puede probar: en las
 elecciones pasadas, la última encuesta estaba a seis días de la votación, y
 en 2026 quedan casi siete semanas. Esa parte de la horquilla se apoya en la
-volatilidad estimada, no en una validación. Que conste.
+volatilidad estimada, no en una validación.
 
 ::: {.callout-note collapse="true"}
 ## Más comprobaciones: diagnósticos, priors y qué aprende el modelo
@@ -1671,9 +1589,7 @@ que hay con tan pocas generales con Vox.
 | Sin CIS ni ElectoPanel en los grandes partidos (ElectoPanel sí en el desglose regional) | Decisión | No |
 | Encuestas que no separan la izquierda fuera del PSOE (Sigma Dos, Winston, Ateneo del Dato, Data10): entran agregadas, con celda Sumar + Podemos y SALF sin observar | Regla | No |
 | Encuestas antiguas sin tamaño publicado: 1.000 personas | A mano | No |
-| El error de Sumar + Podemos se reparte en proporción entre los dos | A mano | No |
-| SALF y los regionales sin error propio: se reescalan | A mano | Segunda parte |
-| El mapa de listas de la izquierda y Adelante Andalucía | Segunda parte | Segunda parte |
+
 
 ::: {.callout-tip collapse="true"}
 ## Reproducir el análisis
@@ -1697,6 +1613,5 @@ mucho: están en la release
 [`full-bayesian-29n`](https://github.com/joscani/blog_quarto/releases/tag/full-bayesian-29n).
 :::
 
-Y hasta aquí la primera parte. En la segunda, cómo se pasa de este voto a
-escaños, provincia a provincia. Como siempre, esto es un ejercicio para mi
-propia diversión, así que si veis alguna burrada, a los comentarios.
+Como siempre, esto es un ejercicio para mi
+propia diversión, así que puede haber alguna burrada , se agradecen comentarios
