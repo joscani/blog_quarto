@@ -5,9 +5,13 @@
 # curvas de edad.
 #
 # Dos fuentes, mismo formato de salida (post_celdas_casa_media.rds):
-#   - brms (mod_brms_nuts.rds): posterior_epred con re_formula = re_sin_casa
-#     (sin los términos de casa, (1 | casa) y (1 | casa:rec), es decir, efecto
-#     casa = 0), como 04b_casa_media_brms.R. Sin modelo de participación.
+#   - brms (mod_brms_nuts.rds): posterior_epred con la fórmula COMPLETA
+#     (re_formula = NULL, incluidos (1 | casa) y (1 | casa:rec)), un epred por
+#     casa y media entre casas (la casa no se conoce en la población). OJO: no
+#     recortar la fórmula: en brms los interceptos de cada dpar van libres y el
+#     modo común solo se cancela con todos los efectos; sin los de casa el eta
+#     de celda se infla (sd 0.20 -> 0.60) y los escaños salen con intervalos
+#     2-3 veces más anchos (v. PLAN.md, 2026-10-25). Sin modelo de participación.
 #   - stan (fit_separado_<modo>_voto.rds, de 05b_separado.R): se reproducen en
 #     R los draws de mrp_voto.stan, con la casa media = media de las 4 casas
 #     (como la fila n_casa + 1 de v_casa en el modelo). OJO: no es exactamente
@@ -21,7 +25,8 @@
 #   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts stan part       # stan con participación
 #   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R prueba stan part     # prueba con los ajustes prueba
 #
-# Salida: datos/post_celdas_casa_media.rds (o _part), con
+# Salida: datos/post_celdas_casa_media.rds (stan, o _part con participación) o
+# datos/post_celdas_casa_media_brms.rds (brms), con
 #   p       array draws x celda x partido (probabilidad de voto válido)
 #   post    tibble con la metainformación de la celda (prov, ccaa, sexo, edad,
 #           edu, rec, N) y, si "part", la columna pv_media (media de pv por
@@ -87,7 +92,6 @@ if (fuente == "brms") {
     )
   }
   post$mes <- factor(max(levels(celdas$mes)), levels = levels(celdas$mes))
-  post$casa <- factor("CIS", levels = levels(celdas$casa)) # no se usa: sin términos de casa
 
   mascara <- sapply(voto_lv, function(p) {
     if (p %in% names(territorio_mod)) {
@@ -97,28 +101,24 @@ if (fuente == "brms") {
     }
   })
 
-  termino_mm <- paste0(
-    "(1 | mm(",
-    paste0("p", 1:K, collapse = ", "),
-    ", weights = cbind(",
-    paste0("w", 1:K, collapse = ", "),
-    "), scale = FALSE))"
-  )
-  re_sin_casa <- as.formula(paste(
-    "~ (1 | edad) + (1 | edu) + (1 | rec) + (1 | ccaa) +",
-    "(1 | ccaa:rec) + (1 | mes) +",
-    termino_mm
-  ))
-
-  set.seed(2026)
-  p_celda <- posterior_epred(
-    mod,
-    newdata = post,
-    re_formula = re_sin_casa,
-    ndraws = ndraws,
-    allow_new_levels = TRUE,
-    sample_new_levels = "gaussian"
-  )
+  casas <- levels(celdas$casa)
+  p_celda <- NULL
+  for (cs in casas) {
+    post_c <- post
+    post_c$casa <- factor(cs, levels = casas)
+    # misma submuestra de draws para las 4 casas
+    set.seed(2026)
+    pc <- posterior_epred(
+      mod,
+      newdata = post_c,
+      ndraws = ndraws,
+      allow_new_levels = TRUE,
+      sample_new_levels = "gaussian"
+    )
+    p_celda <- if (is.null(p_celda)) pc else p_celda + pc
+    cat("  casa", cs, "hecha\n")
+  }
+  p_celda <- p_celda / length(casas)
   for (d in seq_len(dim(p_celda)[1])) {
     p_celda[d, , ] <- p_celda[d, , ] * mascara
     p_celda[d, , ] <- p_celda[d, , ] / rowSums(p_celda[d, , ])
@@ -291,7 +291,13 @@ if (modo == "nuts") {
   }
   salida <- paste0(
     "post_celdas_casa_media",
-    if (con_part) "_part" else "",
+    if (fuente == "brms") {
+      "_brms"
+    } else if (con_part) {
+      "_part"
+    } else {
+      ""
+    },
     ".rds"
   )
   saveRDS(

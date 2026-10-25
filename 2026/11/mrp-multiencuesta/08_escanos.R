@@ -23,7 +23,8 @@
 #   escanos_mrp.png             distribución posterior de escaños
 #   datos/estim_escanos_mrp.rds arrays draw x provincia x partido
 #
-#   Rscript 2026/11/mrp-multiencuesta/08_escanos.R
+#   Rscript 2026/11/mrp-multiencuesta/08_escanos.R              # entrada preferente: _part
+#   Rscript 2026/11/mrp-multiencuesta/08_escanos.R brms         # entrada base (brms), salidas _brms
 
 library(dplyr)
 library(tidyr)
@@ -36,7 +37,12 @@ dir_datos <- file.path(dir_proy, "datos")
 
 f_post_part <- file.path(dir_datos, "post_celdas_casa_media_part.rds")
 f_post_base <- file.path(dir_datos, "post_celdas_casa_media.rds")
-if (file.exists(f_post_part)) {
+f_post_brms <- file.path(dir_datos, "post_celdas_casa_media_brms.rds")
+etiq <- commandArgs(trailingOnly = TRUE)[1]
+suf <- if (!is.na(etiq) && etiq != "") paste0("_", etiq) else ""
+if (!is.na(etiq) && etiq == "brms") {
+  x <- readRDS(f_post_brms)
+} else if (file.exists(f_post_part)) {
   # versión con participación: el peso de cada celda (pv) varía por draw
   x <- readRDS(f_post_part)
 } else if (file.exists(f_post_base)) {
@@ -229,9 +235,18 @@ print(as.data.frame(resumen), row.names = FALSE)
 cat("\n== probabilidad de cada mayoría ==\n")
 print(as.data.frame(mayorias), row.names = FALSE)
 
-readr::write_csv(resumen, file.path(dir_proy, "escanos_mrp_resumen.csv"))
-readr::write_csv(mayorias, file.path(dir_proy, "escanos_mrp_mayorias.csv"))
-readr::write_csv(provincias, file.path(dir_proy, "escanos_mrp_provincias.csv"))
+readr::write_csv(
+  resumen,
+  file.path(dir_proy, paste0("escanos_mrp", suf, "_resumen.csv"))
+)
+readr::write_csv(
+  mayorias,
+  file.path(dir_proy, paste0("escanos_mrp", suf, "_mayorias.csv"))
+)
+readr::write_csv(
+  provincias,
+  file.path(dir_proy, paste0("escanos_mrp", suf, "_provincias.csv"))
+)
 saveRDS(
   list(
     totales = totales,
@@ -243,7 +258,7 @@ saveRDS(
     umbral = umbral,
     mes = x$mes
   ),
-  file.path(dir_datos, "estim_escanos_mrp.rds")
+  file.path(dir_datos, paste0("estim_escanos_mrp", suf, ".rds"))
 )
 
 # ---- gráfico -------------------------------------------------------------------
@@ -304,10 +319,19 @@ p_esc <- todo |>
   theme_minimal(base_size = 12)
 
 ggsave(
-  file.path(dir_proy, "escanos_mrp.png"),
+  file.path(dir_proy, paste0("escanos_mrp", suf, ".png")),
   p_esc,
   width = 8,
   height = 5.5,
   dpi = 200
 )
-cat("\nguardados escanos_mrp_*.csv, escanos_mrp.png y estim_escanos_mrp.rds\n")
+cat(
+  "\nguardados escanos_mrp",
+  suf,
+  "_*.csv, escanos_mrp",
+  suf,
+  ".png y estim_escanos_mrp",
+  suf,
+  ".rds\n",
+  sep = ""
+)
