@@ -1431,7 +1431,7 @@ knitr::kable(
         AA = "Adelante Andalucía"
       ),
       `Escaños (mediana)` = mediana,
-      `Intervalo del 90 %` = paste0(q05, "–", round(q95)),
+      `Intervalo del 90 %` = paste0(round(q05), "–", round(q95)),
       `Reparto que suma 350` = etiqueta
     ),
   align = "lrrr"
@@ -1443,7 +1443,7 @@ reparte los 350 escaños por resto mayor, para quien quiera un número por
 partido.
 
 PP y Vox suman `r median(der)` escaños de mediana (intervalo del 90 %:
-`r quantile(der, 0.05)`–`r round(quantile(der, 0.95))`), y alcanzan la
+`r round(quantile(der, 0.05))`–`r round(quantile(der, 0.95))`), y alcanzan la
 mayoría absoluta en el `r pct_es(p_cj)` de las simulaciones. Con el pipeline
 de octubre, el `r pct_es(p_oct)`.
 
