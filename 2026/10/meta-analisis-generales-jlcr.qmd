@@ -30,6 +30,28 @@ knitr:
     comment: "#>"
 ---
 
+```{r}
+#| include: false
+n_mod1_ahora <- readr::read_csv(
+  here::here("2026/10/encuestas_meta_grande.csv"),
+  show_col_types = FALSE
+) |>
+  dplyr::distinct(encuestadora, campo) |>
+  nrow()
+n_mod2_ahora <- readr::read_csv(
+  here::here("2026/10/encuestas_meta_bloque.csv"),
+  show_col_types = FALSE
+) |>
+  dplyr::distinct(encuestadora, campo) |>
+  nrow()
+```
+
+::: callout-note
+## Actualización del 26 de octubre de 2026
+
+Entran tres encuestas nuevas de ciento76. La de SocioMétrica (campo del 1 de septiembre al 25 de octubre, n = 3.223) publica las seis principales, incluida SALF, y entra en el modelo 1, que pasa de 48 a `r n_mod1_ahora` encuestas. El modelo 2 se queda en `r n_mod2_ahora`, porque la de SocioMétrica no entra en el bloque. Sigma Dos (n = 3.122) no publica SALF y NC Report no publica su tamaño muestral, así que ninguna de las dos entra en estos modelos. Los dos modelos están reajustados con las nuevas.
+:::
+
 ::: callout-note
 ## Actualización del 25 de octubre de 2026
 

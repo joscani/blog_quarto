@@ -645,7 +645,7 @@ tamaño típico del paso semanal, en la escala de la softmax.
 
 ```{r}
 #| label: fig-tendencia
-#| fig-cap: "Voto latente de los cuatro grandes en 2026 (mediana e intervalo del 90 %) y las encuestas que lo informan. Desde la última encuesta (16 de octubre) hasta el 29-N, el modelo solo puede extrapolar: el intervalo se abre."
+#| fig-cap: "Voto latente de los cuatro grandes en 2026 (mediana e intervalo del 90 %) y las encuestas que lo informan. Desde la última encuesta (25 de octubre) hasta el 29-N, el modelo solo puede extrapolar: el intervalo se abre."
 colores <- c(
   PP = "#005999",
   PSOE = "#FF0126",
@@ -669,6 +669,7 @@ puntos <- bind_rows(
     transmute(fecha, partido = celda, pct = 100 * y / n)
 )
 ultima <- max(puntos$fecha)
+sem_29n <- round(as.numeric(as.Date("2026-11-29") - ultima) / 7)
 ggplot(tend, aes(fecha, mediana, colour = partido, fill = partido)) +
   geom_ribbon(aes(ymin = q05, ymax = q95), alpha = 0.2, colour = NA) +
   geom_line(linewidth = 0.8) +
@@ -783,7 +784,7 @@ su voto, `r num_es(v("26j", "SUMAR"), 2)`, es la mayor de todas), y el
 Vox `r num_es(v("2026", "VOX"), 3)` y Sumar `r num_es(v("2026", "SUMAR"), 3)`.
 
 ¿Y esto por qué importa? Porque entre la última encuesta y el 29-N quedan
-casi  semanas en las que el modelo solo puede extrapolar. Si les aplicara
+`r sem_29n` semanas en las que el modelo solo puede extrapolar. Si les aplicara
 la volatilidad media de todas las campañas, la incertidumbre sería aún mayor. 
 
 ::: {.callout-note collapse="true"}
@@ -862,7 +863,7 @@ Imagina tres semanas seguidas: una encuesta da al PP un 30 %, la siguiente
 un 35 % y la siguiente un 31 %. Con sorteos perfectos, la única explicación
 es que el PP subió cinco puntos en una semana y bajó cuatro en la
 siguiente. El modelo aprende que el voto es muy nervioso, y cuando luego
-tiene que proyectar casi siete semanas sin encuestas, hasta el 29-N, aplica esos
+tiene que proyectar `r sem_29n` semanas sin encuestas, hasta el 29-N, aplica esos
 nervios y la horquilla se dispara. 
 
 La solución es la **Dirichlet-multinomial**, que es justo lo de en medio:
@@ -1449,7 +1450,7 @@ de octubre, el `r pct_es(p_oct)`.
 
 Las horquillas de cada partido son anchas, y la de Vox, la que más. Salen
 de dos sitios: lo que suelen fallar las encuestas todas a la vez, que en el
-pasado fue del orden de tres puntos con el PP, y las casi siete semanas sin
+pasado fue del orden de tres puntos con el PP, y las `r sem_29n` semanas sin
 encuestas que quedan hasta el 29-N. La de la suma de PP y Vox es más
 estrecha en proporción, por la correlación negativa: cuando las encuestas
 fallan con uno, suelen fallar al revés con el otro.
@@ -1516,7 +1517,7 @@ moneda al aire. Sumaron `r bt_m$real_pp_vox[bt_m$eleccion == "23j"]`.
 Con cuatro elecciones, esto dice que el modelo no está mal calibrado, no
 que sea perfecto. Y hay una cosa que el backtest no puede probar: en las
 elecciones pasadas, la última encuesta estaba a seis días de la votación, y
-en 2026 quedan casi siete semanas. Esa parte de la horquilla se apoya en la
+en 2026 quedan `r sem_29n` semanas. Esa parte de la horquilla se apoya en la
 volatilidad estimada, no en una validación.
 
 ::: {.callout-note collapse="true"}

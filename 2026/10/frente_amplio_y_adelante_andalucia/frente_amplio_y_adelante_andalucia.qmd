@@ -192,6 +192,12 @@ dif_pp_vox <- dif("PP") + dif("VOX")
 ```
 
 ::: callout-note
+## Actualización del 26 de octubre de 2026
+
+Entran las tres encuestas nuevas de ciento76. La de SocioMétrica entra en el modelo de 7 categorías; Sigma Dos y NC Report no. Podemos anuncia que va dentro de la lista del Frente Amplio en Illes Balears, según laSexta, y lo cambio en el mapa con la regla `unida`, como en Canarias. Con eso, SUMAR saca `r pv("Illes Balears", "SUMAR", "oficial", "escanos_mediana")` escaño en Baleares en el escenario mapa, frente a `r pv("Illes Balears", "SUMAR", "separadas", "escanos_mediana")` con Podemos aparte. En el mapa, el PP tiene una mediana de `r em("PP")` escaños y VOX de `r em("VOX")`, y la probabilidad de que PP y VOX sumen 176 o más es `r pc(pr("PP + VOX >= 176"))`. La tabla de sensibilidad a los priors sigue siendo la del 17 de octubre.
+:::
+
+::: callout-note
 ## Actualización del 25 de octubre de 2026
 
 Los tres escenarios usan los modelos reajustados con la encuesta de IMOP para El Confidencial (campo del 13 al 16 de octubre), la única publicada desde el 11 de octubre. En el escenario mapa, la mediana de escaños pasa de 131 a 129 para el PP y de 67 a 68 para VOX. La probabilidad de que PP y VOX sumen 176 o más sigue en el 99 %. La tabla de sensibilidad a los priors es todavía la del ajuste del 17 de octubre.
@@ -285,12 +291,12 @@ para volver a simular sin encuestas nuevas).
 
 ## El mapa de coaliciones, provincia a provincia
 
-Lo que se ha registrado (CSV provisional del 16-17 oct): Sumar ha hecho
+Lo que se ha registrado (CSV provisional del 16-17 oct, con Baleares del 26 oct): Sumar ha hecho
 frente amplio, pero Podemos solo entra en algunas provincias; en Cataluña
 Podemos no se presenta y hace campaña por ERC; en Andalucía, Adelante
 Andalucía no entra en el frente amplio. El mapa operativo queda así:
 
-- **Canarias y C. Valenciana**: lista conjunta (Podemos dentro).
+- **Canarias, C. Valenciana e Illes Balears**: lista conjunta (Podemos dentro). El caso de Baleares es un anuncio del 26 de octubre, según laSexta, y de momento solo tiene esa fuente.
 - **Cataluña**: Frente Amplio–Comuns por un lado; ERC + Podemos por otro
   (Podemos no compite con siglas propias).
 - **Andalucía**: Frente Amplio por Andalucía sin Podemos ni Adelante
@@ -300,7 +306,7 @@ Andalucía no entra en el frente amplio. El mapa operativo queda así:
 
 ```{r}
 #| label: tbl-mapa
-#| tbl-cap: "Regla del simulador por comunidad: número de provincias (mapa provisional, 16-17 oct 2026)."
+#| tbl-cap: "Regla del simulador por comunidad: número de provincias (mapa provisional, 16-26 oct 2026)."
 # el mismo fichero que lee simular(listas = "mapa")
 mapa <- read_csv(
   here::here("2026/10/coaliciones_izquierda_29N_provincias.csv"),
@@ -368,7 +374,7 @@ flowchart TD
   E[Escaños por provincia y partido]
 ```
 
-- `unida` (Canarias, C. Valenciana): el voto de Podemos se suma a la lista
+- `unida` (Canarias, C. Valenciana, Illes Balears): el voto de Podemos se suma a la lista
   conjunta, D'Hondt no ve composición interna.
 - `sin_podemos` (Cataluña): Podemos no compite; su voto se reparte entre
   ERC y SUMAR y el resto va a abstención/otros.
@@ -462,7 +468,7 @@ encuestas nacionales la infravaloran.
 
 ```{r}
 #| label: tbl-escanos
-#| tbl-cap: "Escaños por partido y escenario (mediana e IC90). `oficial` es el mapa de coaliciones registrado el 16-17 oct."
+#| tbl-cap: "Escaños por partido y escenario (mediana e IC90). `oficial` es el mapa de coaliciones registrado el 16-17 oct, con Baleares del 26 oct."
 protagonistas <- c("SUMAR", "PODEMOS", "AA", "ERC", "PSOE", "PP", "VOX")
 t_esc |>
   filter(partido %in% protagonistas) |>

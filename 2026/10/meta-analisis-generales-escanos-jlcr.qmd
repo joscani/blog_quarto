@@ -769,6 +769,26 @@ resumen_escanos(sim, width = 0.9) |>
 ```
 
 ```{r}
+#| include: false
+med_esc <- function(p) {
+  resumen_escanos(sim, width = 0.9) |>
+    filter(partido == p) |>
+    pull(escanos)
+}
+p_mayoria <- function(m) {
+  prob_mayorias(sim) |>
+    filter(escenario == m) |>
+    pull(prob)
+}
+```
+
+::: callout-note
+## Actualización del 26 de octubre de 2026
+
+Entran las tres encuestas nuevas (ver la actualización del mismo día en la primera parte). Las medianas de PP (`r med_esc("PP")`) y VOX (`r med_esc("VOX")`) no cambian. PSOE sube a `r med_esc("PSOE")` (antes 107), ERC a `r med_esc("ERC")` (antes 8) y SUMAR baja a `r med_esc("SUMAR")` (antes 18). La probabilidad de que PP y VOX sumen 176 o más sigue en el `r num_es(100 * p_mayoria("PP + VOX >= 176"), 1)` %.
+:::
+
+```{r}
 #| fig-width: 10
 #| fig-height: 6
 colores_esc <- c(
