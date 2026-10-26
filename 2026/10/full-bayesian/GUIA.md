@@ -137,6 +137,7 @@ Las de la tabla "Todos los supuestos principales" del post, en corto:
 - El scrape baja una encuesta nueva pero el driver dice "sin cambios": la
   encuesta entró en el fichero bruto pero quedó excluida por las reglas de
   arriba (mira la sección 4).
+- Una encuesta sin n de Sigma Dos, Winston, Ateneo del Dato o Data10 no entra en `encuestas_meta_agregadas.csv` (`construir_meta_agregadas()` la filtra), así que no mueve el driver. Si ves una fila con la muestra vacía en ese CSV, el filtro se ha perdido.
 - Semillas fijas (1811 en los Stan, 2029 en las simulaciones): con los mismos
   datos sale el mismo posterior, así que re-renderizar sin datos nuevos no
   mueve las cifras.

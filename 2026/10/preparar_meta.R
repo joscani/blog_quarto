@@ -280,6 +280,9 @@ construir_meta_agregadas <- function(
   dat <- leer_encuestas_meta(fecha_inicio_grande) |>
     filter(
       Encuestadora %in% casas_agregadas,
+      # sin n publicado, fuera (igual que prep_grande); si no, el CSV cambia
+      # sin que cambie el modelo
+      !is.na(Muestra),
       if_all(c(PP, PSOE, VOX, Sumar, Podemos), ~ !is.na(.x)),
       is.na(SALF)
     ) |>
