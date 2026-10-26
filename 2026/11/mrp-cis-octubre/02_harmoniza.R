@@ -1,0 +1,143 @@
+# Armoniza las tres fuentes a un vocabulario común y construye los targets
+# del raking. Imprime los objetos intermedios: la idea es poder seguirlo.
+
+library(haven)
+library(dplyr)
+library(tidyr)
+library(readr)
+
+dir_datos <- "2026/11/mrp-cis-octubre/datos"
+dir_pob   <- "2026/10/mrp-raking/datos"   # población: la misma que en el post de octubre
+
+# ---------------------------------------------------------------------------
+# 1. Tabla puente de CCAA
+# ---------------------------------------------------------------------------
+# CIS, INE y Ministerio del Interior usan tres codificaciones distintas.
+# CIS e INE solo se diferencian en que intercambian las dos Castillas;
+# Interior cambia bastante más. Unir por código sin mirar es un desastre.
+
+ccaa_cod <- read_csv(file.path(dir_pob, "ccaa_codigos.csv"),
+                     col_types = cols(.default = "c", cod_cis = "i"))
+print(ccaa_cod, n = 19)
+
+ccaa_lv <- ccaa_cod$ccaa
+
+# ---------------------------------------------------------------------------
+# 2. Encuesta del CIS: recodificación
+# ---------------------------------------------------------------------------
+
+cis_raw <- read_sav(file.path(dir_datos, "3582.sav"))
+
+# Tramos de edad. El 18-20 va aparte porque son quienes no tenían edad de
+# votar el 23-J (comprobado: las edades 18, 19 y 20 son todas "no tenía edad").
+tramo_edad <- function(edad) {
+  cut(edad,
+      breaks = c(18, 21, 25, 35, 45, 55, 65, Inf),
+      labels = c("18-20", "21-24", "25-34", "35-44", "45-54", "55-64", "65+"),
+      right = FALSE)
+}
+edad_lv <- c("18-20", "21-24", "25-34", "35-44", "45-54", "55-64", "65+")
+
+# Nivel de estudios: las 19 categorías del CIS a los 3 sectores de la EPA.
+# FP de Grado Superior va en "alta" porque en la CNED es educación superior,
+# que es como la clasifica la EPA.
+recod_edu <- function(nivel) {
+  nivel <- as.character(nivel)
+  case_when(
+    grepl("^Menos de 5|^Educación Primaria|^FP Básica|^Educación secundaria", nivel) ~ "baja",
+    grepl("^FP de Grado Medio|^Bachillerato", nivel) ~ "media",
+    grepl("^FP de Grado Superior|^Arquitectura|^Diplomatura|^Grado|^Licenciatura|^Máster|^Doctorado|^Títulos propios", nivel) ~ "alta",
+    TRUE ~ NA_character_
+  )
+}
+edu_lv <- c("baja", "media", "alta")
+
+# Partidos: la definición común está en 00_partidos.R (partidos_lv, rec_lv,
+# territorio y la recodificación de etiquetas del CIS).
+source("2026/11/mrp-cis-octubre/00_partidos.R")
+
+# Recuerdo de voto. El blanco y el nulo van a OTROS, como en los resultados.
+recod_partido <- function(x) {
+  recod_cis_partido(x, no_validos = c("N.C.", "N.R.", "N.P."))
+}
+
+# La intención de voto, que es lo que se quiere estimar. Se mide sobre voto
+# válido, que es la base en la que el CIS publica su estimación: quedan fuera
+# la abstención declarada, el voto nulo, los indecisos y los que no contestan.
+# Repartir a los indecisos es la "cocina", y es otro asunto.
+voto_lv <- partidos_lv
+recod_voto <- function(x) {
+  recod_cis_partido(x, no_validos = c("No sabe todavía", "N.C.", "N.R.", "N.P.",
+                                      "No votaría", "Voto nulo"))
+}
+
+cis <- cis_raw %>%
+  transmute(
+    cod_cis = as.integer(CCAA),
+    voto = factor(recod_voto(as_factor(INTENCIONG)), levels = voto_lv),
+    sexo = factor(as_factor(SEXO), levels = c("Hombre", "Mujer"),
+                  labels = c("H", "M")),
+    edad_n = as.numeric(EDAD),
+    edad = tramo_edad(edad_n),
+    edu = factor(recod_edu(as_factor(NIVELESTENTREV)), levels = edu_lv),
+    participacion = as.character(as_factor(PARTICIPACIONG)),
+    partido_rec = recod_partido(as_factor(RECUVOTOG)),
+    intencion = recod_partido(as_factor(INTENCIONG)),
+    ideol = ifelse(as.numeric(ESCIDEOL) %in% 1:10, as.numeric(ESCIDEOL), NA),
+    # Probabilidad declarada de ir a votar (0-10). Para el modelo de
+    # participación uso "10 = con toda seguridad iría a votar".
+    prob_voto = ifelse(as.numeric(PROBVOTO) %in% 0:10, as.numeric(PROBVOTO), NA),
+    vota_seguro = as.integer(prob_voto == 10),
+    peso = as.numeric(PESO)
+  ) %>%
+  left_join(ccaa_cod %>% select(ccaa, cod_cis), by = "cod_cis") %>%
+  mutate(ccaa = factor(ccaa, levels = ccaa_lv))
+
+# Un partido regional fuera de su comunidad no se puede votar (p. ej., ERC en
+# Baleares). Esas respuestas van a OTROS.
+fuera <- function(p, ccaa) !is.na(p) & !se_presenta(p, ccaa)
+cat("\n== respuestas fuera de territorio (van a OTROS) ==\n")
+cat("intención:", sum(fuera(cis$voto, cis$ccaa)),
+    " recuerdo:", sum(fuera(cis$partido_rec, cis$ccaa)), "\n")
+cis <- cis %>%
+  mutate(
+    voto = factor(ifelse(fuera(voto, ccaa), "OTROS", as.character(voto)), levels = voto_lv),
+    partido_rec = ifelse(fuera(partido_rec, ccaa), "OTROS", partido_rec),
+    intencion = ifelse(fuera(intencion, ccaa), "OTROS", intencion),
+    # La intención solo se usa como predictor del recuerdo en 04_raking.R.
+    # Aliança Catalana no existía en 2023, así que ahí va con OTROS.
+    intencion = ifelse(intencion == "AC", "OTROS", intencion)
+  )
+
+# El recuerdo combina dos variables del CIS: participación y, para quien
+# votó, el partido. Quien no tenía edad en 2023 es una categoría propia.
+cis <- cis %>%
+  mutate(rec = case_when(
+    edad == "18-20" ~ "NO_PODIA",
+    participacion == "No votó" ~ "ABST",
+    participacion == "Votó" ~ partido_rec,
+    TRUE ~ NA_character_     # no tenía derecho, N.R./N.C. de participación
+  ),
+  rec = factor(rec, levels = rec_lv))
+
+cat("\n== recuerdo recodificado ==\n")
+print(table(cis$rec, useNA = "ifany"))
+
+cat("\n== cuántos casos sin recuerdo y por qué ==\n")
+print(cis %>% filter(is.na(rec)) %>% count(participacion, sin_partido = is.na(partido_rec)))
+
+# ---------------------------------------------------------------------------
+# 3. Diagnóstico: lo torcida que está la muestra
+# ---------------------------------------------------------------------------
+
+cat("\n== estudios: CIS (bruto y ponderado) ==\n")
+print(cis %>% filter(!is.na(edu)) %>%
+        summarise(across(everything(), ~NULL)) %>% bind_cols(
+          cis %>% filter(!is.na(edu)) %>%
+            group_by(edu) %>%
+            summarise(bruto = n() / sum(!is.na(cis$edu)),
+                      ponderado = sum(peso) / sum(cis$peso[!is.na(cis$edu)]),
+                      .groups = "drop")))
+
+saveRDS(cis, file.path(dir_datos, "cis_recodificado.rds"))
+cat("\nguardado cis_recodificado.rds\n")
