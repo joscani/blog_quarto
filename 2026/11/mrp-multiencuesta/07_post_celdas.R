@@ -73,7 +73,9 @@ territorio_mod <- territorio[names(territorio) != "AC"]
 post <- as.data.frame.table(tabla, responseName = "N") |>
   filter(N > 1e-6) |>
   left_join(prov_ccaa, by = "prov")
-stopifnot(nrow(post) == 12264)
+# con UPN como categoría propia, las celdas fuera de Navarra son cero
+# estructural y Navarra gana las suyas: el número ya no es fijo
+stopifnot(nrow(post) > 12264)
 
 p_celda <- NULL # draws x celda x partido
 pv <- NULL # draws x celda
@@ -178,38 +180,49 @@ if (fuente == "brms") {
     # muestras independientes: se toman ndraws equiespaciadas, como adelgaza()
     A <- readRDS(file.path(dir_datos, paste0("fit_rtmb_voto_", modo, ".rds")))$A
     i_d <- round(seq(1, nrow(A$alpha), length.out = ndraws))
-    A <- lapply(A, function(a) if (length(dim(a)) == 3) a[i_d, , , drop = FALSE] else a[i_d, , drop = FALSE])
+    A <- lapply(A, function(a) {
+      if (length(dim(a)) == 3) {
+        a[i_d, , , drop = FALSE]
+      } else {
+        a[i_d, , drop = FALSE]
+      }
+    })
     nd <- ndraws
   } else {
-  av <- readRDS(file.path(
-    dir_datos,
-    paste0("fit_separado_", modo, "_voto.rds")
-  ))
-  dv <- matriz(av$fit$draws(format = "draws_matrix"))
-  dv <- adelgaza(dv, ndraws)
-  nd <- nrow(dv)
-  A <- list(
-    alpha = vecs(dv, "alpha", J),
-    b_mujer = vecs(dv, "b_mujer", J),
-    mes = arr(dv, "a_mes", datos$n_mes),
-    edad = arr(dv, "a_edad", datos$n_edad),
-    edu = arr(dv, "a_edu", datos$n_edu),
-    rec = arr(dv, "a_rec", n_rec),
-    ccaa = arr(dv, "a_ccaa", datos$n_ccaa),
-    prov = arr(dv, "a_prov", datos$n_prov),
-    ccaa_rec = arr(dv, "a_ccaa_rec", datos$n_ccaa * n_rec),
-    casa = arr(dv, "a_casa", n_casa),
-    casa_rec = arr(dv, "a_casa_rec", n_casa * n_rec)
-  )
+    av <- readRDS(file.path(
+      dir_datos,
+      paste0("fit_separado_", modo, "_voto.rds")
+    ))
+    dv <- matriz(av$fit$draws(format = "draws_matrix"))
+    dv <- adelgaza(dv, ndraws)
+    nd <- nrow(dv)
+    A <- list(
+      alpha = vecs(dv, "alpha", J),
+      b_mujer = vecs(dv, "b_mujer", J),
+      mes = arr(dv, "a_mes", datos$n_mes),
+      edad = arr(dv, "a_edad", datos$n_edad),
+      edu = arr(dv, "a_edu", datos$n_edu),
+      rec = arr(dv, "a_rec", n_rec),
+      ccaa = arr(dv, "a_ccaa", datos$n_ccaa),
+      prov = arr(dv, "a_prov", datos$n_prov),
+      ccaa_rec = arr(dv, "a_ccaa_rec", datos$n_ccaa * n_rec),
+      casa = arr(dv, "a_casa", n_casa),
+      casa_rec = arr(dv, "a_casa_rec", n_casa * n_rec)
+    )
   }
   stopifnot(length(datos$P_mascara) == P * J)
   mascara <- matrix(datos$P_mascara, P, J) # P_mascara viene columna a columna
 
   pv <- NULL
   if (con_part && fuente == "rtmb") {
-    Tp <- readRDS(file.path(dir_datos, paste0("fit_rtmb_part_", modo, ".rds")))$Tp
+    Tp <- readRDS(file.path(
+      dir_datos,
+      paste0("fit_rtmb_part_", modo, ".rds")
+    ))$Tp
     i_p <- round(seq(1, length(Tp$delta), length.out = ndraws))
-    Tp <- lapply(Tp, function(a) if (is.null(dim(a))) a[i_p] else a[i_p, , drop = FALSE])
+    Tp <- lapply(Tp, function(a) {
+      if (is.null(dim(a))) a[i_p] else a[i_p, , drop = FALSE]
+    })
   } else if (con_part) {
     ap <- readRDS(file.path(
       dir_datos,

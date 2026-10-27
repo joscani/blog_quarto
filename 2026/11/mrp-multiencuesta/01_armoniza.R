@@ -87,6 +87,8 @@ recod_partido_otras <- function(x, no_validos) {
     grepl("Bildu", x) ~ "BILDU",
     grepl("^BNG\\b", x) ~ "BNG",
     x %in% c("Coalición Canaria", "CC") ~ "CCA",
+    # 40dB: "UPN (Unión del Pueblo Navarro)"; MIC y Ateneo: "UPN"
+    grepl("^UPN", x) ~ "UPN",
     is.na(x) ~ NA_character_,
     TRUE ~ "OTROS"
   )

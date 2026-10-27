@@ -154,7 +154,8 @@ etq <- c(
   BILDU = "EH Bildu",
   PNV = "PNV",
   BNG = "BNG",
-  CCA = "CC"
+  CCA = "CC",
+  UPN = "UPN"
 )
 stopifnot(setequal(names(etq), partidos_dh))
 

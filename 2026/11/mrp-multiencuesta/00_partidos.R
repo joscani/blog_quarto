@@ -17,6 +17,7 @@ partidos_lv <- c(
   "PNV",
   "BNG",
   "CCA",
+  "UPN",
   "OTROS"
 )
 
@@ -33,7 +34,8 @@ territorio <- list(
   BILDU = c("País Vasco", "Navarra"),
   PNV = "País Vasco",
   BNG = "Galicia",
-  CCA = "Canarias"
+  CCA = "Canarias",
+  UPN = "Navarra"
 )
 
 # TRUE si el partido p se puede votar en la comunidad ccaa
@@ -80,7 +82,8 @@ regionales_cis <- c(
   BILDU = "EH Bildu",
   PNV = "EAJ-PNV",
   BNG = "BNG",
-  CCA = "CCa"
+  CCA = "CCa",
+  UPN = "UPN"
 )
 
 recod_cis_partido <- function(x, no_validos) {
