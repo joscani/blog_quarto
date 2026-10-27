@@ -24,6 +24,11 @@
 #   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts stan            # stan, 1000 draws
 #   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts stan part       # stan con participación
 #   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R prueba stan part     # prueba con los ajustes prueba
+#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts rtmb part       # RTMB (rtmb/05b_rtmb.R)
+#
+# Fuente rtmb: los mismos cálculos que stan con las muestras de Laplace de
+# datos/fit_rtmb_voto_<modo>.rds y fit_rtmb_part_<modo>.rds (1.000 muestras
+# independientes; ver rtmb/mrp_voto_rtmb.R). Salidas con el sufijo _rtmb.
 #
 # Salida: datos/post_celdas_casa_media.rds (stan, o _part con participación) o
 # datos/post_celdas_casa_media_brms.rds (brms), con
@@ -40,8 +45,8 @@ args <- commandArgs(trailingOnly = TRUE)
 modo <- if (length(args) >= 1) args[1] else "nuts"
 fuente <- if (length(args) >= 2) args[2] else "brms"
 con_part <- if (length(args) >= 3) args[3] == "part" else FALSE
-stopifnot(modo %in% c("nuts", "prueba"), fuente %in% c("brms", "stan"))
-stopifnot(!con_part || fuente == "stan") # el modelo de participación solo existe en Stan
+stopifnot(modo %in% c("nuts", "prueba"), fuente %in% c("brms", "stan", "rtmb"))
+stopifnot(!con_part || fuente != "brms") # el modelo de participación no existe en brms
 ndraws <- if (modo == "prueba") 50L else 1000L
 cat(
   "modo:",
@@ -158,13 +163,6 @@ if (fuente == "brms") {
   adelgaza <- function(dm, n) {
     dm[round(seq(1, nrow(dm), length.out = n)), , drop = FALSE]
   }
-  av <- readRDS(file.path(
-    dir_datos,
-    paste0("fit_separado_", modo, "_voto.rds")
-  ))
-  dv <- matriz(av$fit$draws(format = "draws_matrix"))
-  dv <- adelgaza(dv, ndraws)
-  nd <- nrow(dv)
   n_casa <- datos$n_casa
   n_rec <- datos$n_rec
   P <- nrow(post)
@@ -176,6 +174,20 @@ if (fuente == "brms") {
   }
   vecs <- function(dm, v, n) dm[, paste0(v, "[", 1:n, "]"), drop = FALSE]
 
+  if (fuente == "rtmb") {
+    # muestras independientes: se toman ndraws equiespaciadas, como adelgaza()
+    A <- readRDS(file.path(dir_datos, paste0("fit_rtmb_voto_", modo, ".rds")))$A
+    i_d <- round(seq(1, nrow(A$alpha), length.out = ndraws))
+    A <- lapply(A, function(a) if (length(dim(a)) == 3) a[i_d, , , drop = FALSE] else a[i_d, , drop = FALSE])
+    nd <- ndraws
+  } else {
+  av <- readRDS(file.path(
+    dir_datos,
+    paste0("fit_separado_", modo, "_voto.rds")
+  ))
+  dv <- matriz(av$fit$draws(format = "draws_matrix"))
+  dv <- adelgaza(dv, ndraws)
+  nd <- nrow(dv)
   A <- list(
     alpha = vecs(dv, "alpha", J),
     b_mujer = vecs(dv, "b_mujer", J),
@@ -189,11 +201,16 @@ if (fuente == "brms") {
     casa = arr(dv, "a_casa", n_casa),
     casa_rec = arr(dv, "a_casa_rec", n_casa * n_rec)
   )
+  }
   stopifnot(length(datos$P_mascara) == P * J)
   mascara <- matrix(datos$P_mascara, P, J) # P_mascara viene columna a columna
 
   pv <- NULL
-  if (con_part) {
+  if (con_part && fuente == "rtmb") {
+    Tp <- readRDS(file.path(dir_datos, paste0("fit_rtmb_part_", modo, ".rds")))$Tp
+    i_p <- round(seq(1, length(Tp$delta), length.out = ndraws))
+    Tp <- lapply(Tp, function(a) if (is.null(dim(a))) a[i_p] else a[i_p, , drop = FALSE])
+  } else if (con_part) {
     ap <- readRDS(file.path(
       dir_datos,
       paste0("fit_separado_", modo, "_part.rds")
@@ -293,10 +310,8 @@ if (modo == "nuts") {
     "post_celdas_casa_media",
     if (fuente == "brms") {
       "_brms"
-    } else if (con_part) {
-      "_part"
     } else {
-      ""
+      paste0(if (fuente == "rtmb") "_rtmb", if (con_part) "_part")
     },
     ".rds"
   )

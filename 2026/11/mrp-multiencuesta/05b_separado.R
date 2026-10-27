@@ -8,7 +8,9 @@
 #   Rscript 2026/11/mrp-multiencuesta/05b_separado.R nuts 2     # 4 cadenas x 2000 it., 2 hilos por cadena
 #
 # Primer argumento: prueba | nuts. Segundo: hilos por cadena del voto
-# (4 cadenas x hilos núcleos). Solo priors "nuevo".
+# (4 cadenas x hilos núcleos). Tercero, opcional: el fichero del modelo de voto
+# (por defecto mrp_voto.stan; mrp_voto_vec.stan es la versión vectorizada, y
+# sus salidas llevan el sufijo _vec). Solo priors "nuevo".
 # Salidas: datos/fit_separado_<modo>_voto.rds, _part.rds y estim_separado_<modo>.rds.
 
 library(dplyr)
@@ -19,7 +21,9 @@ args <- commandArgs(trailingOnly = TRUE)
 modo <- if (length(args) >= 1) args[1] else "prueba"
 stopifnot(modo %in% c("prueba", "nuts"))
 hilos <- if (length(args) >= 2) as.integer(args[2]) else 1L
-cat("modo:", modo, " hilos por cadena:", hilos, "\n")
+f_voto <- if (length(args) >= 3) args[3] else "mrp_voto.stan"
+sufijo <- sub("^mrp_voto", "", sub("\\.stan$", "", f_voto))   # "" o "_vec"
+cat("modo:", modo, " hilos por cadena:", hilos, " modelo de voto:", f_voto, "\n")
 
 dir_proy <- "2026/11/mrp-multiencuesta"
 dir_datos <- file.path(dir_proy, "datos")
@@ -121,7 +125,7 @@ ajusta_o_carga <- function(f_stan, h, nombre) {
   a
 }
 
-av <- ajusta_o_carga("mrp_voto.stan", hilos, "voto")
+av <- ajusta_o_carga(f_voto, hilos, paste0("voto", sufijo))
 ap <- ajusta_o_carga("mrp_part.stan", 1L, "part") # la participación es barata: un hilo
 
 cat("\n== tiempos y diagnóstico ==\n")
@@ -341,5 +345,5 @@ print(
   row.names = FALSE
 )
 
-saveRDS(res, file.path(dir_datos, paste0("estim_separado_", modo, ".rds")))
-cat("\nguardado", paste0("estim_separado_", modo, ".rds"), "\n")
+saveRDS(res, file.path(dir_datos, paste0("estim_separado_", modo, sufijo, ".rds")))
+cat("\nguardado", paste0("estim_separado_", modo, sufijo, ".rds"), "\n")

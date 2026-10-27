@@ -25,6 +25,7 @@
 #
 #   Rscript 2026/11/mrp-multiencuesta/08_escanos.R              # entrada preferente: _part
 #   Rscript 2026/11/mrp-multiencuesta/08_escanos.R brms         # entrada base (brms), salidas _brms
+#   Rscript 2026/11/mrp-multiencuesta/08_escanos.R rtmb         # entrada RTMB (_rtmb_part o _rtmb), salidas _rtmb
 
 library(dplyr)
 library(tidyr)
@@ -40,8 +41,12 @@ f_post_base <- file.path(dir_datos, "post_celdas_casa_media.rds")
 f_post_brms <- file.path(dir_datos, "post_celdas_casa_media_brms.rds")
 etiq <- commandArgs(trailingOnly = TRUE)[1]
 suf <- if (!is.na(etiq) && etiq != "") paste0("_", etiq) else ""
+f_post_rtmb <- file.path(dir_datos, "post_celdas_casa_media_rtmb_part.rds")
+f_post_rtmb_base <- file.path(dir_datos, "post_celdas_casa_media_rtmb.rds")
 if (!is.na(etiq) && etiq == "brms") {
   x <- readRDS(f_post_brms)
+} else if (!is.na(etiq) && etiq == "rtmb") {
+  x <- readRDS(if (file.exists(f_post_rtmb)) f_post_rtmb else f_post_rtmb_base)
 } else if (file.exists(f_post_part)) {
   # versión con participación: el peso de cada celda (pv) varía por draw
   x <- readRDS(f_post_part)
