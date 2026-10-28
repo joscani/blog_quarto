@@ -480,8 +480,11 @@ print(
   row.names = FALSE
 )
 
-# Comparación con la tabla por CCAA del post de octubre, agregando provincias
-tabla_oct <- readRDS("2026/10/mrp-raking/datos/tabla_postestratificacion.rds")
+# Diagnóstico, no entra en el post: comparación con la tabla por CCAA de octubre,
+# agregando provincias
+tabla_oct <- readRDS(here::here(
+  "2026/10/mrp-raking/datos/tabla_postestratificacion.rds"
+))
 ccaa_prov <- apply(tabla, c(1, 5), sum) |>
   as.data.frame.table(responseName = "N") |>
   left_join(prov_ccaa, by = "prov") |>

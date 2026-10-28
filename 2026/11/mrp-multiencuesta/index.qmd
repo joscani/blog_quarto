@@ -1,6 +1,7 @@
 ---
 title: "MRP con varias encuestas (I): nueve encuestas y una tabla de postestratificación"
 date: '2026-10-28'
+date-modified: today
 draft: false
 categories:
   - "2026"
@@ -41,23 +42,20 @@ knitr:
 ## Introducción
 
 En [el post de octubre](https://muestrear-no-es-pecado.es/2026/10/mrp-raking/)
-hice un MRP con una sola encuesta, el barómetro del CIS de septiembre (estudio
-3577), postestratificando por comunidad autónoma. La idea era ir al grano: un
-modelo multinivel, una tabla de postestratificación fabricada con raking, y
-escaños.
+hice un MRP con una sola encuesta, el barómetro del CIS de septiembre , postestratificando por comunidad autónoma. 
 
-Ahora faltan poco más de dos meses para las generales del 29-N y las cosas han
-cambiado un poco:
+Pero pensando en que si al final lo que uso para postestratificar son solo datos demográficos, más el recuerdo de voto y para modelar lo  mismo, pues podría unir varios encuestas, por ejemplo, varios barómetros del CIS o microdatos de otras empresas. 
 
-- Hay **nueve encuestas** de **cuatro casas** (CIS, 40dB, More in Common y
+
+
+- Tengo **nueve encuestas** de **cuatro casas** (CIS, 40dB, More in Common y
   Ateneo del Dato) publicadas entre junio y octubre: casi 30.000 entrevistas
   en vez de 4.000.
 - Ya no postestratifico por comunidad sino por **provincia**, que es donde se
-  reparten los escaños del Congreso (D'Hondt). Es otra liga: 52 provincias y
+  reparten los escaños del Congreso (D'Hondt).  52 provincias y
   un mapa de escaños nuevo (RD 806/2026: Madrid gana un escaño, Cádiz pierde
   uno).
 - UPN aparece ahora como categoría propia (en octubre iba metida en OTROS),
-  que tiene gracia en un modelo multinivel: no se presenta fuera de Navarra.
 
 Esta es la primera parte de la serie. El plan:
 
@@ -74,7 +72,7 @@ Esta es la primera parte de la serie. El plan:
 Nada de error histórico ni de volatilidad: eso ya lo hice en
 [el post del 29-N completo](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html).
 Aquí el voto es latente, lo miden las encuestas del mes, y el modelo bayesiano
-sirve para estimarlo bien en celdas pequeñas. Que ya es mucho.
+sirve para estimarlo bien en celdas pequeñas. 
 
 ## Las encuestas
 
@@ -85,10 +83,7 @@ suppressPackageStartupMessages({
   library(DT)
 })
 
-dir_proy <- here::here("2026/11/mrp-multiencuesta")
-dir_datos <- file.path(dir_proy, "datos")
-
-enc <- readRDS(file.path(dir_datos, "encuestas.rds"))
+enc <- readRDS(here::here("2026/11/mrp-multiencuesta/datos/encuestas.rds"))
 ```
 
 Nueve encuestas, 29.831 entrevistas. La tabla de abajo la genera
@@ -139,15 +134,18 @@ Tres cosas que condicionan todo lo que viene:
 
 - **La provincia**. El CIS y 40dB la traen siempre; More in Common y Ateneo
   del Dato solo en las comunidades uniprovinciales (un 25 % de sus
-  entrevistas). Para el resto hay que ingeniárselas, y eso da para el primer
-  intento del post II (`mm()` de brms) y para la "mezcla" del modelo final.
+  entrevistas). Se podría pensar en quitar esas entrevistas, pero estamos en bayesiano y queremos aprovechar toda la info. El primer intento es usar multimembership, `mm()` en brms, pero al final se puede usar de forma coherente la verosimilitud en los modelos con Stan o numpyro. 
 - **La probabilidad de votar**. CIS, 40dB y More in Common preguntan ("¿del 0
   al 10, qué probabilidad hay de que vote?"); Ateneo del Dato no. El modelo de
   participación se apoya en las tres primeras.
-- **La ambigüedad de los estudios**. 40dB y More in Common tienen categorías
-  que no se pueden mapear con seguridad a los tres niveles (baja, media, alta)
-  que usa el Censo; marco esas entrevistas como ambiguas y las reparto
-  proporcionalmente usando la composición del Censo. El CIS no las necesita.
+- **La ambigüedad de los estudios**. 40dB, More in Common y Ateneo del Dato
+  tienen categorías que no se pueden mapear con seguridad a los tres niveles
+  (baja, media, alta) que usa el Censo: "Segundo grado, segundo ciclo", "FP" y
+  "Secundaria 2do ciclo" juntan Bachillerato con FP, de grado medio o superior.
+  Esas entrevistas van a media y se marcan con `edu_ambigua = TRUE`. No las
+  reparto entre media y alta, así que en esas casas la categoría media queda
+  sobrerrepresentada y la alta subrepresentada, en la medida en que parte de
+  ellas sea FP de grado superior. El CIS no las necesita.
 
 ```{r fig-encuestas}
 #| fig-cap: "Entrevistas por casa y mes de campo."
@@ -166,8 +164,7 @@ AA solo la pregunta el CIS en intención de voto (y de pasada, en el flash de
 40dB): 96 menciones en total. En la serie de octubre, con las autonómicas de
 mayo en el recuerdo, AA salía al 9,6 %; en la intención de voto de estas
 generales el CIS la ve mucho más baja. Cómo tratarla (¿missing en las casas
-que no preguntan? ¿la serie autonómica como prior?) lo dejo para el post II:
-aquí la armonización la deja como categoría aparte, con lo puesto.
+que no preguntan? ¿la serie autonómica como prior?) , no tengo claro como tratarlo, aún tengo que pensarlo. Aquí la armonización la deja como categoría aparte, con lo puesto.
 :::
 
 ## Armonización
@@ -180,15 +177,26 @@ recodifica las nueve encuestas a un formato común: una fila por entrevista y
 `voto`, `rec`, `prob_voto`, `vota_seguro`, ...).
 
 ```{r niveles}
-source(file.path(dir_proy, "00_partidos.R"))
+source(here::here("2026/11/mrp-multiencuesta/00_partidos.R"))
 cat("partidos del voto:", paste(partidos_lv, collapse = ", "), "\n\n")
 cat("recuerdo:", paste(rec_lv, collapse = ", "), "\n")
 ```
 
-Del voto salen 15 etiquetas: los 11 partidos estatales y regionales con peso
-más **Alianza Catalana** (solo la pregunta el CIS; en el modelo va con OTROS,
-como en octubre), **Adelante Andalucía** (la excepción de arriba) y **UPN**.
-UPN es la novedad del recuerdo de las generales respecto al post de octubre:
+Del voto salen 15 etiquetas: los 11 partidos estatales y regionales con peso,
+**Alianza Catalana**, **Adelante Andalucía** (la excepción de arriba) y **UPN**.
+Alianza Catalana no se presentó el 23-J, así que no aparece en el recuerdo.
+Solo la pregunta el CIS en la intención de voto, y solo en Cataluña (37
+entrevistas). Fuera de Cataluña ya va a OTROS, y en el modelo va con OTROS en
+todas partes, como en octubre.
+Podemos va aparte en la intención de voto: en octubre iba con SUMAR, y el mapa
+del 29-N la trata como partido propio en la mayoría de provincias. En el
+recuerdo del 23-J iba dentro de la coalición, así que se pliega a SUMAR y no
+tiene categoría propia.
+Adelante Andalucía también es nueva respecto a octubre, pero solo en la
+intención de voto: muy pocas casas la preguntan, así que no se puede juntar con
+OTROS (en las demás faltaría el dato, no sería "otros"). No se presentó el 23-J,
+así que no está en el recuerdo. UPN es la novedad del recuerdo de las generales
+respecto al post de octubre:
 en la tabla de postestratificación tiene cero estructural fuera de Navarra,
 igual que ERC y JUNTS fuera de Cataluña, PNV fuera del País Vasco o BNG fuera
 de Galicia.
@@ -228,16 +236,21 @@ El universo es el electorado de hoy: el censo del 23-J más los que entonces
 tenían 15-17 años. De 36,7 millones:
 
 ```{r electorado}
-tg <- readRDS(file.path(dir_datos, "targets_prov.rds"))
+tg <- readRDS(here::here("2026/11/mrp-multiencuesta/datos/targets_prov.rds"))
 format(round(sum(tg$total_prov$total)), big.mark = " ")
 ```
 
-Hay un detalle fino: el censo del 23-J no incluye a los 18-20 de hoy, y el
-Censo sí. Si se reescala la pirámide entera no cuadran los dos bloques y el
-IPF no puede ajustar T1 (error de ~10.000 personas por celda). La solución es
-reescalar **por bloques de edad**: el bloque 18-20 tiene que sumar exactamente
-lo que marca NO_PODIA en T2, y el de 21+ lo del censo del 23-J. Con eso los
-ceros estructurales (18-20 años ↔ NO_PODIA) se sostienen solos.
+Hay un detalle con los totales. El Censo de 2024 cuenta a todos los
+residentes, incluidos los 18-20 de hoy, pero el censo del 23-J solo tiene a
+quienes podían votar entonces. Como los 18-20 de hoy tenían 15-17 años en 2023,
+el electorado de hoy es el censo del 23-J más esos 18-20 (NO_PODIA en T2).
+Si se reescala toda la pirámide del Censo a ese total, el tramo 18-20 deja de
+sumar NO_PODIA y el IPF no puede ajustar T1 (según el comentario del código, el
+error llega a unas 10.000 personas por celda). La solución es reescalar **por
+bloques de edad**: los 18-20 de T1 se escalan para sumar exactamente NO_PODIA, y
+los de 21 o más, para sumar el censo del 23-J. Dentro de cada bloque se conserva
+la estructura del Censo (sexo, estudios). Los ceros estructurales (18-20 años
+con cualquier recuerdo distinto de NO_PODIA) se mantienen porque el IPF no añade donde la semilla es cero.
 
 **La semilla**. Solo el CIS: tiene provincia en todas las entrevistas y
 estudios con la codificación exacta. La semilla aporta la asociación entre
@@ -254,7 +267,9 @@ sem_dat <- enc |>
     !is.na(rec)
   )
 nrow(sem_dat)
+
 ```
+
 
 Con 30.576 celdas (52 × 2 × 7 × 3 × 14) y 15.540 entrevistas completas, el 83
 % de las celdas están vacías. Se suaviza mezclando la tabla observada con la
@@ -271,38 +286,63 @@ Aquí compruebo la tabla ya ajustada contra los targets:
 t1 <- xtabs(N ~ prov + sexo + edad + edu, tg$pob_prov)
 t2 <- xtabs(N ~ prov + rec, tg$rec_prov)
 library(mipfp)
-tabla <- readRDS(file.path(dir_datos, "tabla_post_prov.rds"))
+tabla <- readRDS(here::here(
+  "2026/11/mrp-multiencuesta/datos/tabla_post_prov.rds"
+))
 err1 <- max(abs(apply(tabla, 1:4, sum) - t1))
 err2 <- max(abs(apply(tabla, c(1, 5), sum) - t2))
 cat("error máximo en T1:", signif(err1, 3), "personas\n")
 cat("error máximo en T2:", signif(err2, 3), "personas\n")
 ```
 
-Converge en 11 iteraciones. El recuerdo nacional de la tabla sale clavado al
-objetivo (los 10,4 millones de abstencionistas del 23-J incluidos):
+Converge en 11 iteraciones. Los márgenes nacionales de la tabla salen clavados
+a los objetivos: el recuerdo de voto (los 10,4 millones de abstencionistas del
+23-J incluidos) y, como comprobación de T1, el sexo y los estudios:
 
 ```{r recuerdo-tabla}
-data.frame(
-  rec = colnames(t2),
-  objetivo_miles = round(colSums(t2) / 1000),
-  tabla_miles = round(apply(tabla, 5, sum)[colnames(t2)] / 1000)
+marginal <- function(variable, objetivo, obtenido) {
+  data.frame(
+    variable = variable,
+    nivel = names(objetivo),
+    objetivo_miles = round(as.vector(objetivo) / 1000),
+    tabla_miles = round(as.vector(obtenido[names(objetivo)]) / 1000)
+  )
+}
+bind_rows(
+  marginal("recuerdo", colSums(t2), apply(tabla, 5, sum)),
+  marginal("sexo", apply(t1, 2, sum), apply(tabla, 2, sum)),
+  marginal("estudios", apply(t1, 4, sum), apply(tabla, 4, sum))
 )
 ```
 
 ## La tabla de postestratificación
 
+Así queda en formato largo, una fila por celda con población. Una muestra al
+azar de ocho filas:
+
 ```{r tabla}
+tabla_df <- as.data.frame.table(tabla, responseName = "N") |>
+  filter(N > 1e-6)
 dim(tabla)
-sum(as.vector(tabla) > 1e-6)
+nrow(tabla_df)
+format(round(sum(tabla_df$N)), big.mark = " ")
+set.seed(4817)
+tabla_df |>
+  slice_sample(n = 8) |>
+  DT::datatable(rownames = FALSE, options = list(dom = "t"))
 ```
 
 52 provincias × 2 sexos × 7 tramos de edad × 3 niveles de estudios × 14
 recuerdos: 30.576 celdas, de las que 12.300 tienen población. El total es el
 electorado, persona a persona.
 
-¿Y por qué provincia y no comunidad? Porque los escaños del Congreso se
-reparten por provincia con D'Hondt, y el mapa del 29-N es nuevo: Madrid 37 →
-38, Cádiz 9 → 8. Un MRP por comunidad no puede decir nada de Cádiz.
+Para quien quiera usarla, la tabla completa está en formato largo, con los
+ceros explícitos y las provincias con su código INE, en
+[esta release](https://github.com/joscani/blog_quarto/releases/download/mrp-multiencuesta-datos/tabla_postestratificacion_provincia.csv).
+Se genera con
+[`12_exporta_tabla.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/12_exporta_tabla.R).
+
+¿Y por qué provincia ?  Porque los escaños del Congreso, un MRP por comunidad no puede decir nada de Cádiz.
 
 Comparada con la tabla del post de octubre (por CCAA, que aquí agrego), la
 correlación es 0,9999. La única diferencia grande con sentido es Navarra:
@@ -334,7 +374,6 @@ las casas privadas no se redistribuyen; los ficheros que lee el post están en
 [esta release](https://github.com/joscani/blog_quarto/releases/tag/mrp-multiencuesta-datos):
 
 ```{r descarga, eval = FALSE}
-dir_datos <- here::here("2026/11/mrp-multiencuesta/datos")
 url_base <- "https://github.com/joscani/blog_quarto/releases/download/mrp-multiencuesta-datos/"
 ficheros <- c(
   "encuestas.rds",
@@ -345,9 +384,17 @@ ficheros <- c(
   "celdas_brms.rds",
   "celdas_part.rds"
 )
-dir.create(dir_datos, recursive = TRUE, showWarnings = FALSE)
+dir.create(
+  here::here("2026/11/mrp-multiencuesta/datos"),
+  recursive = TRUE,
+  showWarnings = FALSE
+)
 for (f in ficheros) {
-  download.file(paste0(url_base, f), file.path(dir_datos, f), mode = "wb")
+  download.file(
+    paste0(url_base, f),
+    here::here("2026/11/mrp-multiencuesta/datos", f),
+    mode = "wb"
+  )
 }
 ```
 
