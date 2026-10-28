@@ -86,6 +86,7 @@ recod_partido_otras <- function(x, no_validos) {
     grepl("PNV", x) ~ "PNV",
     grepl("Bildu", x) ~ "BILDU",
     grepl("^BNG\\b", x) ~ "BNG",
+    grepl("Adelante Andaluc", x) ~ "AA",
     x %in% c("Coalición Canaria", "CC") ~ "CCA",
     # 40dB: "UPN (Unión del Pueblo Navarro)"; MIC y Ateneo: "UPN"
     grepl("^UPN", x) ~ "UPN",
@@ -195,7 +196,9 @@ lee_cis <- function(f) {
       ),
       partido_rec = recod_cis_partido(
         as_factor(RECUVOTOG),
-        no_validos = c("N.C.", "N.R.", "N.P.")
+        no_validos = c("N.C.", "N.R.", "N.P."),
+        # AA no se presentó en las generales del 23-J: el recuerdo de AA va a OTROS
+        aa = FALSE
       ),
       prob_voto = ifelse(
         as.numeric(PROBVOTO) %in% 0:10,

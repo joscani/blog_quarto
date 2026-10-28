@@ -26,6 +26,7 @@
 #   Rscript 2026/11/mrp-multiencuesta/08_escanos.R              # entrada preferente: _part
 #   Rscript 2026/11/mrp-multiencuesta/08_escanos.R brms         # entrada base (brms), salidas _brms
 #   Rscript 2026/11/mrp-multiencuesta/08_escanos.R rtmb         # entrada RTMB (_rtmb_part o _rtmb), salidas _rtmb
+#   Rscript 2026/11/mrp-multiencuesta/08_escanos.R numpyro      # entrada numpyro (02_celdas_a_rds.R), salidas _numpyro
 
 library(dplyr)
 library(tidyr)
@@ -43,10 +44,13 @@ etiq <- commandArgs(trailingOnly = TRUE)[1]
 suf <- if (!is.na(etiq) && etiq != "") paste0("_", etiq) else ""
 f_post_rtmb <- file.path(dir_datos, "post_celdas_casa_media_rtmb_part.rds")
 f_post_rtmb_base <- file.path(dir_datos, "post_celdas_casa_media_rtmb.rds")
+f_post_np <- file.path(dir_datos, "post_celdas_casa_media_numpyro_part.rds")
 if (!is.na(etiq) && etiq == "brms") {
   x <- readRDS(f_post_brms)
 } else if (!is.na(etiq) && etiq == "rtmb") {
   x <- readRDS(if (file.exists(f_post_rtmb)) f_post_rtmb else f_post_rtmb_base)
+} else if (!is.na(etiq) && etiq == "numpyro") {
+  x <- readRDS(f_post_np)
 } else if (file.exists(f_post_part)) {
   # versión con participación: el peso de cada celda (pv) varía por draw
   x <- readRDS(f_post_part)
@@ -155,9 +159,11 @@ etq <- c(
   PNV = "PNV",
   BNG = "BNG",
   CCA = "CC",
+  AA = "AA",
   UPN = "UPN"
 )
-stopifnot(setequal(names(etq), partidos_dh))
+# el posterior manda: los fits de 12 partidos no llevan UPN
+etq <- etq[partidos_dh]
 
 # etiqueta de escaños: las medias suman 350 en cada draw; se redondean por
 # resto mayor (las medianas por partido no suman 350), como en el post del 29-N
@@ -183,19 +189,27 @@ resumen <- tibble(
   })
 )
 
-# mayorías: derecha = PP + VOX; investidura = bloque del 23-J + CC, como
-# bloques() en simular_escanos.R (SALF está dentro de OTROS y no se asigna)
+# mayorías: derecha = PP + VOX; investidura = bloque del 23-J + CC + AA (si el
+# fit lo lleva, como bloques() en simular_escanos.R; SALF está en OTROS y no
+# se asigna)
+izq <- intersect(
+  c(
+    "PSOE",
+    "SUMAR",
+    "PODEMOS",
+    "ERC",
+    "JUNTS",
+    "BILDU",
+    "PNV",
+    "BNG",
+    "CCA",
+    "AA"
+  ),
+  colnames(totales)
+)
 bloques_d <- cbind(
   derecha = totales[, "PP"] + totales[, "VOX"],
-  izquierda = totales[, "PSOE"] +
-    totales[, "SUMAR"] +
-    totales[, "PODEMOS"] +
-    totales[, "ERC"] +
-    totales[, "JUNTS"] +
-    totales[, "BILDU"] +
-    totales[, "PNV"] +
-    totales[, "BNG"] +
-    totales[, "CCA"]
+  izquierda = rowSums(totales[, izq, drop = FALSE])
 )
 mayorias <- tibble(
   mayoria = c("PP solo >= 176", "PP + VOX >= 176", "Investidura >= 176"),
@@ -281,7 +295,9 @@ colores <- c(
   "EH Bildu" = "#00A56D",
   "PNV" = "#008141",
   "BNG" = "#B5C9E4",
-  "CC" = "#D44A20"
+  "CC" = "#D44A20",
+  "AA" = "#7A9A01",
+  "UPN" = "#999999"
 )
 
 todo <- as_tibble(totales) |>

@@ -17,13 +17,16 @@ partidos_lv <- c(
   "PNV",
   "BNG",
   "CCA",
+  "AA",
   "UPN",
   "OTROS"
 )
 
 # Aliança Catalana (AC) no se presentó a las generales del 23-J, así que no
-# existe en el recuerdo de voto; Podemos tampoco como categoría propia.
-rec_lv <- c(setdiff(partidos_lv, c("AC", "PODEMOS")), "ABST", "NO_PODIA")
+# existe en el recuerdo de voto; Podemos tampoco como categoría propia. AA
+# (Adelante Andalucía) tampoco se presentó en las generales y va como
+# categoría propia solo en la intención (el recuerdo de AA va a OTROS).
+rec_lv <- c(setdiff(partidos_lv, c("AC", "PODEMOS", "AA")), "ABST", "NO_PODIA")
 
 # Comunidades en las que se presenta cada partido regional (23-J). Fuera de
 # ellas su probabilidad es un cero estructural.
@@ -35,6 +38,7 @@ territorio <- list(
   PNV = "País Vasco",
   BNG = "Galicia",
   CCA = "Canarias",
+  AA = "Andalucía",
   UPN = "Navarra"
 )
 
@@ -86,12 +90,13 @@ regionales_cis <- c(
   UPN = "UPN"
 )
 
-recod_cis_partido <- function(x, no_validos) {
+recod_cis_partido <- function(x, no_validos, aa = TRUE) {
   x <- as.character(x)
   out <- dplyr::case_when(
     x == "PP" ~ "PP",
     x == "PSOE" ~ "PSOE",
     x == "VOX" ~ "VOX",
+    x == "Adelante Andalucía" & aa ~ "AA",
     x %in% c("Podemos", "Unidas Podemos") ~ "PODEMOS",
     x %in% sumar_cis ~ "SUMAR",
     x %in% no_validos ~ NA_character_,
