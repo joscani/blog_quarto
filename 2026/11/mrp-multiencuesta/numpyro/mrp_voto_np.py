@@ -1,5 +1,5 @@
 # Port de mrp_voto.stan a numpyro, con bench contra la prueba de Stan
-# (05b_separado.R prueba). Mismo modelo, misma parametrización:
+# (stan/ajusta.R prueba). Mismo modelo, misma parametrización:
 #   - alpha y b_mujer sum-to-zero: base ortonormal del subespacio (Q del
 #     centro de masas), como el sum_to_zero_vector de Stan.
 #   - efectos casa: z_casa sum-to-zero por partido sobre las casas, escala
@@ -12,7 +12,7 @@
 #   - verosimilitud: multinomial logit por fila; las filas sin provincia como
 #     mezcla en escala log (logsumexp sobre sus entradas), como voto_parcial().
 #   - v_casa (postestratificación) se calcula fuera del modelo, en numpy,
-#     igual que la versión en R de 05b_separado.R.
+#     igual que la versión en R de stan/ajusta.R.
 #
 # Uso (desde la raíz del repo, con el venv r-mrp-numpyro):
 #   ~/.virtualenvs/r-mrp-numpyro/bin/python \
@@ -396,7 +396,7 @@ print(
 
 # -------------------------------------------------- postestratificación ----
 # v_casa: voto válido (%) en España según cada casa y la casa media, con los
-# draws de la posterior. Las mismas fórmulas que 05b_separado.R (sección 3).
+# draws de la posterior. Las mismas fórmulas que stan/ajusta.R (sección 3).
 def centra_np(a):
     return a - a.mean(axis=-1, keepdims=True)
 
@@ -423,7 +423,7 @@ def prob_valida(eta):
 
 
 # Participación (mrp_part_np.py), si está: la muestra d del voto se empareja
-# con la d de la participación, como en 05b_separado.R (v_part)
+# con la d de la participación, como en stan/ajusta.R (v_part)
 f_part = f"2026/11/mrp-multiencuesta/datos/part_numpyro_draws_{args.modo}.npz"
 Tp = None
 try:

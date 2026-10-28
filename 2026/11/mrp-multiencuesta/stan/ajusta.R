@@ -1,43 +1,37 @@
-# MRP conjunto de las 4 casas: voto (mrp_voto.stan, con reduce_sum) y
-# participación (mrp_part.stan) en dos modelos separados. No comparten
-# parámetros: la posterior es la misma que la del antiguo mrp.stan conjunto
-# (obsoleto/). Los datos los prepara 05_stan.R. La postestratificación con
-# participación se hace en R, emparejando las muestras de los dos ajustes.
+# MRP conjunto de las 4 casas: voto y participación en dos modelos Stan
+# separados (no comparten parámetros: la posterior es la misma que la del
+# antiguo modelo conjunto). Los datos los prepara 06_stan_datos.R
+# (datos/datos_stan.rds). La postestratificación con participación se hace en
+# R, emparejando las muestras de los dos ajustes.
 #
-#   Rscript 2026/11/mrp-multiencuesta/05b_separado.R prueba 3   # 10 % del voto, 1 cadena, 3 hilos
-#   Rscript 2026/11/mrp-multiencuesta/05b_separado.R nuts 2     # 4 cadenas x 2000 it., 2 hilos por cadena
-#
-# Primer argumento: prueba | nuts. Segundo: hilos por cadena del voto
-# (4 cadenas x hilos núcleos). Tercero, opcional: el fichero del modelo de voto
-# (por defecto mrp_voto.stan; mrp_voto_vec.stan es la versión vectorizada, y
-# sus salidas llevan el sufijo _vec). Solo priors "nuevo".
 # Salidas: datos/fit_separado_<modo>_voto.rds, _part.rds y estim_separado_<modo>.rds.
 
 library(dplyr)
 library(tidyr)
 library(cmdstanr)
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
-stopifnot(modo %in% c("prueba", "nuts"))
-hilos <- if (length(args) >= 2) as.integer(args[2]) else 1L
-f_voto <- if (length(args) >= 3) args[3] else "mrp_voto.stan"
-sufijo <- sub("^mrp_voto", "", sub("\\.stan$", "", f_voto))   # "" o "_vec"
-cat("modo:", modo, " hilos por cadena:", hilos, " modelo de voto:", f_voto, "\n")
+# constantes: editar aquí, no hay argumentos
+modo <- "prueba" # prueba | nuts
+hilos <- 3 # hilos por cadena del voto (4 cadenas x hilos = núcleos)
+f_voto <- "mrp_voto.stan" # o mrp_voto_vec.stan (vectorizado); el sufijo _vec va en las salidas
+sufijo <- sub("^mrp_voto", "", sub("\\.stan$", "", f_voto)) # "" o "_vec"
 
 dir_proy <- "2026/11/mrp-multiencuesta"
 dir_datos <- file.path(dir_proy, "datos")
-
-# 1. Datos: los de 05_stan.R, sin ajustar
-f_datos <- tempfile(fileext = ".rds")
-st <- system2(
-  "Rscript",
-  c(file.path(dir_proy, "05_stan.R"), modo, "nuevo"),
-  env = paste0("SOLO_DATOS=", f_datos),
-  stdout = FALSE
+cat(
+  "modo:",
+  modo,
+  "  hilos por cadena:",
+  hilos,
+  "  modelo de voto:",
+  f_voto,
+  "\n"
 )
-stopifnot(st == 0, file.exists(f_datos))
-x <- readRDS(f_datos)
+
+# 1. Datos: los de 06_stan_datos.R. Si 06_stan_datos.R está en otro modo
+# (p. ej. prueba), los datos no coinciden: hay que regenerarlos con el mismo modo.
+x <- readRDS(file.path(dir_datos, "datos_stan.rds"))
+stopifnot(x$modo == modo)
 datos <- x$datos
 voto_lv <- x$voto_lv
 nombres_casa <- c(x$lv$casa, "casa media")
@@ -56,9 +50,9 @@ datos <- c(
 cat(
   "filas de voto:",
   datos$N,
-  " grainsize:",
+  "  grainsize:",
   datos$grainsize,
-  " filas de participación:",
+  "  filas de participación:",
   datos$NT,
   "\n"
 )
@@ -66,7 +60,7 @@ cat(
 # 2. Ajustes (CmdStan ignora los datos que un modelo no declara)
 compila <- function(f) {
   cmdstan_model(
-    file.path(dir_proy, f),
+    file.path(dir_proy, "stan", f),
     include_paths = file.path(dir_proy, "stan"),
     cpp_options = list(stan_threads = TRUE)
   )
@@ -83,7 +77,7 @@ ajusta <- function(mod, h) {
     iter_sampling = if (modo == "prueba") 150 else 1000,
     init = 0,
     adapt_delta = 0.95,
-    max_treedepth = 8, # igual que 05_stan.R
+    max_treedepth = 8,
     refresh = if (modo == "prueba") 25 else 100
   )
   list(fit = fit, min = as.numeric(difftime(Sys.time(), t0, units = "mins")))
@@ -100,10 +94,10 @@ diagnostico <- function(fit, nombre, min) {
 }
 
 # Cada ajuste se guarda con una huella del modelo (y funciones.stan) y de los
-# datos: si no cambian, se carga en vez de reajustar (como en 05_stan.R)
+# datos: si no cambian, se carga en vez de reajustar
 ajusta_o_carga <- function(f_stan, h, nombre) {
   huella <- digest::digest(list(
-    readLines(file.path(dir_proy, f_stan)),
+    readLines(file.path(dir_proy, "stan", f_stan)),
     readLines(file.path(dir_proy, "stan", "funciones.stan")),
     datos[names(datos) != "grainsize"],
     modo
@@ -165,7 +159,7 @@ sds <- bind_rows(
 cat(
   "Rhat máximo de las sd:",
   round(max(sds$rhat), 3),
-  " ESS bulk mínimo:",
+  "  ESS bulk mínimo:",
   round(min(sds$ess_bulk)),
   "\n"
 )
@@ -345,5 +339,8 @@ print(
   row.names = FALSE
 )
 
-saveRDS(res, file.path(dir_datos, paste0("estim_separado_", modo, sufijo, ".rds")))
+saveRDS(
+  res,
+  file.path(dir_datos, paste0("estim_separado_", modo, sufijo, ".rds"))
+)
 cat("\nguardado", paste0("estim_separado_", modo, sufijo, ".rds"), "\n")

@@ -1,5 +1,9 @@
 # MRP con varias encuestas (CIS + 40dB + More in Common)
 
+> NOTA (2026-10-28): este fichero queda como historial de decisiones. La
+> estructura actual del pipeline (scripts, orden, pendientes y plan del post)
+> está en GUIA.md. Los nombres de scripts de este documento son los antiguos.
+
 Proyecto de noviembre 2026. Continúa `2026/10/mrp-raking/`.
 Idea: juntar microdatos de varias casas y varios meses en un solo modelo MRP.
 Cada encuesta aporta información; el modelo estima el efecto de cada casa y la evolución temporal.

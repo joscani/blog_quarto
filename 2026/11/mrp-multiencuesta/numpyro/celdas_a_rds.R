@@ -11,7 +11,7 @@
 # al alta de UPN (13 niveles: los 14 actuales menos UPN). Solo prov y N entran
 # en el cálculo de escaños, así que una etiqueta equivocada no movería nada.
 #
-# Uso: Rscript 2026/11/mrp-multiencuesta/numpyro/02_celdas_a_rds.R <npz>
+# Uso: Rscript 2026/11/mrp-multiencuesta/numpyro/celdas_a_rds.R <npz>
 
 suppressMessages({
   library(reticulate)

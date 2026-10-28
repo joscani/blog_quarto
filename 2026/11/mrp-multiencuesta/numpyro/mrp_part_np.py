@@ -11,18 +11,18 @@
 #   - filas sin provincia: mezcla en escala log,
 #       logit p = logsumexp(log w + log_sigmoid(x)) - logsumexp(log w + log_sigmoid(-x)),
 #     como mrp_part.stan.
-#   - priors como 05b_separado.R: alpha_t N(1, 1.5), b_mujer_t N(0, 1),
+#   - priors como stan/ajusta.R: alpha_t N(1, 1.5), b_mujer_t N(0, 1),
 #     sd_rec N+(0, 2), el resto N+(0, 0.5).
 #   - part_bruta y delta (calibra) se calculan fuera del modelo, en numpy,
 #     como en las generated quantities de mrp_part.stan.
 #
 # Uso (desde la raíz del repo, con el venv r-mrp-numpyro; antes,
-# Rscript 2026/11/mrp-multiencuesta/numpyro/01_datos.R <modo>):
+# Rscript 2026/11/mrp-multiencuesta/numpyro/exporta_npz.R <modo>):
 #   ~/.virtualenvs/r-mrp-numpyro/bin/python -u \
 #     2026/11/mrp-multiencuesta/numpyro/mrp_part_np.py --modo nuts
 #
 # Salida: datos/part_numpyro_draws_<modo>.npz (efectos, part_bruta y delta
-# por muestra, con los nombres de Tp en 05b_separado.R).
+# por muestra, con los nombres de Tp en stan/ajusta.R).
 
 import argparse
 import time

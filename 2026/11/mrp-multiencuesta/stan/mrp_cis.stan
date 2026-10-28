@@ -221,7 +221,7 @@ model {
 
 generated quantities {
   // Voto válido (%) en España según el CIS. Matriz de una fila, para que
-  // 05_stan.R lea igual este modelo y mrp.stan.
+  // stan/ajusta_cis.R lea igual este modelo y el antiguo mrp.stan.
   matrix[1, J] v_casa = rep_matrix(0, 1, J);
   // Con participación: votos de cada celda = N * P(votar) * P(partido)
   matrix[1, J] v_part = rep_matrix(0, 1, J);

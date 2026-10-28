@@ -1,4 +1,4 @@
-// MRP conjunto: modelo de voto (antes, parte de mrp.stan; ahora en obsoleto/).
+// MRP conjunto: modelo de voto (antes, parte del antiguo mrp.stan conjunto).
 //
 // Mismo modelo de voto que mrp.stan. Cambios:
 //  1. Sin el modelo de participación: va en mrp_part.stan. Los dos modelos
@@ -8,16 +8,12 @@
 //  4. Prior de b_mujer como dato (s_b_mujer).
 // La postestratificación con participación se hace en R con los dos ajustes.
 //
-// mrp_voto_c.stan: mrp_voto_vec.stan con casa, mes, edad, estudios y recuerdo
-// centrados (como mrp_part.stan). CCAA, provincia y las interacciones siguen
-// sin centrar: tienen grupos pequeños. Mismo modelo, otra parametrización.
-//
 // mrp_voto_vec.stan: el mismo modelo que mrp_voto.stan, con la verosimilitud
 // vectorizada por bloques de filas en vez de fila a fila (menos nodos de
 // derivada). Quita las constantes de la multinomial: cambia lp__, no la posterior.
 //  - Filas con provincia: sum(y .* eta) - n * log_sum_exp(eta) por fila.
-//  - Filas mezcla: p = sum_e w_e softmax(eta + a_prov_e), en escala natural.
-//    exp() no desborda: |eta| es pequeño y off vale 0 o -20.
+//  - Filas mezcla: p = sum_e w_e softmax(eta + a_prov_e), en escala natural,
+//    restando el max de cada fila antes del exp (sin desbordes).
 
 functions {
 #include funciones.stan
@@ -48,7 +44,8 @@ functions {
                    alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
                    a_ccaa_rec, a_casa_rec)
         + a_prov[prov_fila[r]];
-    vector[size(r)] lse = log(exp(eta) * rep_vector(1.0, cols(off)));
+    vector[size(r)] lse;
+    for (i in 1:size(r)) lse[i] = log_sum_exp(eta[i]');
     return sum(Y[r] .* eta) - dot_product(n_y[r], lse);
   }
 
@@ -76,7 +73,11 @@ functions {
       = eta_bloque(r, mujer, casa, mes, edad, edu, rec, ccaa, ccaa_rec, casa_rec, off,
                    alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
                    a_ccaa_rec, a_casa_rec);
-    matrix[e1 - e0 + 1, J] pe = exp(eta[fila_e] + a_prov[ent_prov[e0:e1]]);
+    matrix[e1 - e0 + 1, J] ea = eta[fila_e] + a_prov[ent_prov[e0:e1]];
+    // resta el max de cada fila antes del exp: sin underflow, log(p) no da -inf
+    vector[e1 - e0 + 1] mx;
+    for (i in 1:rows(ea)) mx[i] = max(ea[i]);
+    matrix[e1 - e0 + 1, J] pe = exp(ea - rep_matrix(mx, J));
     // w_e * softmax por fila
     pe = diag_pre_multiply(ent_w[e0:e1] ./ (pe * rep_vector(1.0, J)), pe);
     matrix[n2, J] p;
@@ -158,9 +159,6 @@ transformed data {
     ini_fila[fila2[m]] = ini[m];
     len_fila[fila2[m]] = len[m];
   }
-  vector[E] log_ent_w = log(ent_w);
-  array[N] int filas = linspaced_int_array(N, 1, N);
-
   // para la verosimilitud vectorizada
   matrix[N, J] Y = to_matrix(y);
   vector[N] n_y = Y * rep_vector(1.0, J);
@@ -173,12 +171,11 @@ transformed data {
 parameters {
   sum_to_zero_vector[J] alpha;
   sum_to_zero_vector[J] b_mujer;
-  // centrados: c_* ~ normal(0, sd)
-  array[J] sum_to_zero_vector[n_casa] c_casa;
-  matrix[n_mes, J] c_mes;
-  matrix[n_edad, J] c_edad;
-  matrix[n_edu, J] c_edu;
-  matrix[n_rec, J] c_rec;
+  array[J] sum_to_zero_vector[n_casa] z_casa;
+  matrix[n_mes, J] z_mes;
+  matrix[n_edad, J] z_edad;
+  matrix[n_edu, J] z_edu;
+  matrix[n_rec, J] z_rec;
   matrix[n_ccaa, J] z_ccaa;
   matrix[n_prov, J] z_prov;
   matrix[n_ccaa * n_rec, J] z_ccaa_rec;
@@ -198,13 +195,13 @@ parameters {
 transformed parameters {
   matrix[n_casa, J] a_casa;
   for (k in 1:J) {
-    a_casa[, k] = c_casa[k];
+    a_casa[, k] = esc_casa * sd_casa[k] * z_casa[k];
   }
   a_casa = centra(a_casa);
-  matrix[n_mes, J] a_mes = centra(c_mes);
-  matrix[n_edad, J] a_edad = centra(c_edad);
-  matrix[n_edu, J] a_edu = centra(c_edu);
-  matrix[n_rec, J] a_rec = centra(c_rec);
+  matrix[n_mes, J] a_mes = centra(diag_post_multiply(z_mes, sd_mes));
+  matrix[n_edad, J] a_edad = centra(diag_post_multiply(z_edad, sd_edad));
+  matrix[n_edu, J] a_edu = centra(diag_post_multiply(z_edu, sd_edu));
+  matrix[n_rec, J] a_rec = centra(diag_post_multiply(z_rec, sd_rec));
   matrix[n_ccaa, J] a_ccaa = centra(diag_post_multiply(z_ccaa, sd_ccaa));
   matrix[n_prov, J] a_prov = centra(diag_post_multiply(z_prov, sd_prov));
   matrix[n_ccaa * n_rec, J] a_ccaa_rec = centra(diag_post_multiply(z_ccaa_rec, sd_ccaa_rec));
@@ -214,16 +211,11 @@ transformed parameters {
 model {
   alpha ~ normal(0, s_alpha);
   b_mujer ~ normal(0, s_b_mujer);
-  // casa: c_casa[k] = esc_casa * sd_casa[k] * z con z ~ std_normal en el
-  // subespacio de suma 0 (dimensión n_casa - 1). normal_lpdf sobre n_casa
-  // componentes resta n_casa * log(escala); la densidad correcta resta
-  // (n_casa - 1) * log(escala): se suma log(escala) por partido.
-  for (k in 1:J) c_casa[k] ~ normal(0, esc_casa * sd_casa[k]);
-  target += sum(log(esc_casa * sd_casa));
-  to_vector(c_mes) ~ normal(0, to_vector(rep_matrix(sd_mes', n_mes)));
-  to_vector(c_edad) ~ normal(0, to_vector(rep_matrix(sd_edad', n_edad)));
-  to_vector(c_edu) ~ normal(0, to_vector(rep_matrix(sd_edu', n_edu)));
-  to_vector(c_rec) ~ normal(0, to_vector(rep_matrix(sd_rec', n_rec)));
+  for (k in 1:J) z_casa[k] ~ std_normal();
+  to_vector(z_mes) ~ std_normal();
+  to_vector(z_edad) ~ std_normal();
+  to_vector(z_edu) ~ std_normal();
+  to_vector(z_rec) ~ std_normal();
   to_vector(z_ccaa) ~ std_normal();
   to_vector(z_prov) ~ std_normal();
   to_vector(z_ccaa_rec) ~ std_normal();

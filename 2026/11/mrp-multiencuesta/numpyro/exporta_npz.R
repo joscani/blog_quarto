@@ -1,33 +1,23 @@
-# Exporta los datos del modelo de voto (mrp_voto.stan) a .npz para el bench
-# de numpyro. Usa la misma vía que 05b_separado.R: 05_stan.R <modo> nuevo con
-# SOLO_DATOS, así la submuestra del modo "prueba" (set.seed(2026), 10 %) es
-# idéntica a la de Stan.
+# Exporta los datos del modelo de voto (mrp_voto.stan) a .npz para el ajuste
+# de numpyro. Lee los mismos datos que stan/ajusta.R (datos/datos_stan.rds, de
+# 06_stan_datos.R), así la submuestra del modo "prueba" (set.seed(2026), 10 %)
+# es idéntica a la de Stan.
 #
 # Uso (desde la raíz del repo):
-#   Rscript 2026/11/mrp-multiencuesta/numpyro/01_datos.R [prueba|nuts]
+#   Rscript 2026/11/mrp-multiencuesta/numpyro/exporta_npz.R
 #
 # Salidas: 2026/11/mrp-multiencuesta/datos/voto_numpyro_<modo>.npz y
-# part_numpyro_<modo>.npz (participación, para mrp_part_np.py)
+# part_numpyro_<modo>.npz (participación, para mrp_part_np.py), con el modo
+# con el que se generó datos_stan.rds en 06_stan_datos.R.
 
 suppressMessages(library(reticulate))
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
-stopifnot(modo %in% c("prueba", "nuts"))
-
 dir_proy <- here::here("2026/11/mrp-multiencuesta")
 
-f_datos <- tempfile(fileext = ".rds")
-st <- system2(
-  "Rscript",
-  c("2026/11/mrp-multiencuesta/05_stan.R", modo, "nuevo"),
-  env = paste0("SOLO_DATOS=", f_datos),
-  stdout = FALSE
-)
-stopifnot(st == 0, file.exists(f_datos))
-x <- readRDS(f_datos)
+x <- readRDS(file.path(dir_proy, "datos", "datos_stan.rds"))
+modo <- x$modo
 d <- x$datos
-# s_b_mujer lo añade 05b_separado.R a sus datos (el valor es fijo ahí)
+# s_b_mujer lo añade stan/ajusta.R a sus datos (el valor es fijo ahí)
 d$s_b_mujer <- 1
 
 np <- import("numpy")
@@ -81,7 +71,7 @@ np$savez_compressed(
   s_sd_rec = d$s_sd_rec,
   s_sd_main = d$s_sd_main,
   s_sd_int = d$s_sd_int,
-  # etiquetas (voto_lv y lv$casa + "casa media", como 05b_separado.R)
+  # etiquetas (voto_lv y lv$casa + "casa media", como stan/ajusta.R)
   voto_lv = paste(x$voto_lv),
   casa_lv = c(paste(x$lv$casa), "casa media")
 )
@@ -103,7 +93,7 @@ cat(
 )
 
 # Participación (mrp_part.stan, para mrp_part_np.py). Los priors de alpha_t y
-# b_mujer_t los fija 05b_separado.R
+# b_mujer_t los fija stan/ajusta.R
 f_npz_t <- here::here(
   "2026/11/mrp-multiencuesta/datos",
   paste0("part_numpyro_", modo, ".npz")
@@ -153,5 +143,15 @@ np$savez_compressed(
   s_alpha_t = 1.5,
   s_b_mujer_t = 1
 )
-cat("escrito", f_npz_t, "\n", "filas:", d$NT, " filas mezcla:", d$NT2,
-    " entradas:", d$TE, "\n")
+cat(
+  "escrito",
+  f_npz_t,
+  "\n",
+  "filas:",
+  d$NT,
+  " filas mezcla:",
+  d$NT2,
+  " entradas:",
+  d$TE,
+  "\n"
+)

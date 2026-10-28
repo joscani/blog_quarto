@@ -1,4 +1,4 @@
-// MRP conjunto: modelo de voto (antes, parte de mrp.stan; ahora en obsoleto/).
+// MRP conjunto: modelo de voto (antes, parte del antiguo mrp.stan conjunto).
 //
 // Mismo modelo de voto que mrp.stan. Cambios:
 //  1. Sin el modelo de participación: va en mrp_part.stan. Los dos modelos

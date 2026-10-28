@@ -1,5 +1,5 @@
 # MRP del CIS con mgcv::gam(family = multinom): la misma estructura que
-# mrp_cis.stan (05_stan.R con muestra "cis") pero con verosimilitud
+# mrp_cis.stan (stan/ajusta_cis.R) pero con verosimilitud
 # multinomial directa — sin truco multinomial-Poisson y sin efectos fijos
 # por celda (la normalización softmax va dentro de la verosimilitud).
 #
@@ -18,7 +18,7 @@
 #     se muestrean del prior como en Stan.
 #   * sin posterior: point estimates; los intervalos requerirían bootstrap.
 #
-# Uso: Rscript 2026/11/mrp-multiencuesta/05d_mgcv_cis.R
+# Uso: Rscript 2026/11/mrp-multiencuesta/11_mgcv_cis.R
 # Salida: datos/estim_gam_cis.rds
 
 library(dplyr)
@@ -162,7 +162,7 @@ est_gam <- tibble(
 )
 
 # ---------------------------------------------------------------------------
-# 4. Comparación con el ajuste Stan (05_stan.R, versión nuts_nuevo_cis)
+# 4. Comparación con el ajuste Stan (stan/ajusta_cis.R)
 # ---------------------------------------------------------------------------
 
 f_stan <- file.path(dir_datos, "estim_stan_nuts_nuevo_cis.rds")

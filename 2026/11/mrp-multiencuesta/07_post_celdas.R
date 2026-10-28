@@ -12,19 +12,15 @@
 #     modo común solo se cancela con todos los efectos; sin los de casa el eta
 #     de celda se infla (sd 0.20 -> 0.60) y los escaños salen con intervalos
 #     2-3 veces más anchos (v. PLAN.md, 2026-10-25). Sin modelo de participación.
-#   - stan (fit_separado_<modo>_voto.rds, de 05b_separado.R): se reproducen en
+#   - stan (fit_separado_<modo>_voto.rds, de stan/ajusta.R): se reproducen en
 #     R los draws de mrp_voto.stan, con la casa media = media de las 4 casas
 #     (como la fila n_casa + 1 de v_casa en el modelo). OJO: no es exactamente
 #     el efecto casa = 0 de brms (la media de 4 efectos estimados no es 0).
 #     Con "part" se añade además pv, el peso de participación de mrp_part.stan
 #     por celda y draw, para ponderar las celdas (como v_part en 05b).
 #
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R                      # brms, 1000 draws
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R prueba               # brms, 50 draws, sin guardar
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts stan            # stan, 1000 draws
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts stan part       # stan con participación
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R prueba stan part     # prueba con los ajustes prueba
-#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R nuts rtmb part       # RTMB (rtmb/05b_rtmb.R)
+#   Rscript 2026/11/mrp-multiencuesta/07_post_celdas.R
+# (constantes abajo: modo prueba | nuts, fuente brms | stan | rtmb, con_part)
 #
 # Fuente rtmb: los mismos cálculos que stan con las muestras de Laplace de
 # datos/fit_rtmb_voto_<modo>.rds y fit_rtmb_part_<modo>.rds (1.000 muestras
@@ -41,10 +37,10 @@
 library(dplyr)
 library(brms)
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "nuts"
-fuente <- if (length(args) >= 2) args[2] else "brms"
-con_part <- if (length(args) >= 3) args[3] == "part" else FALSE
+# constantes: editar aquí, no hay argumentos
+modo <- "nuts" # prueba (50 draws) | nuts (1000)
+fuente <- "rtmb" # brms | stan | rtmb
+con_part <- TRUE # ponderar las celdas con el modelo de participación (no en brms)
 stopifnot(modo %in% c("nuts", "prueba"), fuente %in% c("brms", "stan", "rtmb"))
 stopifnot(!con_part || fuente != "brms") # el modelo de participación no existe en brms
 ndraws <- if (modo == "prueba") 50L else 1000L
@@ -69,7 +65,7 @@ prov_ccaa <- readRDS(file.path(dir_datos, "prov_ccaa.rds"))
 voto_lv <- setdiff(partidos_lv, "AC")
 territorio_mod <- territorio[names(territorio) != "AC"]
 
-# Celdas de población, igual que en 04_brms.R y 04b (y que 05_stan.R)
+# Celdas de población, igual que en 05_brms_mm.R y 06_stan_datos.R
 post <- as.data.frame.table(tabla, responseName = "N") |>
   filter(N > 1e-6) |>
   left_join(prov_ccaa, by = "prov")
@@ -133,22 +129,15 @@ if (fuente == "brms") {
   mes_salida <- max(levels(celdas$mes))
   nd <- ndraws
 } else {
-  # ---- stan: mrp_voto.stan (+ mrp_part.stan con "part"), como 05b_separado.R --
+  # ---- stan | rtmb: mrp_voto.stan (+ mrp_part.stan con "part"), como stan/ajusta.R
 
-  # los datos de los ajustes salen de 05_stan.R (SOLO_DATOS, sin ajustar)
-  f_datos <- tempfile(fileext = ".rds")
-  st <- system2(
-    "Rscript",
-    c(file.path(dir_proy, "05_stan.R"), modo, "nuevo"),
-    env = paste0("SOLO_DATOS=", f_datos),
-    stdout = FALSE
-  )
-  stopifnot(st == 0, file.exists(f_datos))
-  x <- readRDS(f_datos)
+  # los datos de los ajustes los prepara 06_stan_datos.R
+  x <- readRDS(file.path(dir_datos, "datos_stan.rds"))
+  stopifnot(x$modo == modo)
   datos <- x$datos
   mes_salida <- x$lv$mes[datos$mes_post]
 
-  # las celdas de 05_stan.R y las de aquí tienen que ser las mismas, en el mismo orden
+  # las celdas de 06_stan_datos.R y las de aquí tienen que ser las mismas, en el mismo orden
   stopifnot(
     identical(as.numeric(datos$P_N), as.numeric(post$N)),
     identical(as.integer(datos$P_prov), as.integer(as.character(post$prov))),

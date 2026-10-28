@@ -39,7 +39,7 @@
 #   escanos_mapa_detalle.png     escaños mediana en las provincias con regla
 #   escanos_mapa_mayorias.png    probabilidades de mayoría
 #
-#   Rscript 2026/11/mrp-multiencuesta/09_escanos_mapa.R
+#   Rscript 2026/11/mrp-multiencuesta/09_mapa_29N.R
 
 library(dplyr)
 library(tidyr)

@@ -10,19 +10,18 @@
 #    incertidumbre no se propaga (diferencia con Stan).
 # La verosimilitud omite las constantes de la multinomial, como mrp_voto_vec.stan.
 #
-#   Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_voto_rtmb.R prueba   # 10 % de filas
-#   Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_voto_rtmb.R nuts     # todas las filas
-#   RTMB_HILOS=8 Rscript ... nuts   # TMB con OpenMP (autopar) y postestratificación en paralelo
+#   Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_voto_rtmb.R
+#   (constantes abajo: modo prueba | nuts; HILOS en rtmb/comun.R)
 #
 # Salidas: datos/fit_rtmb_voto_<modo>.rds: muestras de los efectos (A, como en
-# 05b_separado.R), v_casa, sd en la moda y tiempos. La postestratificación con
-# participación la hace 05b_rtmb.R.
+# stan/ajusta.R), v_casa, sd en la moda y tiempos. La postestratificación con
+# participación la hace rtmb/ajusta.R.
 # Compara con datos/fit_separado_<modo>_voto.rds (Stan) si existe.
 
 source("2026/11/mrp-multiencuesta/rtmb/comun.R")
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
+# constantes: editar aquí, no hay argumentos (HILOS en rtmb/comun.R)
+modo <- "nuts" # prueba | nuts
 stopifnot(modo %in% c("prueba", "nuts"))
 n_draws <- 1000L
 hilos <- configura_hilos()
@@ -31,7 +30,7 @@ hilos <- configura_hilos()
 x <- carga_datos(modo)
 d <- x$datos
 voto_lv <- x$voto_lv
-s_b_mujer <- 1 # como en 05b_separado.R
+s_b_mujer <- 1 # como en stan/ajusta.R
 
 J <- d$J
 Y <- matrix(as.numeric(d$y), d$N, J)
@@ -177,7 +176,7 @@ aj <- ajusta(nll, par0, aleatorios)
 obj <- aj$obj
 opt <- aj$opt
 
-# 4. Muestras de los efectos (numéricos), con el formato de A en 05b_separado.R
+# 4. Muestras de los efectos (numéricos), con el formato de A en stan/ajusta.R
 t0 <- Sys.time()
 pars <- muestras_laplace(obj, opt, n_draws)
 ef <- parallel::mclapply(pars, efectos, mc.cores = hilos)
@@ -187,7 +186,7 @@ A <- lapply(setNames(nm = c("alpha", "b_mujer", names(niveles))), function(nm) {
 t_sdr <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 cat("muestras de los efectos:", round(t_sdr, 1), "s\n")
 
-# 5. v_casa: voto válido (%) por casa y casa media, como en 05b_separado.R
+# 5. v_casa: voto válido (%) por casa y casa media, como en stan/ajusta.R
 prob <- function(eta) {
   p <- exp(eta - apply(eta, 1, max)) * d$P_mascara
   p / rowSums(p)

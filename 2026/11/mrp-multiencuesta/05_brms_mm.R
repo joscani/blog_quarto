@@ -2,18 +2,13 @@
 # More in Common no tiene provincia fuera de las uniprovinciales, y su efecto
 # provincia es la media ponderada de las provincias de su comunidad.
 #
-# Uso:
-#   Rscript 2026/11/mrp-multiencuesta/04_brms.R prueba       # 10 % de las filas, 1 cadena: prueba el script
-#   Rscript 2026/11/mrp-multiencuesta/04_brms.R pathfinder   # no sirve: Pareto k = 12. Además brms 2.23.0 (CRAN) falla al leer path__ de cmdstan >= 2.37; corregido en brms 2.23.2 de GitHub (issue #1830, PR #1831)
-#   Rscript 2026/11/mrp-multiencuesta/04_brms.R nuts         # ajuste final, horas
-#   Rscript 2026/11/mrp-multiencuesta/04_brms.R bench        # 10 % de filas: metrica diag/dense x priors brms/nuevos
+# constantes: editar aquí, no hay argumentos
+modo <- "nuts" # prueba (10 % de filas, 1 cadena) | nuts (ajuste final, horas) | pathfinder (no sirve: Pareto k = 12) | bench
 
 library(dplyr)
 library(tidyr)
 library(brms)
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
 stopifnot(modo %in% c("prueba", "pathfinder", "nuts", "bench"))
 cat("modo:", modo, "\n")
 
@@ -31,7 +26,7 @@ territorio_mod <- territorio[names(territorio) != "AC"]
 prov_lv <- levels(prov_ccaa$prov)
 K <- 9 # máximo de provincias por CCAA (Castilla y León)
 
-# Celdas de 03b_celdas.R
+# Celdas de 03_celdas.R
 celdas <- readRDS(file.path(dir_datos, "celdas_brms.rds"))
 
 con_offsets <- function(d) {
@@ -81,7 +76,7 @@ priors <- Reduce(
   })
 )
 
-# Priors nuevos (los del prior predictive check de 05_stan.R): sd_rec N(0, 2),
+# Priors nuevos (los del prior predictive check de stan/ajusta_cis.R): sd_rec N(0, 2),
 # principales N(0, 0,5), interacciones N(0, 0,25); el grupo de la mezcla mm()
 # hereda el principal. El bench de 2026-10-23 los deja en 4,3 min frente a 5,2
 # de exponential(1), y sobre todo saca el muestreo de max_treedepth (0 frente

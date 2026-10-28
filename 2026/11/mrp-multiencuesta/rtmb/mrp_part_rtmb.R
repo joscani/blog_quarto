@@ -10,17 +10,17 @@
 #    libres (ver PLAN.md, 2026-10-26).
 #  - Como Stan (generated quantities): part_bruta y delta (calibra) por muestra.
 #
-#   Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_part_rtmb.R prueba
-#   RTMB_HILOS=8 Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_part_rtmb.R nuts
+#   Rscript 2026/11/mrp-multiencuesta/rtmb/mrp_part_rtmb.R
+#   (constantes abajo: modo prueba | nuts; HILOS en rtmb/comun.R)
 #
 # Salida: datos/fit_rtmb_part_<modo>.rds: muestras de los efectos (Tp, como en
-# 05b_separado.R), sd en la moda y tiempos. Compara part_bruta y delta con
+# stan/ajusta.R), sd en la moda y tiempos. Compara part_bruta y delta con
 # datos/fit_separado_<modo>_part.rds (Stan) si existe.
 
 source("2026/11/mrp-multiencuesta/rtmb/comun.R")
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
+# constantes: editar aquí, no hay argumentos (HILOS en rtmb/comun.R)
+modo <- "nuts" # prueba | nuts
 stopifnot(modo %in% c("prueba", "nuts"))
 n_draws <- 1000L
 hilos <- configura_hilos()
@@ -28,7 +28,7 @@ hilos <- configura_hilos()
 # 1. Datos
 x <- carga_datos(modo)
 d <- x$datos
-m_alpha_t <- 1      # como en 05b_separado.R
+m_alpha_t <- 1 # como en stan/ajusta.R
 s_alpha_t <- 1.5
 s_b_mujer_t <- 1
 esc_casa_t <- sqrt(d$n_casa_t / (d$n_casa_t - 1))
@@ -48,20 +48,38 @@ n1 <- d$t_n[d$t_fila1]
 k2 <- d$t_k[d$t_fila2]
 n2 <- d$t_n[d$t_fila2]
 
-niveles <- c(casa = d$n_casa_t, mes = d$n_mes, edad = d$n_edad, edu = d$n_edu,
-             rec = d$n_rec, ccaa = d$n_ccaa, prov = d$n_prov)
-s_sd <- c(casa = d$s_sd_main, mes = d$s_sd_main, edad = d$s_sd_main,
-          edu = d$s_sd_main, rec = d$s_sd_rec, ccaa = d$s_sd_main,
-          prov = d$s_sd_main)
+niveles <- c(
+  casa = d$n_casa_t,
+  mes = d$n_mes,
+  edad = d$n_edad,
+  edu = d$n_edu,
+  rec = d$n_rec,
+  ccaa = d$n_ccaa,
+  prov = d$n_prov
+)
+s_sd <- c(
+  casa = d$s_sd_main,
+  mes = d$s_sd_main,
+  edad = d$s_sd_main,
+  edu = d$s_sd_main,
+  rec = d$s_sd_rec,
+  ccaa = d$s_sd_main,
+  prov = d$s_sd_main
+)
 
 # 2. Efectos a partir de los parámetros (números AD o numéricos)
 efectos <- function(p) {
   sd <- exp(p$log_sd)
   list(
-    alpha = p$alpha_t, b = p$b_mujer_t,
-    casa = Q_casa_t %*% p$u_casa,          # suma 0; ya en su escala (centrado)
-    mes = p$a_mes, edad = p$a_edad, edu = p$a_edu, rec = p$a_rec,
-    ccaa = sd[6] * p$z_ccaa, prov = sd[7] * p$z_prov
+    alpha = p$alpha_t,
+    b = p$b_mujer_t,
+    casa = Q_casa_t %*% p$u_casa, # suma 0; ya en su escala (centrado)
+    mes = p$a_mes,
+    edad = p$a_edad,
+    edu = p$a_edu,
+    rec = p$a_rec,
+    ccaa = sd[6] * p$z_ccaa,
+    prov = sd[7] * p$z_prov
   )
 }
 
@@ -80,8 +98,14 @@ nll <- function(p) {
   # sd ~ half-normal(0, s) en escala log: + log(sd) por el jacobiano
   res <- res - sum(dnorm(sd, 0, s_sd, log = TRUE)) - sum(p$log_sd)
 
-  eta <- a$alpha + d$t_mujer * a$b + a$casa[d$t_casa] + a$mes[d$t_mes] +
-    a$edad[d$t_edad] + a$edu[d$t_edu] + a$rec[d$t_rec] + a$ccaa[d$t_ccaa]
+  eta <- a$alpha +
+    d$t_mujer * a$b +
+    a$casa[d$t_casa] +
+    a$mes[d$t_mes] +
+    a$edad[d$t_edad] +
+    a$edu[d$t_edu] +
+    a$rec[d$t_rec] +
+    a$ccaa[d$t_ccaa]
   # filas con provincia: binomial_logit (sin la constante)
   x1 <- eta[d$t_fila1] + a$prov[d$t_prov1]
   ll <- sum(k1 * x1 - n1 * log(1 + exp(x1)))
@@ -99,17 +123,33 @@ nll <- function(p) {
 }
 
 par0 <- list(
-  alpha_t = 0, b_mujer_t = 0, u_casa = rep(0, d$n_casa_t - 1),
-  a_mes = rep(0, d$n_mes), a_edad = rep(0, d$n_edad), a_edu = rep(0, d$n_edu),
-  a_rec = rep(0, d$n_rec), z_ccaa = rep(0, d$n_ccaa), z_prov = rep(0, d$n_prov),
+  alpha_t = 0,
+  b_mujer_t = 0,
+  u_casa = rep(0, d$n_casa_t - 1),
+  a_mes = rep(0, d$n_mes),
+  a_edad = rep(0, d$n_edad),
+  a_edu = rep(0, d$n_edu),
+  a_rec = rep(0, d$n_rec),
+  z_ccaa = rep(0, d$n_ccaa),
+  z_prov = rep(0, d$n_prov),
   log_sd = log(0.5 * s_sd)
 )
 aleatorios <- setdiff(names(par0), "log_sd")
 
 # 3. Ajuste
-cat("modo:", modo, " filas:", d$NT, " filas mezcla:", d$NT2,
-    " efectos integrados:", sum(lengths(par0[aleatorios])),
-    " sd optimizadas:", length(par0$log_sd), "\n")
+cat(
+  "modo:",
+  modo,
+  " filas:",
+  d$NT,
+  " filas mezcla:",
+  d$NT2,
+  " efectos integrados:",
+  sum(lengths(par0[aleatorios])),
+  " sd optimizadas:",
+  length(par0$log_sd),
+  "\n"
+)
 aj <- ajusta(nll, par0, aleatorios)
 
 # 4. Muestras y cantidades generadas (part_bruta y delta, como en mrp_part.stan)
@@ -130,42 +170,83 @@ t0 <- Sys.time()
 pars <- muestras_laplace(aj$obj, aj$opt, n_draws)
 gq <- function(p) {
   a <- efectos(p)
-  eta_pt <- c(a$alpha) + d$P_mujer * c(a$b) + a$mes[d$mes_post] +
-    a$edad[d$P_edad] + a$edu[d$P_edu] + a$rec[d$P_rec] +
-    a$ccaa[d$P_ccaa] + a$prov[d$P_prov]
-  c(a[c("alpha", "b", "mes", "edad", "edu", "rec", "ccaa", "prov")],
+  eta_pt <- c(a$alpha) +
+    d$P_mujer * c(a$b) +
+    a$mes[d$mes_post] +
+    a$edad[d$P_edad] +
+    a$edu[d$P_edu] +
+    a$rec[d$P_rec] +
+    a$ccaa[d$P_ccaa] +
+    a$prov[d$P_prov]
+  c(
+    a[c("alpha", "b", "mes", "edad", "edu", "rec", "ccaa", "prov")],
     part_bruta = 100 * sum(d$P_N * plogis(eta_pt)) / sum(d$P_N),
-    delta = calibra(eta_pt, d$P_N, d$part_obj))
+    delta = calibra(eta_pt, d$P_N, d$part_obj)
+  )
 }
 g <- parallel::mclapply(pars, gq, mc.cores = hilos)
-Tp <- lapply(setNames(nm = names(g[[1]])), function(nm) apila(lapply(g, `[[`, nm)))
+Tp <- lapply(setNames(nm = names(g[[1]])), function(nm) {
+  apila(lapply(g, `[[`, nm))
+})
 t_gq <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 cat("muestras y cantidades generadas:", round(t_gq, 1), "s\n")
 
-sd_moda <- setNames(exp(aj$opt$par[names(aj$opt$par) == "log_sd"]), names(niveles))
+sd_moda <- setNames(
+  exp(aj$opt$par[names(aj$opt$par) == "log_sd"]),
+  names(niveles)
+)
 f_out <- file.path(dir_datos, paste0("fit_rtmb_part_", modo, ".rds"))
-saveRDS(list(Tp = Tp, sd_moda = sd_moda, opt = aj$opt, hilos = hilos,
-             tiempos = c(optimizacion = aj$t_opt, muestras = t_gq)), f_out)
+saveRDS(
+  list(
+    Tp = Tp,
+    sd_moda = sd_moda,
+    opt = aj$opt,
+    hilos = hilos,
+    tiempos = c(optimizacion = aj$t_opt, muestras = t_gq)
+  ),
+  f_out
+)
 cat("guardado", f_out, "\n")
 
 # 5. Comparación con Stan
-resumen <- function(v) round(c(media = mean(v), q05 = quantile(v, 0.05, names = FALSE),
-                               q95 = quantile(v, 0.95, names = FALSE)), 3)
+resumen <- function(v) {
+  round(
+    c(
+      media = mean(v),
+      q05 = quantile(v, 0.05, names = FALSE),
+      q95 = quantile(v, 0.95, names = FALSE)
+    ),
+    3
+  )
+}
 f_stan <- file.path(dir_datos, paste0("fit_separado_", modo, "_part.rds"))
 if (file.exists(f_stan)) {
   fit <- readRDS(f_stan)$fit
   ds <- posterior::as_draws_matrix(fit$draws(c("part_bruta", "delta")))
   cat("\n== Stan frente a RTMB ==\n")
   print(rbind(
-    part_bruta_stan = resumen(ds[, "part_bruta"]), part_bruta_rtmb = resumen(Tp$part_bruta),
-    delta_stan = resumen(ds[, "delta"]), delta_rtmb = resumen(Tp$delta)
+    part_bruta_stan = resumen(ds[, "part_bruta"]),
+    part_bruta_rtmb = resumen(Tp$part_bruta),
+    delta_stan = resumen(ds[, "delta"]),
+    delta_rtmb = resumen(Tp$delta)
   ))
-  sd_stan <- sapply(names(niveles), function(nm)
-    fit$summary(paste0("sd_", nm, "_t"), "median")$median)
+  sd_stan <- sapply(names(niveles), function(nm) {
+    fit$summary(paste0("sd_", nm, "_t"), "median")$median
+  })
   cat("\n== sd: mediana Stan frente a moda RTMB ==\n")
-  print(data.frame(nivel = names(niveles), stan = round(sd_stan, 3),
-                   rtmb = round(sd_moda, 3)), row.names = FALSE)
+  print(
+    data.frame(
+      nivel = names(niveles),
+      stan = round(sd_stan, 3),
+      rtmb = round(sd_moda, 3)
+    ),
+    row.names = FALSE
+  )
 } else {
   print(rbind(part_bruta = resumen(Tp$part_bruta), delta = resumen(Tp$delta)))
 }
-cat("\ntiempo total RTMB (sin preparar datos):", round((aj$t_opt + t_gq) / 60, 1), "min\n")
+cat(
+  "\ntiempo total RTMB (sin preparar datos):",
+  round((aj$t_opt + t_gq) / 60, 1),
+  "min\n"
+)

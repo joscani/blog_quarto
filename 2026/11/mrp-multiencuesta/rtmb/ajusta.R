@@ -1,10 +1,9 @@
-# Flujo de 05b_separado.R con los ajustes RTMB: postestratifica el voto con
+# Flujo de stan/ajusta.R con los ajustes RTMB: postestratifica el voto con
 # participación (v_part) a partir de datos/fit_rtmb_voto_<modo>.rds y
-# datos/fit_rtmb_part_<modo>.rds, que se ajustan aquí si no existen.
-# Mismas fórmulas que la sección 3 de 05b_separado.R. La muestra d del voto se
-# empareja con la d de la participación (los dos ajustes son independientes).
-#
-#   RTMB_HILOS=8 Rscript 2026/11/mrp-multiencuesta/rtmb/05b_rtmb.R nuts
+# datos/fit_rtmb_part_<modo>.rds, que se ajustan aquí si no existen (llamando
+# a rtmb/mrp_voto_rtmb.R y rtmb/mrp_part_rtmb.R). Mismas fórmulas que la
+# sección 3 de stan/ajusta.R. La muestra d del voto se empareja con la d de la
+# participación (los dos ajustes son independientes).
 #
 # Salida: datos/estim_rtmb_<modo>.rds, con el formato de estim_separado_<modo>.rds.
 # Compara con datos/estim_separado_<modo>.rds (Stan) si existe.
@@ -13,8 +12,8 @@ library(dplyr)
 library(tidyr)
 source("2026/11/mrp-multiencuesta/rtmb/comun.R")
 
-args <- commandArgs(trailingOnly = TRUE)
-modo <- if (length(args) >= 1) args[1] else "prueba"
+# constantes: editar aquí, no hay argumentos (HILOS está en rtmb/comun.R)
+modo <- "nuts" # prueba | nuts
 stopifnot(modo %in% c("prueba", "nuts"))
 hilos <- configura_hilos()
 
@@ -23,7 +22,10 @@ for (m in c("voto", "part")) {
   f <- file.path(dir_datos, paste0("fit_rtmb_", m, "_", modo, ".rds"))
   if (!file.exists(f)) {
     cat("ajusto", m, "\n")
-    st <- system2("Rscript", c(file.path(dir_proy, "rtmb", paste0("mrp_", m, "_rtmb.R")), modo))
+    st <- system2(
+      "Rscript",
+      c(file.path(dir_proy, "rtmb", paste0("mrp_", m, "_rtmb.R")), modo)
+    )
     stopifnot(st == 0)
   }
 }
@@ -36,7 +38,7 @@ nombres_casa <- c(x$lv$casa, "casa media")
 A <- av$A
 Tp <- ap$Tp
 
-# 2. Postestratificación (sección 3 de 05b_separado.R)
+# 2. Postestratificación (sección 3 de stan/ajusta.R)
 J <- datos$J
 P <- datos$P
 n_rec <- datos$n_rec
@@ -87,10 +89,18 @@ una <- function(d) {
 r <- parallel::mclapply(seq_len(nd), una, mc.cores = hilos)
 v_casa_r <- apila(lapply(r, `[[`, "vc"))
 v_part <- apila(lapply(r, `[[`, "vp"))
-cat("postestratificación:", nd, "muestras,",
-    round(as.numeric(difftime(Sys.time(), t0, units = "secs")), 1), "s\n")
-cat("comprobación v_casa, aquí frente a mrp_voto_rtmb.R: diferencia máx. =",
-    signif(max(abs(v_casa_r - av$v_casa[seq_len(nd), , ])), 2), "puntos\n")
+cat(
+  "postestratificación:",
+  nd,
+  "muestras,",
+  round(as.numeric(difftime(Sys.time(), t0, units = "secs")), 1),
+  "s\n"
+)
+cat(
+  "comprobación v_casa, aquí frente a mrp_voto_rtmb.R: diferencia máx. =",
+  signif(max(abs(v_casa_r - av$v_casa[seq_len(nd), , ])), 2),
+  "puntos\n"
+)
 stopifnot(max(abs(v_casa_r - av$v_casa[seq_len(nd), , ])) < 1e-8)
 
 resume <- function(a, etiqueta) {
@@ -109,9 +119,18 @@ saveRDS(res, file.path(dir_datos, paste0("estim_rtmb_", modo, ".rds")))
 cat("guardado", file.path(dir_datos, paste0("estim_rtmb_", modo, ".rds")), "\n")
 
 cat("\n== participación (RTMB) ==\n")
-cat("part_bruta:", round(mean(Tp$part_bruta), 2), " delta:", round(mean(Tp$delta), 3), "\n")
-cat("\n== MRP con participación calibrada al", 100 * datos$part_obj,
-    "% (% voto válido), RTMB ==\n")
+cat(
+  "part_bruta:",
+  round(mean(Tp$part_bruta), 2),
+  " delta:",
+  round(mean(Tp$delta), 3),
+  "\n"
+)
+cat(
+  "\n== MRP con participación calibrada al",
+  100 * datos$part_obj,
+  "% (% voto válido), RTMB ==\n"
+)
 print(
   as.data.frame(
     res %>%
@@ -127,19 +146,44 @@ print(
 # 3. Comparación con Stan
 f_stan <- file.path(dir_datos, paste0("estim_separado_", modo, ".rds"))
 if (file.exists(f_stan)) {
-  cmp <- inner_join(readRDS(f_stan), res, by = c("casa", "partido"),
-                    suffix = c("_stan", "_rtmb")) %>%
-    mutate(dif = mrp_rtmb - mrp_stan,
-           ancho = (q95_rtmb - q05_rtmb) / (q95_stan - q05_stan))
-  cat("\n== RTMB frente a Stan, las", nrow(cmp), "cifras (casas x partidos, con y sin participación) ==\n")
-  cat("máx |dif. media|:", round(max(abs(cmp$dif)), 2), "puntos;",
-      " ancho del 90 % RTMB / Stan: mediana", round(median(cmp$ancho), 2),
-      ", rango", paste(round(range(cmp$ancho), 2), collapse = "–"), "\n")
+  cmp <- inner_join(
+    readRDS(f_stan),
+    res,
+    by = c("casa", "partido"),
+    suffix = c("_stan", "_rtmb")
+  ) %>%
+    mutate(
+      dif = mrp_rtmb - mrp_stan,
+      ancho = (q95_rtmb - q05_rtmb) / (q95_stan - q05_stan)
+    )
+  cat(
+    "\n== RTMB frente a Stan, las",
+    nrow(cmp),
+    "cifras (casas x partidos, con y sin participación) ==\n"
+  )
+  cat(
+    "máx |dif. media|:",
+    round(max(abs(cmp$dif)), 2),
+    "puntos;",
+    " ancho del 90 % RTMB / Stan: mediana",
+    round(median(cmp$ancho), 2),
+    ", rango",
+    paste(round(range(cmp$ancho), 2), collapse = "–"),
+    "\n"
+  )
   cat("\n== casa media con participación ==\n")
-  print(as.data.frame(
-    cmp %>% filter(casa == "casa media, con participación") %>%
-      transmute(partido, stan = round(mrp_stan, 1), rtmb = round(mrp_rtmb, 1),
-                stan_ancho90 = round(q95_stan - q05_stan, 1),
-                rtmb_ancho90 = round(q95_rtmb - q05_rtmb, 1))
-  ), row.names = FALSE)
+  print(
+    as.data.frame(
+      cmp %>%
+        filter(casa == "casa media, con participación") %>%
+        transmute(
+          partido,
+          stan = round(mrp_stan, 1),
+          rtmb = round(mrp_rtmb, 1),
+          stan_ancho90 = round(q95_stan - q05_stan, 1),
+          rtmb_ancho90 = round(q95_rtmb - q05_rtmb, 1)
+        )
+    ),
+    row.names = FALSE
+  )
 }

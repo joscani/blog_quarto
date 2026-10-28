@@ -1,4 +1,4 @@
-// MRP conjunto: modelo de participación (antes, parte de mrp.stan; ahora en obsoleto/).
+// MRP conjunto: modelo de participación (antes, parte del antiguo mrp.stan conjunto).
 //
 // Binomial de decir "10, seguro que voto", con efecto casa (solo las casas que
 // lo preguntan), mes, sexo, edad, estudios, recuerdo, CCAA y provincia. Mismo
@@ -7,7 +7,7 @@
 //  2. Priors de alpha_t y b_mujer_t como datos.
 //  3. Forma centrada en los efectos con pocos niveles y muchos datos: casa,
 //     mes, edad, estudios y recuerdo. CCAA y provincia, sin centrar. La
-//     versión sin centrar (obsoleto/mrp_part_no_centrada.stan) llegaba a
+//     versión sin centrar del antiguo mrp_part.stan llegaba a
 //     max_treedepth en el 61 % de las iteraciones; la posterior es la misma.
 
 functions {

@@ -3,7 +3,7 @@
 # RDS (R, con factores).
 # El codebook está en datos/entrega/codebook.md.
 #
-#   Rscript 2026/11/mrp-multiencuesta/06_exporta.R
+#   Rscript 2026/11/mrp-multiencuesta/04_exporta.R
 
 library(haven)
 library(dplyr)

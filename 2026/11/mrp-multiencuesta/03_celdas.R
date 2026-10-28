@@ -1,9 +1,9 @@
 # Celdas para los modelos: agrega las entrevistas de datos/encuestas.rds.
-#   datos/celdas_brms.rds  votos por celda (voto válido), para 04_brms.R y 05_stan.R
-#   datos/celdas_part.rds  participación por celda ("10, seguro que voto"), para 05_stan.R
+#   datos/celdas_brms.rds  votos por celda (voto válido), para 05_brms_mm.R y 06_stan_datos.R
+#   datos/celdas_part.rds  participación por celda ("10, seguro que voto"), para 06_stan_datos.R
 # More in Common sin provincia: pesos de cada provincia de su CCAA (p1..p9, w1..w9).
 #
-#   Rscript 2026/11/mrp-multiencuesta/03b_celdas.R
+#   Rscript 2026/11/mrp-multiencuesta/03_celdas.R
 
 library(dplyr)
 library(tidyr)
