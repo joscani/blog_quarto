@@ -44,8 +44,8 @@ if (modo == "prueba") {
 # Población para postestratificar (común a los dos juegos de datos)
 # ---------------------------------------------------------------------------
 
-post <- as.data.frame.table(tabla, responseName = "N") %>%
-  filter(N > 1e-6) %>%
+post <- as.data.frame.table(tabla, responseName = "N") |>
+  filter(N > 1e-6) |>
   left_join(prov_ccaa, by = "prov")
 
 mascara <- sapply(voto_lv, function(p) {
@@ -62,7 +62,7 @@ mascara <- sapply(voto_lv, function(p) {
 
 prep <- function(celdas, solo_cis) {
   if (solo_cis) {
-    celdas <- celdas %>% filter(casa == "CIS") %>% droplevels()
+    celdas <- celdas |> filter(casa == "CIS") |> droplevels()
     stopifnot(all(celdas$w1 == 1)) # el CIS siempre trae la provincia
   }
 
@@ -169,9 +169,9 @@ prep <- function(celdas, solo_cis) {
   # (2026/10/mrp-raking/datos/mun_23j.rds).
   cp <- readRDS(file.path(dir_datos, "celdas_part.rds"))
   if (solo_cis) {
-    cp <- cp %>% filter(casa == "CIS")
+    cp <- cp |> filter(casa == "CIS")
   }
-  cp <- cp %>% mutate(mes = factor(as.character(mes), levels = lv$mes))
+  cp <- cp |> mutate(mes = factor(as.character(mes), levels = lv$mes))
   stopifnot(!anyNA(cp$mes))
   datos <- c(
     datos,

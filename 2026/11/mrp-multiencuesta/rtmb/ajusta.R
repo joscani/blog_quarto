@@ -133,11 +133,11 @@ cat(
 )
 print(
   as.data.frame(
-    res %>%
-      filter(grepl("participación", casa)) %>%
-      mutate(casa = sub(", con participación", "", casa)) %>%
-      select(casa, partido, mrp) %>%
-      pivot_wider(names_from = casa, values_from = mrp) %>%
+    res |>
+      filter(grepl("participación", casa)) |>
+      mutate(casa = sub(", con participación", "", casa)) |>
+      select(casa, partido, mrp) |>
+      pivot_wider(names_from = casa, values_from = mrp) |>
       mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE
@@ -151,7 +151,7 @@ if (file.exists(f_stan)) {
     res,
     by = c("casa", "partido"),
     suffix = c("_stan", "_rtmb")
-  ) %>%
+  ) |>
     mutate(
       dif = mrp_rtmb - mrp_stan,
       ancho = (q95_rtmb - q05_rtmb) / (q95_stan - q05_stan)
@@ -174,8 +174,8 @@ if (file.exists(f_stan)) {
   cat("\n== casa media con participación ==\n")
   print(
     as.data.frame(
-      cmp %>%
-        filter(casa == "casa media, con participación") %>%
+      cmp |>
+        filter(casa == "casa media, con participación") |>
         transmute(
           partido,
           stan = round(mrp_stan, 1),

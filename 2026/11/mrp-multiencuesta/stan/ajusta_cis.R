@@ -154,7 +154,7 @@ cat(
 )
 print(
   as.data.frame(
-    res %>% select(-q05, -q95) %>% mutate(across(-partido, ~ round(.x, 1)))
+    res |> select(-q05, -q95) |> mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE
 )
@@ -173,7 +173,7 @@ res_part <- tibble(
 cat("\n== MRP con participación calibrada al 70,4 % (% voto válido) ==\n")
 print(
   as.data.frame(
-    res_part %>% select(-q05, -q95) %>% mutate(across(-partido, ~ round(.x, 1)))
+    res_part |> select(-q05, -q95) |> mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE
 )

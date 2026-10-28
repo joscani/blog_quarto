@@ -37,7 +37,7 @@ territorio_mod <- territorio[names(territorio) != "AC"]
 stopifnot(identical(colnames(celdas$y), voto_lv))
 J <- length(voto_lv)
 
-cis <- celdas %>% filter(casa == "CIS")
+cis <- celdas |> filter(casa == "CIS")
 stopifnot(all(cis$w1 == 1)) # en CIS la provincia siempre está
 partidos <- voto_lv
 
@@ -46,7 +46,7 @@ lv_ccaa <- levels(prov_ccaa$ccaa)
 lv_prov <- levels(prov_ccaa$prov)
 
 prep <- function(d) {
-  d %>%
+  d |>
     mutate(
       ccaa = factor(ccaa, levels = lv_ccaa),
       prov = factor(prov, levels = lv_prov),
@@ -66,8 +66,8 @@ idx_cell <- rep(seq_len(nrow(cis)), times = rowSums(y_mat))
 lab <- unlist(lapply(seq_len(nrow(cis)), function(i) {
   rep(seq_len(J), times = as.integer(y_mat[i, ]))
 }))
-dd <- cis[idx_cell, ] %>%
-  select(mes, ccaa, ccaa_rec, prov, sexo, edad, edu, rec, mujer) %>%
+dd <- cis[idx_cell, ] |>
+  select(mes, ccaa, ccaa_rec, prov, sexo, edad, edu, rec, mujer) |>
   mutate(y = lab - 1) # 0 = PP (referencia), 1..12 = el resto
 
 # columnas de offset, una por partido (0 para los no regionales)
@@ -121,13 +121,13 @@ sds_re <- data.frame(
   grupo = rep(nombres_re, each = J - 1),
   partido = rep(partidos[-1], times = length(nombres_re)),
   sp = fit$sp
-) %>%
+) |>
   mutate(sd = sqrt(1 / sp))
 cat("\n== sd de los efectos aleatorios (equivalente a sd_* de Stan) ==\n")
 print(
-  sds_re %>%
-    select(grupo, partido, sd) %>%
-    tidyr::pivot_wider(names_from = grupo, values_from = sd) %>%
+  sds_re |>
+    select(grupo, partido, sd) |>
+    tidyr::pivot_wider(names_from = grupo, values_from = sd) |>
     mutate(across(-partido, ~ round(.x, 2))),
   row.names = FALSE
 )
@@ -137,10 +137,10 @@ print(
 # ---------------------------------------------------------------------------
 
 tabla <- readRDS(file.path(dir_datos, "tabla_post_prov.rds"))
-post <- as.data.frame.table(tabla, responseName = "N") %>%
-  filter(N > 1e-6) %>%
-  left_join(prov_ccaa, by = "prov") %>%
-  prep() %>%
+post <- as.data.frame.table(tabla, responseName = "N") |>
+  filter(N > 1e-6) |>
+  left_join(prov_ccaa, by = "prov") |>
+  prep() |>
   mutate(mes = max(levels(celdas$mes))) # el mes más reciente de la encuesta
 
 cat("\nceldas de población:", nrow(post), "\n")
@@ -167,21 +167,21 @@ est_gam <- tibble(
 
 f_stan <- file.path(dir_datos, "estim_stan_nuts_nuevo_cis.rds")
 if (file.exists(f_stan)) {
-  est_stan <- readRDS(f_stan) %>%
-    filter(casa == "CIS solo") %>%
+  est_stan <- readRDS(f_stan) |>
+    filter(casa == "CIS solo") |>
     select(partido, stan = mrp)
-  comparacion <- est_gam %>%
-    left_join(est_stan, by = "partido") %>%
+  comparacion <- est_gam |>
+    left_join(est_stan, by = "partido") |>
     mutate(dif = gam - stan)
   cat("\n== voto válido estimado (%): gam vs Stan ==\n")
   print(
-    as.data.frame(comparacion %>% mutate(across(-partido, ~ round(.x, 1)))),
+    as.data.frame(comparacion |> mutate(across(-partido, ~ round(.x, 1)))),
     row.names = FALSE
   )
 } else {
   cat("\n(sin estim_stan_nuts_nuevo_cis.rds para comparar)\n")
   print(
-    as.data.frame(est_gam %>% mutate(across(-partido, ~ round(.x, 1)))),
+    as.data.frame(est_gam |> mutate(across(-partido, ~ round(.x, 1)))),
     row.names = FALSE
   )
 }

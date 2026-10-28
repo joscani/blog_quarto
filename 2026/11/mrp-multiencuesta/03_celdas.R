@@ -28,23 +28,23 @@ K <- 9   # máximo de provincias por CCAA (Castilla y León)
 # 1. Datos agregados por celda
 # ---------------------------------------------------------------------------
 
-dat <- enc %>%
-  filter(!is.na(voto), !is.na(sexo), !is.na(edad), !is.na(edu), !is.na(rec)) %>%
+dat <- enc |>
+  filter(!is.na(voto), !is.na(sexo), !is.na(edad), !is.na(edu), !is.na(rec)) |>
   mutate(voto = factor(ifelse(voto == "AC", "OTROS", as.character(voto)), levels = voto_lv),
          prov = factor(prov, levels = prov_lv))
 
 cat("\n== entrevistas usadas ==\n")
-print(dat %>% count(casa, estudio))
+print(dat |> count(casa, estudio))
 cat("total:", nrow(dat), "de", nrow(enc), "\n")
 
-celdas <- dat %>%
-  count(casa, mes, ccaa, prov, sexo, edad, edu, rec, voto) %>%
+celdas <- dat |>
+  count(casa, mes, ccaa, prov, sexo, edad, edu, rec, voto) |>
   pivot_wider(names_from = voto, values_from = n, values_fill = 0)
 for (p in setdiff(voto_lv, names(celdas))) celdas[[p]] <- 0L
 celdas$y <- as.matrix(celdas[, voto_lv])
 celdas$n <- rowSums(celdas$y)
 cat("\nfilas agregadas:", nrow(celdas), " (", round(nrow(celdas) / nrow(dat), 2), "por entrevista )\n")
-print(celdas %>% count(casa, prov_conocida = !is.na(prov)))
+print(celdas |> count(casa, prov_conocida = !is.na(prov)))
 
 # ---------------------------------------------------------------------------
 # 2. Pesos de provincia para mm()
@@ -53,17 +53,17 @@ print(celdas %>% count(casa, prov_conocida = !is.na(prov)))
 # peso de cada provincia de su CCAA en esa misma celda sexo x edad x estudios
 # x recuerdo, según la tabla de postestratificación.
 
-cuota <- as.data.frame.table(tabla, responseName = "N") %>%
-  left_join(prov_ccaa, by = "prov") %>%
-  group_by(ccaa, sexo, edad, edu, rec) %>%
-  mutate(w = N / sum(N)) %>% ungroup()
+cuota <- as.data.frame.table(tabla, responseName = "N") |>
+  left_join(prov_ccaa, by = "prov") |>
+  group_by(ccaa, sexo, edad, edu, rec) |>
+  mutate(w = N / sum(N)) |> ungroup()
 
 # Si una celda de la CCAA no tiene población (no debería pasar con datos
 # observados), se usa el peso de la provincia en el electorado de la CCAA
 n_prov <- apply(tabla, 1, sum)
-cuota_ccaa <- tibble(prov = factor(names(n_prov), levels = prov_lv), N = as.numeric(n_prov)) %>%
-  left_join(prov_ccaa, by = "prov") %>%
-  group_by(ccaa) %>% mutate(w_ccaa = N / sum(N)) %>% ungroup() %>% select(prov, w_ccaa)
+cuota_ccaa <- tibble(prov = factor(names(n_prov), levels = prov_lv), N = as.numeric(n_prov)) |>
+  left_join(prov_ccaa, by = "prov") |>
+  group_by(ccaa) |> mutate(w_ccaa = N / sum(N)) |> ungroup() |> select(prov, w_ccaa)
 
 provs_de <- split(as.character(prov_ccaa$prov), prov_ccaa$ccaa)
 
@@ -75,17 +75,17 @@ pesos_mm <- function(d) {
   W[conocida, 1] <- 1
   idx <- which(!conocida)
   if (length(idx) > 0) {
-    clave <- d[idx, ] %>% mutate(fila = idx) %>%
+    clave <- d[idx, ] |> mutate(fila = idx) |>
       select(fila, ccaa, sexo, edad, edu, rec)
-    w_largo <- clave %>%
-      left_join(cuota %>% select(ccaa, sexo, edad, edu, rec, prov, w),
-                by = c("ccaa", "sexo", "edad", "edu", "rec"), relationship = "many-to-many") %>%
-      left_join(cuota_ccaa, by = "prov") %>%
-      group_by(fila) %>%
-      mutate(w = if (all(is.finite(w)) && sum(w) > 0) w else w_ccaa) %>%
+    w_largo <- clave |>
+      left_join(cuota |> select(ccaa, sexo, edad, edu, rec, prov, w),
+                by = c("ccaa", "sexo", "edad", "edu", "rec"), relationship = "many-to-many") |>
+      left_join(cuota_ccaa, by = "prov") |>
+      group_by(fila) |>
+      mutate(w = if (all(is.finite(w)) && sum(w) > 0) w else w_ccaa) |>
       ungroup()
     for (f in idx) {
-      wf <- w_largo %>% filter(fila == f)
+      wf <- w_largo |> filter(fila == f)
       k <- nrow(wf)
       P[f, ] <- c(as.character(wf$prov), rep(as.character(wf$prov[1]), K - k))
       W[f, ] <- c(wf$w, rep(0, K - k))
@@ -102,7 +102,7 @@ pesos_mm <- function(d) {
 celdas <- pesos_mm(celdas)
 
 cat("\n== ejemplo: una fila de More in Common de Castilla y León ==\n")
-ej <- celdas %>% filter(casa == "More in Common", ccaa == "Castilla y León") %>% slice(1)
+ej <- celdas |> filter(casa == "More in Common", ccaa == "Castilla y León") |> slice(1)
 print(data.frame(prov = sapply(1:K, function(k) as.character(ej[[paste0("p", k)]])),
                  w = round(sapply(1:K, function(k) ej[[paste0("w", k)]]), 3)))
 
@@ -124,15 +124,15 @@ saveRDS(celdas, file.path(dir_datos, "celdas_brms.rds"))
 
 # Celdas de participación: todas las entrevistas con probabilidad de votar,
 # también las que no dan voto válido. k = cuántas dicen "10, seguro que voto".
-celdas_part <- enc %>%
-  filter(!is.na(vota_seguro), !is.na(sexo), !is.na(edad), !is.na(edu), !is.na(rec)) %>%
-  mutate(prov = factor(prov, levels = prov_lv)) %>%
-  group_by(casa, mes, ccaa, prov, sexo, edad, edu, rec) %>%
-  summarise(n = n(), k = sum(vota_seguro), .groups = "drop") %>%
+celdas_part <- enc |>
+  filter(!is.na(vota_seguro), !is.na(sexo), !is.na(edad), !is.na(edu), !is.na(rec)) |>
+  mutate(prov = factor(prov, levels = prov_lv)) |>
+  group_by(casa, mes, ccaa, prov, sexo, edad, edu, rec) |>
+  summarise(n = n(), k = sum(vota_seguro), .groups = "drop") |>
   pesos_mm()
 celdas_part$casa <- factor(celdas_part$casa, levels = levels(celdas$casa))
 celdas_part$mes <- factor(celdas_part$mes, levels = levels(celdas$mes))
 cat("\n== celdas de participación ==\n")
-print(celdas_part %>% group_by(casa) %>%
+print(celdas_part |> group_by(casa) |>
         summarise(entrevistas = sum(n), pct_seguro = round(100 * sum(k) / sum(n), 1), filas = n()))
 saveRDS(celdas_part, file.path(dir_datos, "celdas_part.rds"))

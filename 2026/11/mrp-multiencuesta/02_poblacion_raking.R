@@ -40,7 +40,7 @@ alpha <- 0.5
 f_censo <- file.path(dir_datos, "censo_66600.rds")
 if (!file.exists(f_censo)) {
   vv <- get_metadata_table_varval(idTable = 66600)
-  provs <- vv %>% filter(Fk_Variable == 115)
+  provs <- vv |> filter(Fk_Variable == 115)
   censo_raw <- bind_rows(lapply(provs$Id, function(id) {
     get_data_table(
       idTable = 66600,
@@ -89,47 +89,47 @@ recod_edu_censo <- function(x) {
   )
 }
 
-censo <- censo_raw %>%
+censo <- censo_raw |>
   transmute(
     prov = as.integer(Comunidad.Autónoma.y.Provincia.Codigo),
     sexo_txt = Sexo,
     edad_txt = Edad,
     nivel = Nivel.de.estudios,
     valor = Valor
-  ) %>%
+  ) |>
   filter(
     sexo_txt %in% c("Hombres", "Mujeres"),
     grepl("^[0-9]+ años?$", edad_txt)
-  ) %>% # fuera "15 y más" y "90 y más"
+  ) |> # fuera "15 y más" y "90 y más"
   mutate(
     edad_n = as.integer(sub(" .*", "", edad_txt)),
     sexo = ifelse(sexo_txt == "Hombres", "H", "M"),
     edu = recod_edu_censo(nivel),
     fp_superior = grepl("^Enseñanzas de formación profesional", nivel)
-  ) %>%
+  ) |>
   filter(edad_n >= 18, !is.na(edu))
 
 # "90 y más años" es un tramo abierto: se añade aparte
-censo_90 <- censo_raw %>%
+censo_90 <- censo_raw |>
   transmute(
     prov = as.integer(Comunidad.Autónoma.y.Provincia.Codigo),
     sexo_txt = Sexo,
     edad_txt = Edad,
     nivel = Nivel.de.estudios,
     valor = Valor
-  ) %>%
-  filter(sexo_txt %in% c("Hombres", "Mujeres"), edad_txt == "90 y más años") %>%
+  ) |>
+  filter(sexo_txt %in% c("Hombres", "Mujeres"), edad_txt == "90 y más años") |>
   mutate(
     edad_n = 90L,
     sexo = ifelse(sexo_txt == "Hombres", "H", "M"),
     edu = recod_edu_censo(nivel),
     fp_superior = grepl("^Enseñanzas de formación profesional", nivel)
-  ) %>%
+  ) |>
   filter(!is.na(edu))
 
 # Comprobación: si las edades simples llegan hasta 89, "90 y más" no se solapa
 cat("edad máxima en años simples:", max(censo$edad_n), "\n")
-censo <- bind_rows(censo, censo_90) %>%
+censo <- bind_rows(censo, censo_90) |>
   mutate(
     edad = cut(
       edad_n,
@@ -140,8 +140,8 @@ censo <- bind_rows(censo, censo_90) %>%
   )
 stopifnot(!anyNA(censo$edad), !anyNA(censo$valor))
 
-pob_prov <- censo %>%
-  group_by(prov, sexo, edad, edu) %>%
+pob_prov <- censo |>
+  group_by(prov, sexo, edad, edu) |>
   summarise(N = sum(valor), .groups = "drop")
 
 cat(
@@ -159,17 +159,17 @@ cat(
 
 cat("\n== estudios en población (%) ==\n")
 print(
-  pob_prov %>%
-    group_by(edu) %>%
-    summarise(N = sum(N)) %>%
+  pob_prov |>
+    group_by(edu) |>
+    summarise(N = sum(N)) |>
     mutate(pct = round(100 * N / sum(N), 1))
 )
 
 # Para repartir después las categorías ambiguas de 40dB y More in Common:
 # qué parte de "alta" es FP de grado superior en cada celda
-fp_sup <- censo %>%
-  filter(edu == "alta") %>%
-  group_by(prov, sexo, edad) %>%
+fp_sup <- censo |>
+  filter(edu == "alta") |>
+  group_by(prov, sexo, edad) |>
   summarise(
     N_alta = sum(valor),
     N_fp_superior = sum(valor[fp_superior]),
@@ -200,14 +200,14 @@ agrupa_siglas <- function(siglas) {
   )
 }
 
-mun <- mun %>% mutate(prov = as.integer(codigo_provincia))
+mun <- mun |> mutate(prov = as.integer(codigo_provincia))
 
-votos_prov <- mun %>%
-  mutate(partido = agrupa_siglas(siglas)) %>%
-  group_by(prov, partido) %>%
+votos_prov <- mun |>
+  mutate(partido = agrupa_siglas(siglas)) |>
+  group_by(prov, partido) |>
   summarise(votos = sum(votos), .groups = "drop")
 
-censo_23j <- mun %>%
+censo_23j <- mun |>
   distinct(
     prov,
     codigo_municipio,
@@ -216,15 +216,15 @@ censo_23j <- mun %>%
     votos_candidaturas,
     votos_blancos,
     votos_nulos
-  ) %>%
-  group_by(prov) %>%
+  ) |>
+  group_by(prov) |>
   summarise(
     across(
       c(censo_escrutinio, votos_candidaturas, votos_blancos, votos_nulos),
       sum
     ),
     .groups = "drop"
-  ) %>%
+  ) |>
   mutate(
     ABST = censo_escrutinio - votos_candidaturas - votos_blancos - votos_nulos
   )
@@ -240,20 +240,20 @@ cat(
 )
 
 # Blancos y nulos a OTROS, como en las encuestas
-recuerdo_prov <- votos_prov %>%
+recuerdo_prov <- votos_prov |>
   left_join(
-    censo_23j %>% select(prov, votos_blancos, votos_nulos),
+    censo_23j |> select(prov, votos_blancos, votos_nulos),
     by = "prov"
-  ) %>%
+  ) |>
   mutate(
     votos = ifelse(
       partido == "OTROS",
       votos + votos_blancos + votos_nulos,
       votos
     )
-  ) %>%
-  select(prov, rec = partido, N = votos) %>%
-  bind_rows(censo_23j %>% transmute(prov, rec = "ABST", N = ABST))
+  ) |>
+  select(prov, rec = partido, N = votos) |>
+  bind_rows(censo_23j |> transmute(prov, rec = "ABST", N = ABST))
 
 # ---------------------------------------------------------------------------
 # 3. Universo y totales consistentes
@@ -262,14 +262,14 @@ recuerdo_prov <- votos_prov %>%
 # 18-20 años, que no pudieron votar. El Censo de 2024 cuenta residentes, no
 # electores, así que de él solo se toma la estructura dentro de cada provincia.
 
-no_podia <- pob_prov %>%
-  filter(edad == "18-20") %>%
-  group_by(prov) %>%
+no_podia <- pob_prov |>
+  filter(edad == "18-20") |>
+  group_by(prov) |>
   summarise(NO_PODIA = sum(N), .groups = "drop")
 
-total_prov <- censo_23j %>%
-  select(prov, censo_escrutinio) %>%
-  left_join(no_podia, by = "prov") %>%
+total_prov <- censo_23j |>
+  select(prov, censo_escrutinio) |>
+  left_join(no_podia, by = "prov") |>
   mutate(total = censo_escrutinio + NO_PODIA)
 
 cat(
@@ -283,29 +283,29 @@ cat(
 # sumar exactamente lo mismo que NO_PODIA en T2, y el de 21+ lo mismo que el
 # censo del 23-J. Reescalando la pirámide entera no cuadran y el IPF no
 # puede ajustar T1 (error de ~10.000 personas por celda).
-t_pob_prov <- pob_prov %>%
-  mutate(bloque = ifelse(edad == "18-20", "NO_PODIA", "censo")) %>%
-  group_by(prov, bloque) %>%
-  mutate(N = N / sum(N)) %>%
-  ungroup() %>%
+t_pob_prov <- pob_prov |>
+  mutate(bloque = ifelse(edad == "18-20", "NO_PODIA", "censo")) |>
+  group_by(prov, bloque) |>
+  mutate(N = N / sum(N)) |>
+  ungroup() |>
   left_join(
-    total_prov %>% select(prov, censo_escrutinio, NO_PODIA),
+    total_prov |> select(prov, censo_escrutinio, NO_PODIA),
     by = "prov"
-  ) %>%
-  mutate(N = N * ifelse(bloque == "NO_PODIA", NO_PODIA, censo_escrutinio)) %>%
+  ) |>
+  mutate(N = N * ifelse(bloque == "NO_PODIA", NO_PODIA, censo_escrutinio)) |>
   select(prov, sexo, edad, edu, N)
 
-t_rec_prov <- recuerdo_prov %>%
-  bind_rows(no_podia %>% transmute(prov, rec = "NO_PODIA", N = NO_PODIA))
+t_rec_prov <- recuerdo_prov |>
+  bind_rows(no_podia |> transmute(prov, rec = "NO_PODIA", N = NO_PODIA))
 
 cat("\n== los dos targets suman lo mismo por provincia? ==\n")
-dif <- t_pob_prov %>%
-  group_by(prov) %>%
-  summarise(pob = sum(N)) %>%
+dif <- t_pob_prov |>
+  group_by(prov) |>
+  summarise(pob = sum(N)) |>
   left_join(
-    t_rec_prov %>% group_by(prov) %>% summarise(rec = sum(N)),
+    t_rec_prov |> group_by(prov) |> summarise(rec = sum(N)),
     by = "prov"
-  ) %>%
+  ) |>
   mutate(dif = pob - rec)
 cat("diferencia máxima:", signif(max(abs(dif$dif)), 3), "\n")
 
@@ -324,7 +324,7 @@ cat(
 # Factores con el orden fijo: Ipfp empareja por posición, no por nombre
 prov_lv <- sort(unique(t_pob_prov$prov))
 como_factor <- function(d) {
-  d %>%
+  d |>
     mutate(
       prov = factor(prov, levels = prov_lv),
       across(any_of("sexo"), ~ factor(.x, levels = c("H", "M"))),
@@ -356,14 +356,14 @@ edad_lv <- levels(tg$pob_prov$edad)
 edu_lv <- levels(tg$pob_prov$edu)
 
 # Provincia -> CCAA, para los ceros de los partidos regionales
-prov_ccaa <- enc %>%
-  filter(casa == "CIS") %>%
-  distinct(prov, ccaa) %>%
-  mutate(prov = factor(prov, levels = prov_lv)) %>%
+prov_ccaa <- enc |>
+  filter(casa == "CIS") |>
+  distinct(prov, ccaa) |>
+  mutate(prov = factor(prov, levels = prov_lv)) |>
   arrange(prov)
 stopifnot(nrow(prov_ccaa) == 52, !anyDuplicated(prov_ccaa$prov))
 
-sem_dat <- enc %>%
+sem_dat <- enc |>
   filter(
     casa == "CIS",
     estudio != excluye,
@@ -372,7 +372,7 @@ sem_dat <- enc %>%
     !is.na(edad),
     !is.na(edu),
     !is.na(rec)
-  ) %>%
+  ) |>
   mutate(prov = factor(prov, levels = prov_lv))
 
 cat("\n== semilla (sin:", excluye, ", alpha:", alpha, ") ==\n")
@@ -482,17 +482,17 @@ print(
 
 # Comparación con la tabla por CCAA del post de octubre, agregando provincias
 tabla_oct <- readRDS("2026/10/mrp-raking/datos/tabla_postestratificacion.rds")
-ccaa_prov <- apply(tabla, c(1, 5), sum) %>%
-  as.data.frame.table(responseName = "N") %>%
-  left_join(prov_ccaa, by = "prov") %>%
-  group_by(ccaa, rec) %>%
+ccaa_prov <- apply(tabla, c(1, 5), sum) |>
+  as.data.frame.table(responseName = "N") |>
+  left_join(prov_ccaa, by = "prov") |>
+  group_by(ccaa, rec) |>
   summarise(N = sum(N), .groups = "drop")
-ccaa_oct <- apply(tabla_oct, c(1, 5), sum) %>%
+ccaa_oct <- apply(tabla_oct, c(1, 5), sum) |>
   as.data.frame.table(responseName = "N_oct")
-comp <- ccaa_prov %>%
-  mutate(ccaa = as.character(ccaa), rec = as.character(rec)) %>%
+comp <- ccaa_prov |>
+  mutate(ccaa = as.character(ccaa), rec = as.character(rec)) |>
   left_join(
-    ccaa_oct %>% mutate(ccaa = as.character(ccaa), rec = as.character(rec)),
+    ccaa_oct |> mutate(ccaa = as.character(ccaa), rec = as.character(rec)),
     by = c("ccaa", "rec")
   )
 cat("\n== CCAA x recuerdo: esta tabla vs la del post de octubre ==\n")
@@ -504,7 +504,7 @@ cat(
   "%\n"
 )
 
-celdas <- as.data.frame.table(tabla, responseName = "N") %>% filter(N > 1e-6)
+celdas <- as.data.frame.table(tabla, responseName = "N") |> filter(N > 1e-6)
 cat("\nceldas con población:", nrow(celdas), "de", length(tabla), "\n")
 cat("total de la tabla:", format(round(sum(tabla)), big.mark = " "), "\n")
 

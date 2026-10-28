@@ -32,7 +32,7 @@ encuestas <- tribble(
   "More in Common"  , "MIC sep"        , "2026-09" , "descargas/microdatos-2026-09/microdatos-septiembre-2026.sav"                          ,
   "Ateneo del Dato" , "Ateneo jun"     , "2026-06" , "descargas/atdt-dat-expresidentes-corrupcion.csv" # campo 9-12 jun 2026
 )
-print(encuestas %>% select(-fichero))
+print(encuestas |> select(-fichero))
 
 # ---------------------------------------------------------------------------
 # 2. Vocabulario común
@@ -47,15 +47,15 @@ ccaa_lv <- ccaa_cod$ccaa
 # Provincia (código INE) -> CCAA. CIS y 40dB usan los códigos del INE
 # (comprobado con las etiquetas). La tabla sale del propio CIS 3582.
 cis_3582 <- read_sav("descargas/MD3582/3582.sav")
-prov_ccaa <- cis_3582 %>%
-  distinct(prov = as.integer(PROV), cod_cis = as.integer(CCAA)) %>%
-  left_join(ccaa_cod %>% select(ccaa, cod_cis), by = "cod_cis") %>%
-  select(prov, ccaa) %>%
+prov_ccaa <- cis_3582 |>
+  distinct(prov = as.integer(PROV), cod_cis = as.integer(CCAA)) |>
+  left_join(ccaa_cod |> select(ccaa, cod_cis), by = "cod_cis") |>
+  select(prov, ccaa) |>
   arrange(prov)
 stopifnot(nrow(prov_ccaa) == 52, !anyNA(prov_ccaa$ccaa))
 
 # Las uniprovinciales: ahí la provincia se sabe aunque la encuesta no la dé
-uniprov <- prov_ccaa %>% group_by(ccaa) %>% filter(n() == 1) %>% ungroup()
+uniprov <- prov_ccaa |> group_by(ccaa) |> filter(n() == 1) |> ungroup()
 cat("\n== CCAA uniprovinciales ==\n")
 print(uniprov, n = Inf)
 
@@ -146,7 +146,7 @@ lee_cis <- function(f) {
       TRUE ~ NA_character_
     )
   }
-  d %>%
+  d |>
     transmute(
       sexo = as.character(as_factor(SEXO)),
       edad_n = as.numeric(EDAD),
@@ -265,7 +265,7 @@ lee_40db <- function(f) {
   rec_txt <- as.character(as_factor(d[[v_rec]]))
   edu_r <- as.character(as_factor(d$educacion_r))
 
-  d %>%
+  d |>
     transmute(
       sexo = as.character(as_factor(sexo)),
       edad_n = as.numeric(edad),
@@ -301,7 +301,7 @@ lee_mic <- function(f) {
   d <- read_sav(f)
   niv <- as.character(as_factor(d$nivel_estudios))
   part <- as.character(as_factor(d$participacion_2023_raw))
-  d %>%
+  d |>
     transmute(
       sexo = as.character(as_factor(genero)),
       edad_n = as.numeric(edad),
@@ -361,7 +361,7 @@ lee_atdt <- function(f) {
     d$simpatia,
     c("Ninguno", "No lo sé", "Prefiero no contestar")
   )
-  d %>%
+  d |>
     transmute(
       sexo = sexo,
       edad_n = NA_real_,
@@ -403,7 +403,7 @@ lectores <- list(
 cat("\n== variables de 40dB localizadas por etiqueta ==\n")
 todas <- bind_rows(lapply(seq_len(nrow(encuestas)), function(i) {
   e <- encuestas[i, ]
-  lectores[[e$casa]](e$fichero) %>%
+  lectores[[e$casa]](e$fichero) |>
     mutate(casa = e$casa, estudio = e$estudio, mes = e$mes, .before = 1)
 }))
 
@@ -442,13 +442,13 @@ ccaa_atdt <- c(
 ccaa_txt_lv <- c(ccaa_mic, ccaa_atdt[!names(ccaa_atdt) %in% names(ccaa_mic)])
 stopifnot(all(na.omit(unique(todas$ccaa_txt)) %in% names(ccaa_txt_lv)))
 
-todas <- todas %>%
-  left_join(prov_ccaa, by = "prov") %>%
-  mutate(ccaa = coalesce(ccaa, unname(ccaa_txt_lv[ccaa_txt]))) %>%
+todas <- todas |>
+  left_join(prov_ccaa, by = "prov") |>
+  mutate(ccaa = coalesce(ccaa, unname(ccaa_txt_lv[ccaa_txt]))) |>
   # More in Common y Ateneo: la provincia se conoce en las uniprovinciales
-  left_join(uniprov %>% rename(prov_uni = prov), by = "ccaa") %>%
-  mutate(prov = coalesce(prov, prov_uni)) %>%
-  select(-prov_uni, -ccaa_txt) %>%
+  left_join(uniprov |> rename(prov_uni = prov), by = "ccaa") |>
+  mutate(prov = coalesce(prov, prov_uni)) |>
+  select(-prov_uni, -ccaa_txt) |>
   mutate(
     ccaa = factor(ccaa, levels = ccaa_lv),
     sexo = factor(sexo, levels = c("Hombre", "Mujer"), labels = c("H", "M")),
@@ -465,8 +465,8 @@ todas <- todas %>%
 fuera <- function(p, ccaa) !is.na(p) & !se_presenta(p, ccaa)
 cat("\n== respuestas fuera de territorio (van a OTROS) ==\n")
 print(
-  todas %>%
-    group_by(estudio) %>%
+  todas |>
+    group_by(estudio) |>
     summarise(
       intencion = sum(fuera(voto, ccaa)),
       voto_sim = sum(fuera(voto_sim, ccaa)),
@@ -474,7 +474,7 @@ print(
     )
 )
 
-todas <- todas %>%
+todas <- todas |>
   mutate(
     voto = ifelse(fuera(voto, ccaa), "OTROS", voto),
     voto_sim = ifelse(fuera(voto_sim, ccaa), "OTROS", voto_sim),
@@ -494,7 +494,7 @@ todas <- todas %>%
     ),
     rec = factor(rec, levels = rec_lv),
     vota_seguro = as.integer(prob_voto == 10)
-  ) %>%
+  ) |>
   select(
     casa,
     estudio,
@@ -523,8 +523,8 @@ cat(
   "\n== entrevistas por encuesta, y cuántas sirven para el modelo de voto ==\n"
 )
 print(
-  todas %>%
-    group_by(casa, estudio, mes) %>%
+  todas |>
+    group_by(casa, estudio, mes) |>
     summarise(
       n = n(),
       con_voto = sum(!is.na(voto)),
@@ -539,7 +539,7 @@ print(
 
 cat("\n== faltantes por variable ==\n")
 print(
-  todas %>%
+  todas |>
     summarise(across(
       c(sexo, edad, edu, ccaa, prov, voto, rec, prob_voto, ideol01, peso),
       ~ sum(is.na(.x))
@@ -548,39 +548,39 @@ print(
 
 cat("\n== intención de voto sobre voto válido, bruta (%) ==\n")
 print(
-  todas %>%
-    filter(!is.na(voto)) %>%
-    count(estudio, voto) %>%
-    group_by(estudio) %>%
-    mutate(pct = round(100 * n / sum(n), 1)) %>%
-    select(-n) %>%
-    pivot_wider(names_from = estudio, values_from = pct) %>%
+  todas |>
+    filter(!is.na(voto)) |>
+    count(estudio, voto) |>
+    group_by(estudio) |>
+    mutate(pct = round(100 * n / sum(n), 1)) |>
+    select(-n) |>
+    pivot_wider(names_from = estudio, values_from = pct) |>
     as.data.frame(),
   row.names = FALSE
 )
 
 cat("\n== voto + simpatía sobre voto válido, bruto (%) ==\n")
 print(
-  todas %>%
-    filter(!is.na(voto_sim)) %>%
-    count(estudio, voto_sim) %>%
-    group_by(estudio) %>%
-    mutate(pct = round(100 * n / sum(n), 1)) %>%
-    select(-n) %>%
-    pivot_wider(names_from = estudio, values_from = pct) %>%
+  todas |>
+    filter(!is.na(voto_sim)) |>
+    count(estudio, voto_sim) |>
+    group_by(estudio) |>
+    mutate(pct = round(100 * n / sum(n), 1)) |>
+    select(-n) |>
+    pivot_wider(names_from = estudio, values_from = pct) |>
     as.data.frame(),
   row.names = FALSE
 )
 
 cat("\n== recuerdo 23-J (% del electorado de la muestra) ==\n")
 print(
-  todas %>%
-    filter(!is.na(rec)) %>%
-    count(estudio, rec) %>%
-    group_by(estudio) %>%
-    mutate(pct = round(100 * n / sum(n), 1)) %>%
-    select(-n) %>%
-    pivot_wider(names_from = estudio, values_from = pct) %>%
+  todas |>
+    filter(!is.na(rec)) |>
+    count(estudio, rec) |>
+    group_by(estudio) |>
+    mutate(pct = round(100 * n / sum(n), 1)) |>
+    select(-n) |>
+    pivot_wider(names_from = estudio, values_from = pct) |>
     as.data.frame(),
   row.names = FALSE
 )

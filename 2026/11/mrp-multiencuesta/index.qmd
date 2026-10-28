@@ -1,7 +1,7 @@
 ---
 title: "MRP con varias encuestas (I): nueve encuestas y una tabla de postestratificación"
 date: '2026-10-28'
-draft: true
+draft: false
 categories:
   - "2026"
   - estadística
@@ -106,14 +106,31 @@ resumen <- enc |>
     menciones_AA = sum(voto == "AA", na.rm = TRUE),
     .groups = "drop"
   ) |>
-  mutate(across(c(provincia, prob_voto, vota_seguro, edu_ambigua), ~ round(100 * .x)))
+  mutate(across(
+    c(provincia, prob_voto, vota_seguro, edu_ambigua),
+    ~ round(100 * .x)
+  ))
 
 DT::datatable(
   resumen,
   rownames = FALSE,
-  colnames = c("casa", "estudio", "mes", "n", "% provincia", "% prob. voto",
-               "% vota seguro", "% edu. ambigua", "AA"),
-  options = list(pageLength = 12, language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"))
+  colnames = c(
+    "casa",
+    "estudio",
+    "mes",
+    "n",
+    "% provincia",
+    "% prob. voto",
+    "% vota seguro",
+    "% edu. ambigua",
+    "AA"
+  ),
+  options = list(
+    pageLength = 12,
+    language = list(
+      url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+    )
+  )
 )
 ```
 
@@ -179,7 +196,8 @@ El recuerdo del 23-J tiene 14 niveles: los partidos, la abstención y
 **NO_PODIA**, los que en 2023 tenían 15-17 años y esta vez votan (o no).
 
 ```{r recuento}
-enc |> count(rec, name = "entrevistas") |>
+enc |>
+  count(rec, name = "entrevistas") |>
   arrange(desc(entrevistas)) |>
   DT::datatable(rownames = FALSE, options = list(pageLength = 6))
 ```
@@ -226,8 +244,14 @@ variables dentro de cada provincia; los totales los fijan los targets.
 
 ```{r semilla}
 sem_dat <- enc |>
-  filter(casa == "CIS", !is.na(prov), !is.na(sexo), !is.na(edad),
-         !is.na(edu), !is.na(rec))
+  filter(
+    casa == "CIS",
+    !is.na(prov),
+    !is.na(sexo),
+    !is.na(edad),
+    !is.na(edu),
+    !is.na(rec)
+  )
 nrow(sem_dat)
 ```
 
@@ -312,8 +336,13 @@ las casas privadas no se redistribuyen; los ficheros que lee el post están en
 dir_datos <- here::here("2026/11/mrp-multiencuesta/datos")
 url_base <- "https://github.com/joscani/blog_quarto/releases/download/mrp-multiencuesta-datos/"
 ficheros <- c(
-  "encuestas.rds", "censo_66600.rds", "targets_prov.rds",
-  "tabla_post_prov.rds", "prov_ccaa.rds", "celdas_brms.rds", "celdas_part.rds"
+  "encuestas.rds",
+  "censo_66600.rds",
+  "targets_prov.rds",
+  "tabla_post_prov.rds",
+  "prov_ccaa.rds",
+  "celdas_brms.rds",
+  "celdas_part.rds"
 )
 dir.create(dir_datos, recursive = TRUE, showWarnings = FALSE)
 for (f in ficheros) {

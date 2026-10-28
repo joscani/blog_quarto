@@ -312,10 +312,10 @@ cat(
 )
 print(
   as.data.frame(
-    res %>%
-      filter(!grepl("participación", casa)) %>%
-      select(casa, partido, mrp) %>%
-      pivot_wider(names_from = casa, values_from = mrp) %>%
+    res |>
+      filter(!grepl("participación", casa)) |>
+      select(casa, partido, mrp) |>
+      pivot_wider(names_from = casa, values_from = mrp) |>
       mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE
@@ -329,11 +329,11 @@ cat(
 )
 print(
   as.data.frame(
-    res %>%
-      filter(grepl("participación", casa)) %>%
-      mutate(casa = sub(", con participación", "", casa)) %>%
-      select(casa, partido, mrp) %>%
-      pivot_wider(names_from = casa, values_from = mrp) %>%
+    res |>
+      filter(grepl("participación", casa)) |>
+      mutate(casa = sub(", con participación", "", casa)) |>
+      select(casa, partido, mrp) |>
+      pivot_wider(names_from = casa, values_from = mrp) |>
       mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE

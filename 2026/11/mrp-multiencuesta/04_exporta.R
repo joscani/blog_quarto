@@ -23,8 +23,8 @@ prov_etq <- prov_etq[prov_etq %in% 1:52]
 # 1. Versión de texto (CSV): una fila por entrevista, etiquetas en claro
 # ---------------------------------------------------------------------------
 
-d <- d %>%
-  mutate(id = row_number(), .before = 1) %>%
+d <- d |>
+  mutate(id = row_number(), .before = 1) |>
   mutate(prov_nombre = unname(setNames(names(prov_etq), prov_etq)[as.character(prov)]),
          .after = prov)
 
@@ -101,6 +101,6 @@ stopifnot(nrow(re_csv) == nrow(d), identical(names(re_csv), names(d)))
 stopifnot(identical(readRDS(file.path(dir_entrega, "encuesta_unida.rds")), d))
 
 cat("== entrevistas por encuesta ==\n")
-print(d %>% count(casa, estudio, mes), n = Inf)
+print(d |> count(casa, estudio, mes), n = Inf)
 cat("\nguardado en", dir_entrega, ":\n")
 print(file.info(list.files(dir_entrega, full.names = TRUE))["size"])

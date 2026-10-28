@@ -213,9 +213,9 @@ cat(
 # 4. Postestratificación por casa, en el último mes (sin participación)
 # ---------------------------------------------------------------------------
 
-post <- as.data.frame.table(tabla, responseName = "N") %>%
-  filter(N > 1e-6) %>%
-  left_join(prov_ccaa, by = "prov") %>%
+post <- as.data.frame.table(tabla, responseName = "N") |>
+  filter(N > 1e-6) |>
+  left_join(prov_ccaa, by = "prov") |>
   mutate(n = 1)
 for (k in seq_len(K)) {
   post[[paste0("p", k)]] <- factor(post$prov, levels = prov_lv)
@@ -233,7 +233,7 @@ mascara <- sapply(voto_lv, function(p) {
 })
 
 por_casa <- lapply(levels(celdas$casa), function(cs) {
-  nd <- post %>% mutate(casa = factor(cs, levels = levels(celdas$casa)))
+  nd <- post |> mutate(casa = factor(cs, levels = levels(celdas$casa)))
   set.seed(2026)
   ep <- posterior_epred(
     mod,
@@ -270,9 +270,9 @@ cat(
 )
 print(
   as.data.frame(
-    res %>%
-      select(casa, partido, mrp) %>%
-      pivot_wider(names_from = casa, values_from = mrp) %>%
+    res |>
+      select(casa, partido, mrp) |>
+      pivot_wider(names_from = casa, values_from = mrp) |>
       mutate(across(-partido, ~ round(.x, 1)))
   ),
   row.names = FALSE
