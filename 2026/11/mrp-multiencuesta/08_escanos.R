@@ -33,7 +33,7 @@ dir_proy <- here::here("2026/11/mrp-multiencuesta")
 dir_datos <- file.path(dir_proy, "datos")
 
 # constante: fuente del posterior (la misma que en 07_post_celdas.R)
-fuente <- "rtmb" # "" (stan) | brms | rtmb | numpyro
+fuente <- "" # "" (stan) | brms | rtmb | numpyro
 suf <- if (fuente != "") paste0("_", fuente) else ""
 
 f_post_part <- file.path(dir_datos, "post_celdas_casa_media_part.rds")

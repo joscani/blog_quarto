@@ -164,6 +164,15 @@ prep <- function(celdas, solo_cis) {
     mes_post = length(lv$mes)
   )
 
+  # AA: filas de encuestas que no la ofrecían (00_partidos.R). Su verosimilitud
+  # se condiciona a no-AA (multinomial_cond en funciones.stan). El CIS siempre
+  # la pregunta, así que en datos_cis no hace falta.
+  if (!solo_cis) {
+    datos$sin_aa <- as.integer(celdas$sin_aa)
+    datos$j_aa <- match("AA", voto_lv)
+    stopifnot(!is.na(datos$j_aa))
+  }
+
   # 3. Participación: celdas de 03_celdas.R. Se calibra a la participación del
   # 23-J entre residentes: votos emitidos / censo INE = 70,4 %
   # (2026/10/mrp-raking/datos/mun_23j.rds).

@@ -29,6 +29,26 @@
     return (p / sum(p))';
   }
 
+  // Multinomial condicionada a excluir la categoría j_aa del normalizador:
+  // para las encuestas que no ofrecían esa opción (AA), cuyos ceros son de
+  // diseño del cuestionario y no informan de su prevalencia. Exige y[j_aa]=0.
+  real multinomial_cond(vector eta, array[] int y, int j_aa) {
+    int J = num_elements(eta);
+    vector[J - 1] sin_jaa;
+    int m = 0;
+    real n = 0;
+    real lp = 0;
+    for (j in 1:J) {
+      lp += y[j] * eta[j];
+      n += y[j];
+      if (j != j_aa) {
+        m += 1;
+        sin_jaa[m] = eta[j];
+      }
+    }
+    return lp - n * log_sum_exp(sin_jaa);
+  }
+
   // Verosimilitud del voto para reduce_sum: suma de log p de las filas
   // filas[1..] (un trozo de 1..N). Cada fila calcula su predictor.
   //   prov_fila[i] > 0: provincia conocida, multinomial con esa provincia.
@@ -38,7 +58,8 @@
                array[,] int y, vector mujer,
                array[] int casa, array[] int mes, array[] int edad, array[] int edu,
                array[] int rec, array[] int ccaa, array[] int ccaa_rec, array[] int casa_rec,
-               matrix off, array[] int prov_fila, array[] int ini_fila, array[] int len_fila,
+               matrix off, array[] int sin_aa, int j_aa,
+               array[] int prov_fila, array[] int ini_fila, array[] int len_fila,
                array[] int ent_prov, vector log_ent_w,
                vector alpha, vector b_mujer, matrix a_casa, matrix a_mes, matrix a_edad,
                matrix a_edu, matrix a_rec, matrix a_ccaa, matrix a_prov,
@@ -51,7 +72,13 @@
                           + a_edad[edad[i]] + a_edu[edu[i]] + a_rec[rec[i]] + a_ccaa[ccaa[i]]
                           + a_ccaa_rec[ccaa_rec[i]] + a_casa_rec[casa_rec[i]] + off[i];
       if (prov_fila[i] > 0) {
-        lp += multinomial_logit_lpmf(y[i] | (eta + a_prov[prov_fila[i]])');
+        row_vector[J] e = eta + a_prov[prov_fila[i]];
+        if (sin_aa[i] == 0) {
+          lp += multinomial_logit_lpmf(y[i] | e');
+        } else {
+          // la encuesta no ofrecía AA: normalizador sin AA
+          lp += multinomial_cond(e', y[i], j_aa);
+        }
       } else {
         int L = len_fila[i];
         matrix[L, J] lpe;
@@ -62,7 +89,12 @@
         vector[J] logp;
         for (j in 1:J) logp[j] = log_sum_exp(lpe[, j]);
         // logp ya está normalizado: softmax(logp) = p
-        lp += multinomial_logit_lpmf(y[i] | logp);
+        if (sin_aa[i] == 0) {
+          lp += multinomial_logit_lpmf(y[i] | logp);
+        } else {
+          // la mezcla de provincias, condicionada a no-AA
+          lp += multinomial_cond(logp, y[i], j_aa);
+        }
       }
     }
     return lp;

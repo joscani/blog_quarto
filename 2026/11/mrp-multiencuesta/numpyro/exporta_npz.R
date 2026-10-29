@@ -37,6 +37,9 @@ np$savez_compressed(
   edu = d$edu,
   rec = d$rec,
   ccaa = d$ccaa,
+  # máscara de AA (1 = la encuesta no la ofrecía) y su índice en voto_lv
+  sin_aa = d$sin_aa,
+  j_aa = d$j_aa,
   # mezcla de provincias (índices 1-based; se convierten en Python)
   fila1 = d$fila1,
   prov1 = d$prov1,

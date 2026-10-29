@@ -11,7 +11,7 @@ library(tidyr)
 library(cmdstanr)
 
 # constantes: editar aquí, no hay argumentos
-modo <- "prueba" # prueba | nuts
+modo <- "nuts" # prueba | nuts
 hilos <- 3 # hilos por cadena del voto (4 cadenas x hilos = núcleos)
 f_voto <- "mrp_voto.stan" # o mrp_voto_vec.stan (vectorizado); el sufijo _vec va en las salidas
 sufijo <- sub("^mrp_voto", "", sub("\\.stan$", "", f_voto)) # "" o "_vec"

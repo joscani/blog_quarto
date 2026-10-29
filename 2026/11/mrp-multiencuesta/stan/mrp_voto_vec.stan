@@ -14,6 +14,11 @@
 //  - Filas con provincia: sum(y .* eta) - n * log_sum_exp(eta) por fila.
 //  - Filas mezcla: p = sum_e w_e softmax(eta + a_prov_e), en escala natural,
 //    restando el max de cada fila antes del exp (sin desbordes).
+//  5. Filas sin_aa (encuestas que no ofrecían AA): la verosimilitud se
+//    condiciona a no-AA. En las filas con provincia, el normalizador es
+//    log_sum_exp(eta) + log1m_exp(eta_AA - log_sum_exp(eta)) (= log de la
+//    suma sin AA, álgebra exacta). En las filas mezcla, p renormalizado:
+//    sum(y .* log(p)) - n * log1m_exp(log(p_AA)), con y_AA = 0.
 
 functions {
 #include funciones.stan
@@ -36,7 +41,7 @@ functions {
                      matrix Y, vector n_y, array[] int prov_fila, vector mujer,
                      array[] int casa, array[] int mes, array[] int edad, array[] int edu,
                      array[] int rec, array[] int ccaa, array[] int ccaa_rec, array[] int casa_rec,
-                     matrix off, vector alpha, vector b_mujer, matrix a_casa, matrix a_mes,
+                     matrix off, array[] int sin_aa, int j_aa, vector alpha, vector b_mujer, matrix a_casa, matrix a_mes,
                      matrix a_edad, matrix a_edu, matrix a_rec, matrix a_ccaa,
                      matrix a_ccaa_rec, matrix a_casa_rec, matrix a_prov) {
     matrix[size(r), cols(off)] eta
@@ -45,7 +50,13 @@ functions {
                    a_ccaa_rec, a_casa_rec)
         + a_prov[prov_fila[r]];
     vector[size(r)] lse;
-    for (i in 1:size(r)) lse[i] = log_sum_exp(eta[i]');
+    for (i in 1:size(r)) {
+      lse[i] = log_sum_exp(eta[i]');
+      // sin AA en el cuestionario: normalizador sin AA
+      if (sin_aa[r[i]] == 1) {
+        lse[i] += log1m_exp(eta[i, j_aa] - lse[i]);
+      }
+    }
     return sum(Y[r] .* eta) - dot_product(n_y[r], lse);
   }
 
@@ -53,10 +64,10 @@ functions {
   real voto2_parcial(array[] int m, int start, int end,
                      array[] int fila2, array[] int ini, array[] int len,
                      array[] int ent_prov, vector ent_w,
-                     matrix Y, vector mujer,
+                     matrix Y, vector n_y, vector mujer,
                      array[] int casa, array[] int mes, array[] int edad, array[] int edu,
                      array[] int rec, array[] int ccaa, array[] int ccaa_rec, array[] int casa_rec,
-                     matrix off, vector alpha, vector b_mujer, matrix a_casa, matrix a_mes,
+                     matrix off, array[] int sin_aa, int j_aa, vector alpha, vector b_mujer, matrix a_casa, matrix a_mes,
                      matrix a_edad, matrix a_edu, matrix a_rec, matrix a_ccaa,
                      matrix a_ccaa_rec, matrix a_casa_rec, matrix a_prov) {
     int J = cols(off);
@@ -85,7 +96,15 @@ functions {
       int a = ini[m[k]] - e0 + 1;
       p[k] = rep_row_vector(1.0, len[m[k]]) * pe[a:(a + len[m[k]] - 1)];
     }
-    return sum(Y[r] .* log(p));
+    matrix[n2, J] lp = log(p);
+    real out = sum(Y[r] .* lp);
+    // filas sin AA: renormalizar el resto (sus y de AA son 0)
+    for (k in 1:n2) {
+      if (sin_aa[r[k]] == 1) {
+        out -= n_y[r[k]] * log1m_exp(lp[k, j_aa]);
+      }
+    }
+    return out;
   }
 }
 
@@ -117,6 +136,8 @@ data {
   array[N] int<lower=1, upper=n_rec> rec;
   array[N] int<lower=1, upper=n_ccaa> ccaa;
   matrix[N, J] off;
+  array[N] int<lower=0, upper=1> sin_aa; // 1: la encuesta no ofrecía AA
+  int<lower=1, upper=J> j_aa;            // índice de AA en voto_lv
 
   int<lower=0> N1;
   array[N1] int<lower=1, upper=N> fila1;
@@ -246,13 +267,13 @@ model {
     target += reduce_sum(voto1_parcial, fila1, grain1,
                          Y, n_y, prov_fila, mujer,
                          casa, mes, edad, edu, rec, ccaa, ccaa_rec, casa_rec,
-                         off, alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
+                         off, sin_aa, j_aa, alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
                          a_ccaa_rec, a_casa_rec, a_prov);
     target += reduce_sum(voto2_parcial, filas2, grain2,
                          fila2, ini, len, ent_prov, ent_w,
-                         Y, mujer,
+                         Y, n_y, mujer,
                          casa, mes, edad, edu, rec, ccaa, ccaa_rec, casa_rec,
-                         off, alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
+                         off, sin_aa, j_aa, alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
                          a_ccaa_rec, a_casa_rec, a_prov);
   }
 }

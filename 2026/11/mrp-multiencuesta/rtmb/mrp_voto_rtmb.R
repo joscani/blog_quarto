@@ -21,7 +21,7 @@
 source("2026/11/mrp-multiencuesta/rtmb/comun.R")
 
 # constantes: editar aquí, no hay argumentos (HILOS en rtmb/comun.R)
-modo <- "nuts" # prueba | nuts
+modo <- "prueba" # prueba | nuts
 stopifnot(modo %in% c("prueba", "nuts"))
 n_draws <- 1000L
 hilos <- configura_hilos()
@@ -38,6 +38,11 @@ n_y <- rowSums(Y)
 ccaa_rec <- (d$ccaa - 1) * d$n_rec + d$rec
 casa_rec <- (d$casa - 1) * d$n_rec + d$rec
 esc_casa <- sqrt(d$n_casa / (d$n_casa - 1))
+
+# AA: las filas de encuestas que no la ofrecían (d$sin_aa) condicionan su
+# verosimilitud a no-AA: sus ceros de AA son de diseño, no evidencia
+j_aa <- d$j_aa
+stopifnot(!is.na(j_aa), voto_lv[j_aa] == "AA")
 
 # Filas mezcla: hasta K entradas por fila; las que faltan, con peso 0
 K <- max(d$len)
@@ -129,11 +134,17 @@ nll <- function(p) {
     a$ccaa_rec[ccaa_rec, , drop = FALSE] +
     a$casa_rec[casa_rec, , drop = FALSE] +
     d$off
-  # filas con provincia
+  # filas con provincia; en las sin AA, el normalizador excluye AA
   eta1 <- eta[d$fila1, , drop = FALSE] + a$prov[d$prov1, , drop = FALSE]
-  lse1 <- log(exp(eta1) %*% rep(1, J))
+  masc1 <- matrix(1, length(d$fila1), J)
+  i1 <- which(d$sin_aa[d$fila1] == 1)
+  if (length(i1)) {
+    masc1[i1, j_aa] <- 0
+  }
+  lse1 <- log((exp(eta1) * masc1) %*% rep(1, J))
   ll <- sum(Y1 * eta1) - sum(n_y[d$fila1] * lse1)
-  # filas mezcla: p = sum_l w_l softmax(eta + a_prov_l)
+  # filas mezcla: p = sum_l w_l softmax(eta + a_prov_l); en las sin AA,
+  # renormalizada sin AA (sus y de AA son 0)
   eta2 <- eta[d$fila2, , drop = FALSE]
   p2 <- 0
   for (l in seq_len(K)) {
@@ -141,7 +152,13 @@ nll <- function(p) {
     w <- mix_w[, l] / (e %*% rep(1, J))
     p2 <- p2 + e * matrix(rep(w, J), d$N2, J)
   }
-  ll <- ll + sum(Y2 * log(p2))
+  p2 <- p2 / matrix(rep(p2 %*% rep(1, J), J), d$N2, J)
+  # en las sin AA la verosimilitud se condiciona a no-AA (como multinomial_cond
+  # en Stan): softmax completo y corrección -n*log(1 - p_AA). Renormalizar con
+  # la máscara dejaría p_AA = 0 con y_AA = 0: 0*log(0) = NaN (todas las filas
+  # de mezcla son sin AA: el CIS no tiene filas sin provincia)
+  pen2 <- ifelse(d$sin_aa[d$fila2] == 1, n_y[d$fila2] * log1p(-p2[, j_aa]), 0)
+  ll <- ll + sum(Y2 * log(p2)) - sum(pen2)
   res - ll
 }
 

@@ -45,13 +45,33 @@ Orden: `01 → 02 → 03 → 06 → (stan | numpyro | rtmb) → 07 → 08 → 09
 ## Decisiones y pendientes
 
 - **UPN** como categoría propia (ceros estructurales fuera de Navarra).
-- **AA (Adelante Andalucía)**: PENDIENTE. Ahora mismo va como categoría propia
-  en el ajuste RTMB, pero está infraestimado: 40dB mensual y More in Common no
-  preguntaban por AA y sus ceros arrastran su efecto de casa a 0 (nacional
-  0,1%; en Andalucía 0,3-0,9%; 0 escaños). Opciones sobre la mesa: tratar AA
-  como missing en las casas que no lo preguntan (efecto de casa estimado solo
-  con CIS + flash) y qué hacer con el recall de las autonómicas de mayo (9,6%
-  en la serie de octubre). El refit RTMB con AA está en local, no en la release.
+- **AA (Adelante Andalucía)**: DECIDIDO (2026-10-29): categoría propia solo en
+  Andalucía (como UPN en Navarra; las 96 menciones de los microdatos están
+  todas en Andalucía) y **multinomial condicional** para las casas que no la
+  preguntaron (40dB mensual, MIC, Ateneo): su verosimilitud normaliza
+  excluyendo AA (`Σ y_j·η_j − n·log Σ_{j≠AA} exp(η_j)`), porque sus ceros son
+  de diseño del cuestionario, no evidencia. AA queda identificada por CIS +
+  flash (6 menciones). Hecho (2026-10-29): `estudio` en la clave de
+  agregación de las celdas de voto (necesario para que la máscara sea
+  constante por fila: el flash, que sí ofrece AA, comparte casa con los
+  mensuales; +278 filas; no cambia el efecto casa, que sigue siendo
+  predictor, ni la verosimilitud salvo donde cambia la máscara),
+  `sin_aa` en `03_celdas.R`/`06_stan_datos.R` y la verosimilitud
+  condicional en `funciones.stan` (`multinomial_cond`) y en las dos
+  variantes de Stan (`mrp_voto.stan` fila a fila; `mrp_voto_vec.stan`,
+  álgebra exacta con `log1m_exp`). Probado en modo prueba con
+  `mrp_voto.stan`: 0 divergencias y la postestratificación en R cuadra
+  con la de Stan (1,3e-06). Pendiente: portar la máscara a numpyro
+  (`numpyro/mrp_voto_np.py`) y RTMB (`rtmb/mrp_voto_rtmb.R`), reajustar
+  (solo el modelo de voto; el de participación no tiene categorías de
+  partido) y subir los fits a la release. Nota: `celdas_brms.rds` es
+  ahora a nivel estudio; el fit de brms guardado es de la agregación
+  anterior y no se reajusta. Para más tarde: el recuerdo de las
+  autonómicas de mayo (9,6 % en la serie de octubre) como predictor
+  natural de AA. brms no se reajusta: no puede expresar la
+  verosimilitud condicional y en el post es el intento con `mm()`, no
+  resultados. Para más tarde: el recuerdo de las autonómicas de mayo (9,6 %
+  en la serie de octubre) como predictor natural de AA.
 - Los fits de Stan/brms/numpyro que hay en `datos/` son de la era **sin AA**;
   solo la cadena RTMB está al día con AA.
 
@@ -76,12 +96,56 @@ Los `post_celdas_*` (358-672 MB) no se suben: se regeneran con
 - **(I) Unir, armonizar y postestratificar** (scripts 00-04): Introducción /
   Las encuestas (quién pregunta qué) / Armonización / Población y raking / La
   tabla de postestratificación / Coda.
-- **(II) El multinomial, en Stan, numpyro y RTMB** (05, 06, backends, 07, 08,
-  10, 11): Intro / El modelo / El intento con brms y `mm()` / El multinomial
-  con la verosimilitud bien / Tres backends (Stan la referencia, numpyro
-  rápido, RTMB Laplace y casi igual) / De celdas a escaños / Coda.
-- **(III) opcional**: insights bayesianos (escenarios de participación, dónde
-  votan VOX los jóvenes, el escaño más disputado, mapa 29-N) y límites de la
-  postestratificación (fidelidad por casa, ad hoc al escribir).
+- **(II) Por qué no lo hago con un glm** (05, 06, backends, 07, 08,
+  10, 11). Hilo conductor: el multinivel estima en sitios pequeños, lo
+  bayesiano da bien la incertidumbre y la postestratificación corrige el
+  sesgo de muestreo (no el de casa). Arco:
+  1. Por qué multinivel (estimación en celdas pequeñas).
+  2. No hay multinomial en lme4; el truco de Poisson como efectos fijos
+     por celda es demasiado (sin pooling, celdas vacías muertas) y como
+     GLMM Poisson lme4 no lo aguanta. Aquí entra `11_mgcv_cis.R`
+     (`mgcv::gam(multinom)`) como lo más parecido a un GLMM multinomial
+     de catálogo, solo CIS.
+  3. `mclogit` (PQL). DECIDIDO (2026-10-29): probamos a correrlo (si no
+     tira, discusión). Su límite real no es la provincia que falta,
+     sino el reparto de MIC entre 9 provincias (mezcla de probabilidades,
+     no de logits) que ningún GLMM de catálogo maneja.
+  4. `brms` con `mm()` (aproximación en logit).
+  5. La versión real en Stan: agregación exacta de probabilidades. El caso
+     AA (ceros estructurales + encuestas que no la ofrecían) va dentro de
+     esta sección: el cuestionario es parte del modelo.
+  6. numpyro como alternativa rápida (JIT/XLA de toda la verosimilitud;
+     misma geometría, misma posterior, otra implementación).
+  7. Anexo RTMB (Laplace) y comprobaciones de igualdad entre backends.
+  8. De celdas a escaños / Coda: el multinivel corrige el muestreo, no la
+     casa; remite a (III).
+- **(III)**: insights bayesianos (escenarios de participación, dónde votan
+  VOX los jóvenes, el escaño más disputado, mapa 29-N) y los sesgos que la
+  postestratificación no corrige: fidelidad por casa (MIC y sus votantes
+  superfieles al PSOE; el sesgo de recuerdo medido, no solo del CIS),
+  autoselección en los paneles online y no-respuesta en el CIS (se
+  seleccionan los votantes del PSOE más fieles/militantes entre los que
+  contestan). Además:
+  - Estimaciones por provincia × nivel de estudios con intervalos, y
+    comparación con lo que dice la encuesta cruda (la reproducción de la
+    estimación publicada de MIC ya está en PLAN.md).
+  - Contraste con un multinomial de efectos fijos (edad × sexo × edu ×
+    recuerdo × provincia, sin pooling): en celdas ralas, estimaciones
+    salvajes con intervalos enormes; en celdas vacías no existe. Dos
+    fallos por separado: el sesgo de casa lo arregla modelar la casa, la
+    varianza en celdas pequeñas solo el pooling. Mostrar también una celda
+    rica donde todo coincide (el shrinkage no distorsiona donde hay datos).
+  - En la (II), una figura de pooling en la sección "por qué multinivel":
+    celda rala o vacía, encuesta cruda vs efectos fijos vs multinivel.
+  - No duplicar lo del post de full-bayesian (2026/10): allí ya están el
+    voto latente nacional, el error del consenso (sesgo, Omega,
+    contracción), las manías de las casas (contra resultados de
+    autonómicas), el rebaño y backtests; de escaños, solo mediana + IC90
+    con shares nacionales y P(PP+Vox >= 176). Todo lo territorial,
+    demográfico, la transferencia y los escenarios de participación son
+    nuevos aquí; histograma de escaños y probabilidades de bloques se
+    presentan como la versión provincial/completa de lo que allí rozó
+    ("la segunda parte" que aquel post prometía). La fidelidad por casa
+    conecta con las manías: enlazar, no repetir.
 
 El historial de decisiones está en PLAN.md.

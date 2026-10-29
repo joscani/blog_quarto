@@ -39,7 +39,7 @@ library(brms)
 
 # constantes: editar aquí, no hay argumentos
 modo <- "nuts" # prueba (50 draws) | nuts (1000)
-fuente <- "rtmb" # brms | stan | rtmb
+fuente <- "stan" # brms | stan | rtmb
 con_part <- TRUE # ponderar las celdas con el modelo de participación (no en brms)
 stopifnot(modo %in% c("nuts", "prueba"), fuente %in% c("brms", "stan", "rtmb"))
 stopifnot(!con_part || fuente != "brms") # el modelo de participación no existe en brms

@@ -40,6 +40,8 @@ data {
   array[N] int<lower=1, upper=n_rec> rec;
   array[N] int<lower=1, upper=n_ccaa> ccaa;
   matrix[N, J] off;
+  array[N] int<lower=0, upper=1> sin_aa; // 1: la encuesta no ofrecía AA
+  int<lower=1, upper=J> j_aa;            // índice de AA en voto_lv
 
   int<lower=0> N1;
   array[N1] int<lower=1, upper=N> fila1;
@@ -163,7 +165,7 @@ model {
   if (!prior_only) {
     target += reduce_sum(voto_parcial, filas, grainsize,
                          y, mujer, casa, mes, edad, edu, rec, ccaa, ccaa_rec, casa_rec,
-                         off, prov_fila, ini_fila, len_fila, ent_prov, log_ent_w,
+                         off, sin_aa, j_aa, prov_fila, ini_fila, len_fila, ent_prov, log_ent_w,
                          alpha, b_mujer, a_casa, a_mes, a_edad, a_edu, a_rec, a_ccaa,
                          a_prov, a_ccaa_rec, a_casa_rec);
   }

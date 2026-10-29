@@ -42,6 +42,20 @@ territorio <- list(
   UPN = "Navarra"
 )
 
+# Encuestas que ofrecen AA (Adelante Andalucía) como opción de respuesta,
+# comprobado en los cuestionarios (etiquetas de valores de los .sav y opciones
+# del CSV de Ateneo). En las demás, los ceros de AA son de diseño del
+# cuestionario, no evidencia: su verosimilitud se condiciona a no-AA
+# (función multinomial_cond en funciones.stan). La máscara va por estudio,
+# que es la clave de agregación de las celdas de voto (03_celdas.R).
+encuestas_con_aa <- c(
+  "CIS 3567",
+  "CIS 3571",
+  "CIS 3577",
+  "CIS 3582",
+  "40dB flash oct"
+)
+
 # TRUE si el partido p se puede votar en la comunidad ccaa
 se_presenta <- function(p, ccaa) {
   p <- as.character(p)

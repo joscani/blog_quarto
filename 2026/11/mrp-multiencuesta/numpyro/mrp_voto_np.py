@@ -123,6 +123,10 @@ s_sd_rec, s_sd_main, s_sd_int = (
     float(z["s_sd_int"]),
 )
 esc_casa = float(np.sqrt(n_casa / (n_casa - 1.0)))
+# AA: filas de encuestas que no la ofrecían (00_partidos.R); su verosimilitud
+# se condiciona a no-AA: sus ceros de AA son de diseño del cuestionario
+sin_aa = z["sin_aa"]
+J_AA = int(z["j_aa"]) - 1  # índice 0-based de AA en voto_lv
 
 # --sin-mezcla: fuera las filas sin provincia. Solo cambian las filas de voto
 # (y sus índices); la postestratificación queda igual
@@ -131,6 +135,7 @@ if SIN_MEZCLA:
     keep = np.ones(N, dtype=bool)
     keep[z["fila2"] - 1] = False
     y, mujer, off = y[keep], mujer[keep], off[keep]
+    sin_aa = sin_aa[keep]
     for k in ["casa", "mes", "edad", "edu", "rec", "ccaa"]:
         z[k] = z[k][keep]
     pos = np.full(N, -1, dtype=np.int64)
@@ -246,6 +251,7 @@ def model(
     ENT_PROV,
     ENT_W,
     MASK,
+    SIN_AA,
 ):
     za = numpyro.sample(
         "z_alpha", dist.Normal(0.0, s_alpha).expand([J - 1]).to_event(1)
@@ -323,7 +329,14 @@ def model(
         -jnp.inf,
     )
     lp = lp.at[MIX].set(logsumexp(lpe, axis=1))
-    numpyro.factor("ll", jnp.sum(Y * lp))
+    # filas sin AA en el cuestionario: log(1 - p_AA) = log1p(-exp(lp_AA));
+    # los y de AA son 0 en esas filas, así que solo falta renormalizar
+    pen = jnp.where(
+        SIN_AA == 1,
+        Y.sum(-1) * jnp.log1p(-jnp.exp(lp[:, J_AA])),
+        0.0,
+    )
+    numpyro.factor("ll", jnp.sum(Y * lp) - jnp.sum(pen))
 
 
 # ------------------------------------------------------------------ bench ----
@@ -346,6 +359,7 @@ datos_jax = dict(
     ENT_PROV=jnp.asarray(ent_pad_prov, jnp.int32),
     ENT_W=fj(ent_pad_w),
     MASK=jnp.asarray(ent_mask),
+    SIN_AA=jnp.asarray(sin_aa, jnp.int32),
 )
 
 warmup = args.warmup or (150 if args.modo == "prueba" else 1000)
