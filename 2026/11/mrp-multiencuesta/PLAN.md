@@ -386,16 +386,21 @@ Prueba de la idea de 2026-10-21 ("Experimento futuro: causact"). Resultado: **ca
 - Nacional (RTMB, casa media, con participación): PP 119 (114–125), PSOE 113 (107–119), VOX 79 (73–86), SUMAR 11, ERC 9, EH Bildu 6, PNV 3, Junts 3, PODEMOS 2, BNG 2, CC 1, UPN 1. P(PP+VOX ≥ 176) = 1. Prácticamente igual que el Stan de 12 partidos (≤1 escaño en PP/PSOE/ERC).
 - Navarra (mediana de 5): PSOE 1, PP 1, VOX 1, EH Bildu 1, UPN 1. Frente a antes (comparado contra el Stan de 12 partidos, `estim_escanos_mrp.rds`), medias por draw: UPN +0,93 (nuevo), PSOE −0,51, VOX −0,26, EH Bildu −0,13, PP −0,01. UPN se lleva el segundo escaño que PSOE ganaba casi siempre (p_escaño UPN 0,88; gana en el 6 % de draws).
 
+## 2026-10-30: sensibilidad sin recuerdo de voto (sintrec) y descomposición del efecto del recuerdo
+
+- La variante vive autocontenida en `sintrec/` (copia limpia de 06/ajusta/07/08 + `mrp_voto_sintrec.stan`, modelo sin los términos `a_rec`, `a_ccaa_rec`, `a_casa_rec`, y README). Los scripts de producción no dependen de ella (sin ganchos). El reajuste dedicado da el mismo posterior que el truco `n_rec = 1` (marginalización exacta); la ventaja es solo de eficiencia.
+- Ajuste (4 × 1000+1000, logs en `sintrec/`): voto 137 min, participación 17 min; 0 divergencias (voto), Rhat máx 1.008, ESS 433. Mismo perfil geométrico que la producción (treedepth saturado, benigno).
+- Resultado (casa media, electorado): PP 27.6 → 22.6 (−5.1), PSOE 26.2 → 31.6 (+5.4), VOX 19.6 → 19.7. Escaños: PP 120 → 93, PSOE 113 → 143, VOX 79 → 78. P(PP+VOX ≥ 176): 1 → 0.23; P(investidura ≥ 176): 0 → 0.69. Los IC90 de PP y PSOE no solapan entre versiones: el recuerdo cambia la conclusión cualitativa. Material del post (III).
+- `14_descompone_recuerdo.R` (salida `datos/descompone_recuerdo.rds`, ignorada por git): sobre el fit de producción, quitar solo `casa_rec` o solo `ccaa_rec` mueve el hueco PP−PSOE ±0.7 pp; el vuelco (−1.4 → +9.0) viene del reajuste completo sin recuerdo, no de la interacción casa×rec. OJO: la fila "sin_rec" sobre el fit de producción NO es comparable (alpha no reabsorbe el nivel; OTROS explota a 23 %), y las variantes intermedias dependen del gaugo del `centra()`; lo canónico es producción vs sintrec.
+- Transición recuerdo → voto (casa media, % en fila): PP 79.9 (→VOX 14.9), PSOE 75.8, VOX **87.8** (el más fiel), SUMAR solo 45.4 (→PODEMOS 23.7, la fusión; →PSOE 12.9); ABST 23J → VOX **28.6** (PP 18.5, PSOE 19.5, OTROS 22.3); NO_PODÍA → PSOE 24.7, VOX 27.3. Ese conjunto, con la población rakeada al 23J, es el anclaje que produce el hueco PP>PSOE.
+- Fidelidad por casa, P(vota j | recordó j): CIS PP 84.0 (resto ~77); VOX en no-CIS ~88-90 (CIS 80.5); PSOE 71.9-76.8; SUMAR 43-47 en todas. Diferencial real pero de segundo orden (coherente con el ±0.7 de la variante sin casa_rec).
+- Release `mrp-multiencuesta-datos`: nuevos assets `sintrec_fit_separado_nuts_{voto,part}.rds`, `sintrec_estim_separado_nuts.rds`, `sintrec_estim_escanos_mrp.rds`, `descompone_recuerdo.rds`, `fit_rtmb_{voto,part}_nuts.rds`; npz de numpyro actualizados al modelo AA condicional. (Nota: al subir los de sintrec se machacaron por error los de producción con el mismo nombre; restaurados con `--clobber` en el mismo día.)
+
 ## Ejecutar el ajuste completo en otro PC
 
-Entradas en git: `datos/celdas_brms.rds`, `celdas_part.rds`, `tabla_post_prov.rds`, `prov_ccaa.rds` y `00_partidos.R`. Con ellas basta para 05b; no hacen falta los microdatos (`descargas/`, fuera de git) salvo para rehacer los pasos 01–03.
+Para escribir los posts NO hace falta reajustar nada: la release `mrp-multiencuesta-datos` tiene los fits de producción (`fit_separado_nuts_{voto,part}.rds`), los de sintrec (`sintrec_*`), los de RTMB (`fit_rtmb_*`), el de brms (`mod_brms_nuts.rds`), las celdas, las tablas de población y los npz de numpyro. Con el repo clonado + `renv::restore()` bastan `06→07→08` (y sus variantes) para regenerar postestratificación y escaños en minutos. Los binarios de CmdStan se recompilan solos con `cmdstanr`.
 
-Para rehacer 02–03b: release `mrp-multiencuesta-datos` (`encuestas.rds`, `censo_66600.rds`, `targets_prov.rds`, `mun_23j.rds`, `targets.rds`, `tabla_postestratificacion.rds`; la descripción dice dónde copiar cada uno). Bajar con `gh release download mrp-multiencuesta-datos -D <carpeta>`.
-
-1. `renv::restore()` y CmdStan instalado (`cmdstanr::install_cmdstan()`; aquí, 2.40.0).
-2. Desde la raíz del repo: `Rscript 2026/11/mrp-multiencuesta/05b_separado.R prueba 2` (unos 3 min).
-3. `Rscript 2026/11/mrp-multiencuesta/05b_separado.R nuts H > 2026/11/mrp-multiencuesta/datos/log_05b_nuts.txt 2>&1`, con H = hilos por cadena (4 cadenas × H núcleos). Estimado aquí: ~70 min el voto con 3 hilos, ~11 min la participación (deducido de la prueba, sin medir).
-4. Salidas: `datos/fit_separado_nuts_voto.rds`, `_part.rds`, `estim_separado_nuts.rds`.
+Si hiciera falta reajustar (no debería): entradas en git `datos/celdas_brms.rds`, `celdas_part.rds`, `tabla_post_prov.rds`, `prov_ccaa.rds` y `00_partidos.R`; para 01–03, bajar de la release `encuestas.rds`, `censo_66600.rds`, `targets_prov.rds`, `mun_23j.rds`, `targets.rds`, `tabla_postestratificacion.rds` (la descripción de la release dice dónde copiar cada uno). Flujo: `06_stan_datos.R` (modo en su constante) → `stan/ajusta.R` (4 cadenas × hilos; ~2.5 h el voto con 3 hilos) → `07_post_celdas.R` → `08_escanos.R`.
 
 ## Para el futuro: pesos de entrevistado desde la tabla IPF
 

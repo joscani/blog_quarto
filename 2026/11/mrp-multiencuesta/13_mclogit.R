@@ -65,22 +65,27 @@ m0 <- mblogit(cis_fit$y ~ sexo + edad + edu + rec + mes + ccaa, data = cis_fit)
 t_m0 <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 cat("mblogit sin aleatorios:", round(t_m0, 1), "s\n")
 
-# coeficientes: vector "param~partido" -> matriz params x (J-1)
-coef_mblogit <- function(m) {
+# coeficientes: vector "param~partido" -> matriz params x (J-1), por nombres
+# (el orden de coef() no está garantizado)
+coef_mblogit <- function(m, xnames) {
   b <- coef(m)
   dos <- strsplit(names(b), "~", fixed = TRUE)
   param <- vapply(dos, `[[`, "", 1)
-  part <- factor(vapply(dos, `[[`, "", 2), levels = voto_lv[-1])
-  matrix(
-    b,
-    nrow = length(unique(param)),
-    dimnames = list(unique(param), NULL)
-  )[,
-    as.integer(part)
-  ]
+  part <- vapply(dos, `[[`, "", 2)
+  B <- matrix(
+    NA_real_,
+    length(xnames),
+    length(voto_lv) - 1,
+    dimnames = list(xnames, voto_lv[-1])
+  )
+  B[cbind(match(param, xnames), match(part, voto_lv[-1]))] <- b
+  stopifnot(!anyNA(B))
+  B
 }
-B <- coef_mblogit(m0)
+x_fit <- colnames(model.matrix(~ sexo + edad + edu + rec + mes + ccaa, cis_fit))
+B <- coef_mblogit(m0, x_fit)
 cat("coeficientes:", nrow(B), "params x", ncol(B), "ecuaciones\n")
+saveRDS(m0, file.path(dir_datos, "fit_mblogit_cis.rds"))
 
 # ---- intento 3: con random = ~1|prov ------------------------------------------
 cat("\n== intento 3: random = ~1|prov ==\n")
@@ -171,4 +176,22 @@ res <- data.frame(
   dif = round(nacional - stan_col[i_stan], 1)
 )
 cat("\n== nacional, electorado del 23-J (% voto válido) ==\n")
+conv <- function(x) {
+  c <- x$convergence
+  if (is.null(c)) NA else c
+}
+saveRDS(
+  list(
+    res = res,
+    convergencia = list(
+      t_m0 = t_m0,
+      t_m1 = t_m1,
+      m0_conv = conv(m0),
+      m1_conv = if (inherits(m1, "try-error")) NA else conv(m1)
+    ),
+    n_colin = n_colin
+  ),
+  file.path(dir_datos, "mclogit_resultado.rds")
+)
+cat("guardado datos/mclogit_resultado.rds\n")
 print(res, row.names = FALSE)
