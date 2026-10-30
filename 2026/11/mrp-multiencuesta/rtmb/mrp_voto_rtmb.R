@@ -21,7 +21,7 @@
 source("2026/11/mrp-multiencuesta/rtmb/comun.R")
 
 # constantes: editar aquí, no hay argumentos (HILOS en rtmb/comun.R)
-modo <- "prueba" # prueba | nuts
+modo <- "nuts" # prueba | nuts
 stopifnot(modo %in% c("prueba", "nuts"))
 n_draws <- 1000L
 hilos <- configura_hilos()
