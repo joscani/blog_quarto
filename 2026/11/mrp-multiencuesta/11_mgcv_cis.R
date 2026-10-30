@@ -96,9 +96,13 @@ terminos <- c(
   "s(ccaa_rec, bs = 're')",
   "s(prov, bs = 're')"
 )
+# solo la primera fórmula de la lista lleva la respuesta (doc de multinom);
+# si todas la llevan, mgcv expande la respuesta K+1 veces y muere con
+# "right-hand side should have n not n*(K+1) rows"
 fmlas <- lapply(seq_len(J - 1), function(j) {
+  lhs <- if (j == 1) "y ~ " else "~ "
   as.formula(paste(
-    "y ~",
+    lhs,
     paste(
       c(terminos, paste0("offset(off_", partidos[j + 1], ")")),
       collapse = " + "

@@ -61,18 +61,36 @@ cat(
   "celdas 18-20 x NO_PODIA, sin efectos aleatorios ==\n"
 )
 t0 <- Sys.time()
-m0 <- mblogit(cis_fit$y ~ sexo + edad + edu + rec + mes + ccaa, data = cis_fit)
+f_m0 <- file.path(dir_datos, "fit_mblogit_cis.rds")
+if (file.exists(f_m0)) {
+  m0 <- readRDS(f_m0)
+  cat("mblogit sin aleatorios: reutilizo el fit guardado\n")
+} else {
+  m0 <- mblogit(cis_fit$y ~ sexo + edad + edu + rec + mes + ccaa, data = cis_fit)
+}
 t_m0 <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 cat("mblogit sin aleatorios:", round(t_m0, 1), "s\n")
 saveRDS(m0, file.path(dir_datos, "fit_mblogit_cis.rds"))
 
-# coeficientes: vector "param~partido" -> matriz params x (J-1), por nombres
-# (el orden de coef() no está garantizado)
+# coeficientes: nombres "partido~param" o "param~partido" según versión
+# -> matriz params x (J-1), por nombres
 coef_mblogit <- function(m, xnames) {
   b <- coef(m)
   dos <- strsplit(names(b), "~", fixed = TRUE)
-  param <- vapply(dos, `[[`, "", 1)
-  part <- vapply(dos, `[[`, "", 2)
+  a1 <- vapply(dos, `[[`, "", 1)
+  a2 <- vapply(dos, `[[`, "", 2)
+  # el lado que casa con partidos es el partido; el otro, la covariable
+  es_part1 <- a1 %in% voto_lv[-1]
+  es_part2 <- a2 %in% voto_lv[-1]
+  if (!all(es_part1 | es_part2)) {
+    cat(
+      "tokens sin casar:",
+      unique(c(a1[!es_part1 & !es_part2], a2[!es_part1 & !es_part2])),
+      "\n"
+    )
+  }
+  part <- ifelse(es_part1, a1, a2)
+  param <- ifelse(es_part1, a2, a1)
   if (anyNA(match(param, xnames))) {
     cat("params sin casar:", unique(param[is.na(match(param, xnames))]), "\n")
   }

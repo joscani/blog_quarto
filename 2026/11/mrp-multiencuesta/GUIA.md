@@ -29,7 +29,7 @@ la postestratificación y el shrinkage bayesiano de las áreas pequeñas).
 | `numpyro/mrp_voto_np.py`, `mrp_part_np.py` | fase 3: los mismos modelos en numpyro/JAX | `voto/part_numpyro_*.npz` |
 | `numpyro/celdas_a_rds.R` | fase 3: los draws de numpyro a formato `post_celdas` | `post_celdas_casa_media_numpyro_part.rds` |
 | `rtmb/ajusta.R` | fase 3: los mismos modelos con RTMB (Laplace; llama a `rtmb/mrp_*_rtmb.R` si faltan los fits) | `fit_rtmb_<modo>_voto/part.rds`, `estim_rtmb_<modo>.rds` |
-| `11_mgcv_cis.R` | fase 3: contraste ML (`mgcv::gam(multinom)`), solo CIS | `estim_gam_cis.rds` |
+| `11_mgcv_cis.R` | fase 3: contraste ML (`mgcv::gam(multinom)`), solo CIS | `estim_gam_cis.rds` (no sale en el post) |
 | `07_post_celdas.R` | fase 3: probabilidad de voto por celda y draw (casa media, último mes). Constantes: `fuente`, `con_part` | `post_celdas_casa_media(_rtmb)_part.rds` |
 | `08_escanos.R` | fase 3: D'Hondt y mayorías sobre el posterior por celda | `escanos_mrp_*.csv/png`, `estim_escanos_mrp*.rds` |
 | `09_mapa_29N.R` | fase 8: mapa de coaliciones del 29-N sobre el posterior de 08 | `escanos_mapa_*` |
@@ -61,19 +61,35 @@ Orden: `01 → 02 → 03 → 06 → (stan | numpyro | rtmb) → 07 → 08 → 09
   variantes de Stan (`mrp_voto.stan` fila a fila; `mrp_voto_vec.stan`,
   álgebra exacta con `log1m_exp`). Probado en modo prueba con
   `mrp_voto.stan`: 0 divergencias y la postestratificación en R cuadra
-  con la de Stan (1,3e-06). Pendiente: portar la máscara a numpyro
-  (`numpyro/mrp_voto_np.py`) y RTMB (`rtmb/mrp_voto_rtmb.R`), reajustar
-  (solo el modelo de voto; el de participación no tiene categorías de
-  partido) y subir los fits a la release. Nota: `celdas_brms.rds` es
+  con la de Stan (1,3e-06). Hecho (2026-10-30): máscara portada a numpyro
+  (`numpyro/mrp_voto_np.py`) y RTMB (`rtmb/mrp_voto_rtmb.R`); reajustado el
+  modelo de voto en producción y fits en la release. Nota: `celdas_brms.rds` es
   ahora a nivel estudio; el fit de brms guardado es de la agregación
-  anterior y no se reajusta. Para más tarde: el recuerdo de las
-  autonómicas de mayo (9,6 % en la serie de octubre) como predictor
-  natural de AA. brms no se reajusta: no puede expresar la
-  verosimilitud condicional y en el post es el intento con `mm()`, no
-  resultados. Para más tarde: el recuerdo de las autonómicas de mayo (9,6 %
-  en la serie de octubre) como predictor natural de AA.
-- Los fits de Stan/brms/numpyro que hay en `datos/` son de la era **sin AA**;
-  solo la cadena RTMB está al día con AA.
+  anterior (sin AA y con UPN dentro de OTROS). Para más tarde: el recuerdo
+  de las autonómicas de mayo (9,6 % en la serie de octubre) como predictor
+  natural de AA. brms no puede expresar la verosimilitud condicional de AA:
+  en el post es el intento con `mm()`, no resultados; se reajusta igualmente
+  con las celdas actuales (ver pendientes).
+- Los fits de Stan/numpyro/RTMB de voto en `datos/` (y en la release) están al
+  día con AA (2026-10-30). El de brms no (ver pendientes).
+
+## Pendientes para el Mac (2026-10-30)
+
+Tras subirlos a la release / commitearlos, hacer `git pull` en el otro PC y
+seguir con el post (II).
+
+1. **brms**: reajustar `05_brms_mm.R` con las celdas actuales (a nivel
+   estudio, UPN como categoría). AA no se puede expresar (verosimilitud
+   condicional): decidir cómo la trata el fit (fundida en OTROS, o fuera)
+   y documentarlo. Subir `mod_brms_nuts.rds` a la release con `--clobber`
+   y, si se regeneran, los `escanos_mrp_brms_*` a git.
+2. **numpyro**: el npz ya está en era AA en la release; no hay que reajustar,
+   solo regenerar (minutos): `numpyro/celdas_a_rds.R` con
+   `datos/voto_numpyro_nuts.npz` → `08_escanos.R` con `fuente <- "numpyro"`
+   → commitear los `escanos_mrp_numpyro_*` nuevos (los de git son del 10-28,
+   sin AA). Si se prefiere reajustar de cero, `numpyro/mrp_voto_np.py --modo nuts`.
+3. Con ambos, cerrar la tabla de igualdad Stan/numpyro/RTMB del post (II)
+   y el texto de la sección brms (ii-modelo.qmd).
 
 ## Datos y releases
 
@@ -83,7 +99,7 @@ Los datos y fits van en la release `mrp-multiencuesta-datos` (no en git;
 `gh release upload mrp-multiencuesta-datos <ficheros> --clobber`. Los scripts
 se enlazan desde `blob/master`.
 
-En la release (2026-10-28): `censo_66600.rds`, `encuestas.rds`,
+En la release (2026-10-30): `censo_66600.rds`, `encuestas.rds`,
 `mun_23j.rds`, `tabla_postestratificacion.rds`, `targets.rds`,
 `targets_prov.rds`, `fit_separado_nuts_voto.rds` (286 MB, ~2 h),
 `fit_separado_nuts_part.rds`, `mod_brms_nuts.rds` (99 MB),
@@ -97,28 +113,26 @@ Los `post_celdas_*` (358-672 MB) no se suben: se regeneran con
   Las encuestas (quién pregunta qué) / Armonización / Población y raking / La
   tabla de postestratificación / Coda.
 - **(II) Por qué no lo hago con un glm** (05, 06, backends, 07, 08,
-  10, 11). Hilo conductor: el multinivel estima en sitios pequeños, lo
+  10). Hilo conductor: el multinivel estima en sitios pequeños, lo
   bayesiano da bien la incertidumbre y la postestratificación corrige el
-  sesgo de muestreo (no el de casa). Arco:
-  1. Por qué multinivel (estimación en celdas pequeñas).
-  2. No hay multinomial en lme4; el truco de Poisson como efectos fijos
-     por celda es demasiado (sin pooling, celdas vacías muertas) y como
-     GLMM Poisson lme4 no lo aguanta. Aquí entra `11_mgcv_cis.R`
-     (`mgcv::gam(multinom)`) como lo más parecido a un GLMM multinomial
-     de catálogo, solo CIS.
-  3. `mclogit` (PQL). DECIDIDO (2026-10-29): probamos a correrlo (si no
-     tira, discusión). Su límite real no es la provincia que falta,
-     sino el reparto de MIC entre 9 provincias (mezcla de probabilidades,
-     no de logits) que ningún GLMM de catálogo maneja.
-  4. `brms` con `mm()` (aproximación en logit).
-  5. La versión real en Stan: agregación exacta de probabilidades. El caso
-     AA (ceros estructurales + encuestas que no la ofrecían) va dentro de
-     esta sección: el cuestionario es parte del modelo.
-  6. numpyro como alternativa rápida (JIT/XLA de toda la verosimilitud;
-     misma geometría, misma posterior, otra implementación).
-  7. Anexo RTMB (Laplace) y comprobaciones de igualdad entre backends.
-  8. De celdas a escaños / Coda: el multinivel corrige el muestreo, no la
-     casa; remite a (III).
+  sesgo de muestreo (no el de casa). DECIDIDO (2026-10-30): `mgcv` y
+  `mclogit` no se mencionan en el post (el script 11 se arregló — la
+  respuesta de la lista de fórmulas solo lleva la primera con `y ~` — pero
+  queda como ejercicio interno; mclogit ni se corre). Arco:
+  1. El problema: las provincias (escaños, celdas ralas, mediana n = 1 en
+     el CIS), por qué multinivel y por qué bayesiano (variabilidad,
+     ejemplos reales de celdas), con la figura de pooling (`07b`).
+  2. More in Common sin provincia: mezcla exacta de probabilidades.
+  3. El cuestionario es parte del modelo: UPN y AA (multinomial
+     condicional).
+  4. Por qué no lo hago con un glm: efectos fijos por celda, truco de
+     Poisson (glmmTMB: Hessian no definida, sd colapsadas), y la razón de
+     fondo: verosimilitudes a medida.
+  5. `brms` con `mm()` (aproximación en logit) y sus dos lecciones.
+  6. El modelo en Stan: especificación, priors, saturación de treedepth.
+  7. Los escaños: D'Hondt draw a draw, mayorías.
+  8. Los tres backends como servicio (no el core): tiempos e igualdad.
+  9. Coda: el multinivel corrige el muestreo, no la casa; remite a (III).
 - **(III)**: insights bayesianos (escenarios de participación, dónde votan
   VOX los jóvenes, el escaño más disputado, mapa 29-N) y los sesgos que la
   postestratificación no corrige: fidelidad por casa (MIC y sus votantes
