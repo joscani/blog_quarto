@@ -64,6 +64,7 @@ t0 <- Sys.time()
 m0 <- mblogit(cis_fit$y ~ sexo + edad + edu + rec + mes + ccaa, data = cis_fit)
 t_m0 <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 cat("mblogit sin aleatorios:", round(t_m0, 1), "s\n")
+saveRDS(m0, file.path(dir_datos, "fit_mblogit_cis.rds"))
 
 # coeficientes: vector "param~partido" -> matriz params x (J-1), por nombres
 # (el orden de coef() no está garantizado)
@@ -72,6 +73,16 @@ coef_mblogit <- function(m, xnames) {
   dos <- strsplit(names(b), "~", fixed = TRUE)
   param <- vapply(dos, `[[`, "", 1)
   part <- vapply(dos, `[[`, "", 2)
+  if (anyNA(match(param, xnames))) {
+    cat("params sin casar:", unique(param[is.na(match(param, xnames))]), "\n")
+  }
+  if (anyNA(match(part, voto_lv[-1]))) {
+    cat(
+      "partidos sin casar:",
+      unique(part[is.na(match(part, voto_lv[-1]))]),
+      "\n"
+    )
+  }
   B <- matrix(
     NA_real_,
     length(xnames),
@@ -85,7 +96,6 @@ coef_mblogit <- function(m, xnames) {
 x_fit <- colnames(model.matrix(~ sexo + edad + edu + rec + mes + ccaa, cis_fit))
 B <- coef_mblogit(m0, x_fit)
 cat("coeficientes:", nrow(B), "params x", ncol(B), "ecuaciones\n")
-saveRDS(m0, file.path(dir_datos, "fit_mblogit_cis.rds"))
 
 # ---- intento 3: con random = ~1|prov ------------------------------------------
 cat("\n== intento 3: random = ~1|prov ==\n")
