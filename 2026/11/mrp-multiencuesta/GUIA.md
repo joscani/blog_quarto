@@ -91,6 +91,62 @@ seguir con el post (II).
 3. Con ambos, cerrar la tabla de igualdad Stan/numpyro/RTMB del post (II)
    y el texto de la sección brms (ii-modelo.qmd).
 
+## Estado del post (II) al 2026-10-31: dónde lo dejo
+
+Hecha una revisión de estilo, claridad y rigor de `ii-modelo.qmd` (aceptada
+entera por José). Renderiza sin errores en el PC de casa. José quizá lo
+reescriba después con su voz: **no reescribir el texto por iniciativa propia**;
+editar solo lo que se pida, con cambios quirúrgicos.
+
+Qué cambió (para no deshacerlo sin querer):
+
+- Supuestos explícitos añadidos: pesos $w_p$ de la mezcla salen de la
+  población (asume que More in Common/Ateneo reparten por provincia como la
+  población dentro de la CCAA y perfil); multinomial condicionada de AA
+  (el votante de AA sin AA en el cuestionario no se va en bloque a otro
+  partido); recuerdo de voto (no se separa no respuesta de mala declaración);
+  la tabla de población es fabricada por raking (4 de 10 cruces los pone la
+  encuesta); máscara a cero exacto además del offset −20.
+- Párrafo nuevo del modelo de participación (binomial sobre "10, seguro que
+  voto", efecto casa sin Ateneo, casa media 60,5 % → calibrada a 70,4 %
+  moviendo el intercepto por draw, draws emparejados por índice).
+- Tabla de mayorías: formato "> 99,9 %" / "< 0,1 %", definición de
+  Investidura, y párrafo de aviso: es la casa media **sin error del
+  consenso**, no comparable con las horquillas del post todo bayesiano.
+- Caption de la tabla de escaños explica `escanos` y `p_mas_esc`.
+- Cifras corregidas contra PLAN.md: Rhat máx Stan 1,017 y ESS mín 466 (antes
+  ponía 1,008, que es de numpyro); 120 comparaciones = 5 casas × 12 partidos
+  × con/sin participación; `max_treedepth = 8` es elección propia (255 pasos
+  es ese tope, no el de Stan por defecto); la ablación descrita como se hizo
+  (sin mezcla; sd de prov, ccaa_rec, casa_rec a 0 una a una; todas a su
+  mediana; cribados 200+200); "subir max_treedepth no compra nada" pasa a
+  deducción no probada; prior predictivo 22 % (no 20 %); Stan participación
+  con 1 hilo.
+- RTMB: Laplace (no "analítico") y las muestras dejan las sd fijas en la moda.
+- "7.817 celdas vacías" estaba escrito a mano y no cuadraba: ahora se calcula
+  en el chunk `soria` (`n_celdas_vacias`, celdas con población sin ninguna
+  entrevista con provincia) y da 6.781. "12.300 celdas" también es inline.
+  Si José confirma otra definición, ajustar.
+- Quitada la frase que justificaba interacciones que el modelo no tiene
+  (provincia × recuerdo, edad × estudios).
+- Estructura: "Tres backends, un modelo" es ahora sección (6), con
+  subsección "El árbol de NUTS, siempre a tope", **antes** de la Coda
+  (reescrita). Después solo queda "Apéndice: cómo se ejecuta".
+- Referencias: "post de octubre" ambiguo sustituido por "post de raking" o
+  "post de todo bayesiano" con enlace.
+
+Lo que sigue pendiente en el post (II):
+
+1. Lo de la sección "Pendientes para el Mac" de abajo (brms y numpyro en era
+   AA) y el `<!-- TODO: tabla de igualdad Stan/numpyro/RTMB -->` de la
+   sección 6.
+2. `<!-- TODO: pista del post -->` en el callout Listening.
+3. Enlace de la tercera parte vacío (`[tercera parte]()`) en la Coda.
+4. Al renderizar en el Mac, `datos/datos_pooling.rds` y
+   `datos/datos_postestrat.rds` están en .gitignore: el post los regenera
+   con `07b_pooling_datos.R` y `07c_postestrat_datos.R` si faltan (necesitan
+   los datos de la release).
+
 ## Datos y releases
 
 Los datos y fits van en la release `mrp-multiencuesta-datos` (no en git;

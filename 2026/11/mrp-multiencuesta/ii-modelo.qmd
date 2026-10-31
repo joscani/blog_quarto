@@ -2,14 +2,14 @@
 title: "MRP con varias encuestas (II): el modelo, de las provincias a los escaños"
 date: '2026-10-30'
 date-modified: today
-draft: true
+draft: false
 categories:
   - "2026"
   - estadística
   - encuestas electorales
   - MRP
   - R
-description: 'MRP con las encuestas del 29-N, segunda parte: por qué el escaño se decide en la provincia, cómo entra en el modelo una encuesta sin provincia y un partido que solo se pregunta en parte del país, y por qué ningún glm de catálogo puede con esto.'
+description: 'MRP con las encuestas del 29-N, segunda parte: por qué el escaño3 se decide en la provincia, cómo entra en el modelo una encuesta sin provincia y un partido que solo se pregunta en parte del país, y por qué esto pide escribir la verosimilitud a mano.'
 execute:
   message: false
   warning: false
@@ -49,27 +49,50 @@ Dato), armonizamos sus variables y fabricamos con raking la tabla de
 postestratificación: provincia × sexo × edad × estudios × recuerdo del 23-J,
 calibrada con el Censo y los resultados del 23-J por municipio.
 
-Esta parte es el modelo, y arranca por el problema que lo dicta: los escaños
-del Congreso se reparten **por provincia**, así que una estimación solo
-nacional no vale — y a la escala provincial las encuestas se quedan muy
-finas. Después vienen dos decisiones que el cuestionario impone (UPN y
-Adelante Andalucía, que solo algunos preguntan), el repaso por lo que puede
-el catálogo de R —spoiler: nada expresa este modelo— y la versión final en
-Stan, con dos backends más (numpyro y RTMB) que ajustan lo mismo en una
-fracción del tiempo.
+El Congreso tiene 350 escaños repartidos entre 52 circunscripciones
+provinciales (RD 806/2026: Madrid gana un escaño, Cádiz pierde uno). D'Hondt
+trabaja con el **porcentaje de voto provincial**: quien quiere escaños tiene
+que estimar voto por provincia, no nacional.
 
-El hilo estadístico, para no perderse:
+Cuando una empresa encuestadora o el CIS da estimaciones de escaños a partir
+de su estimación de voto, lo que se suele hacer es utilizar un método de
+proyección de escaños, partiendo de los porcentajes nacionales o, si acaso, a
+nivel de CCAA. Para eso se tiene en cuenta cómo fue el reparto provincial en
+elecciones anteriores; ya lo conté en el
+[post de todo bayesiano](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html). La
+razón es sencilla: la mayoría de las encuestadoras no tiene suficientes
+entrevistas por provincia, y algunas ni siquiera informan de la provincia del
+entrevistado, se quedan en la CCAA.
 
-- el **multinivel** es lo que permite estimar en celdas pequeñas: encoge las
-  celdas ralas hacia las grandes;
-- la **postestratificación** corrige el sesgo de muestreo de las encuestas;
-- lo **bayesiano** da la incertidumbre bien (posterior completa, no
-  asintótica), y D'Hondt sobre 1.000 draws la convierte en distribución de
-  escaños.
+Pero, ¿y si juntamos varios microdatos de encuestas para tener más
+entrevistados en las provincias pequeñas? Y no solo eso: ¿y la combinación
+Ceuta, estudios altos, de 30 a 34 años y que en 2023 votó al PSOE? Lo normal es
+que, incluso tras juntar microdatos, tengas muy pocos entrevistados en esa
+combinación, puede que ninguno.
 
-Y lo que nada de esto corrige: el sesgo de la casa. Eso, y los insights
-bayesianos del posterior, van en la [tercera parte]().
-<!-- TODO: enlace a (III) cuando exista -->
+Un modelo MRP, Multilevel Regression and Poststratification, pretende resolver
+varios de estos problemas:
+
+- el **multinivel** es lo que permite estimar en celdas pequeñas: utiliza toda
+  la información disponible y mezcla, con partial pooling, la información
+  particular y la general;
+- la **postestratificación** corrige que la muestra no se parezca a la
+  población, al menos en las variables por las que postestratificas;
+- hacer el modelo de forma **bayesiana** da la incertidumbre del modelo
+  entera (la posterior, no un error estándar asintótico), y D'Hondt sobre
+  1.000 draws la convierte en distribución de escaños.
+
+Juntar encuestas, eso sí, trae sus propios problemas. En este post van tres, y
+cada uno añade una pieza al modelo:
+
+1. **Celdas casi vacías**: incluso con nueve encuestas, la mayoría de las
+   combinaciones tiene una entrevista o ninguna.
+2. **Dos encuestas sin provincia**: More in Common y Ateneo del Dato solo dan
+   la CCAA.
+3. **Una variable respuesta que cambia según la encuesta**: no todas preguntan por los mismos
+   partidos.
+
+Y con eso ya se pueden sacar escaños.
 
 ```{r setup}
 suppressPackageStartupMessages({
@@ -81,290 +104,547 @@ suppressPackageStartupMessages({
 
 dir_proy <- here::here("2026/11/mrp-multiencuesta")
 dir_datos <- file.path(dir_proy, "datos")
+read_csv_here <- function(f) read.csv(file.path(dir_proy, f))
+num <- function(x, d = 0) format(round(x, d), big.mark = ".", decimal.mark = ",", nsmall = d)
+
+celdas <- readRDS(file.path(dir_datos, "celdas_brms.rds"))
+provincias <- readRDS(file.path(dir_datos, "estim_escanos_mrp.rds"))$prov_ref |>
+  transmute(prov = as.character(as.integer(codigo_provincia)), provincia)
 ```
 
-## El problema: las provincias
+## Problema 1: celdas casi vacías
 
-El Congreso tiene 350 escaños repartidos entre 52 circunscripciones
-provinciales (RD 806/2026: Madrid gana un escaño, Cádiz pierde uno). D'Hondt
-trabaja con el **share provincial**: quien quiere escaños tiene que estimar
-voto por provincia, no nacional.
+Empecemos por los datos. Las nueve encuestas juntas suman
+`r num(sum(celdas$n))` entrevistas con intención de voto válida, que no está
+nada mal. Pero el escaño se decide en la provincia, así que miremos cuántas
+caen en cada una:
 
-El problema es que la provincia es la dimensión donde las encuestas tienen
-menos carne. En el CIS de octubre, con 5.024 entrevistas, hay provincias con
-pocas decenas; y la celda donde vive cada encuestado es provincia × sexo ×
-edad × estudios × recuerdo del 23-J: **12.300 celdas de población** y 14.717
-filas de celdas con datos en las nueve encuestas juntas. La mayoría de las
-celdas tienen menos de tres entrevistas — en el CIS, la **mediana es una
-entrevista** — y 7.817 de las 12.300 celdas no tienen ninguna.
+```{r prov-n}
+#| fig-height: 8
+n_prov <- celdas |>
+  filter(!is.na(prov)) |>
+  summarise(n = sum(n), .by = prov) |>
+  mutate(prov = as.character(prov)) |>
+  left_join(provincias, by = "prov")
+n_soria <- n_prov$n[n_prov$prov == "42"]
+n_madrid <- n_prov$n[n_prov$prov == "28"]
 
-En una celda grande el glm más simple basta. En una rala — dos entrevistas,
-o ninguna — la proporción cruda es ruido o directamente no existe. La salida
-clásica sería un efecto fijo por celda, pero:
+ggplot(n_prov, aes(n, reorder(provincia, n))) +
+  geom_col(aes(fill = prov == "42"), width = 0.75, show.legend = FALSE) +
+  geom_text(aes(label = num(n)), hjust = -0.15, size = 2.8) +
+  scale_fill_manual(values = c(`FALSE` = "grey60", `TRUE` = "#d95f02")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    x = "entrevistas con voto válido (nueve encuestas)", y = NULL,
+    caption = "Sin las filas de More in Common y Ateneo del Dato que no tienen provincia."
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(panel.grid.major.y = element_blank())
+```
 
-- con efectos fijos por celda no hay pooling: cada celda aprende solo de sí
-  misma, y las vacías quedan sin estimación;
-- el modelo real tiene estructura: el efecto de recordar votar a VOX no es
-  independiente de la provincia, ni el efecto de la edad del de los estudios.
+Madrid tiene `r num(n_madrid)`; Soria, `r n_soria`. Y para el modelo Soria no
+es una provincia, son muchas celdas: sexo × edad × estudios × recuerdo del 23-J.
+Así se reparten esas `r n_soria` entrevistas entre el recuerdo y la edad, y
+eso antes de partir además por sexo y estudios:
 
-El multinivel pone efectos aleatorios con una distribución común: las celdas
-ralas se encogen hacia la media del grupo (pooling parcial) y las vacías se
-predicen con el prior. Dos ejemplos reales del ajuste:
+```{r soria}
+soria <- celdas |> filter(prov == "42")
+tabla_pob <- readRDS(file.path(dir_datos, "tabla_post_prov.rds"))
+pob_soria <- tabla_pob["42", , , , ]
+# recuerdos con población en Soria (ERC, PNV... no existen allí)
+rec_soria <- names(which(apply(pob_soria, "rec", sum) > 0))
 
-- **Las Palmas, hombre de 25-34, estudios medios, recuerda votar PP.** El
-  CIS tiene 2 entrevistas en esa celda; las dos dicen que votan a VOX. La
-  cruda es un 100 % que nadie publicaría. El modelo dice 43,9 % con IC90
-  [35,6, 52,4]: los dos datos tiran al alza (con n = 2, 2/2 es evidencia
-  fuerte), pero el encogimiento hacia el contexto — VOX gana entre hombres
-  jóvenes, no tanto en Canarias — los baja del 100. Con el mismo perfil y
-  recuerdo PSOE (1 entrevista, también a VOX), el modelo dice 13,1 %:
-  la fidelidad de los votantes del PSOE es otra.
-- **BILDU fuera de su territorio.** Un hombre de 21-24 con estudios altos en
-  Álava cuyo recuerdo es SUMAR y cuya única entrevista en la celda dice
-  BILDU: cruda 100 %, modelo 7,4 % [2,7, 14,7]. El mismo caso en Navarra
-  (45-54, estudios bajos, recuerdo BILDU): cruda 100 %, modelo 80,2 %
-  [63,8, 91,8]. La misma cruda, territorios distintos: es el pooling, que
-  sabe que BILDU vive en Euskadi y Navarra y en el resto casi no existe.
+soria |>
+  summarise(n = sum(n), .by = c(rec, edad)) |>
+  mutate(rec = as.character(rec)) |>
+  complete(rec = rec_soria, edad) |>
+  mutate(rec = factor(rec, levels = rec_soria)) |>
+  pivot_wider(names_from = edad, values_from = n, names_sort = TRUE) |>
+  arrange(rec) |>
+  mutate(rec = as.character(rec)) |>
+  gt(rowname_col = "rec") |>
+  sub_missing(missing_text = "·") |>
+  tab_stubhead("recuerdo 23-J") |>
+  tab_caption("Entrevistas de Soria por recuerdo y edad (nueve encuestas). Un punto: ninguna.")
+
+soria_celdas <- soria |> summarise(n = sum(n), .by = c(sexo, edad, edu, rec))
+n_celdas_soria <- sum(pob_soria > 0)
+n_celdas_total <- sum(tabla_pob > 0)
+
+# celdas con población y sin ninguna entrevista con provincia, en toda España
+claves_celda <- c("prov", "sexo", "edad", "edu", "rec")
+con_datos <- celdas |>
+  filter(!is.na(prov)) |>
+  distinct(across(all_of(claves_celda))) |>
+  mutate(across(everything(), as.character), con_datos = TRUE)
+n_celdas_vacias <- as.data.frame.table(tabla_pob, responseName = "N") |>
+  filter(N > 0) |>
+  mutate(across(all_of(claves_celda), as.character)) |>
+  left_join(con_datos, by = claves_celda) |>
+  summarise(sum(is.na(con_datos))) |>
+  pull()
+```
+
+En la tabla de postestratificación Soria tiene `r n_celdas_soria` celdas con
+población. De ellas, `r nrow(soria_celdas)` tienen alguna entrevista y
+`r sum(soria_celdas$n == 1)` solo una. Las otras
+`r n_celdas_soria - nrow(soria_celdas)` están vacías. En toda España son
+`r num(n_celdas_total)` celdas, y Soria no es la excepción: es lo normal en
+cuanto sales de Madrid, Barcelona y Valencia.
+
+En estos casos la proporción cruda, un group by y una media, no tiene
+sentido, y un modelo que trate cada factor por su lado tampoco es capaz de
+aprovechar toda la información. Como siempre dice Carlos, quien no tiene en
+cuenta la estructura palma pasta. Y aquí hay estructura: el efecto de haber
+votado a VOX no es el mismo en Andalucía que en Cataluña (eso sí lo meto en el
+modelo, CCAA × recuerdo), y lo que se sabe de la edad, los estudios o la
+provincia en unas celdas sirve para las demás.
+
+
+Dos ejemplos reales del ajuste:
+
+- **Las Palmas, hombre de 25-34, estudios medios, recuerda votar PP.** El CIS
+  tiene 2 entrevistas en esa celda y las dos dicen que votan a VOX. El
+  porcentaje bruto es un 100 % que nadie creería. El modelo dice 43,9 %, con
+  IC90 [35,6, 52,4]: ha visto que VOX gana entre los hombres jóvenes, pero no
+  tanto en Canarias, y los baja del 100. Con el mismo perfil y recuerdo PSOE
+  (1 entrevista, también a VOX), el modelo dice 13,1 %: la fidelidad de los
+  votantes del PSOE es otra.
+- **Segovia, mujer de 65+, estudios bajos, recuerda votar PSOE.** Su única
+  entrevista dice que no vota al PSOE: bruto 0 %, modelo 90,4 % [87,8, 92,8].
+  La fidelidad de las socialistas mayores pesa más que una entrevista.
+
+La figura sigue a diez celdas, de menos a más entrevistas sumando las nueve
+encuestas. En gris, la proporción cruda con su intervalo binomial; en color, la
+estimación del modelo con su IC90. Con una o dos entrevistas la cruda no dice
+nada (el intervalo va de casi 0 a 100) y el modelo se va adonde dice el resto
+de la estructura; según crecen las entrevistas, los dos intervalos se
+estrechan y se acercan.
 
 ```{r pooling}
+#| fig-height: 6
 if (!file.exists(file.path(dir_datos, "datos_pooling.rds"))) {
   source(here::here("2026/11/mrp-multiencuesta/07b_pooling_datos.R"))
 }
 d_pool <- readRDS(file.path(dir_datos, "datos_pooling.rds"))
+claves <- c("prov", "sexo", "edad", "edu", "rec")
 
-bd <- d_pool |> filter(partido == "BILDU", n > 0)
-ejemplos <- bd |>
-  filter((prov == "1" & sexo == "H" & edad == "21-24" & edu == "alta" & rec == "SUMAR") |
-         (prov == "31" & sexo == "H" & edad == "45-54" & edu == "baja" & rec == "BILDU")) |>
-  mutate(etq = ifelse(prov == "1", "Álava: 1 entrevista",
-                      "Navarra: 1 entrevista"))
+# cruda con las nueve encuestas (las filas sin provincia no cuentan)
+cruda9 <- celdas |>
+  filter(!is.na(prov)) |>
+  summarise(across(c(PP, PSOE, VOX, n), sum), .by = all_of(claves)) |>
+  pivot_longer(c(PP, PSOE, VOX), names_to = "partido", values_to = "y")
 
-ggplot(bd, aes(n, 100 * media)) +
-  geom_point(aes(color = 100 * cruda), alpha = 0.4, size = 1.2) +
-  scale_color_viridis_c(direction = -1, name = "% cruda") +
-  geom_hline(yintercept = 100 * mean(bd$media), linetype = "dashed", color = "grey40") +
-  geom_point(data = ejemplos, aes(n, 100 * media), shape = 1, size = 4, stroke = 1.2, color = "black") +
-  geom_label(
-    data = ejemplos, aes(label = etq),
-    nudge_x = c(4, 4), nudge_y = c(6, 6), size = 3, label.size = 0, alpha = 0.9
-  ) +
-  scale_x_continuous(trans = "log1p", breaks = c(1, 2, 5, 10, 30, 60)) +
+celdas_fig <- tribble(
+  ~partido, ~prov, ~sexo, ~edad,   ~edu,    ~rec,
+  "VOX",    "35",  "H",   "25-34", "media", "PP",
+  "VOX",    "35",  "H",   "25-34", "media", "PSOE",
+  "PSOE",   "40",  "M",   "65+",   "baja",  "PSOE",
+  "PP",     "28",  "M",   "21-24", "media", "PP",
+  "VOX",    "8",   "M",   "35-44", "alta",  "PP",
+  "PSOE",   "26",  "H",   "55-64", "alta",  "PSOE",
+  "VOX",    "30",  "M",   "35-44", "alta",  "PP",
+  "PP",     "46",  "M",   "65+",   "alta",  "PP",
+  "VOX",    "28",  "H",   "25-34", "alta",  "PP",
+  "PP",     "28",  "H",   "55-64", "alta",  "PP"
+)
+
+a_chr <- \(d) mutate(d, across(all_of(claves), as.character))
+
+fig <- celdas_fig |>
+  left_join(a_chr(cruda9), by = c("partido", claves)) |>
+  left_join(a_chr(d_pool) |> select(all_of(c("partido", claves)), media, q05, q95),
+            by = c("partido", claves)) |>
+  left_join(provincias, by = "prov") |>
+  rowwise() |>
+  mutate(
+    cp_lo = binom.test(y, n, conf.level = 0.9)$conf.int[1],
+    cp_hi = binom.test(y, n, conf.level = 0.9)$conf.int[2]
+  ) |>
+  ungroup() |>
+  mutate(
+    estudios = c(baja = "bajos", media = "medios", alta = "altos")[edu],
+    etq = sprintf("%s · %s %s · estudios %s · rec. %s → %s  (n = %d)",
+                  provincia, sexo, edad, estudios, rec, partido, n),
+    etq = reorder(etq, -n)
+  )
+
+ggplot(fig, aes(y = etq)) +
+  geom_linerange(aes(xmin = 100 * cp_lo, xmax = 100 * cp_hi),
+                 color = "grey70", linewidth = 2.5,
+                 position = position_nudge(y = 0.15)) +
+  geom_point(aes(x = 100 * y / n), color = "grey40", size = 2.5,
+             position = position_nudge(y = 0.15)) +
+  geom_linerange(aes(xmin = 100 * q05, xmax = 100 * q95),
+                 color = "#d95f02", linewidth = 2.5,
+                 position = position_nudge(y = -0.15)) +
+  geom_point(aes(x = 100 * media), color = "#a63603", size = 2.5,
+             position = position_nudge(y = -0.15)) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
+                     labels = \(x) paste0(x, " %")) +
   labs(
-    x = "entrevistas del CIS en la celda (escala log)",
-    y = "share de BILDU estimada (%)",
-    tag = "Cada punto es una celda provincia × sexo × edad × estudios × recuerdo; color: proporción cruda del CIS."
+    x = "probabilidad de votar al partido", y = NULL,
+    caption = "Gris: proporción cruda (nueve encuestas) e IC90 de Clopper-Pearson. Naranja: modelo, media e IC90 (casa media).\nLa cruda es de casas concretas y el modelo, de la casa media: parte de la distancia puede ser efecto casa."
   ) +
   theme_minimal() +
-  theme(plot.tag.position = "bottomleft", plot.tag.size = 8)
+  theme(panel.grid.major.y = element_blank())
 ```
 
-### Por qué bayesiano: la variabilidad
+### Cuánto sabe el modelo
 
-El multinivel encoge; el bayesiano además dice **cuánto sabe**. En la celda
-de Las Palmas de arriba, el intervalo binomial de un 2/2 es [16 %, 100 %]
-(Clopper-Pearson): la cruda es inútil y su incertidumbre, honesta pero
-ciega — no usa nada de lo que se sabe sobre VOX, Canarias o la fidelidad de
-los votantes del PP. El modelo devuelve [35,6, 52,4]: más estrecho porque
-usa la estructura, y a la vez creíble, porque no finge la precisión de una
-celda con mil entrevistas.
+El multinivel encoge, y el bayesiano además te dice **cuánto sabe**. El 2/2
+de Las Palmas tiene un IC90 de Clopper-Pearson de [22 %, 100 %]. Es honesto,
+pero no usa nada de lo que sabemos de VOX, de Canarias o de lo fieles que son
+los votantes del PP. El modelo dice [35,6, 52,4]: más estrecho porque usa esa
+estructura, pero tampoco se cree que tenga mil entrevistas.
 
-En las 7.817 celdas vacías, el ajuste de efectos fijos no existe; el modelo
-predice con lo que sabe del contexto (para BILDU: alto en Álava y Navarra,
-casi 0 en el resto). Y esa incertidumbre no se queda en la celda: cada draw
-del posterior lleva su reparto provincial completo, y D'Hondt — una función
-discreta y escalonada — lo convierte en una distribución de escaños y
-probabilidades de mayoría. Con estimaciones puntuales y errores estándar
-asintóticos, esa propagación no tiene una respuesta limpia; con draws, es
-el subproducto natural.
+En las `r num(n_celdas_vacias)` celdas con población y sin ninguna entrevista
+no hay cruda que calcular; el modelo predice con lo que sabe del contexto
+(para BILDU: alto en Álava y Navarra, casi 0 en el resto). Y esa
+incertidumbre no se queda en la celda: cada draw de la posterior lleva su
+reparto provincial completo, y D'Hondt, una función discreta y escalonada, lo
+convierte en una distribución de escaños. Con draws esa propagación es casi
+gratis. También se puede simular de una normal asintótica, que es lo que hace
+RTMB más abajo, pero hay que hacerlo a propósito.
 
-Lo que postestratifica es la tabla: para cada draw de la posterior, la
-probabilidad de voto en cada celda se pondera con la población real de la
-celda. El modelo corrige el muestreo (encuestas que sobre-representan
-recuerdos de PSOE, jóvenes...), no el sesgo de la casa; de eso va la tercera
-parte.
+Así que con pocas entrevistas el modelo no se vuelve loco, y cuando no sabe,
+lo dice en la anchura del intervalo.
 
-### More in Common no tiene provincia
+## Problema 2: encuestas sin provincia
 
-Hay un problema extra: More in Common **no pregunta provincia** (la conocemos
-en las 9 CCAA uniprovinciales; en el resto, nada). Descartar sus 6.968
-entrevistas sería tirar un tercio de los datos; asignarle una provincia
-inventada, peor.
+Hasta aquí, todo eso supone que sé de qué provincia es cada entrevistado.
+Pues no siempre. Otra vez, primero los datos. More in Common y Ateneo del Dato **no preguntan
+la provincia**: se sabe en las CCAA uniprovinciales y en el resto, nada.
 
-La solución estadística es tratar sus filas como lo que son: observaciones
-del **agregado**. Para una fila de More in Common en la CCAA $c$, la
-probabilidad de votar al partido $j$ es
+```{r sin-prov}
+sin_prov <- celdas |>
+  filter(casa %in% c("More in Common", "Ateneo del Dato")) |>
+  mutate(provincia = if_else(is.na(prov), "sin provincia", "con provincia")) |>
+  summarise(n = sum(n), .by = c(ccaa, casa, provincia))
+n_sin_prov <- sum(sin_prov$n[sin_prov$provincia == "sin provincia"])
 
-$$
-P(j) = \sum_{p \in c} w_p \cdot \mathrm{softmax}(\eta_p)_j ,
-$$
-
-la media de las probabilidades provinciales, con los pesos $w_p$ de la tabla
-de postestratificación. Es la misma construcción del
-[post del 29-N completo](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html)
-con las encuestas que solo publican agregados; aquí va fila a fila dentro de
-la verosimilitud (hasta 9 softmax por fila en Castilla y León).
-
-La forma "fácil" — promediar los logits y hacer la softmax de la media — no
-es lo mismo: la mezcla de probabilidades reparte la masa entre provincias;
-la softmax del logit medio la concentra. La diferencia crece con la
-dispersión de los efectos de provincia, que en partidos regionales es
-grande. Volveremos a esto con `brms` y `mm()`.
-
-## El cuestionario es parte del modelo
-
-Los ceros del modelo no son todos ruido. Dos casos:
-
-**UPN solo compite en Navarra.** Fuera de Navarra sus menciones son cero por
-construcción, no porque nadie quiera votarla. Un modelo que no lo sepa
-intentará explicar los ceros de las otras 51 provincias con efectos
-espurios. En el post de octubre UPN iba fundida en OTROS y distorsionaba el
-quinto escaño navarro: su ~20 % navarro se repartía mal. Aquí es categoría
-propia.
-
-**AA (Adelante Andalucía) solo la preguntan CIS y el flash de 40dB.** Las
-otras encuestas no ofrecían esa opción en el cuestionario: sus ceros de AA
-son de **diseño**, no evidencia de que nadie vote a AA. Si la verosimilitud
-los cuenta como datos, AA queda aplastada por ceros que no significan nada.
-
-La corrección es la multinomial condicional: para las filas de encuestas que
-no ofrecían AA, la verosimilitud normaliza excluyéndola,
-
-$$
-\mathcal{L} = \prod_{j \neq AA} \left( \frac{\exp(\eta_j)}{\sum_{k \neq AA} \exp(\eta_k)} \right)^{y_j}.
-$$
-
-Es decir: esas encuestas informan sobre el reparto *dentro del menú que
-ofrecieron*, y AA queda identificada por las que sí la ofrecieron (6
-menciones del flash + las del CIS). En las celdas del modelo, la máscara del
-menú es constante por fila — por eso las celdas de voto van a nivel de
-estudio y no de casa.
-
-Lo mismo vale, mutatis mutandis, para los ceros de UPN fuera de Navarra y
-para los partidos regionales con offset en su territorio.
-
-## Por qué no lo hago con un glm
-
-Con el problema claro, la pregunta del título: ¿hace falta escribir un
-modelo a mano? El catálogo de R tiene aproximaciones a un "GLMM multinomial"
-y ninguna llega. Lo recorro en orden de cercanía.
-
-**El truco de Poisson.** No hay multinomial en lme4, pero una multinomial se
-puede escribir como Poissones condicionadas a la fila, con un intercepto por
-categoría que absorbe el tamaño de fila. Dos versiones:
-
-- como **efectos fijos por celda**: 12.300 celdas × 13 predictores por
-  categoría. Sin pooling y con celdas vacías muertas: exactamente lo que el
-  multinivel venía a arreglar. Descartado sin ajustar.
-- como **GLMM Poisson** (efectos aleatorios de verdad): lo intenté con
-  `glmmTMB`. Corre — 22,6 minutos sobre 65.042 filas en formato largo — pero
-  con dos heridas: el Hessian sale no definido positivo (los errores
-  estándar no son de fiar) y las sd de los efectos aleatorios colapsan:
-  39 de 99 quedan por debajo de 0,01, varias clavadas en 0, con `NaN` en la
-  matriz de covarianza de los efectos.
-
-```{r glmmtmb}
-est_gmb <- readRDS(file.path(dir_datos, "estim_glmmtmb.rds"))
-est_gmb |>
-  gt() |>
-  tab_caption("glmmTMB con el truco de Poisson: intento de la era sin AA ni UPN, no es el modelo final.")
+sin_prov |>
+  pivot_wider(names_from = casa, values_from = n, values_fill = 0) |>
+  arrange(provincia, desc(`More in Common`)) |>
+  mutate(ccaa = as.character(ccaa)) |>
+  gt(rowname_col = "ccaa", groupname_col = "provincia") |>
+  tab_caption("Entrevistas con voto válido de More in Common y Ateneo del Dato, por CCAA.")
 ```
 
-Y aunque convergiera bien, no hay posterior (punto sin incertidumbre), ni
-priors, ni mezcla de provincias, ni verosimilitud condicional.
+Son `r num(n_sin_prov)` entrevistas sin provincia, un
+`r num(100 * n_sin_prov / sum(celdas$n))` % del total, en Andalucía, Cataluña,
+la Comunitat Valenciana… justo las CCAA con más escaños. Las opciones
+habituales son dos: quitarlas, y tirar uno de cada seis datos, o asignarles una
+provincia según la población, que es inventarse lo que la encuesta no dice.
 
-La razón de fondo está en lo que el modelo necesita y ningún paquete
-expresa: la **mezcla de probabilidades** de More in Common y la
-**multinomial condicional** de AA son verosimilitudes a medida, y esas solo
-las escribe uno. La aproximación más cercana que queda en pie de catálogo
-es `brms`, y tiene sus propios límites.
+Como en el
+[post de todo bayesiano](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html)
+con las encuestas que publicaban partidos agrupados, el bayesiano permite una
+tercera vía: meter cada encuesta con la información que aporta, ni más ni
+menos. Un entrevistado de More in Common en Castilla y León dice algo sobre el
+voto en Castilla y León, aunque no sepamos de qué provincia es.
 
-## La aproximación en logit: brms con mm()
+### Primer intento: brms con mm()
 
-La vía `brms` merece su sección porque es lo que se suele recomendar para
-MRP, y porque el intento enseñó dos cosas que no están en la documentación.
-
-La fórmula con multi-membership asigna a More in Common una mezcla de
-efectos de provincia:
+Lo primero que probé fue `brms`, que es lo que se suele recomendar para MRP.
+En el [post de raking](https://muestrear-no-es-pecado.es/2026/10/mrp-raking/)
+lo usé y fue bien con una encuesta, así que tocaba ver si aguantaba nueve.
+Tiene algo que se parece mucho a lo que hace falta, el multi-membership, que
+asigna a cada fila sin provincia una mezcla de efectos de provincia,
 
 ```r
 (1 | mm(p1, p2, ..., p9, weights = cbind(w1, w2, ..., w9)))
 ```
 
-Con pesos 1 en la provincia propia para las encuestas que la tienen. Es
-correcto como *aproximación*, pero aproxima donde toca: promedia en la
-escala logit, $\mathrm{softmax}(\sum_p w_p\, \eta_p)$, cuando lo exacto es la
-mezcla de probabilidades $\sum_p w_p \cdot \mathrm{softmax}(\eta_p)$. Para
-los partidos con efecto provincial disperso (los regionales), la
-diferencia es material. Y la condicional de AA no la puede expresar: su
-verosimilitud es de catálogo.
+con peso 1 en la provincia propia para las encuestas que la tienen. Parece lo
+mismo, pero no lo es: `mm()` promedia en la escala del logit,
+$\mathrm{softmax}(\sum_p w_p\, \eta_p)$, y lo que pide el problema es la
+mezcla de probabilidades, $\sum_p w_p \cdot \mathrm{softmax}(\eta_p)$.
 
-Dos lecciones del intento (que está en
-[`05_brms_mm.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/05_brms_mm.R)):
+Se ve con un caso real. En Canarias, More in Common no dice si el entrevistado
+es de Las Palmas o de Santa Cruz de Tenerife, y CC no pesa lo mismo en las dos.
+Con los resultados del 23-J:
 
-1. **El epred tiene que llevar todos los términos aleatorios.** Mi primera
-   postestratificación evaluaba `posterior_epred` con `re_formula` sin los
-   términos de casa. En la parametrización de brms (interceptos libres por
-   categoría, sin centrar) el modo común entre intercepto y efectos solo se
-   anula con *todos* los términos: sin los de casa, la sd del predictor de
-   celda pasa de 0,20 a 0,60 y la sd del agregado nacional de PSOE de 0,64 a
-   2,10. D'Hondt amplifica, y los intervalos de escaños salían 2-3 veces más
-   anchos que los de Stan. No era el modelo ni el sampler: era la
-   especificación del epred.
-2. **`file_refit = "on_change"`.** Con el valor por defecto (`"never"`),
-   brms recarga el `.rds` guardado aunque cambien la fórmula, los datos o
-   los priors, sin avisar. Un ajuste "nuevo" que es el viejo.
+```{r juguete-mm}
+softmax <- function(x) exp(x) / sum(exp(x))
 
-El ajuste completo (4 cadenas, 168 minutos) da estimaciones razonables y sus
-escaños están en la tabla de abajo. Se queda como el intento, no como el
-resultado; en el post cumple el papel de "lo que pasa si dejas que el
-paquete elija el modelo".
+mun <- readRDS(file.path(dir_datos, "mun_23j.rds")) |>
+  filter(codigo_provincia %in% c("35", "38"))
+validos <- mun |>
+  distinct(codigo_provincia, codigo_municipio, votos_candidaturas, votos_blancos) |>
+  group_by(codigo_provincia) |>
+  summarise(validos = sum(votos_candidaturas + votos_blancos))
+canarias <- mun |>
+  mutate(g = case_when(
+    siglas == "CCa" ~ "CC",
+    siglas %in% c("PP", "PSOE") ~ "PP+PSOE",
+    TRUE ~ "resto"
+  )) |>
+  group_by(codigo_provincia, g) |>
+  summarise(votos = sum(votos), .groups = "drop") |>
+  left_join(validos, by = "codigo_provincia") |>
+  pivot_wider(names_from = g, values_from = votos) |>
+  mutate(resto = validos - CC - `PP+PSOE`, w = validos / sum(validos))
 
-```{r brms}
-read_csv_here <- function(f) read.csv(file.path(dir_proy, f))
-res_brms <- read_csv_here("escanos_mrp_brms_resumen.csv")
-res_brms |>
-  mutate(across(where(is.numeric), ~ round(.x, 1))) |>
-  gt() |>
-  tab_caption("Escaños con el ajuste de brms (era sin AA ni UPN como categoría; sin participación: brms no tiene modelo de participación).")
+p <- as.matrix(canarias[, c("CC", "PP+PSOE", "resto")]) / canarias$validos
+w <- canarias$w
+
+rbind(
+  `Las Palmas` = p[1, ],
+  `S. C. de Tenerife` = p[2, ],
+  `mezcla de probabilidades` = colSums(w * p),
+  `softmax del logit medio (mm)` = softmax(colSums(w * log(p)))
+) |>
+  (\(x) round(100 * x, 1))()
 ```
+
+Un votante canario de More in Common vota a CC con probabilidad 11,3 %, la
+media ponderada del 6,3 % de Las Palmas y el 16,6 % de Tenerife. La versión
+en logit dice 10,4 %: el promedio de logits tira hacia la provincia donde el
+partido es pequeño. Aquí es un punto, pero la diferencia crece cuanto más
+distintas son las provincias, y en las celdas, donde las provincias se
+separan más que en el agregado, puede ser mayor.
+
+### Bien hecho: factorizar en Stan
+
+La forma correcta sale de la ley de la probabilidad total. Si no sé la
+provincia, la probabilidad de que un entrevistado de la CCAA $c$ vote al
+partido $j$ es la suma, provincia a provincia, de la probabilidad de ser de esa
+provincia por la de votar a $j$ siendo de ella:
+
+$$
+P(j \mid c) = \sum_{p \in c} \underbrace{P(p \mid c)}_{w_p} \cdot
+\underbrace{P(j \mid p)}_{\mathrm{softmax}(\eta_p)_j} .
+$$
+
+Los pesos $w_p$ salen de la tabla de postestratificación (qué parte de los
+hombres de 25-34 con estudios medios y recuerdo PP de Canarias vive en cada
+provincia), y las $P(j \mid p)$ son las del propio modelo. Es la mezcla de
+probabilidades, la buena, y en Stan se escribe tal cual dentro de la
+verosimilitud: hasta 9 softmax por fila en Castilla y León. La encuesta sin
+provincia informa de la media de sus provincias, y lo que distingue a Las
+Palmas de Tenerife lo aprenden las encuestas que sí tienen provincia.
+
+Esto tiene un supuesto, que conviene decirlo: los pesos salen de la
+población, así que asumo que More in Common, dentro de Castilla y León y para
+un mismo perfil, no tiene más gente de Valladolid de la que le toca. Un panel
+online que tire hacia las capitales lo incumpliría. No lo puedo comprobar,
+pero es bastante menos inventado que asignarle una provincia a cada uno.
+
+::: {.callout-tip collapse="true"}
+## Una lección de brms por el camino
+
+Antes de rendirme con `brms` llegué a ajustarlo entero, y por el camino
+aprendí esto. El intento está en
+[`05_brms_mm.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/05_brms_mm.R)
+y dejó una lección que no está en la documentación: **el epred tiene que
+llevar todos los términos aleatorios.** Mi primera postestratificación
+evaluaba `posterior_epred` con un `re_formula` sin los términos de casa. En la
+parametrización de brms (interceptos libres por categoría, sin centrar) el
+modo común entre intercepto y efectos solo se anula con *todos* los términos:
+sin los de casa, la sd del predictor de celda pasa de 0,20 a 0,60 y la sd del
+agregado nacional de PSOE de 0,64 a 2,10. D'Hondt amplifica, y los intervalos
+de escaños salían 2-3 veces más anchos que los de Stan. Y yo echándole la
+culpa al sampler… pues no, el fallo estaba en cómo pedía el epred.
+:::
+
+## Problema 3: no todos los partidos están en todas partes
+
+### Partidos que solo compiten en su territorio
+
+ERC solo se presenta en Cataluña, UPN solo en Navarra, el PNV en el País
+Vasco, el BNG en Galicia… En los datos se ve sin sorpresas:
+
+```{r regionales}
+reg <- c("ERC", "JUNTS", "BILDU", "PNV", "BNG", "CCA", "UPN")
+celdas |>
+  summarise(across(all_of(reg), sum), .by = ccaa) |>
+  pivot_longer(-ccaa, names_to = "partido", values_to = "n") |>
+  filter(n > 0) |>
+  summarise(
+    `CCAA con menciones` = paste(ccaa, collapse = ", "),
+    menciones = sum(n),
+    .by = partido
+  ) |>
+  gt() |>
+  tab_caption("Menciones de los partidos regionales en las nueve encuestas.")
+```
+
+Fuera de su territorio, sus ceros son **estructurales**: nadie vota a ERC en
+Soria porque en Soria no se puede votar a ERC. Si el modelo no lo sabe, tiene
+que explicar esos ceros con efectos de CCAA y provincia muy negativos, que es
+gastar estructura en algo que ya sabemos, y además le deja a ERC una
+probabilidad pequeña, pero no nula, en Soria. La solución es decírselo: fuera
+de su territorio la probabilidad de cada regional se fija a cero (en el
+predictor lineal entra un offset de $-20$, que en probabilidad es cero a
+efectos prácticos). Y en la postestratificación lo pongo a cero exacto con una
+máscara, que ya vimos en el post de raking que el $-20$ a veces no basta.
+
+En el [post de raking](https://muestrear-no-es-pecado.es/2026/10/mrp-raking/) UPN iba fundida en OTROS y eso distorsionaba el quinto
+escaño navarro: su ~20 % navarro se repartía mal. Aquí es categoría propia.
+
+### Partidos que no están en todos los cuestionarios
+
+Lo de AA (Adelante Andalucía) es más sutil. AA solo se presenta en Andalucía,
+pero además no todas las encuestas la ofrecen como respuesta. Mirando solo
+Andalucía:
+
+```{r aa}
+celdas |>
+  filter(ccaa == "Andalucía") |>
+  summarise(entrevistas = sum(n), `menciones de AA` = sum(AA), .by = c(estudio, sin_aa)) |>
+  mutate(`¿ofrece AA?` = if_else(sin_aa, "no", "sí")) |>
+  arrange(sin_aa, estudio) |>
+  select(estudio, `¿ofrece AA?`, entrevistas, `menciones de AA`) |>
+  gt() |>
+  tab_caption("Andalucía: entrevistas con voto válido y menciones de AA por encuesta.")
+```
+
+Las encuestas que ofrecen AA le dan entre un 3 y un 6 % de las menciones en
+Andalucía; las que no la ofrecen, cero. Esos ceros son de **diseño**, no
+evidencia de que nadie vote a AA. Si el modelo los cuenta como datos, AA queda
+aplastada por más de 1.700 entrevistas que no podían elegirla.
+
+La corrección es la multinomial condicionada. Pongamos que en una celda
+andaluza el modelo dice PP 35 %, PSOE 28 %, VOX 17 %, AA 5 % y resto 15 %. Para
+un entrevistado del CIS, que sí podía elegir AA, la probabilidad de que diga
+PSOE es 28 %. Para uno de 40dB de julio, que no podía, es la probabilidad de
+decir PSOE *sabiendo que no ha dicho AA*: 28 / 95 = 29,5 %. En general, para
+las encuestas sin AA,
+
+$$
+P(j \mid \text{no AA}) = \frac{\exp(\eta_j)}{\sum_{k \neq \text{AA}} \exp(\eta_k)} ,
+\qquad j \neq \text{AA}.
+$$
+
+Así esas encuestas informan sobre el reparto entre los partidos que sí
+ofrecían, que es lo que de verdad saben, y no dicen nada sobre AA. AA queda
+identificada por las que sí la preguntaban: el CIS y el flash de 40dB. Es la
+misma idea de factorizar la verosimilitud que en el post de todo bayesiano,
+donde el desglose regional entraba condicionado al total del bloque.
+
+El supuesto, que conviene decirlo, es que el votante de AA al que no le
+ofrecen AA no se va en bloque a otro partido: o se queda fuera del voto
+válido, o se reparte como el resto. Si en 40dB se fueran todos a OTROS, lo
+estaría inflando en Andalucía.
+
+Y `brms` tampoco sabe expresar esto. Entre este problema y el anterior, no
+quedaba otra que escribir la verosimilitud a mano en Stan.
 
 ## El modelo
 
-[`mrp_voto.stan`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/stan/mrp_voto.stan)
-junta todo lo anterior:
+Para cada celda (o fila de encuesta) y cada partido $j$, el modelo construye
+un predictor lineal sumando efectos:
 
-- **multinomial con softmax completo** (sin categoría de referencia; los
-  interceptos van centrados entre partidos con `sum_to_zero_vector`, como los
-  efectos de casa);
-- **la mezcla de provincias exacta** para las filas de More in Common sin
-  provincia;
-- **la verosimilitud condicional** para las encuestas que no ofrecían AA
-  (y la máscara de territorio para UPN y los regionales);
-- efectos aleatorios por partido para casa, mes, edad, estudios, recuerdo,
-  CCAA, provincia y las interacciones CCAA×recuerdo y casa×recuerdo;
-- priors con medio ojo: `exponential(1)` en las sd daba un prior predictivo
-  indecente (44 % de las celdas con un partido por encima del 90 %); el
-  ajuste (`sd_rec N+(0, 2)`, resto `N+(0, 0.5)`, interacciones `N+(0, 0.25)`)
-  lo baja a un 20 % de celdas con un partido dominante, que es lo que se ve
-  en los datos.
+$$
+\begin{aligned}
+\eta_j = \; & \alpha_j + \beta_j \cdot \text{mujer}
+  + a^{\text{edad}}_j + a^{\text{estudios}}_j + a^{\text{recuerdo}}_j
+  && \text{quién es} \\
+& + a^{\text{CCAA}}_j + a^{\text{provincia}}_j + a^{\text{CCAA×recuerdo}}_j
+  && \text{dónde vive} \\
+& + a^{\text{casa}}_j + a^{\text{casa×recuerdo}}_j + a^{\text{mes}}_j
+  && \text{quién pregunta y cuándo}
+\end{aligned}
+$$
 
-El modelo de participación (`mrp_part.stan`) va aparte y sin categorías de
-partido: da el peso de cada celda en la postestratificación.
+y la probabilidad de votar a cada partido es la softmax de los $\eta_j$, sin
+partido de referencia. Cada bloque de efectos $a$ es aleatorio: sus valores
+salen de una normal con su propia sd, por partido. Eso es el partial pooling
+del problema 1: si la provincia de Soria tiene pocos datos, su efecto se queda
+cerca de 0 salvo que los datos digan otra cosa. Las dos interacciones son las
+que importan para MRP: CCAA × recuerdo (la fidelidad del votante del PSOE no es
+la misma en Andalucía que en Cataluña) y casa × recuerdo (cada casa tiene su
+manera de captar a los votantes de cada partido).
 
-Una nota de sampler que costó aprenderla: con los datos completos, NUTS
-satura el árbol en todas las iteraciones (255 pasos de mediana, el máximo
-permitido) durante las ~2,5 horas del ajuste. Suena a desastre y no lo es:
-0 divergencias, Rhat máximo 1,008, ESS sano. Lo comprobé por ablación
-(cada pasada 18 minutos): quitando las filas de mezcla, fijando cada bloque
-de sd a su mediana o a cero, y fijándolas *todas*, la mediana de pasos no se
-mueve. La causa no es localizable: es el rango dinámico de la propia
-posterior — direcciones bien informadas (los efectos del recuerdo, con 13
-mil filas) junto a direcciones anchas y débilmente identificadas (los
-partidos pequeños, con sd de posterior 0,4-0,8). El stepsize lo fija la
-dirección rígida y la trayectoria no encuentra U-turn en la ancha. A esta
-escala es inherente al modelo: subir `max_treedepth` no compra nada.
+Sobre ese predictor van las tres piezas: la mezcla de provincias para las
+filas de More in Common, la verosimilitud condicional para las encuestas que
+no ofrecían AA, y la máscara de territorio para UPN y los regionales. Todo
+está en
+[`mrp_voto.stan`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/stan/mrp_voto.stan).
+
+La participación va en otro modelo
+([`mrp_part.stan`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/stan/mrp_part.stan)),
+binomial, sobre quién dice "10, seguro que voto", con las mismas variables,
+efecto casa (sin Ateneo del Dato, que no lo pregunta) y la misma mezcla de
+provincias. La casa media sale en un 60,5 %, muy lejos del 70,4 % de
+participación entre residentes del 23-J, así que en cada draw muevo el
+intercepto, en escala logit, hasta que cuadre. Lo ajusto aparte del de voto y
+emparejo draw con draw, lo que supone que la incertidumbre de uno no tiene
+que ver con la del otro. Sirve para dar el peso de cada celda en la
+postestratificación: cuenta quien vota, no quien está en el censo.
+
+::: {.callout-note collapse="true"}
+## Los priors
+
+Los priors de las sd importan más de lo que parece. Con `exponential(1)`, lo
+habitual, el prior predictivo era indecente: un 44 % de las celdas tenía un
+partido por encima del 90 %. Con `sd_rec ~ N+(0, 2)` (el recuerdo sí puede
+mover mucho el voto), `N+(0, 0.5)` para el resto y `N+(0, 0.25)` para las
+interacciones, baja a un 22 % de celdas con un partido dominante, que ya es
+algo razonable. Los interceptos y los efectos van centrados entre
+partidos (`sum_to_zero_vector` en Stan), para que la softmax sin referencia
+esté identificada.
+:::
 
 ## Los escaños
+
+### La postestratificación, con un ejemplo
+
+El modelo da la probabilidad de voto en cada celda; la postestratificación
+pondera cada celda con lo que pesa **en la población**, no en la muestra. Para
+verlo basta con una sola variable, el recuerdo del 23-J:
+
+```{r postestrat}
+if (!file.exists(file.path(dir_datos, "datos_postestrat.rds"))) {
+  source(here::here("2026/11/mrp-multiencuesta/07c_postestrat_datos.R"))
+}
+pe <- readRDS(file.path(dir_datos, "datos_postestrat.rds"))
+psoe_mue <- 100 * sum(pe$muestra * pe$p_psoe)
+psoe_pob <- 100 * sum(pe$poblacion * pe$p_psoe)
+pp_mue <- 100 * sum(pe$muestra * pe$p_pp)
+pp_pob <- 100 * sum(pe$poblacion * pe$p_pp)
+
+pe |>
+  bind_rows(tibble(
+    rec = c("voto ponderando con la muestra", "voto ponderando con la población"),
+    p_psoe = c(psoe_mue, psoe_pob) / 100,
+    p_pp = c(pp_mue, pp_pob) / 100
+  )) |>
+  mutate(across(-rec, ~ 100 * .x)) |>
+  gt(rowname_col = "rec") |>
+  tab_stubhead("recuerdo 23-J") |>
+  cols_label(
+    muestra = "% en la muestra", poblacion = "% en la población",
+    p_psoe = "P(PSOE | recuerdo)", p_pp = "P(PP | recuerdo)"
+  ) |>
+  fmt_number(decimals = 1, dec_mark = ",", sep_mark = ".") |>
+  sub_missing(missing_text = "") |>
+  tab_style(cell_text(weight = "bold"), cells_body(rows = 8:9)) |>
+  tab_style(cell_text(weight = "bold"), cells_stub(rows = 8:9)) |>
+  tab_caption("Probabilidades del modelo: casa media y si votara todo el mundo.")
+```
+
+La muestra trae un `r num(100 * pe$muestra[pe$rec == "PSOE"], 1)` % de
+recuerdo PSOE, cuando en la población es un
+`r num(100 * pe$poblacion[pe$rec == "PSOE"], 1)` %, y un
+`r num(100 * pe$muestra[pe$rec == "ABST"], 1)` % de abstencionistas del 23-J
+frente al `r num(100 * pe$poblacion[pe$rec == "ABST"], 1)` % real. A las
+encuestas contesta más quien vota, y o contesta más quien votó al PSOE, o más
+gente dice haberlo votado. Con estos datos no puedo separar las dos cosas, y
+postestratificar por recuerdo asume que el recuerdo es verdad. Con las mismas
+probabilidades del modelo, ponderar con la muestra da al PSOE un
+`r num(psoe_mue, 1)` % y al PP un `r num(pp_mue, 1)` %; ponderar con la
+población, `r num(psoe_pob, 1)` % y `r num(pp_pob, 1)` %. Más de cuatro puntos
+de diferencia solo por quién contesta. En el modelo se hace lo mismo, pero con
+las `r num(n_celdas_total)` celdas en vez de 7 filas, y draw a draw.
+
+Ojo, que la tabla de población también es fabricada: sale del raking del
+[post de raking](https://muestrear-no-es-pecado.es/2026/10/mrp-raking/), donde
+cuatro de los diez cruces de variables los pone la encuesta y no una fuente
+oficial. Y de esa misma tabla salen los pesos de la mezcla de provincias.
+
+### De las celdas a los escaños
 
 La postestratificación da, para cada draw de la posterior, la probabilidad
 de voto válido en cada celda de población. Los escaños salen así:
@@ -376,55 +656,99 @@ de voto válido en cada celda de población. Los escaños salen así:
 3. D'Hondt en cada provincia y draw;
 4. se suman los escaños por partido y draw → la distribución de escaños.
 
+El modelo corrige el muestreo (encuestas que sobrerrepresentan recuerdos de
+PSOE, jóvenes...), no el sesgo de la casa; de eso va la tercera parte. Las
+tablas son para la casa media.
+
 ```{r stan-resumen}
 res_stan <- read_csv_here("escanos_mrp_resumen.csv")
 res_stan |>
   mutate(across(where(is.numeric), ~ round(.x, 1))) |>
   gt() |>
-  tab_caption("Escaños del Congreso (D'Hondt por provincia sobre el posterior por celda, casa media, con participación). Mediana, media e IC90 por draw.")
+  tab_caption("Escaños del Congreso (D'Hondt por provincia sobre el posterior por celda, casa media, con participación). Mediana, media e IC90 por draw. `escanos`: medias redondeadas por resto mayor para que sumen 350. `p_mas_esc`: probabilidad de ser el partido con más escaños.")
+```
+
+```{r escanos-dist}
+#| fig-height: 6
+est <- readRDS(file.path(dir_datos, "estim_escanos_mrp.rds"))
+principales <- c("PP", "PSOE", "VOX", "SUMAR", "ERC", "BILDU")
+
+as.data.frame(est$totales) |>
+  pivot_longer(everything(), names_to = "partido", values_to = "escanos") |>
+  filter(partido %in% principales) |>
+  mutate(partido = factor(partido, levels = principales)) |>
+  count(partido, escanos) |>
+  mutate(prob = n / sum(n), .by = partido) |>
+  ggplot(aes(escanos, prob)) +
+  geom_col(width = 0.8, fill = "grey30") +
+  facet_wrap(~partido, scales = "free", ncol = 3) +
+  scale_x_continuous(breaks = \(x) unique(floor(pretty(x)))) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
+  labs(
+    x = "escaños", y = "probabilidad",
+    caption = "1.000 draws de la posterior; D'Hondt por provincia en cada uno. Casa media, con participación."
+  ) +
+  theme_minimal()
 ```
 
 ```{r stan-mayorias}
+n_draws <- nrow(est$totales)
 read.csv(file.path(dir_proy, "escanos_mrp_mayorias.csv")) |>
+  mutate(prob = case_when(
+    prob == 0 ~ sprintf("< %s %%", num(100 / n_draws, 1)),
+    prob == 1 ~ sprintf("> %s %%", num(100 - 100 / n_draws, 1)),
+    TRUE ~ paste(num(100 * prob, 1), "%")
+  )) |>
   gt() |>
-  tab_caption("Probabilidades de mayoría.")
+  tab_caption("Probabilidades de mayoría (casa media, sin error del consenso). Investidura: el bloque de la investidura del 23-J más CC y AA.")
 ```
 
-Es la versión provincial y completa de lo que el
-[post de octubre](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html)
-rozó con shares nacionales (allí solo mediana e IC90 y la P(PP+VOX ≥ 176)).
+Ojo con ese "más del 99,9 %". No es que sea seguro: es que en los
+`r num(n_draws)` draws PP y VOX suman 176 o más. Es lo que dice la casa media
+si las encuestas no se equivocan todas a la vez, y eso, como vimos en el
+[post de todo bayesiano](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html),
+pasa. Aquí no meto ese error, y por eso las horquillas son mucho más estrechas
+que allí. Así que esto es "qué dicen estas nueve encuestas bien
+postestratificadas", no "qué va a pasar el 29-N".
+
+Es la versión provincial de lo que el post de todo bayesiano rozó con shares
+nacionales (allí solo mediana e IC90 y la P(PP+VOX ≥ 176)). Más completa en lo
+provincial, menos en incertidumbre.
 El detalle por provincia y el mapa de coaliciones del 29-N, la transición
 del recuerdo al voto y los escenarios de participación van en la tercera
 parte.
 
-## Cómo lo ajusto: tres backends, un modelo
+## Tres backends, un modelo
 
-El control de la verosimilitud tiene un precio: ajustar a mano en Stan son
-~2,5 horas cada vez que se toca algo. Los mismos datos, el mismo modelo y
-los mismos priors caben en dos backends más, útiles por razones distintas.
+Escribir el Stan a mano tiene un precio: unas dos horas de ajuste cada vez
+que tocas algo. Así que probé a pasar el mismo modelo, con los mismos datos y
+los mismos priors, a numpyro, y luego a RTMB.
 
-**numpyro** (JAX, CPU). El port
+**numpyro** (JAX, CPU). Pasarlo
 ([`numpyro/mrp_voto_np.py`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/numpyro/mrp_voto_np.py))
-es literal: `sum_to_zero_vector` → base ortonormal del subespacio de suma
-cero, las sd truncadas → `HalfNormal`, `reduce_sum` → vectorización total
-(una evaluación del gradiente cubre todas las filas). El ajuste completo
-baja de 121 a 18,4 minutos y la posterior coincide dentro de ~0,06 puntos
-en todas las estimaciones, con el ancho de los IC90 idéntico (mediana del
-ratio 1,00). numpyro además fue la herramienta del diagnóstico de la
-ablación: cada pasada de 18 minutos habría costado 2 horas en Stan.
-Un aviso de medición: JAX despacha en asíncrono y sin
-`jax.block_until_ready` los tiempos de `mcmc.run` mienten — los primeros
-"2,8 segundos" eran solo compilación y despacho.
+fue casi traducir línea a línea. Los `sum_to_zero_vector` de Stan pasan a ser
+una base ortonormal del subespacio de suma cero, las sd truncadas pasan a
+`HalfNormal`, y el `reduce_sum` desaparece porque todo va vectorizado: una
+evaluación del gradiente cubre todas las filas de golpe. El ajuste completo
+baja de 121 a 18,4 minutos y la posterior coincide con la de Stan dentro de
+~0,06 puntos en todas las estimaciones, con el ancho de los IC90 idéntico
+(mediana del ratio 1,00). Un aviso, que me la jugó: JAX despacha en asíncrono
+y, sin `jax.block_until_ready`, los tiempos de `mcmc.run` mienten. Mis
+primeros "2,8 segundos" eran solo compilación y despacho. Ya me parecía a mí
+demasiado bonito.
 
 **RTMB** (Laplace). El mismo modelo
-([`rtmb/mrp_voto_rtmb.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/rtmb/mrp_voto_rtmb.R))
-con los efectos integrados analíticamente y las sd en su moda: todo el flujo
-— ajuste y postestratificación — en 5,6 minutos, con 1.000 muestras
-independientes de la aproximación de Laplace. Las medias coinciden con Stan
-dentro de 0,17 puntos en las 120 comparaciones (5 casas × 12 partidos), el
-ancho del IC90 sale con mediana 1,03× el de Stan. Las sd de la moda van un
-3-32 % por encima de las medianas de Stan — la asimetría de la posterior de
-una sd, que Laplace no ve — pero en las estimaciones no se nota.
+([`rtmb/mrp_voto_rtmb.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/rtmb/mrp_voto_rtmb.R)),
+pero los efectos aleatorios se integran con la aproximación de Laplace y las
+sd se quedan en su moda. Todo el flujo, ajuste y postestratificación, en 5,6
+minutos. Las 1.000 muestras salen de la normal de Laplace con las sd fijas,
+así que no llevan la incertidumbre de las sd. Aun así, las medias coinciden
+con Stan dentro de 0,17 puntos en las 120 comparaciones (5 casas × 12
+partidos, con y sin participación), y el ancho del IC90 sale con mediana
+1,03× el de Stan, quizá porque las sd en la moda van algo por encima. Van un
+3-32 % por encima de las medianas de Stan, pero son la moda de una marginal
+aproximada, no la mediana de la posterior, y no tienen por qué coincidir. En
+las estimaciones no se nota.
 
 ```{r rtmb}
 res_rtmb <- read_csv_here("escanos_mrp_rtmb_resumen.csv")
@@ -436,25 +760,52 @@ res_rtmb |>
 
 | backend | voto | participación |
 |---|---|---|
-| Stan (cmdstanr, 3 hilos) | 121 min | 11,5 min |
+| Stan (cmdstanr; voto con 3 hilos, participación con 1) | 121 min | 11,5 min |
 | numpyro (JAX CPU, 4 cadenas) | 18,4 min | 5,4 min |
 | RTMB (Laplace) | 5,6 min | 1,5 s |
+
+### El árbol de NUTS, siempre a tope
+
+Con los datos completos, NUTS llega al límite del árbol en todas las
+iteraciones: 255 pasos de mediana, que es el máximo con `max_treedepth = 8`,
+que es lo que puse (el valor por defecto es 10). Cuando lo vi pensé que algo
+estaba muy mal. Pues no: 0 divergencias, Rhat máximo 1,017 y ESS mínimo 466
+en Stan. Y con el 10 % de los datos no pasa, se queda en 127 pasos.
+
+Mis sospechosos eran la mezcla de provincias y los bloques de celdas
+diminutas. Probarlo en Stan eran dos horas por intento, así que hice la
+ablación en numpyro, que reproduce los 255 pasos y tarda 18 minutos (unos
+cribados de 200+200 iteraciones, que la firma ya se ve en las primeras 100).
+Quité las filas de mezcla, puse a cero una a una las sd de provincia, de CCAA
+× recuerdo y de casa × recuerdo, y fijé *todas* las sd a su mediana. Los 255
+pasos no se movieron en ninguno.
+
+Así que no hay un culpable que se pueda señalar. Mi interpretación es que es
+el rango dinámico de la propia posterior: direcciones muy bien informadas
+(los efectos del recuerdo, con 13 mil filas) junto a direcciones anchas y
+débilmente identificadas (los partidos pequeños, con sd de posterior de
+0,4-0,8). El stepsize lo fija la dirección rígida y la trayectoria no
+encuentra el U-turn en la ancha. Subir `max_treedepth` no lo he probado, pero
+con 0 divergencias, un ESS decente y las tres implementaciones cuadrando, no
+espero que cambie nada salvo el tiempo. Con estos datos, me temo que es lo que
+hay.
 
 <!-- TODO: tabla de igualdad Stan/numpyro/RTMB con los tres en era AA (Mac) -->
 
 ## Coda
 
-El problema dictó el modelo: escaños por provincia (postestratificación
-provincial y multinivel para las celdas ralas), una encuesta sin provincia
-(mezcla exacta de probabilidades), un cuestionario que no pregunta todos los
-partidos (multinomial condicional). Ningún paquete de catálogo expresa esas
-tres cosas a la vez, así que la verosimilitud se escribe a mano — y los
-backends alternativos existen para que el control no cueste 2,5 horas.
+Resumiendo: quería escaños por provincia, y eso me obligó a postestratificar
+por provincia y a tirar de multinivel para las celdas vacías. Luego dos
+encuestas no decían la provincia (mezcla de probabilidades, no de logits) y
+algunas no preguntaban por AA (multinomial condicionada). Lo de `brms` con
+`mm()` casi cuela, pero no. Así que verosimilitud a mano, dos horas de Stan
+por ajuste, y numpyro y RTMB para no volverme loco.
 
-Pero el modelo corrige el muestreo, no la casa: ni la fidelidad desigual del
+Y ojo, el modelo corrige el muestreo, no la casa: ni la fidelidad desigual del
 recuerdo de voto por casa, ni la autoselección de los paneles online, ni la
-no-respuesta del CIS. De eso, y de lo que el posterior regala (escenarios de
-participación, dónde votan VOX los jóvenes, el escaño más disputado), va la
+no respuesta del CIS. Por eso la probabilidad de mayoría sale tan redonda. De
+eso, y de lo que regala la posterior (escenarios de participación, dónde
+votan VOX los jóvenes, el escaño más disputado), va la
 [tercera parte]().
 
 ## Apéndice: cómo se ejecuta
