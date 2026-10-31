@@ -143,9 +143,13 @@ Lo que sigue pendiente en el post (II):
 2. `<!-- TODO: pista del post -->` en el callout Listening.
 3. Enlace de la tercera parte vacío (`[tercera parte]()`) en la Coda.
 4. Al renderizar en el Mac, `datos/datos_pooling.rds` y
-   `datos/datos_postestrat.rds` están en .gitignore: el post los regenera
-   con `07b_pooling_datos.R` y `07c_postestrat_datos.R` si faltan (necesitan
-   los datos de la release).
+   `datos/datos_postestrat.rds` están en .gitignore pero **ya están en la
+   release** (subidos el 2026-10-31): bajarlos con
+   `gh release download mrp-multiencuesta-datos -p 'datos_p*.rds' -D 2026/11/mrp-multiencuesta/datos --clobber`.
+   Si faltan, el post los regenera con `07b_pooling_datos.R` y
+   `07c_postestrat_datos.R`, pero esos leen
+   `datos/post_celdas_casa_media_part.rds` (700 MB, NO está en la release;
+   sale de `07_post_celdas.R` con el fit de Stan).
 
 ## Datos y releases
 
