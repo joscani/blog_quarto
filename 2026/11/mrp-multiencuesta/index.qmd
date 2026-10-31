@@ -385,21 +385,29 @@ ficheros <- c(
   "tabla_post_prov.rds",
   "prov_ccaa.rds",
   "celdas_brms.rds",
-  "celdas_part.rds"
+  "celdas_part.rds",
+  # los lee 02_poblacion_raking.R desde la carpeta del post de octubre
+  "mun_23j.rds",
+  "targets.rds"
 )
-dir.create(
-  here::here("2026/11/mrp-multiencuesta/datos"),
-  recursive = TRUE,
-  showWarnings = FALSE
+destinos <- c(
+  rep("2026/11/mrp-multiencuesta/datos", 7),
+  rep("2026/10/mrp-raking/datos", 2)
 )
-for (f in ficheros) {
+for (d in unique(destinos)) {
+  dir.create(here::here(d), recursive = TRUE, showWarnings = FALSE)
+}
+for (i in seq_along(ficheros)) {
   download.file(
-    paste0(url_base, f),
-    here::here("2026/11/mrp-multiencuesta/datos", f),
+    paste0(url_base, ficheros[i]),
+    here::here(destinos[i], ficheros[i]),
     mode = "wb"
   )
 }
 ```
+
+Los dos últimos (`mun_23j.rds` y `targets.rds`) van a la carpeta `datos/` del
+post de octubre, de donde los lee `02_poblacion_raking.R`.
 
 Fuente de los datos: CIS (estudios 3567, 3571, 3577 y 3582), 40dB, More in
 Common y Ateneo del Dato. Las releases son recodificaciones propias; las casas
