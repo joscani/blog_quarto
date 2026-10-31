@@ -151,6 +151,62 @@ Lo que sigue pendiente en el post (II):
    `datos/post_celdas_casa_media_part.rds` (700 MB, NO está en la release;
    sale de `07_post_celdas.R` con el fit de Stan).
 
+## Siguiente tarea (pedida el 2026-10-31, para hacer el 2026-11-01)
+
+**Hacer el post (II) más empírico**: enseñar más los datos con tablas
+pequeñas y ejemplos reales, sin alargarlo mucho. **Primero proponer (qué
+tabla, dónde va, qué script la genera) y NO modificar `ii-modelo.qmd` hasta
+que José elija.** Mejor 2-3 incorporaciones muy buenas que muchas. Solo
+datos y resultados reales del proyecto: nada inventado ni aproximado para
+rellenar. Nada de tablas enormes ni gráficos decorativos: cada ejemplo
+responde a una pregunta concreta. Mantener su voz (cercano, directo, técnico,
+contando lo que hace con los datos).
+
+Candidatos que pidió:
+
+1. Tabla de 6-8 celdas reales de postestratificación: provincia, sexo, edad,
+   estudios, recuerdo, población estimada (N) y n.º de entrevistas.
+   Provincias grandes y pequeñas, celdas con y sin entrevistas.
+2. Para algunas, probabilidad posterior de voto con IC90, junto a la cruda:
+   que se *vea* el partial pooling.
+3. Ejemplo real de los pesos provinciales de la mezcla para una encuesta sin
+   provincia, preferiblemente Canarias, con la cuenta de la probabilidad
+   mezclada de un partido (CC).
+4. Si cabe sin pisar la parte III: una provincia pequeña de celdas → % de
+   voto provincial → D'Hondt.
+
+Exploración hecha (el 31, sin escribir nada en el post):
+
+- Fuentes: `datos/tabla_post_prov.rds` (array prov × sexo × edad × edu × rec,
+  N); `datos/celdas_brms.rds` (entrevistas por fila, con `casa`, `prov` NA en
+  las filas sin provincia, `p1..p9`/`w1..w9` = provincias y pesos de la
+  mezcla, de `03_celdas.R::pesos_mm`); `datos/post_celdas_casa_media_part.rds`
+  (700 MB, no está en la release; `p` = draws × celda × partido, `post` =
+  metadatos con N y `pv_media`, `pv` = participación por draw; sale de
+  `07_post_celdas.R`); `datos/estim_escanos_mrp.rds` (`votos` 1000 × 52 × 14,
+  `esc` 1000 × 52 × 13, `prov_ref` con diputados, `totales`).
+- Filas sin provincia: More in Common 1.556 y Ateneo 639 (con provincia 514
+  y 202, uniprovinciales).
+- Idea para 1+2 (una sola tabla): **un mismo perfil en varias provincias**
+  (p. ej. Madrid, Sevilla, Las Palmas, Segovia, Soria y una con 0
+  entrevistas), con N, n, cruda e IC90 del modelo. Así el pooling se ve sin
+  explicarlo: donde hay n, el modelo se acerca a la cruda; donde no, tira
+  hacia la estructura. Ojo: la cruda de `datos_pooling.rds` es solo del CIS,
+  y la figura actual usa las nueve encuestas (`cruda9` en el post); y el
+  modelo es la casa media.
+- Idea para 3: coger una fila real de More in Common en Canarias de
+  `celdas_brms.rds`, sus `w1, w2` (Las Palmas / S. C. de Tenerife) y la
+  P(CC | provincia) de esa celda en `post_celdas`, y hacer la suma
+  ∑ w_p · P(CC | p) a la vista. Con casa media, no con la casa More in
+  Common: decirlo.
+- Idea para 4: Soria (2 escaños) o Segovia/Teruel (3) con `est$votos` y
+  `est$esc`: % provincial por draw → D'Hondt → distribución de repartos
+  (p. ej. cuántos draws dan 2-1 frente a 1-1-1). Comprobar que no se pisa
+  "el escaño más disputado" de la parte III.
+- Probable implementación: un script nuevo `07d_ejemplos_datos.R` que lea
+  `post_celdas` una vez y guarde un `datos/datos_ejemplos.rds` pequeño (como
+  07b/07c), y subirlo a la release para que el post renderice sin los 700 MB.
+
 ## Datos y releases
 
 Los datos y fits van en la release `mrp-multiencuesta-datos` (no en git;
