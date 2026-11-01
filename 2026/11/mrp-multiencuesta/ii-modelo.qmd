@@ -115,8 +115,8 @@ provincias <- readRDS(file.path(dir_datos, "estim_escanos_mrp.rds"))$prov_ref |>
 
 ## Problema 1: celdas casi vacías
 
-Los datos que usa esta parte — las celdas de las encuestas, la tabla de
-postestratificación y los fits — están en
+Los datos que usa esta parte (las celdas de las encuestas, la tabla de
+postestratificación y los fits) están en
 [la release del post](https://github.com/joscani/blog_quarto/releases/tag/mrp-multiencuesta-datos),
 por si quieres reproducirlo sin reajustar nada.
 
@@ -199,8 +199,8 @@ pob_rec_edad |>
 ```
 
 Dos detalles de la tabla de población: los que en 2023 no podían votar solo
-pueden estar en la fila `NO_PODIA` — y de hecho su población está toda en la
-columna 18-20—, y no hay filas para ERC, JUNTS o PNV porque en Soria no tienen
+pueden estar en la fila `NO_PODIA` (y de hecho su población está toda en la
+columna 18-20), y no hay filas para ERC, JUNTS o PNV porque en Soria no tienen
 población: por eso el modelo ni se plantea repartirles escaños allí.
 
 
@@ -315,7 +315,7 @@ La fórmula completa del primer intento era esta (esquema: el script la
 construye pegando cadenas, ver
 [`05_brms_mm.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/05_brms_mm.R);
 hay un `mu<partido>` por cada partido menos PP, la referencia, cada uno con sus
-propios efectos aleatorios y sus propias sd — nada se comparte entre partidos —
+propios efectos aleatorios y sus propias sd, sin compartir nada entre partidos,
 y los territoriales añaden la máscara de offset):
 
 ```r
