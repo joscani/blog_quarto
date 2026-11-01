@@ -129,11 +129,30 @@ Qué cambió (para no deshacerlo sin querer):
   Si José confirma otra definición, ajustar.
 - Quitada la frase que justificaba interacciones que el modelo no tiene
   (provincia × recuerdo, edad × estudios).
+- Quitado el callout «Una lección de brms por el camino» (el epred y el
+  `re_formula`): la lección vive ahora en la sección «Lección de brms» de esta
+  guía.
 - Estructura: "Tres backends, un modelo" es ahora sección (6), con
   subsección "El árbol de NUTS, siempre a tope", **antes** de la Coda
   (reescrita). Después solo queda "Apéndice: cómo se ejecuta".
 - Referencias: "post de octubre" ambiguo sustituido por "post de raking" o
   "post de todo bayesiano" con enlace.
+- La tabla de población ya no se atribuye al post de raking de octubre: sale
+  del raking de la primera parte de esta serie (targets oficiales, semilla CIS).
+- Tras la figura de pooling, párrafo y tabla didácticos sobre la primera fila:
+  la única encuestada de la celda (Segovia, M 65+, baja, rec. PSOE) contesta
+  PP (cruda 0 %, n = 1) y el modelo da 90 % a PSOE porque una persona no
+  representa a su perfil (chunk `primera-celda`).
+- La figura de pooling pasa de 10 a 6 celdas: Segovia (n = 1), Las Palmas
+  rec. PSOE (n = 1, el 13,1 % del ejemplo del texto), Las Palmas rec. PP
+  (n = 2, el 43,9 %), València (n = 25), Madrid VOX (n = 46) y Madrid PP
+  (n = 72); se pierden las de n = 4-15. El texto dice "seis celdas".
+- Reescrito el "el modelo corrige el muestreo, no la casa" (en «De las celdas
+  a los escaños» y en la Coda): el efecto de casa absorbe las diferencias
+  entre casas (incluida casa×recuerdo), pero no lo que todas comparten; con
+  4 casas aprende poco, harían falta más (microdatos); sin microdatos, solo
+  queda usar las pocas publicadas o irse al meta-análisis. La Coda añade que
+  la casa media va sin error del consenso.
 
 Lo que sigue pendiente en el post (II):
 
@@ -150,6 +169,30 @@ Lo que sigue pendiente en el post (II):
    `07c_postestrat_datos.R`, pero esos leen
    `datos/post_celdas_casa_media_part.rds` (700 MB, NO está en la release;
    sale de `07_post_celdas.R` con el fit de Stan).
+
+## Lección de brms: el epred y el `re_formula` (quitada del post II, 2026-11-01)
+
+Antes de rendirse con `brms` se llegó a ajustar el modelo entero
+([`05_brms_mm.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/05_brms_mm.R)).
+Lección que no está en la documentación de brms: **el epred tiene que llevar
+todos los términos aleatorios.**
+
+- La primera postestratificación evaluaba `posterior_epred()` con un
+  `re_formula` sin los términos de casa.
+- En la parametrización de brms (interceptos libres por categoría, sin
+  centrar), el modo común entre intercepto y efectos solo se anula con *todos*
+  los términos. Sin los de casa: la sd del predictor de celda pasa de 0,20 a
+  0,60 y la sd del agregado nacional de PSOE, de 0,64 a 2,10. D'Hondt
+  amplifica, y los intervalos de escaños salían 2-3 veces más anchos que los
+  de Stan. La culpa no era del sampler: era de cómo se pedía el epred.
+- `re_formula` no añade términos a los del modelo: **sustituye** la lista
+  completa.
+  - `NULL` — el default; basta con no pasar el argumento —: mantiene todos
+    los efectos aleatorios. Es lo que hace el `posterior_epred` final de
+    `05_brms_mm.R` (líneas ~238-244).
+  - `NA`: lo contrario, quita todos (solo efectos fijos).
+  - Una fórmula parcial tipo `~ (1 | ccaa) + ...`: deja fuera todo lo que no
+    aparezca en ella — ese era el fallo.
 
 ## Siguiente tarea (pedida el 2026-10-31, para hacer el 2026-11-01)
 
@@ -256,6 +299,13 @@ Los `post_celdas_*` (358-672 MB) no se suben: se regeneran con
   autoselección en los paneles online y no-respuesta en el CIS (se
   seleccionan los votantes del PSOE más fieles/militantes entre los que
   contestan). Además:
+  - Escenarios de participación (planteado por José, 2026-11-01): la
+    calibración al 23-J es un solo intercepto en logit (casa media 60,5 %
+    → 70,4 % residentes). Mover ese intercepto, en vez de anclarlo, da una
+    familia de escenarios (más/menos participación) que conserva las
+    diferencias entre perfiles — sumar lo mismo a todos los logits preserva
+    los odds ratios — y se propaga draw a draw a escaños y mayorías.
+    «Lo mismo lo hago para el siguiente post».
   - Estimaciones por provincia × nivel de estudios con intervalos, y
     comparación con lo que dice la encuesta cruda (la reproducción de la
     estimación publicada de MIC ya está en PLAN.md).
