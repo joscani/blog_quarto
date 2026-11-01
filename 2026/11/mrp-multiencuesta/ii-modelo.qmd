@@ -115,8 +115,7 @@ provincias <- readRDS(file.path(dir_datos, "estim_escanos_mrp.rds"))$prov_ref |>
 ## Problema 1: celdas casi vacías
 
 Empecemos por los datos. Las nueve encuestas juntas suman
-`r num(sum(celdas$n))` entrevistas con intención de voto válida, que no está
-nada mal. Pero el escaño se decide en la provincia, así que miremos cuántas
+`r num(sum(celdas$n))` entrevistas con intención de voto válida. Pero el escaño se decide en la provincia, así que miremos cuántas
 caen en cada una:
 
 ```{r prov-n}
@@ -143,7 +142,7 @@ ggplot(n_prov, aes(n, reorder(provincia, n))) +
 ```
 
 Madrid tiene `r num(n_madrid)`; Soria, `r n_soria`. Y para el modelo Soria no
-es una provincia, son muchas celdas: sexo × edad × estudios × recuerdo del 23-J.
+es una provincia, son muchas combinaciones: sexo × edad × estudios × recuerdo del 23-J.
 Así se reparten esas `r n_soria` entrevistas entre el recuerdo y la edad, y
 eso antes de partir además por sexo y estudios:
 
