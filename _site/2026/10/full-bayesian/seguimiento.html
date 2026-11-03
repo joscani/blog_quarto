@@ -1,0 +1,3187 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="description" content="Estado vivo del modelo bayesiano conjunto: tendencia del voto, escaños y probabilidad de mayoría. Se actualiza con cada encuesta nueva.">
+
+<title>Generales 2026: el pronóstico vivo del 29-N – Muestrear no es pecado</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-df07115ad9f15e2ef3479c789e6873c8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<link href="../../../site_libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet">
+<script src="../../../site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="../../../site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet">
+<script src="../../../site_libs/datatables-binding-0.34.0/datatables.js"></script>
+<script src="../../../site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="../../../site_libs/dt-core-1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="../../../site_libs/dt-core-1.13.6/css/jquery.dataTables.extra.css" rel="stylesheet">
+<script src="../../../site_libs/dt-core-1.13.6/js/jquery.dataTables.min.js"></script>
+<link href="../../../site_libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet">
+<script src="../../../site_libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="../../../site_libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet">
+<script src="../../../site_libs/selectize-0.12.0/selectize.min.js"></script>
+<link href="../../../site_libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
+<script src="../../../site_libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://bsky.app/profile/joscani.muestrear-no-es-pecado.es"> <i class="bi bi-bluesky" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://x.com/joscani"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"> <i class="bi bi-mastodon" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../blog.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../archive.html"> 
+<span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#el-voto-el-29-n" id="toc-el-voto-el-29-n" class="nav-link active" data-scroll-target="#el-voto-el-29-n">El voto el 29-N</a></li>
+  <li><a href="#tendencia" id="toc-tendencia" class="nav-link" data-scroll-target="#tendencia">Tendencia</a></li>
+  <li><a href="#escaños" id="toc-escaños" class="nav-link" data-scroll-target="#escaños">Escaños</a></li>
+  <li><a href="#provincia-a-provincia" id="toc-provincia-a-provincia" class="nav-link" data-scroll-target="#provincia-a-provincia">Provincia a provincia</a></li>
+  <li><a href="#las-encuestas-que-entran" id="toc-las-encuestas-que-entran" class="nav-link" data-scroll-target="#las-encuestas-que-entran">Las encuestas que entran</a></li>
+  <li><a href="#qué-ha-cambiado-esta-semana" id="toc-qué-ha-cambiado-esta-semana" class="nav-link" data-scroll-target="#qué-ha-cambiado-esta-semana">¿Qué ha cambiado esta semana?</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Generales 2026: el pronóstico vivo del 29-N</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">2026</div>
+    <div class="quarto-category">encuestas electorales</div>
+    <div class="quarto-category">análisis bayesiano</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Estado vivo del modelo bayesiano conjunto: tendencia del voto, escaños y probabilidad de mayoría. Se actualiza con cada encuesta nueva.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Esto es un meta-análisis de encuestas que hago por diversión. No trabajo para ningún medio ni tengo que acertar. Hay gente que hace cosas parecidas, y muy bien: Kiko Llaneras en El País, <a href="https://www.ciento76.es">ciento76</a> u <a href="https://objetivo176.es/">objetivo176</a>. De sus tablas salen buena parte de las encuestas que uso.</p>
+<p>Lo mío va por otro lado: todo es bayesiano. Las encuestas, el sesgo de cada casa y lo que fallan todas a la vez van en un solo modelo. Ese error común no lo pongo a ojo: lo estima el modelo con las elecciones pasadas. Y esa incertidumbre llega hasta cada escaño, simulación a simulación. Por eso las horquillas salen anchas.</p>
+<p>En <a href="full-bayesian.html">Generales 2026, todo bayesiano (I): el voto</a> puedes ver como lo hice.</p>
+<p>Esta página es el estado vivo de ese modelo, que normalmente actualizaré de vez en cuando, conforme vea que van saliendo encuests. El post técnico quedó congelado Con cada encuesta nueva se reajusta el modelo y se vuelve a renderizar esta página. Actualizado el <strong>3 de noviembre de 2026</strong>, con las encuestas publicadas hasta el <strong>1 de noviembre de 2026</strong>.</p>
+<section id="el-voto-el-29-n" class="level2">
+<h2 class="anchored" data-anchor-id="el-voto-el-29-n">El voto el 29-N</h2>
+<p>El modelo da dos cifras de voto para el 29-N. El <strong>voto latente</strong> es la media de las casas encuestadoras, llevada hasta el día de la votación, dice qué cuentan las encuestas.</p>
+<p>El <strong>voto con el error del consenso</strong> le suma lo que todas las casas pueden fallar a la vez, estimado con las elecciones pasadas. Los escaños y el voto provincial salen de este segundo. La mediana apenas cambia, pero el intervalo se abre: el IC90 del PP mide 3,4 puntos sin el error y 10,0 con él.</p>
+<div class="cell">
+<div id="tbl-voto-29n" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-voto-29n-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;1: Voto nacional el 29-N, en % sobre voto a candidaturas. Adelante Andalucía no aparece: su voto lo fija la regla de cada provincia, no el modelo nacional.
+</figcaption>
+<div aria-describedby="tbl-voto-29n-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="kvvwnwktvx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#kvvwnwktvx table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#kvvwnwktvx thead, #kvvwnwktvx tbody, #kvvwnwktvx tfoot, #kvvwnwktvx tr, #kvvwnwktvx td, #kvvwnwktvx th {
+  border-style: none;
+}
+
+#kvvwnwktvx p {
+  margin: 0;
+  padding: 0;
+}
+
+#kvvwnwktvx .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#kvvwnwktvx .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#kvvwnwktvx .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#kvvwnwktvx .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#kvvwnwktvx .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#kvvwnwktvx .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#kvvwnwktvx .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#kvvwnwktvx .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#kvvwnwktvx .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#kvvwnwktvx .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#kvvwnwktvx .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#kvvwnwktvx .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#kvvwnwktvx .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#kvvwnwktvx .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#kvvwnwktvx .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kvvwnwktvx .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#kvvwnwktvx .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#kvvwnwktvx .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#kvvwnwktvx .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kvvwnwktvx .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#kvvwnwktvx .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kvvwnwktvx .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#kvvwnwktvx .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kvvwnwktvx .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#kvvwnwktvx .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kvvwnwktvx .gt_left {
+  text-align: left;
+}
+
+#kvvwnwktvx .gt_center {
+  text-align: center;
+}
+
+#kvvwnwktvx .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#kvvwnwktvx .gt_font_normal {
+  font-weight: normal;
+}
+
+#kvvwnwktvx .gt_font_bold {
+  font-weight: bold;
+}
+
+#kvvwnwktvx .gt_font_italic {
+  font-style: italic;
+}
+
+#kvvwnwktvx .gt_super {
+  font-size: 65%;
+}
+
+#kvvwnwktvx .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#kvvwnwktvx .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#kvvwnwktvx .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#kvvwnwktvx .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#kvvwnwktvx .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#kvvwnwktvx .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#kvvwnwktvx .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#kvvwnwktvx .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#kvvwnwktvx div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="gt_col_headings gt_spanner_row header">
+<th rowspan="2" id="partido" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Partido</th>
+<th colspan="2" id="Voto latente" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Voto latente
+</div></th>
+<th colspan="2" id="Con el error del consenso" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Con el error del consenso
+</div></th>
+</tr>
+<tr class="gt_col_headings even">
+<th id="m_lat" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Mediana (%)</th>
+<th id="ic_lat" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">IC90 (%)</th>
+<th id="m_err" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Mediana (%)</th>
+<th id="ic_err" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">IC90 (%)</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">PP</td>
+<td class="gt_row gt_right" headers="m_lat">31,5</td>
+<td class="gt_row gt_left" headers="ic_lat">29,6–33,0</td>
+<td class="gt_row gt_right" headers="m_err">30,6</td>
+<td class="gt_row gt_left" headers="ic_err">25,8–35,8</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">PSOE</td>
+<td class="gt_row gt_right" headers="m_lat">26,8</td>
+<td class="gt_row gt_left" headers="ic_lat">25,3–28,2</td>
+<td class="gt_row gt_right" headers="m_err">27,1</td>
+<td class="gt_row gt_left" headers="ic_err">22,8–31,8</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Vox</td>
+<td class="gt_row gt_right" headers="m_lat">19,5</td>
+<td class="gt_row gt_left" headers="ic_lat">17,8–21,3</td>
+<td class="gt_row gt_right" headers="m_err">19,3</td>
+<td class="gt_row gt_left" headers="ic_err">14,3–24,9</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Frente Amplio</td>
+<td class="gt_row gt_right" headers="m_lat">6,5</td>
+<td class="gt_row gt_left" headers="ic_lat">5,7–7,5</td>
+<td class="gt_row gt_right" headers="m_err">6,8</td>
+<td class="gt_row gt_left" headers="ic_err">5,1–9,0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Podemos</td>
+<td class="gt_row gt_right" headers="m_lat">2,4</td>
+<td class="gt_row gt_left" headers="ic_lat">1,7–3,2</td>
+<td class="gt_row gt_right" headers="m_err">2,5</td>
+<td class="gt_row gt_left" headers="ic_err">1,6–3,7</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">ERC</td>
+<td class="gt_row gt_right" headers="m_lat">2,1</td>
+<td class="gt_row gt_left" headers="ic_lat">1,9–2,4</td>
+<td class="gt_row gt_right" headers="m_err">2,1</td>
+<td class="gt_row gt_left" headers="ic_err">1,8–2,4</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">SALF</td>
+<td class="gt_row gt_right" headers="m_lat">1,9</td>
+<td class="gt_row gt_left" headers="ic_lat">1,4–2,6</td>
+<td class="gt_row gt_right" headers="m_err">1,9</td>
+<td class="gt_row gt_left" headers="ic_err">1,4–2,6</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Junts</td>
+<td class="gt_row gt_right" headers="m_lat">1,3</td>
+<td class="gt_row gt_left" headers="ic_lat">1,2–1,5</td>
+<td class="gt_row gt_right" headers="m_err">1,3</td>
+<td class="gt_row gt_left" headers="ic_err">1,1–1,5</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">EH Bildu</td>
+<td class="gt_row gt_right" headers="m_lat">1,3</td>
+<td class="gt_row gt_left" headers="ic_lat">1,1–1,4</td>
+<td class="gt_row gt_right" headers="m_err">1,2</td>
+<td class="gt_row gt_left" headers="ic_err">1,1–1,4</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">PNV</td>
+<td class="gt_row gt_right" headers="m_lat">0,9</td>
+<td class="gt_row gt_left" headers="ic_lat">0,8–1,0</td>
+<td class="gt_row gt_right" headers="m_err">0,9</td>
+<td class="gt_row gt_left" headers="ic_err">0,8–1,0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">BNG</td>
+<td class="gt_row gt_right" headers="m_lat">0,9</td>
+<td class="gt_row gt_left" headers="ic_lat">0,7–1,0</td>
+<td class="gt_row gt_right" headers="m_err">0,8</td>
+<td class="gt_row gt_left" headers="ic_err">0,7–1,0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">CC</td>
+<td class="gt_row gt_right" headers="m_lat">0,4</td>
+<td class="gt_row gt_left" headers="ic_lat">0,4–0,5</td>
+<td class="gt_row gt_right" headers="m_err">0,4</td>
+<td class="gt_row gt_left" headers="ic_err">0,4–0,5</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">UPN</td>
+<td class="gt_row gt_right" headers="m_lat">0,2</td>
+<td class="gt_row gt_left" headers="ic_lat">0,1–0,2</td>
+<td class="gt_row gt_right" headers="m_err">0,2</td>
+<td class="gt_row gt_left" headers="ic_err">0,1–0,2</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Resto</td>
+<td class="gt_row gt_right" headers="m_lat">4,1</td>
+<td class="gt_row gt_left" headers="ic_lat">2,6–6,8</td>
+<td class="gt_row gt_right" headers="m_err">4,1</td>
+<td class="gt_row gt_left" headers="ic_err">2,5–6,7</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="tendencia" class="level2">
+<h2 class="anchored" data-anchor-id="tendencia">Tendencia</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-tendencia-viva" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tendencia-viva-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="seguimiento_files/figure-html/fig-tendencia-viva-1.png" class="img-fluid figure-img" width="2664">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tendencia-viva-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;1: Voto latente (media de las casas), sin el error del consenso: mediana e IC90 por semana desde octubre. La primera línea discontinua marca la última encuesta incluida; desde ahí hasta el 29-N el modelo solo extrapola, y por eso el intervalo se abre. El voto provincial y los escaños sí llevan el error del consenso.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="escaños" class="level2">
+<h2 class="anchored" data-anchor-id="escaños">Escaños</h2>
+<p>Los escaños salen del <strong>escenario mapa</strong>: el voto nacional se reparte por provincias y, antes del D’Hondt, se aplican las candidaturas que de verdad se presentan en cada una. Las encuestas preguntan por partidos nacionales, pero a la izquierda del PSOE las listas cambian según el territorio:</p>
+<ul>
+<li><strong>Podemos no se presenta</strong> en Barcelona, Girona, Lleida y Tarragona, por su acuerdo con ERC. Su voto se reparte en cada simulación con un sorteo centrado en 65 % para ERC, 30 % para el Frente Amplio y 5 % fuera (abstención u otros).</li>
+<li><strong>El Frente Amplio no se presenta</strong> en Teruel: CHA-Frente Amplio retiró su lista el 21 de octubre. Su voto va a un sorteo centrado en 55 % para el PSOE y 45 % fuera.</li>
+<li><strong>Adelante Andalucía</strong> se presenta sola en las 8 provincias andaluzas. Las encuestas nacionales no la miden, así que su voto sale de las autonómicas del 17 de mayo de 2026 (9,6 % en Andalucía), con incertidumbre en el paso de autonómicas a generales. Ese voto sale primero de “otros partidos” y después de Podemos y el Frente Amplio.</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-escanos-vivos" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-escanos-vivos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="seguimiento_files/figure-html/fig-escanos-vivos-1.png" class="img-fluid figure-img" width="2664">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-escanos-vivos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;2: Escaños proyectados por partido (escenario mapa): mediana e IC90 de las simulaciones, con el error del consenso incluido.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div id="tbl-escanos-vivos" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-escanos-vivos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;2: Escaños proyectados (escenario mapa, mediana e IC90).
+</figcaption>
+<div aria-describedby="tbl-escanos-vivos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="slkoxlbwbw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#slkoxlbwbw table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#slkoxlbwbw thead, #slkoxlbwbw tbody, #slkoxlbwbw tfoot, #slkoxlbwbw tr, #slkoxlbwbw td, #slkoxlbwbw th {
+  border-style: none;
+}
+
+#slkoxlbwbw p {
+  margin: 0;
+  padding: 0;
+}
+
+#slkoxlbwbw .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#slkoxlbwbw .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#slkoxlbwbw .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#slkoxlbwbw .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#slkoxlbwbw .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#slkoxlbwbw .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#slkoxlbwbw .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#slkoxlbwbw .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#slkoxlbwbw .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#slkoxlbwbw .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#slkoxlbwbw .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#slkoxlbwbw .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#slkoxlbwbw .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#slkoxlbwbw .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#slkoxlbwbw .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#slkoxlbwbw .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#slkoxlbwbw .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#slkoxlbwbw .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#slkoxlbwbw .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#slkoxlbwbw .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#slkoxlbwbw .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#slkoxlbwbw .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#slkoxlbwbw .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#slkoxlbwbw .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#slkoxlbwbw .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#slkoxlbwbw .gt_left {
+  text-align: left;
+}
+
+#slkoxlbwbw .gt_center {
+  text-align: center;
+}
+
+#slkoxlbwbw .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#slkoxlbwbw .gt_font_normal {
+  font-weight: normal;
+}
+
+#slkoxlbwbw .gt_font_bold {
+  font-weight: bold;
+}
+
+#slkoxlbwbw .gt_font_italic {
+  font-style: italic;
+}
+
+#slkoxlbwbw .gt_super {
+  font-size: 65%;
+}
+
+#slkoxlbwbw .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#slkoxlbwbw .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#slkoxlbwbw .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#slkoxlbwbw .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#slkoxlbwbw .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#slkoxlbwbw .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#slkoxlbwbw .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#slkoxlbwbw .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#slkoxlbwbw div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="partido" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Partido</th>
+<th id="mediana" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Mediana</th>
+<th id="q05" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">q05</th>
+<th id="q95" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">q95</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">PP</td>
+<td class="gt_row gt_right" headers="mediana">126</td>
+<td class="gt_row gt_right" headers="q05">103</td>
+<td class="gt_row gt_right" headers="q95">151</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">PSOE</td>
+<td class="gt_row gt_right" headers="mediana">108</td>
+<td class="gt_row gt_right" headers="q05">88</td>
+<td class="gt_row gt_right" headers="q95">131</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Vox</td>
+<td class="gt_row gt_right" headers="mediana">68</td>
+<td class="gt_row gt_right" headers="q05">43</td>
+<td class="gt_row gt_right" headers="q95">94</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Frente Amplio</td>
+<td class="gt_row gt_right" headers="mediana">11</td>
+<td class="gt_row gt_right" headers="q05">7</td>
+<td class="gt_row gt_right" headers="q95">20</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">ERC</td>
+<td class="gt_row gt_right" headers="mediana">10</td>
+<td class="gt_row gt_right" headers="q05">8</td>
+<td class="gt_row gt_right" headers="q95">12</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">EH Bildu</td>
+<td class="gt_row gt_right" headers="mediana">7</td>
+<td class="gt_row gt_right" headers="q05">6</td>
+<td class="gt_row gt_right" headers="q95">8</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Junts</td>
+<td class="gt_row gt_right" headers="mediana">5</td>
+<td class="gt_row gt_right" headers="q05">4</td>
+<td class="gt_row gt_right" headers="q95">7</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">PNV</td>
+<td class="gt_row gt_right" headers="mediana">5</td>
+<td class="gt_row gt_right" headers="q05">3</td>
+<td class="gt_row gt_right" headers="q95">6</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Adelante Andalucía</td>
+<td class="gt_row gt_right" headers="mediana">3</td>
+<td class="gt_row gt_right" headers="q05">2</td>
+<td class="gt_row gt_right" headers="q95">6</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">BNG</td>
+<td class="gt_row gt_right" headers="mediana">2</td>
+<td class="gt_row gt_right" headers="q05">2</td>
+<td class="gt_row gt_right" headers="q95">3</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">CC</td>
+<td class="gt_row gt_right" headers="mediana">1</td>
+<td class="gt_row gt_right" headers="q05">1</td>
+<td class="gt_row gt_right" headers="q95">2</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Podemos</td>
+<td class="gt_row gt_right" headers="mediana">1</td>
+<td class="gt_row gt_right" headers="q05">0</td>
+<td class="gt_row gt_right" headers="q95">2</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">UPN</td>
+<td class="gt_row gt_right" headers="mediana">1</td>
+<td class="gt_row gt_right" headers="q05">0</td>
+<td class="gt_row gt_right" headers="q95">1</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">SALF</td>
+<td class="gt_row gt_right" headers="mediana">0</td>
+<td class="gt_row gt_right" headers="q05">0</td>
+<td class="gt_row gt_right" headers="q95">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div id="tbl-mayorias" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-mayorias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;3: Probabilidad de las mayorías sobre las mismas simulaciones.
+</figcaption>
+<div aria-describedby="tbl-mayorias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="waklnkibbt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#waklnkibbt table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#waklnkibbt thead, #waklnkibbt tbody, #waklnkibbt tfoot, #waklnkibbt tr, #waklnkibbt td, #waklnkibbt th {
+  border-style: none;
+}
+
+#waklnkibbt p {
+  margin: 0;
+  padding: 0;
+}
+
+#waklnkibbt .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#waklnkibbt .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#waklnkibbt .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#waklnkibbt .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#waklnkibbt .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#waklnkibbt .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#waklnkibbt .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#waklnkibbt .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#waklnkibbt .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#waklnkibbt .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#waklnkibbt .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#waklnkibbt .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#waklnkibbt .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#waklnkibbt .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#waklnkibbt .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#waklnkibbt .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#waklnkibbt .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#waklnkibbt .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#waklnkibbt .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#waklnkibbt .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#waklnkibbt .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#waklnkibbt .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#waklnkibbt .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#waklnkibbt .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#waklnkibbt .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#waklnkibbt .gt_left {
+  text-align: left;
+}
+
+#waklnkibbt .gt_center {
+  text-align: center;
+}
+
+#waklnkibbt .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#waklnkibbt .gt_font_normal {
+  font-weight: normal;
+}
+
+#waklnkibbt .gt_font_bold {
+  font-weight: bold;
+}
+
+#waklnkibbt .gt_font_italic {
+  font-style: italic;
+}
+
+#waklnkibbt .gt_super {
+  font-size: 65%;
+}
+
+#waklnkibbt .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#waklnkibbt .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#waklnkibbt .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#waklnkibbt .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#waklnkibbt .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#waklnkibbt .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#waklnkibbt .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#waklnkibbt .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#waklnkibbt div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="escenario" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Mayoría</th>
+<th id="prob" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Probabilidad</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="escenario">PP solo &gt;= 176</td>
+<td class="gt_row gt_right" headers="prob">0,2%</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="escenario">PP + VOX &gt;= 176</td>
+<td class="gt_row gt_right" headers="prob">94,7%</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="escenario">izquierda &gt;= 176</td>
+<td class="gt_row gt_right" headers="prob">3,9%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="provincia-a-provincia" class="level2">
+<h2 class="anchored" data-anchor-id="provincia-a-provincia">Provincia a provincia</h2>
+<p>El modelo no tiene encuestas provinciales, pero sí tiene el voto nacional con el error del consenso y un patrón provincial: el del 23-J, ajustado con el shock de los regionales (ver el post donde cuento todo eso) y las reglas del mapa de listas. Con eso reparte el voto draw a draw entre las 52 provincias, y de ahí sale el D’Hondt. Las tres tablas miran esa distribución provincial: primero el voto, luego los escaños, y al final el escaño más reñido de cada provincia.</p>
+<p><strong>El voto.</strong> Mediana, en %, del voto (con el error del consenso) que cada familia recibe en cada provincia. Con el filtro se busca la que quieras; conviene leerlo como “a dónde va el voto”, no como encuesta provincial.</p>
+<div class="cell">
+<div id="tbl-voto-prov" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-voto-prov-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;4: Voto por provincia (con el error del consenso): mediana en % de cada familia.
+</figcaption>
+<div aria-describedby="tbl-voto-prov-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-309138d6ad7e805e8912" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-309138d6ad7e805e8912">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"8.80807461641571\" data-max=\"47.6607783955033\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"20.2638041057079\" data-max=\"33.7231440893918\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"33.1893944319198\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"13.6911143734505\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"3.28857542991136\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.63060781094757\" data-max=\"2.88543011772362\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"16.3255949751815\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"22.3096969808097\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"24.5772017450122\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"32.7757552084426\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"14.1729076345667\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"16.2266351343525\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"11.8793338181659\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"29.3308399132783\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"14.1939116072915\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Araba/Álava","Albacete","Alacant/Alicante","Almería","Ávila","Badajoz","Illes Balears","Barcelona","Burgos","Cáceres","Cádiz","Castelló/Castellón","Ciudad Real","Córdoba","A Coruña","Cuenca","Girona","Granada","Guadalajara","Gipuzkoa","Huelva","Huesca","Jaén","León","Lleida","La Rioja","Lugo","Madrid","Málaga","Murcia","Navarra","Ourense","Asturias","Palencia","Las Palmas","Pontevedra","Salamanca","Santa Cruz de Tenerife","Cantabria","Segovia","Sevilla","Soria","Tarragona","Teruel","Toledo","València/Valencia","Valladolid","Bizkaia","Zamora","Zaragoza","Ceuta","Melilla"],[17.97286634526037,36.08568117778028,33.04228641733236,35.44651908669541,36.9286728477303,34.90301122973997,32.66868055989564,12.84927214105783,37.4591570721642,35.01938914265585,31.20663494952902,31.87647008170563,36.78954926361769,34.575651289738,40.98112428732554,36.28973301550463,8.808074616415713,33.37130178903969,32.05473054320163,8.935396363309232,33.35179955785603,34.89230946182234,33.5986375299758,31.90354203739156,11.7849953663757,43.26092004714235,47.66077839550325,37.55875043109393,34.23431750042739,35.68534549936248,16.47866949905701,47.37489093440504,33.50546105238862,38.12156172813788,22.03238964125266,37.78750160730257,42.74830547210048,35.70556772875782,38.70285400111764,41.5222069587918,30.74379219254741,30.35733557470969,12.58190151333519,28.90576411197057,33.680389348841,30.45293258217366,37.18264403824951,11.94241370325143,40.83325054235078,32.35799212162056,33.29167904998252,42.37592565965447],[25.96915044810653,28.74472781700749,26.60885374441584,23.12712959841937,21.74337131953683,33.72314408939182,25.50056170159943,31.08863170964366,29.27616208293517,33.2832765554227,24.19513668931517,27.41120369221206,29.83763763851836,25.55141106340514,24.83763908909956,31.54183842568775,24.45219526899316,26.78103474607919,26.8531073261281,22.18743181678266,28.99033436179595,28.57652793206589,30.12236508218555,27.11985682523986,25.0416757450096,31.15496281178077,26.75850673651345,23.90106864683998,23.25715353540579,20.28184357359137,24.95543273264802,26.36292888096845,29.92038018245511,29.20269147877012,26.29325394190582,27.66776732082139,25.68700005373341,31.4026107955564,28.34415855546344,25.96300953144507,27.99244153874959,22.29905910304259,27.67979917865315,23.89364646857007,26.65935379121482,26.92859120493312,27.53911450323884,24.79272246131342,27.60208339864735,25.58485103480151,27.09700153422098,20.26380410570791],[6.469170032949465,24.66012035666919,24.34662959334646,30.77252280206661,21.90055277172752,20.88397569860339,23.2586498005723,11.70128583345541,19.48498024123256,20.86216975223121,22.61429065671887,23.90164249339013,24.55559642412712,21.20365553693894,7.98794453981807,23.66881942605299,10.55559651002262,24.11077559552679,28.24963028593038,3.561565463057331,22.35109863007067,19.19853669897491,22.0567605563509,18.47436260110049,10.37820816691397,15.32242728953294,6.829215934116115,21.54451998904628,24.53922000010294,31.40647861151321,9.234219495453445,7.699781586518742,19.39867696631933,19.37347430745983,20.67766115471976,7.579761431971247,22.23435946674023,0,21.3787516382985,21.52303929610478,20.39686458783209,13.20720983882966,15.60818242675127,17.7961056228258,28.78666599747227,23.01082603894619,22.90106056140218,4.505373339267395,19.89972994428911,22.57088871975682,33.18939443191984,22.78305936712098],[6.723158230833048,3.863242029702063,10.09084374708546,3.173915868594501,2.40385138934439,3.509159437935807,12.44069916640993,8.252613714596169,4.663008404934065,3.292018680141835,3.858932524933514,11.63471629962654,3.339972259822792,6.640484695183016,5.947170544327228,2.982663593750239,5.695353711858566,4.782689725690655,4.719662759086815,5.645765126866001,3.997523018260229,6.758066553321074,4.579881455670261,3.140809328916752,4.230319734639452,3.688352309987931,2.335805668696656,8.219885747637464,4.455701211306164,4.906707351906989,7.052775071511755,2.590083934477465,8.741814898673764,3.25767239602769,7.158425638514836,7.003887511148552,2.679595724663014,8.48261116178557,4.269113504455474,4.343541238125876,4.153860675853795,1.436353021124668,5.98656080320693,0,4.323399517611108,13.69111437345052,4.755736684738531,5.883562666627119,2.703631659835833,7.693368920778103,0.9475583156131556,1.364794353558839],[3.288575429911358,1.398138612902471,0,0.7565807752211589,1.051769879650981,1.508230243947502,0,0,1.756708606048901,1.65211913048997,0,0,1.211758101037425,0,3.012723329822289,1.117223281895785,0,0.349713842555315,1.80805783360279,2.843921143721914,0,2.044493098938184,1.189166167870661,1.45683696291444,0,1.354008304533871,1.365707658393015,3.246666774627963,0,1.801456883386181,2.99815814462953,1.368172561626077,2.835078474245771,1.193371479476426,0,3.003239298706475,1.266083727314952,0,1.878148626613781,1.642321650514895,0,0.6966028356210965,0,0.8738338906171258,1.594966432767318,0,1.770773257990612,2.901022276608639,1.305004927403878,2.367860273063288,0.6161374712235559,0.659833645974912],[1.009252067317753,2.218661516697119,2.347958339919111,2.640955270865658,1.563148485942755,1.439888978956164,2.109895541604008,1.159735215634495,1.583139268027119,1.286762906418542,2.521242288654104,2.013801193680334,1.632263535696782,2.122725876080951,0.8233331985345381,1.550252052404246,0.8563280674785493,2.346817947962096,2.502942886256089,0.6306078109475701,1.930899061799937,1.861329303898377,1.742721760400742,1.529519904949538,0.9200957753933382,1.498638987467137,0.6821969323675184,2.024165823669966,2.881960976826001,2.458521456566592,1.307321508262111,0.7493293509821453,1.336743355654236,1.586605643203385,2.52232228397704,0.9351295004555603,1.457015425097093,2.587207693097046,2.270308098042627,1.746317179585175,2.525252022976236,1.100390460720827,1.327956494714438,1.667842262884369,1.86863676739957,2.280125916427376,1.788419557158143,0.7971493523324137,1.287182119414497,2.022352344990309,2.885430117723619,2.197384768903087],[0,0,0,0,0,0,0,8.31053794010308,0,0,0,0,0,0,0,0,16.32559497518147,0,0,0,0,0,0,0,15.16398215756438,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9.221535502454522,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,16.76787815848516,0,0,0,0,0,0,0,0,18.23830006911877,0,0,0,0,0,0,0,22.30969698080973,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18.66024638383299,0,0,0,0,0,0,0,0,0],[14.8180114599846,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20.46777887540728,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,24.57720174501219,0,0,0,0],[20.07309347395562,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,32.7757552084426,0,0,0,0,0,0,0,0,0,0,17.31353836098247,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,21.80494751922531,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,14.17290763456673,0,0,0,0,0,0,0,0,0,0,0,12.35003531387275,0,0,0,0,11.65987592489079,0,0,0,13.42632410595499,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5.195195555538776,0,0,16.2266351343525,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,11.87933381816587,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[2.400729947886529,1.593048026849347,2.302046256214267,0,12.8720616498064,2.763868398064333,2.46993064997652,8.44724403712627,4.331705004884492,3.106554956719052,0,1.789259994764253,1.381255844313462,0,1.190698927937833,1.504950436085201,13.61123799455478,0,2.346619301742534,1.936488500023158,0,5.110438908327934,0.5509918756265831,14.70890049542667,8.825854808121584,2.460686100023532,1.096018536837008,2.239313409715345,0,2.289222333404079,7.242533567565834,1.268649198461565,2.829658649906604,5.843107677715492,14.33556553714647,1.472702233024025,2.6804764252301,4.656342988723215,1.917839482980273,2.036996193524596,0,29.33083991327826,7.50864776973035,25.14263541589319,1.692584238498851,2.299632784340416,2.686052778548383,1.7325768502363,5.143341676377967,5.69357554573403,0.7953875322772104,8.76849256148032],[0,0,0,3.050896249119194,0,0,0,0,0,0,14.19391160729146,0,0,8.221113583459214,0,0,0,6.714456362534083,0,0,7.917877036526456,0,4.320061252994789,0,0,0,0,0,9.273181666045458,0,0,0,0,0,0,0,0,0,0,0,12.81281419835825,0,0,0,0,0,0,0,0,0,0,0]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>provincia<\/th>\n      <th>PP<\/th>\n      <th>PSOE<\/th>\n      <th>Vox<\/th>\n      <th>Frente Amplio<\/th>\n      <th>Podemos<\/th>\n      <th>SALF<\/th>\n      <th>Junts<\/th>\n      <th>ERC<\/th>\n      <th>PNV<\/th>\n      <th>EH Bildu<\/th>\n      <th>BNG<\/th>\n      <th>CC<\/th>\n      <th>UPN<\/th>\n      <th>RESTO<\/th>\n      <th>Adelante Andalucía<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"scrollX":true,"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":6,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":7,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":8,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":9,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":10,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":11,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":12,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":13,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":14,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":15,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-right","targets":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]},{"name":"provincia","targets":0},{"name":"PP","targets":1},{"name":"PSOE","targets":2},{"name":"Vox","targets":3},{"name":"Frente Amplio","targets":4},{"name":"Podemos","targets":5},{"name":"SALF","targets":6},{"name":"Junts","targets":7},{"name":"ERC","targets":8},{"name":"PNV","targets":9},{"name":"EH Bildu","targets":10},{"name":"BNG","targets":11},{"name":"CC","targets":12},{"name":"UPN","targets":13},{"name":"RESTO","targets":14},{"name":"Adelante Andalucía","targets":15}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render","options.columnDefs.6.render","options.columnDefs.7.render","options.columnDefs.8.render","options.columnDefs.9.render","options.columnDefs.10.render","options.columnDefs.11.render","options.columnDefs.12.render","options.columnDefs.13.render","options.columnDefs.14.render"],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>Los escaños.</strong> D’Hondt sobre el voto anterior, draw a draw, con el umbral legal del 3 % provincial. Para cada provincia y partido con opciones, los escaños en las 6.000 simulaciones. La <strong>media</strong> son los escaños esperados, y suma los de la provincia. La mediana y el IC90 son escaños enteros. La nota de debajo de la tabla explica por qué las medianas a veces no cuadran.</p>
+<div class="cell">
+<div id="tbl-esc-prov" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-esc-prov-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;5: Escaños por provincia y partido: media (escaños esperados), mediana e IC90. Solo partidos con opciones (q95 &gt; 0).
+</figcaption>
+<div aria-describedby="tbl-esc-prov-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-cd91971817f1fa9232e1" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-cd91971817f1fa9232e1">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.055666666666666\" data-max=\"15.5333333333333\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"16\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"12\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"19\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Albacete","Albacete","Albacete","Almería","Almería","Almería","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Asturias","Asturias","Asturias","Asturias","Badajoz","Badajoz","Badajoz","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Burgos","Burgos","Burgos","Cantabria","Cantabria","Cantabria","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Ceuta","Ceuta","Ceuta","Ciudad Real","Ciudad Real","Ciudad Real","Cuenca","Cuenca","Cuenca","Cáceres","Cáceres","Cáceres","Cádiz","Cádiz","Cádiz","Cádiz","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Girona","Girona","Girona","Girona","Girona","Granada","Granada","Granada","Guadalajara","Guadalajara","Guadalajara","Huelva","Huelva","Huelva","Huesca","Huesca","Huesca","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Jaén","Jaén","Jaén","La Rioja","La Rioja","La Rioja","Las Palmas","Las Palmas","Las Palmas","Las Palmas","León","León","León","Lleida","Lleida","Lleida","Lleida","Lleida","Lugo","Lugo","Lugo","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Melilla","Melilla","Murcia","Murcia","Murcia","Málaga","Málaga","Málaga","Málaga","Málaga","Navarra","Navarra","Navarra","Navarra","Navarra","Ourense","Ourense","Ourense","Palencia","Palencia","Palencia","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Salamanca","Salamanca","Salamanca","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Segovia","Segovia","Segovia","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Soria","Soria","Soria","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Teruel","Teruel","Teruel","Toledo","Toledo","Toledo","Valladolid","Valladolid","Valladolid","València/Valencia","València/Valencia","València/Valencia","València/Valencia","Zamora","Zamora","Zamora","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Ávila","Ávila","Ávila"],["PP","PSOE","BNG","Vox","Frente Amplio","PP","PSOE","Vox","Frente Amplio","PP","PSOE","Vox","PP","Vox","PSOE","PSOE","EH Bildu","PP","PNV","PP","PSOE","Vox","Frente Amplio","PP","PSOE","Vox","PSOE","ERC","PP","Vox","Junts","Frente Amplio","PSOE","PNV","EH Bildu","PP","Frente Amplio","PP","PSOE","Vox","PP","PSOE","Vox","PP","PSOE","Vox","Frente Amplio","Vox","PP","PSOE","PP","PSOE","Vox","PP","PSOE","Vox","PP","PSOE","Vox","PP","PSOE","Vox","Adelante Andalucía","PP","PSOE","Vox","Adelante Andalucía","Frente Amplio","EH Bildu","PSOE","PNV","PP","PSOE","ERC","Junts","Vox","PP","PP","PSOE","Vox","PP","Vox","PSOE","PP","PSOE","Vox","PP","PSOE","Vox","PP","PSOE","Vox","Frente Amplio","PP","PSOE","Vox","PP","PSOE","Vox","PSOE","PP","Vox","Frente Amplio","PP","PSOE","Vox","PSOE","ERC","Junts","PP","Vox","PP","PSOE","BNG","PP","PSOE","Vox","Frente Amplio","Podemos","SALF","PP","Vox","PP","Vox","PSOE","PP","Vox","PSOE","Adelante Andalucía","Frente Amplio","PSOE","PP","EH Bildu","UPN","Vox","PP","PSOE","BNG","PP","PSOE","Vox","PP","PSOE","BNG","Vox","Frente Amplio","PP","PSOE","Vox","PP","PSOE","CC","Frente Amplio","PP","PSOE","Vox","PP","PSOE","Vox","Adelante Andalucía","Frente Amplio","PP","PSOE","Vox","PSOE","ERC","Vox","PP","Junts","PP","PSOE","Vox","PP","Vox","PSOE","PP","PSOE","Vox","PP","PSOE","Vox","Frente Amplio","PP","PSOE","Vox","PP","PSOE","Vox","Frente Amplio","PP","PSOE","Vox"],[4.1615,2.344833333333333,1.0605,0.3738333333333331,0.05916666666666669,4.364166666666667,3.459333333333333,3.133,1.043333333333333,1.733833333333334,1.209666666666666,1.0565,2.472666666666667,2.095666666666667,1.4315,1.309,1.004833333333333,0.9266666666666669,0.75,2.820166666666668,2.463833333333334,1.4595,0.2565,2.017,1.933666666666666,1.049333333333333,11.62533333333334,6.049166666666667,4.587833333333333,4.183833333333333,2.781833333333334,2.771166666666667,2.457833333333333,2.384500000000001,2.075333333333333,1.002,0.06466666666666653,1.895833333333333,1.305333333333333,0.7988333333333331,2.315666666666667,1.5745,1.109666666666667,1.9065,1.547833333333333,1.314,0.2316666666666666,0.4501666666666663,0.4426666666666664,0.1071666666666667,2.111333333333333,1.6255,1.263166666666667,1.228166666666667,1.0585,0.7133333333333335,1.645999999999999,1.514999999999999,0.8390000000000002,2.860666666666666,2.080166666666666,1.958000000000001,1.073166666666667,2.602,1.819333333333334,1.428333333333333,0.09283333333333341,0.05749999999999995,2.687333333333333,1.679666666666667,1.423333333333334,0.2026666666666665,2.196,1.500166666666667,1.134833333333334,0.7200000000000004,0.4301666666666665,2.826833333333334,2.178666666666667,1.9365,1.0765,0.968,0.9554999999999999,2.046666666666667,1.717000000000001,1.217333333333334,1.365666666666666,1.0695,0.5644999999999996,2.921666666666667,2.201,1.969,0.908333333333333,2.035,1.792833333333333,1.172166666666667,2.181666666666668,1.408166666666667,0.410166666666667,2.956833333333333,2.414666666666666,2.252666666666667,0.3686666666666668,1.769166666666667,1.368166666666666,0.8626666666666674,1.443833333333333,1.104333333333334,0.9311666666666666,0.3088333333333336,0.2118333333333331,2.671833333333334,1.231833333333333,0.08916666666666646,15.53333333333333,9.744833333333334,8.859000000000002,3.094333333333334,0.6959999999999997,0.07250000000000013,0.9404999999999999,0.05566666666666625,4.145999999999999,3.635666666666667,2.176666666666667,4.278499999999999,2.961499999999999,2.755333333333334,0.8824999999999997,0.1203333333333335,1.837166666666666,1.05,1.041666666666667,0.7636666666666667,0.2696666666666672,2.688166666666666,1.233333333333333,0.06283333333333319,1.451,1.047333333333333,0.5016666666666671,3.378833333333334,2.356333333333334,0.9856666666666666,0.1940000000000002,0.08516666666666679,2.0445,1.0495,0.9059999999999999,3.080333333333333,2.649666666666666,1.055333333333333,0.214666666666667,1.5285,0.9030000000000001,0.5684999999999998,4.119833333333334,3.677666666666666,2.59,1.4255,0.1863333333333331,1.065166666666667,0.8543333333333335,0.08049999999999997,2.3505,1.3165,1.144833333333334,0.8978333333333332,0.2735000000000004,1.276833333333334,1.044,0.6791666666666663,2.310499999999999,1.9365,1.752833333333333,2.233833333333333,1.538166666666667,1.228,5.309833333333336,4.637333333333333,3.915833333333335,2.1335,1.543499999999999,0.9723333333333332,0.4841666666666665,2.831999999999999,2.153,1.856666666666665,0.1583333333333334,1.463166666666667,0.7948333333333335,0.7419999999999997],[4,2,1,0,0,4,3,3,1,2,1,1,2,2,1,1,1,1,1,3,2,1,0,2,2,1,12,6,5,4,3,3,2,2,2,1,0,2,1,1,2,2,1,2,2,1,0,0,0,0,2,2,1,1,1,1,2,2,1,3,2,2,1,3,2,1,0,0,3,2,1,0,2,1,1,1,0,3,2,2,1,1,1,2,2,1,1,1,1,3,2,2,1,2,2,1,2,1,0,3,2,2,0,2,1,1,1,1,1,0,0,3,1,0,16,10,9,3,1,0,1,0,4,4,2,4,3,3,1,0,2,1,1,1,0,3,1,0,1,1,0,3,2,1,0,0,2,1,1,3,3,1,0,2,1,1,4,4,3,1,0,1,1,0,2,1,1,1,0,1,1,1,2,2,2,2,2,1,5,5,4,2,2,1,0,3,2,2,0,1,1,1],[3,2,1,0,0,3,2,2,1,1,1,0,2,1,1,1,1,0,0,2,2,1,0,1,1,0,9,5,3,2,2,2,2,2,2,1,0,1,1,0,2,1,0,1,1,1,0,0,0,0,1,1,1,1,1,0,1,1,0,2,1,1,1,2,1,1,0,0,2,1,1,0,2,1,1,0,0,2,1,1,1,0,0,1,1,1,1,1,0,2,1,1,0,1,1,1,1,1,0,2,2,1,0,1,1,0,1,1,0,0,0,2,1,0,12,7,5,2,0,0,0,0,3,2,1,3,2,2,0,0,1,1,1,0,0,2,1,0,1,1,0,2,2,1,0,0,1,1,0,2,2,1,0,1,0,0,3,2,1,1,0,1,0,0,2,1,0,0,0,1,1,0,2,1,1,2,1,1,4,3,2,1,1,0,0,2,1,1,0,1,0,0],[5,3,2,1,1,6,5,5,2,2,2,2,3,3,2,2,1,1,1,4,3,2,1,3,3,2,14,7,6,6,3,4,3,3,3,1,1,3,2,1,3,2,2,3,2,2,1,1,1,1,3,2,2,2,2,1,2,2,1,4,3,3,2,4,3,2,1,1,3,2,2,1,3,2,2,1,1,4,3,3,2,1,1,3,2,2,2,2,1,4,3,3,1,3,2,2,3,2,1,4,3,3,1,2,2,1,2,2,1,1,1,3,2,1,19,13,13,5,2,1,1,1,5,5,3,6,4,4,1,1,2,2,1,1,1,3,2,1,2,2,1,4,3,1,1,1,3,2,1,4,3,2,1,2,1,1,5,5,4,2,1,2,1,1,3,2,2,1,1,2,2,1,3,3,2,3,2,2,7,6,6,3,2,1,1,4,3,3,1,2,1,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Provincia<\/th>\n      <th>Partido<\/th>\n      <th>Media<\/th>\n      <th>Mediana<\/th>\n      <th>q05<\/th>\n      <th>q95<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"scrollX":true,"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \",\", null);\n  }"},{"className":"dt-right","targets":[2,3,4,5]},{"name":"provincia","targets":0},{"name":"partido","targets":1},{"name":"media","targets":2},{"name":"mediana","targets":3},{"name":"q05","targets":4},{"name":"q95","targets":5}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Por qué las medianas no siempre suman los escaños
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La mediana es el valor del medio de las 6.000 simulaciones, y se calcula para cada partido por separado. Por eso las medianas de varios partidos no tienen por qué sumar los escaños de la provincia. La media sí los suma: en cada simulación los escaños suman el total, y la media conserva esa suma.</p>
+<p>Pasa cuando un escaño está muy disputado: ahora mismo, en 17 de las 52 provincias. Ejemplo: Ceuta reparte 1 escaño, pero sus medianas suman 0. Las medias de los partidos con más opciones son Vox 0,5, PP 0,4, PSOE 0,1.</p>
+<p>Por eso la tabla se ordena por la media. La mediana y el IC90 dicen otra cosa: qué número entero de escaños es el típico para cada partido.</p>
+</div>
+</div>
+<p><strong>El escaño más reñido de cada provincia.</strong> El D’Hondt reparte los escaños uno a uno: cada escaño va al cociente más alto, que es el voto del partido dividido por los escaños que ya lleva conseguidos, más uno. El último escaño en caer es el más ajustado de la provincia. Con 6.000 simulaciones completas se puede mirar, en cada una, quién se queda ese escaño y qué partido se quedó más cerca de quitárselo; la tabla resume las combinaciones que aparecen en cada provincia y con qué frecuencia.</p>
+<div class="cell">
+<div id="tbl-ultimo" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ultimo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;6: El escaño más reñido de cada provincia: quién se lo lleva, quién se queda más cerca y en qué % de simulaciones.
+</figcaption>
+<div aria-describedby="tbl-ultimo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-d2031556a7a3c5618e49" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-d2031556a7a3c5618e49">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"45\" data-max=\"99\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"56.7\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Araba/Álava","Albacete","Albacete","Albacete","Albacete","Albacete","Albacete","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Alacant/Alicante","Almería","Almería","Almería","Almería","Almería","Almería","Almería","Ávila","Ávila","Ávila","Ávila","Ávila","Ávila","Badajoz","Badajoz","Badajoz","Badajoz","Badajoz","Badajoz","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Illes Balears","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Barcelona","Burgos","Burgos","Burgos","Burgos","Burgos","Burgos","Cáceres","Cáceres","Cáceres","Cáceres","Cáceres","Cáceres","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Cádiz","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Castelló/Castellón","Ciudad Real","Ciudad Real","Ciudad Real","Ciudad Real","Ciudad Real","Ciudad Real","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","Córdoba","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","A Coruña","Cuenca","Cuenca","Cuenca","Cuenca","Cuenca","Cuenca","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Girona","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Granada","Guadalajara","Guadalajara","Guadalajara","Guadalajara","Guadalajara","Guadalajara","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Gipuzkoa","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huelva","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Huesca","Jaén","Jaén","Jaén","Jaén","Jaén","Jaén","Jaén","Jaén","León","León","León","León","León","León","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","Lleida","La Rioja","La Rioja","La Rioja","La Rioja","La Rioja","La Rioja","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Lugo","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Madrid","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Málaga","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Murcia","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Navarra","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Ourense","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Asturias","Palencia","Palencia","Palencia","Palencia","Palencia","Palencia","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Las Palmas","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Pontevedra","Salamanca","Salamanca","Salamanca","Salamanca","Salamanca","Salamanca","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Santa Cruz de Tenerife","Cantabria","Cantabria","Cantabria","Cantabria","Cantabria","Cantabria","Cantabria","Segovia","Segovia","Segovia","Segovia","Segovia","Segovia","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Sevilla","Soria","Soria","Soria","Soria","Soria","Soria","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Tarragona","Teruel","Teruel","Teruel","Teruel","Teruel","Teruel","Toledo","Toledo","Toledo","Toledo","Toledo","Toledo","Toledo","Toledo","Toledo","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","València/Valencia","Valladolid","Valladolid","Valladolid","Valladolid","Valladolid","Valladolid","Valladolid","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Bizkaia","Zamora","Zamora","Zamora","Zamora","Zamora","Zamora","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Zaragoza","Ceuta","Ceuta","Ceuta","Ceuta","Ceuta","Ceuta","Melilla","Melilla","Melilla","Melilla","Melilla","Melilla"],["PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","EH Bildu","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PSOE","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","PP","Vox","Vox","Vox","Vox","Vox","Vox","PP","PP","PP","PP","PP","PP"],[81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,70,70,70,70,70,70,65,65,65,65,65,65,65,65,65,65,65,65,65,65,63,63,63,63,63,63,63,89,89,89,89,89,89,53,53,53,53,53,53,69,69,69,69,69,69,69,69,69,69,69,69,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,79,79,79,79,79,79,55,55,55,55,55,55,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,60,60,60,60,60,60,60,60,60,60,60,60,69,69,69,69,69,69,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,78,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,63,63,63,63,63,63,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,52,52,52,52,52,52,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,95,63,63,63,63,63,63,63,63,63,63,63,63,63,63,73,73,73,73,73,73,73,73,73,73,73,61,61,61,61,61,61,61,61,68,68,68,68,68,68,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,87,87,87,87,87,87,98,98,98,98,98,98,98,98,98,98,98,98,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,91,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,77,63,63,63,63,63,63,63,63,63,63,63,63,63,63,63,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,89,98,98,98,98,98,98,98,98,98,98,98,98,63,63,63,63,63,63,63,63,63,63,63,63,80,80,80,80,80,80,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,86,92,92,92,92,92,92,67,67,67,67,67,67,67,67,67,67,67,67,67,67,83,83,83,83,83,83,83,91,91,91,91,91,91,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,86,86,86,86,86,86,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,92,70,70,70,70,70,70,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,79,79,79,79,79,79,79,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,89,89,89,89,89,89,70,70,70,70,70,70,70,70,70,70,70,70,45,45,45,45,45,45,94,94,94,94,94,94],["PNV-PSOE","PSOE-PNV","PP-PSOE","PNV-PP","PNV-EH Bildu","PP-PNV","PSOE-PP","PP-EH Bildu","EH Bildu-PSOE","EH Bildu-PNV","PSOE-EH Bildu","EH Bildu-PP","PNV-Vox","PNV-Frente Amplio","PP-Vox","Vox-PNV","PSOE-Vox","PP-Frente Amplio","Vox-PP","PSOE-Frente Amplio","Frente Amplio-PSOE","EH Bildu-Vox","Vox-PSOE","EH Bildu-Frente Amplio","Frente Amplio-PNV","Vox-EH Bildu","Frente Amplio-PP","Frente Amplio-EH Bildu","PP-PSOE","PP-Vox","Vox-PP","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","PP-Frente Amplio","Frente Amplio-PP","PSOE-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-Vox","PSOE-SALF","Vox-SALF","Vox-PP","PP-Vox","PP-PSOE","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-SALF","PSOE-PP","Vox-PP","PP-Vox","PP-PSOE","PSOE-Vox","Vox-PSOE","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","Frente Amplio-PP","PP-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-Vox","PSOE-Frente Amplio","Vox-Frente Amplio","PSOE-ERC","ERC-PSOE","PSOE-PP","PP-PSOE","PSOE-Vox","Vox-PSOE","PSOE-Junts","Junts-PSOE","PSOE-Frente Amplio","Frente Amplio-PSOE","ERC-Vox","ERC-PP","Vox-ERC","PP-ERC","Junts-ERC","PP-Vox","Vox-PP","Frente Amplio-ERC","ERC-Frente Amplio","Frente Amplio-Vox","Junts-PP","ERC-Junts","PP-Junts","Vox-Junts","Frente Amplio-PP","Junts-Vox","PP-Frente Amplio","Vox-Frente Amplio","Frente Amplio-Junts","Junts-Frente Amplio","PP-PSOE","PSOE-PP","Vox-PP","PP-Vox","Vox-PSOE","PSOE-Vox","PP-PSOE","PSOE-PP","Vox-PSOE","Vox-PP","PP-Vox","PSOE-Vox","PP-PSOE","PP-Vox","PSOE-PP","Vox-PP","Vox-PSOE","PSOE-Vox","PP-Adelante Andalucía","Adelante Andalucía-PP","Adelante Andalucía-PSOE","PSOE-Adelante Andalucía","Vox-Adelante Andalucía","Adelante Andalucía-Vox","PP-Frente Amplio","PSOE-Frente Amplio","Frente Amplio-PP","Vox-Frente Amplio","Frente Amplio-Vox","Frente Amplio-PSOE","Adelante Andalucía-Frente Amplio","Frente Amplio-Adelante Andalucía","PSOE-SALF","PP-PSOE","PSOE-PP","PP-Vox","PSOE-Vox","Vox-PSOE","PP-Frente Amplio","Vox-PP","PSOE-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-PP","Vox-Frente Amplio","Frente Amplio-Vox","PSOE-PP","PP-PSOE","PP-Vox","PSOE-Vox","Vox-PP","Vox-PSOE","PSOE-PP","PP-PSOE","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","PP-Adelante Andalucía","PSOE-Adelante Andalucía","Vox-Adelante Andalucía","Adelante Andalucía-PP","PP-Frente Amplio","Adelante Andalucía-PSOE","Adelante Andalucía-Vox","PSOE-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PP","Frente Amplio-PSOE","Frente Amplio-Vox","Adelante Andalucía-Frente Amplio","Frente Amplio-Adelante Andalucía","PP-PSOE","PSOE-PP","PP-Vox","PP-BNG","Vox-PP","PSOE-Vox","Vox-PSOE","PSOE-BNG","PP-Frente Amplio","BNG-PP","Frente Amplio-PP","BNG-PSOE","Vox-BNG","PSOE-Frente Amplio","BNG-Vox","Frente Amplio-PSOE","Vox-Frente Amplio","Frente Amplio-Vox","Frente Amplio-BNG","BNG-Frente Amplio","PP-Podemos","BNG-Podemos","Podemos-BNG","PSOE-Podemos","Vox-PP","Vox-PSOE","PP-Vox","PSOE-PP","PP-PSOE","PSOE-Vox","ERC-Junts","PSOE-ERC","ERC-PSOE","PP-ERC","ERC-PP","PSOE-Junts","Vox-ERC","PP-PSOE","ERC-Vox","Junts-ERC","PP-Junts","PSOE-PP","Vox-PSOE","PSOE-Vox","Junts-PSOE","Vox-Junts","PP-Vox","Vox-PP","Junts-PP","Junts-Vox","ERC-Frente Amplio","PSOE-Frente Amplio","Frente Amplio-ERC","Frente Amplio-PP","Frente Amplio-Junts","Junts-Frente Amplio","PP-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-Vox","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","Vox-PSOE","PSOE-Vox","PP-Adelante Andalucía","PSOE-Adelante Andalucía","Vox-Adelante Andalucía","Adelante Andalucía-PP","Adelante Andalucía-Vox","Adelante Andalucía-PSOE","PP-Frente Amplio","PSOE-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PP","Frente Amplio-PSOE","Frente Amplio-Vox","Adelante Andalucía-Frente Amplio","Frente Amplio-Adelante Andalucía","Vox-PP","PSOE-PP","PSOE-Vox","PP-Vox","Vox-PSOE","PP-PSOE","EH Bildu-PNV","PNV-EH Bildu","PSOE-PNV","EH Bildu-PSOE","PSOE-EH Bildu","PNV-PSOE","EH Bildu-PP","PNV-PP","PP-PNV","PSOE-PP","PP-EH Bildu","PP-PSOE","EH Bildu-Frente Amplio","PNV-Frente Amplio","PSOE-Frente Amplio","Frente Amplio-EH Bildu","Frente Amplio-PNV","Frente Amplio-PSOE","EH Bildu-Vox","PP-Frente Amplio","Frente Amplio-PP","PNV-Vox","PSOE-Podemos","PSOE-Vox","Vox-PP","PSOE-PP","PP-PSOE","PP-Vox","PSOE-Vox","Vox-PP","Vox-PSOE","PP-Adelante Andalucía","PSOE-Adelante Andalucía","Vox-Adelante Andalucía","Adelante Andalucía-PP","Adelante Andalucía-Vox","Adelante Andalucía-PSOE","PSOE-Frente Amplio","PP-Frente Amplio","Vox-PP","PP-Vox","PP-PSOE","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-Frente Amplio","PSOE-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-Vox","Vox-Frente Amplio","PSOE-PP","PP-PSOE","PP-Vox","PSOE-Vox","Vox-PP","Vox-PSOE","PSOE-Frente Amplio","PP-Frente Amplio","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","Vox-PSOE","PSOE-Vox","PSOE-ERC","PSOE-PP","Junts-PSOE","PP-PSOE","Junts-ERC","Junts-PP","PP-ERC","PSOE-Vox","Vox-PSOE","ERC-PSOE","ERC-PP","Junts-Vox","Vox-PP","PP-Vox","Vox-ERC","PSOE-Junts","PP-Junts","ERC-Vox","Vox-Junts","ERC-Junts","PSOE-Frente Amplio","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","Vox-PSOE","PSOE-Vox","PP-PSOE","PP-BNG","PSOE-PP","PSOE-BNG","BNG-PP","BNG-PSOE","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","BNG-Vox","Vox-BNG","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","Vox-PSOE","PSOE-Vox","PP-Frente Amplio","Frente Amplio-PP","Frente Amplio-PSOE","Vox-Frente Amplio","PSOE-Frente Amplio","Frente Amplio-Vox","PP-Podemos","Podemos-PP","Podemos-Vox","Podemos-PSOE","PSOE-Podemos","Vox-Podemos","Podemos-Frente Amplio","Frente Amplio-Podemos","PP-SALF","SALF-PP","Vox-SALF","PP-Vox","PP-PSOE","Vox-PP","PSOE-PP","Vox-PSOE","PSOE-Vox","Adelante Andalucía-PP","PP-Adelante Andalucía","Adelante Andalucía-PSOE","Vox-Adelante Andalucía","Adelante Andalucía-Vox","PP-Frente Amplio","PSOE-Adelante Andalucía","Frente Amplio-PP","Vox-Frente Amplio","Frente Amplio-Vox","PSOE-Frente Amplio","Frente Amplio-PSOE","Adelante Andalucía-Frente Amplio","Frente Amplio-Adelante Andalucía","PP-SALF","SALF-Vox","SALF-Adelante Andalucía","SALF-PP","Vox-PP","PP-Vox","PP-PSOE","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PP","PSOE-Frente Amplio","Frente Amplio-Vox","Frente Amplio-PSOE","PP-SALF","SALF-PP","Vox-SALF","UPN-PSOE","UPN-Vox","PSOE-EH Bildu","PSOE-UPN","UPN-PP","PSOE-Vox","UPN-EH Bildu","PSOE-PP","Vox-UPN","PP-PSOE","Vox-PSOE","PP-UPN","UPN-Frente Amplio","PSOE-Frente Amplio","PP-EH Bildu","EH Bildu-PSOE","PP-Vox","Vox-PP","Vox-EH Bildu","EH Bildu-UPN","Frente Amplio-UPN","Frente Amplio-PSOE","EH Bildu-PP","EH Bildu-Vox","PP-Frente Amplio","Vox-Frente Amplio","Frente Amplio-Vox","Frente Amplio-PP","EH Bildu-Frente Amplio","Frente Amplio-EH Bildu","PP-PSOE","PP-BNG","PSOE-PP","PSOE-BNG","BNG-PP","PP-Vox","BNG-PSOE","Vox-PP","PSOE-Vox","Vox-PSOE","Vox-BNG","BNG-Vox","PP-PSOE","PSOE-PP","Vox-PP","PP-Vox","PSOE-Vox","Vox-PSOE","PP-Frente Amplio","Frente Amplio-PP","PSOE-Frente Amplio","Frente Amplio-PSOE","Vox-Frente Amplio","Frente Amplio-Vox","Vox-PP","PP-Vox","PP-PSOE","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-PSOE","PSOE-PP","PSOE-Vox","Vox-PSOE","PP-Vox","Vox-PP","PSOE-Frente Amplio","Frente Amplio-PSOE","PP-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PP","Frente Amplio-Vox","PSOE-CC","Vox-CC","PP-CC","Frente Amplio-CC","CC-PSOE","CC-Vox","CC-Frente Amplio","CC-PP","PSOE-SALF","SALF-PP","PP-PSOE","PSOE-PP","PP-Vox","PP-Frente Amplio","Vox-PP","BNG-PP","PSOE-Vox","Vox-PSOE","PSOE-Frente Amplio","PP-BNG","Frente Amplio-PP","BNG-PSOE","Frente Amplio-PSOE","PSOE-BNG","Vox-Frente Amplio","Frente Amplio-Vox","BNG-Frente Amplio","BNG-Vox","Vox-BNG","Frente Amplio-BNG","PP-PSOE","PP-Vox","Vox-PP","PSOE-PP","Vox-PSOE","PSOE-Vox","PP-PSOE","PSOE-PP","PP-Frente Amplio","PP-CC","PSOE-Frente Amplio","Frente Amplio-PP","Frente Amplio-PSOE","PSOE-CC","CC-PSOE","CC-PP","Frente Amplio-CC","CC-Frente Amplio","PP-SALF","PSOE-SALF","PSOE-PP","PP-PSOE","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","Frente Amplio-PP","PP-Vox","Vox-PP","PSOE-PP","PP-PSOE","PSOE-Vox","Vox-PSOE","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","PP-Adelante Andalucía","Adelante Andalucía-PP","Adelante Andalucía-PSOE","PSOE-Adelante Andalucía","Vox-Adelante Andalucía","Adelante Andalucía-Vox","PP-Frente Amplio","Frente Amplio-PP","Frente Amplio-PSOE","PSOE-Frente Amplio","Vox-Frente Amplio","Frente Amplio-Vox","Frente Amplio-Adelante Andalucía","Adelante Andalucía-Frente Amplio","SALF-PSOE","Adelante Andalucía-SALF","PSOE-PP","PSOE-Vox","PP-PSOE","PP-Vox","Vox-PSOE","Vox-PP","PSOE-ERC","ERC-Junts","PSOE-Junts","Junts-ERC","ERC-PSOE","Junts-PSOE","Vox-PSOE","Vox-ERC","Vox-Junts","PSOE-Vox","PP-Junts","ERC-Vox","PP-ERC","PP-PSOE","Junts-Vox","PSOE-PP","ERC-PP","Junts-PP","PP-Vox","Vox-PP","ERC-Frente Amplio","PSOE-Frente Amplio","Junts-Frente Amplio","Frente Amplio-ERC","Frente Amplio-Junts","Frente Amplio-Vox","PP-Frente Amplio","Frente Amplio-PSOE","Vox-Frente Amplio","Frente Amplio-PP","Vox-PP","PP-Vox","PSOE-PP","Vox-PSOE","PP-PSOE","PSOE-Vox","PSOE-PP","Vox-PP","PP-Vox","PP-PSOE","Vox-PSOE","PSOE-Vox","Vox-Frente Amplio","PP-Frente Amplio","Frente Amplio-PP","PP-PSOE","PSOE-PP","Vox-PP","PP-Vox","PSOE-Vox","Vox-PSOE","PP-Frente Amplio","Frente Amplio-PP","PSOE-Frente Amplio","Frente Amplio-PSOE","Vox-Frente Amplio","Frente Amplio-Vox","PP-SALF","SALF-PSOE","PSOE-SALF","SALF-PP","SALF-Vox","Vox-SALF","SALF-Frente Amplio","PSOE-PP","PP-PSOE","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","Vox-Frente Amplio","PSOE-PNV","PNV-PSOE","PNV-EH Bildu","EH Bildu-PNV","PSOE-EH Bildu","EH Bildu-PSOE","PP-PNV","PP-PSOE","PNV-PP","PSOE-PP","PNV-Frente Amplio","Frente Amplio-PNV","PSOE-Frente Amplio","PP-EH Bildu","Frente Amplio-PSOE","EH Bildu-PP","EH Bildu-Frente Amplio","Frente Amplio-EH Bildu","PNV-Vox","PP-Frente Amplio","PSOE-Vox","Frente Amplio-PP","Vox-PNV","Vox-PSOE","EH Bildu-Vox","Vox-Frente Amplio","PP-Vox","Frente Amplio-Vox","Vox-EH Bildu","Podemos-EH Bildu","PSOE-Podemos","PP-Vox","Vox-PP","PSOE-PP","PP-PSOE","PSOE-Vox","Vox-PSOE","PP-PSOE","PSOE-PP","PP-Vox","Vox-PP","PSOE-Vox","Vox-PSOE","PP-Frente Amplio","Frente Amplio-PP","PSOE-Frente Amplio","Vox-Frente Amplio","Frente Amplio-PSOE","Frente Amplio-Vox","Vox-PP","PP-Vox","PP-PSOE","Vox-PSOE","PSOE-PP","PSOE-Vox","PP-Vox","PP-PSOE","Vox-PP","PSOE-PP","Vox-PSOE","PSOE-Vox"],[37,15.5,10.3,8.800000000000001,7.5,4.8,4.1,2.4,2.2,1.8,1.5,0.9,0.9,0.5,0.3,0.3,0.2,0.2,0.1,0.1,0.1,0.1,0.1,0,0,0,0,0,31.5,20.7,16.8,14.6,9.800000000000001,6.6,18.4,16.4,14.6,14.2,10.3,9.300000000000001,3.8,3.3,2.5,2.5,2.3,2.2,0,0,22,21.7,16.4,14.9,12.9,12.1,0,27.2,22,17.6,15.4,11,6.9,27.8,27.7,11.9,11.4,11.3,9.9,16.4,14.7,13.8,13.4,8.9,8.699999999999999,6,4.8,3.9,3.8,3,2.6,10.9,9.1,7.4,7.3,7.1,6.2,5.2,4.8,4.4,3.9,2.9,2.8,2.8,2.7,1.9,1.9,1.9,1.7,1.7,1.5,1.5,1.4,1.4,1.3,1.2,1.2,1.2,1.2,0.8,0.8,31.5,16.7,16.2,14.8,12,8.800000000000001,28.3,24,12.6,12,11.6,11.4,14.9,13.9,13.7,12.9,8.6,8.6,5.4,4.8,3.5,3.3,3.2,3,0.8,0.8,0.7,0.5,0.4,0.4,0.2,0.1,0,14.2,13.9,9.6,9,8.6,8.4,8.1,8,6,5.6,5.2,3.5,25.4,23.9,14.3,12.9,12.2,11.2,18,16.9,12.2,11.1,8,7.6,5.2,3.1,2.7,2.5,2.5,1.8,1.8,1.7,1.4,1.3,1.1,0.9,0.1,0.1,28.3,20.2,8.6,8.4,7.8,3.6,3.5,3.5,3.4,3,1.9,1.7,1.3,1.2,0.8,0.8,0.6,0.5,0.5,0.4,0,0,0,0,30,16.8,16.4,14.4,12.3,10.2,9.9,9.300000000000001,9.199999999999999,7.6,7.2,5.6,5.3,5.2,5,4.1,4.1,4.1,3.6,2.8,2.8,2.7,2.3,2.2,2,1.6,0.9,0.7,0.4,0.3,0.2,0.2,0.2,0.2,0.1,0.1,18.4,17.5,16.2,15.3,11.1,10.4,2.5,1.6,1.4,1.1,0.9,0.9,0.8,0.6,0.4,0.3,0.2,0.2,0,0,23.6,22,19,14,12.8,8.699999999999999,19.1,14.2,11.2,10.2,9.6,8.1,6.4,5.2,4.2,4,3.8,2.5,0.5,0.3,0.1,0.1,0.1,0.1,0,0,0,0,0,0,0,24.8,22.1,13.3,12.7,11.4,10.2,1.8,1.4,0.8,0.6,0.5,0.4,0,0,28.2,21.3,15.4,13.9,13.2,7.8,0.1,0,0,0,0,28.6,24,13.8,13.2,10.3,10,0,0,31,19.6,14.5,13.8,11.8,9.199999999999999,11.2,10.7,10.2,8.699999999999999,7.4,7,6.8,5.1,4.5,3.9,3.5,3.5,3.4,3.2,2.8,2.6,1.8,1.8,1.1,0.6,0,30,21.6,13.8,13.7,10.7,10.3,39.4,25.8,18.6,5.9,5.5,2.8,1,0.3,0.2,0.2,0.2,0.1,18.9,16,15.9,13.8,7.2,6.5,5,4.7,2.7,2.2,2.1,2,0.8,0.6,0.4,0.3,0.3,0.2,0.2,0.1,0,0,0,14.8,14.6,14.4,13.7,8.4,8,4.4,4.2,2.5,2.5,2.4,1.8,1.8,1.6,1.3,1.1,0.8,0.8,0.5,0.3,0.1,0.1,0,0,24.4,23.7,13.2,12.1,10.2,10.1,1.7,1.3,1.2,0.8,0.7,0.6,0,0,0,16,8,7.3,7.2,7.2,7.1,6.4,6.3,4.5,4.3,4.2,3.4,2.4,2.3,1.7,1.6,1.5,1.4,1.1,1,0.8,0.8,0.7,0.6,0.6,0.6,0.4,0.2,0.2,0.2,43.8,20.7,19.6,4.8,3.5,3,2.3,0.8,0.7,0.3,0.3,0.2,18.8,17.6,9.699999999999999,9.699999999999999,8.1,7.6,6.8,5.5,5.4,4.8,3.6,2.5,26.1,24,17,15.8,10,7.1,12.8,12.8,11.8,11.5,9.300000000000001,8.5,6.6,6,4.9,4.6,4.6,4.3,0.6,0.5,0.4,0.3,0.2,0.2,0.1,0.1,0,0,29.8,24.5,6.7,5.8,5.2,4.2,4.2,3.1,3,2.6,2.6,2.4,1.9,1.4,0.9,0.7,0.3,0.3,0.2,0.2,26.6,24.1,23.6,14.1,7.3,4.4,27.2,26,9.1,7.1,6.7,5.8,5.5,5.4,2.4,2.2,1.6,1,0,0,27.6,27,13.1,12.7,10.3,9.300000000000001,0,25.2,23.3,21.9,14.3,8.800000000000001,6.5,15.4,13.1,9.699999999999999,9.1,8.300000000000001,7.9,5.8,5.3,4.8,4.8,3.6,3.5,1.7,1.6,1.5,1.3,0.9,0.9,0.5,0.5,0,0,51.6,20.3,14.3,6.8,5.4,1.7,11.3,10.2,10.2,9.300000000000001,7.4,6.4,4.2,4.2,4,4,3.8,3.6,3.3,3.1,2.9,2.3,2.1,2.1,1.5,1.1,0.5,0.5,0.4,0.4,0.3,0.2,0.2,0.2,0.1,0.1,30.6,19.2,15.4,14.3,11.9,8.5,18.6,18.2,17.4,17.4,14.3,14,0,0,0,16.4,14.3,11.2,10.9,9.4,8.800000000000001,5.5,5.3,5.2,4.7,4,3.9,0.1,0,0,0,0,0,0,25.9,24.3,14.8,13.7,11.1,10.1,0,21.4,16,10.3,7.8,7.7,6.6,4.4,3.9,3.4,2.7,2.5,2.1,2,1.9,1.2,1.2,0.8,0.7,0.7,0.6,0.4,0.4,0.4,0.3,0.3,0.1,0,0,0,0,0,28,24.2,17.6,15.9,7.4,6.8,16.3,15.6,14.3,14,9.300000000000001,8.9,5.8,3.7,3.5,3.2,2.9,2.5,31.6,25.3,19,13.4,6.2,4.5,56.7,37.4,5.4,0.4,0.2,0]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Provincia<\/th>\n      <th>Gana la provincia<\/th>\n      <th>P(gana) %<\/th>\n      <th>El escaño más reñido (se lo lleva-casi se lo lleva)<\/th>\n      <th>% de simulaciones<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"scrollX":true,"columnDefs":[{"className":"dt-right","targets":[2,4]},{"name":"provincia","targets":0},{"name":"gana","targets":1},{"name":"p_gana","targets":2},{"name":"par","targets":3},{"name":"freq","targets":4}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Cómo se lee. <em>Gana la provincia</em> es el partido con más escaños en ella; si dos empatan, el más votado. Un par como <code>Vox-PP</code> dice que el escaño más reñido acaba en manos de Vox y que el partido que más cerca estuvo de arrebatárselo fue el PP; el % de simulaciones dice cuántas veces ocurre eso. Dentro de una misma provincia, fíjate en si el que se lo lleva se repite en casi todas las filas o va alternando entre partidos. Cuando se repite, la provincia está sentenciada: en Melilla, PP se lleva el escaño más reñido en el 94 % de las simulaciones, sea cual sea el rival. Cuando alterna, ese escaño está en el aire, y es justo donde un pequeño movimiento de voto cambia el color de un escaño. El buscador de la tabla sirve para localizarlas: escribe un par concreto (por ejemplo, <code>Vox-PP</code>) y verás en qué provincias ese escaño está al alcance de los dos.</p>
+<p>Podemos ver la probabilidad de que cada partido se lleve el escaño más reñido de cada provincia, sumados todos los pares posibles, en %. El resto de partidos va en la última columna, cada uno con su nombre y su %. Las provincias van de más abierta a más sentenciada: arriba, escaños que nadie controla; abajo, favoritos claros.</p>
+<div class="cell">
+<div id="tbl-lleva-ultimo" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-lleva-ultimo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;7: Probabilidad (%) de que cada partido se lleve el escaño más reñido de cada provincia.
+</figcaption>
+<div aria-describedby="tbl-lleva-ultimo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-ee21c0b01436e93cc764" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-ee21c0b01436e93cc764">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"10.6\" data-max=\"94\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.4\" data-max=\"72\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"46.8\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"15.2\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Tarragona","Lleida","Las Palmas","Castelló/Castellón","Girona","Sevilla","València/Valencia","Bizkaia","Toledo","Illes Balears","Cádiz","Barcelona","Asturias","Málaga","Gipuzkoa","Zaragoza","Córdoba","Alacant/Alicante","Granada","Almería","Ávila","Ciudad Real","Murcia","Huelva","Valladolid","Segovia","Badajoz","Cáceres","Navarra","Cantabria","Madrid","Guadalajara","Palencia","Huesca","Jaén","Santa Cruz de Tenerife","La Rioja","Zamora","Pontevedra","Teruel","Ceuta","León","Burgos","Cuenca","A Coruña","Salamanca","Albacete","Araba/Álava","Lugo","Ourense","Soria","Melilla"],[11.9,20.5,27.4,32.2,19.3,32.5,32.9,10.8,34.8,35,35.1,14.5,35.2,35.4,10.6,36.4,36.8,36.8,37.9,38.1,33,38.2,38.6,37.2,39.2,39.5,39.7,39.9,11.5,40,40.7,22.7,41,36.8,37.8,43.4,43.7,44,44.9,31.1,44.3,45.5,46.3,28.7,48.7,50.6,52.2,18,66.2,67.5,21,94],[28.3,29.7,31.7,30.9,22.4,27.3,29,34.2,32.6,26.6,26.4,35.1,31.1,24.3,24.9,28.4,30.8,29.3,30.1,27,38.1,38.4,23,39,37,30.7,39,35.5,30.2,37.9,24.9,40.9,22.9,21.7,41.9,38.1,31.8,25,33.1,23.9,10.7,28.9,25.4,24.5,28.5,18.4,21.2,21.4,24.7,25.1,72,0.4],[13.7,11.8,25.1,21.9,14,21.5,24.1,0.9,32.5,24.8,25.3,13.4,20.9,26.7,0,26.2,22.8,26,28.1,34.9,28.9,23.5,35.8,22.4,23.8,29.8,21.4,24.7,11.8,22,23.4,36.4,36.1,41.5,20.3,0,24.4,31,9.5,45,45,25.7,28.2,46.8,13.2,30.9,26.6,0.5,0.6,1.4,7,5.6],[1.2,0,15.2,15,1.2,4.6,13.9,4.5,0,13.7,1.6,9,12.8,3.8,0.4,9.1,3.4,7.9,0.9,0,0,0,2.5,0,0,0,0,0,2.4,0,9.6,0,0,0,0,13,0,0,5.3,0,0,0,0,0,3.6,0,0,0.2,0,0,0,0],["ERC 23,9 · Junts 21,0","Junts 28,2 · ERC 9,8","CC 0,6 · SALF &lt;0,1","—","ERC 32,2 · Junts 10,8","Adelante Andalucía 14,1 · SALF &lt;0,1","SALF 0,1","PNV 32,8 · EH Bildu 16,7 · Podemos &lt;0,1","—","—","Adelante Andalucía 11,6","ERC 17,8 · Junts 10,2","—","Adelante Andalucía 9,8 · SALF 0,1","EH Bildu 36,3 · PNV 27,8","—","Adelante Andalucía 6,3","—","Adelante Andalucía 3,0","—","—","—","SALF &lt;0,1","Adelante Andalucía 1,4","—","—","—","—","UPN 40,0 · EH Bildu 4,2","—","Podemos 1,4 · SALF &lt;0,1","—","—","—","—","CC 5,5","—","—","BNG 7,2","—","—","—","—","—","BNG 6,0 · Podemos &lt;0,1","—","—","PNV 54,7 · EH Bildu 5,1","BNG 8,5","BNG 6,0","—","—"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Provincia<\/th>\n      <th>PP<\/th>\n      <th>PSOE<\/th>\n      <th>Vox<\/th>\n      <th>Frente Amplio<\/th>\n      <th>Otros (%)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"scrollX":true,"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \",\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \",\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \",\", null);\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \",\", null);\n  }"},{"className":"dt-right","targets":[1,2,3,4]},{"name":"provincia","targets":0},{"name":"PP","targets":1},{"name":"PSOE","targets":2},{"name":"Vox","targets":3},{"name":"Frente Amplio","targets":4},{"name":"Otros","targets":5}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render"],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Un ejemplo de provincia en juego, Granada: en 66 % de las simulaciones la gana PP, pero el escaño más reñido no está nada sentenciado: en el 18,4 % de las simulaciones se lo lleva PP con PSOE a las puertas, en el 17,5 % se lo lleva PSOE contra PP, y así hasta media docena de combinaciones distintas. Ese es el escaño que decidiría quién gana Granada si el voto se moviera un poco.</p>
+</section>
+<section id="las-encuestas-que-entran" class="level2">
+<h2 class="anchored" data-anchor-id="las-encuestas-que-entran">Las encuestas que entran</h2>
+<p>Las 34 encuestas de 2026 con los grandes partidos son la primera tabla, ordenadas por fecha. El modelo descarta las que no publican tamaño muestral, las del CIS y las de ElectoPanel, que es un panel continuo y solo entra en el reparto del bloque. La columna <em>Regionales</em> marca las que entran también con el desglose de los partidos regionales, que se rellena con el scraping de <a href="https://objetivo176.es/">objetivo176</a> (con los arreglos curados a mano por encima). Debajo, las encuestas que no publican SALF (Sigma Dos, Winston, Ateneo del Dato, Data10). Todas separan Sumar y Podemos; lo que les falta es SALF, que es un partido de derechas. Sin SALF no se cierra el reparto de los siete partidos, así que entran con menos celdas: PP, PSOE, VOX, Sumar + Podemos y un resto con SALF, los regionales y otros. Algunas (Sigma Dos, Data10) también arrastran el desglose del bloque desde objetivo176.</p>
+<div class="cell">
+<div id="tbl-encuestas" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-encuestas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;8: Encuestas de 2026 que entran en el modelo de voto, con su estimación (%).
+</figcaption>
+<div aria-describedby="tbl-encuestas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-950adf6cd78d53146cde" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-950adf6cd78d53146cde">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"date\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1783123200000\" data-max=\"1793491200000\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"800\" data-max=\"4893\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"28.5\" data-max=\"34.9\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"25\" data-max=\"28.2\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"16.1\" data-max=\"20.3\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"3.6\" data-max=\"8.9\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1.7\" data-max=\"4.3\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.5\" data-max=\"2.6\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"9.7\" data-max=\"14.3\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["SocioMétrica","Target Point","Hamalgama Métrica","Sondaxe","SocioMétrica","IMOP","SocioMétrica","Target Point","40dB","GAD3","GESOP","Hamalgama Métrica","DYM","IMOP","NC Report","SocioMétrica","Data10","40dB","SocioMétrica","Celeste-Tel","DYM","InvyMark","Target Point","Hamalgama Métrica","GAD3","40dB","More in Common","Cluster17","SocioMétrica","DYM","Target Point","GESOP","Hamalgama Métrica","SocioMétrica"],["1 sep–1 nov 26","28–30 oct 26","22–28 oct 26","26–28 oct 26","1 sep–25 oct 26","13–16 oct 26","10–11 oct 26","6–9 oct 26","7–8 oct 26","6–8 oct 26","6–8 oct 26","5–8 oct 26","5–7 oct 26","5–7 oct 26","1–6 oct 26","1–3 oct 26","2–2 oct 26","25–28 sep 26","24–26 sep 26","16–21 sep 26","16–21 sep 26","7–11 sep 26","9–10 sep 26","1–8 sep 26","1–3 sep 26","31 ago–2 sep 26","24–28 ago 26","22–25 ago 26","5–6 ago 26","15–20 jul 26","15–17 jul 26","6–9 jul 26","30 jun–6 jul 26","2–4 jul 26"],["2026-11-01","2026-10-30","2026-10-28","2026-10-28","2026-10-25","2026-10-16","2026-10-11","2026-10-09","2026-10-08","2026-10-08","2026-10-08","2026-10-08","2026-10-07","2026-10-07","2026-10-06","2026-10-03","2026-10-02","2026-09-28","2026-09-26","2026-09-21","2026-09-21","2026-09-11","2026-09-10","2026-09-08","2026-09-03","2026-09-02","2026-08-28","2026-08-25","2026-08-06","2026-07-20","2026-07-17","2026-07-09","2026-07-06","2026-07-04"],[4893,1024,1000,1200,3223,1000,1000,1002,800,1077,1000,1000,1011,900,1000,1000,1000,2000,1200,1100,1017,1200,1012,1000,1010,2000,2144,1637,1690,1014,1004,1001,1000,1416],["sí","—","—","—","sí","sí","sí","—","—","sí","—","sí","—","sí","sí","sí","sí","sí","sí","sí","—","—","—","sí","sí","sí","—","—","sí","—","—","—","sí","sí"],[32.3,31.8,32,29.2,32,28.5,32.6,32,31.9,31.4,28.7,33.4,34,30.4,34.1,33.4,34,31.6,33.9,33.9,34.7,33.7,31.5,33.6,31.1,32.4,28.7,30.1,33.8,34.9,32.1,29.4,33.8,33.6],[26.6,25.5,26.4,26.9,27,27.1,26.2,25.9,28.1,26.4,26.1,25.3,28.2,26.5,25,26.5,26.1,27.4,25.7,25.4,26.3,26.8,25.6,25.1,26.1,27.6,27,28.1,26,27,26.1,26.5,25.9,25.7],[19.1,19.9,19.9,19.2,18.6,20,18.8,18.7,18.9,18.2,18.9,19.6,18.2,19,18.2,18.1,18.6,18.4,18,17.8,17.3,18.6,18.9,19.3,19.2,17.8,20.3,16.1,17,16.5,17.6,17.8,18.8,16.9],[5.8,6.6,5.4,7.2,5.8,8.9,5.8,6.9,5.3,7.4,8,5.4,3.6,7.6,5.3,5.3,5.2,5.6,5.7,6.4,4.5,6.1,6.9,5.6,7,5.7,6.6,6.1,5.9,3.8,6.1,7.7,5.9,6],[1.7,2.4,2.2,2,1.8,1.9,2.8,3.4,2.3,2.3,2.6,3.3,2.6,2.3,3.9,3.1,4.3,2.7,3.3,3.3,3.7,3.3,2.8,3.8,3.1,2.8,3.6,3.6,2.7,4.1,2.7,4,3.8,2.8],[2.5,2.6,1.8,2.5,2.4,1.2,2.1,1.3,1.8,1.8,2,1.8,0.5,1.9,1.8,2.2,1.4,2,2,1.7,1,1.8,2.5,1.6,1.5,2.2,2.3,1.7,2.3,1,2.4,2,1.6,2.2],[12,11.2,12.3,13,12.4,12.4,11.7,11.8,11.7,12.5,13.7,11.2,12.9,12.3,11.7,11.4,10.4,12.3,11.4,11.5,12.5,9.699999999999999,11.8,11,12,11.5,11.5,14.3,12.3,12.7,13,12.6,10.2,12.8],["<a href=\"https://www.elespanol.com/espana/politica/20261101/primer-sondeo-tragedia-pp-vox-amplian-ventaja-sanchez-sigue-cayendo-pese-vaciar-frente-amplio/1003744442810_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldebate.com/espana/20261102/accidente-frena-psoe-amplia-apoyo-pp-mayoria-absolutisima-derecha_475640.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.vozpopuli.com/espana/politica/pp-y-vox-suman-ya-un-techo-historico-de-127-millones-de-votos-y-lograrian-205-escanos.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.lavozdegalicia.es/noticia/espana/2026/11/01/pp-ganaria-elecciones-23-puntos-ventaja-sobre-psoe/0003_202611G1P26991.htm\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20261025/izquierda-no-remonta-sanchez-gana-escanos-costa-frente-podemos-sondeo-noche/1003744434105_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elconfidencial.com/espana/2026-10-23/encuesta-imop-elecciones-29n-bloque-psoe-frente-amplio_4450302/\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20261011/sanchez-no-funciona-apropiarse-maricarmen-huelga-oposicion-cae-sondeo-noche/1003744416762_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldebate.com/espana/20261011/izquierda-apenas-reacciona-adelanto-frente-derecha-le-saca-casi-15-puntos_468080.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://ep00.epimg.net/infografias/encuestas40db/2026/10-08-barometro-flash/2026_10_informe_voto_barometro_flash.pdf\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.abc.es/espana/derecha-mantiene-mayoria-absoluta-pese-agitacion-callejera-20261012015025-nt.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elperiodico.com/es/politica/20261012/encuesta-elecciones-generales-espana-2026-29n-135212729\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.vozpopuli.com/espana/politica/debacle-de-la-izquierda-pp-y-vox-suman-ya-212-escanos-y-el-53-de-los-votos.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.20minutos.es/nacional/psoe-absorbe-intencion-votos-sumar-podemos-mientras-pp-vox-consolidan-su-mayoria_7046598_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elconfidencial.com/espana/2026-10-09/derecha-pp-gana-vox-dispara-sanchez-baja-sumar_4441291/\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.larazon.es/espana/adelanto-electoral-refuerza-bloque-vox-junts_202610086ac69166b0108820e09b13b5.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20261004/sondeo-expres-sanchez-disuelve-congreso-pp-hoy-diputados-psoe-vox-sumar/1003744408026_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://okdiario.com/espana/efecto-maricarmen-resucita-sanchez-hasta-110-escanos-pero-ni-todos-sus-socios-alcanzan-pp-vox-que-suman-203-20469916\" target=\"_blank\">fuente<\/a>","<a href=\"https://ep00.epimg.net/infografias/encuestas40db/2026/10-barometro/2026_10_informe_voto.pdf\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20260927/sanchez-devora-socios-pide-ayuda-decreto-maricarmen-sumar-junts-pnv-bajarian-escanos/1003744398872_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.ondacero.es/noticias/espana/gestion-crisis-ceuta-casos-corrupcion-siguen-desgastando-gobierno-sanchez_202609246ab530d7a520494aafd5d597.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.20minutos.es/nacional/crisis-ceuta-pasa-factura-psoe-mientras-vox-capitaliza-descontento_7040042_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.lasexta.com/noticias/nacional/barometro-lasexta-intencion-voto-situa-como-primera-fuerza-feijoo-como-politico-mejor-valorado_202609136aa6943d7486a40f2c9c4e90.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldebate.com/espana/20260913/sanchez-paga-errores-ceuta-cayendo-otro-medio-punto-abascal-sube-fuerza-costa-pp_457920.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.vozpopuli.com/espana/politica/ceuta-descalabra-a-la-izquierda-pp-y-vox-sumarian-ya-212-escanos-en-las-elecciones.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.abc.es/espana/pp-vox-disparan-202-escanos-sanchez-aguanta-20260907215840-nt.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://elpais.com/espana/2026-09-07/el-pp-y-vox-superan-por-primera-vez-el-50-del-voto-en-plena-crisis-de-ceuta.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://moreincommones.substack.com/p/la-inmigracion-se-convierte-en-el\" target=\"_blank\">fuente<\/a>","<a href=\"https://agendapublica.es/noticia/21388/espanoles-ante-inminente-ciclo-electoral-pp-lideraria-con-mas-30-apoyos-psoe-resistiria-con-mas-28-alianca-catalana-optaria-al-congreso-si-se-presentara\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20260809/ceuta-hunde-sanchez-pp-sube-suma-escanos-gobierno-baja-sondeo-espanol-invasion/1003744347988_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.20minutos.es/nacional/pp-vox-suben-tras-caso-zapatero-amplian-brecha-con-psoe-sus-socios_7017602_0.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldebate.com/espana/20260719/pp-vox-abonan-200-escanos-sanchez-contiene-hemorragia-costa-sumar_440835.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elperiodico.com/es/politica/20260714/encuesta-elecciones-generales-espana-132382672\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.vozpopuli.com/espana/politica/pp-y-vox-amplian-su-ventaja-hasta-los-209-escanos-y-la-izquierda-se-hunde-por-la-corrupcion.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elespanol.com/espana/politica/20260705/demoledor-sondeo-ola-corrupcion-psoe-arrastra-izquierda-no-separatista-peor-dato-anos/1003744310813_0.html\" target=\"_blank\">fuente<\/a>"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Casa<\/th>\n      <th>Trabajo de campo<\/th>\n      <th>Fecha<\/th>\n      <th>n<\/th>\n      <th>Regionales<\/th>\n      <th>PP<\/th>\n      <th>PSOE<\/th>\n      <th>VOX<\/th>\n      <th>SUMAR<\/th>\n      <th>PODEMOS<\/th>\n      <th>SALF<\/th>\n      <th>BLOQUE<\/th>\n      <th>Enlace<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"order":[[2,"desc"]],"scrollX":true,"columnDefs":[{"className":"dt-right","targets":[5,6,7,8,9,10,11]},{"className":"dt-right","targets":3},{"name":"encuestadora","targets":0},{"name":"campo","targets":1},{"name":"fecha","targets":2},{"name":"muestra","targets":3},{"name":"regionales","targets":4},{"name":"PP","targets":5},{"name":"PSOE","targets":6},{"name":"VOX","targets":7},{"name":"SUMAR","targets":8},{"name":"PODEMOS","targets":9},{"name":"SALF","targets":10},{"name":"BLOQUE","targets":11},{"name":"enlace","targets":12}],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div id="tbl-agregadas" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-agregadas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;9: Encuestas sin SALF: entran con celdas agregadas; Izquierda = Sumar + Podemos (%).
+</figcaption>
+<div aria-describedby="tbl-agregadas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-23521884713c30157dd2" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-23521884713c30157dd2">{"x":{"filter":"none","vertical":false,"data":[["Sigma Dos","Ateneo del Dato","Sigma Dos","Sigma Dos","Sigma Dos","Ateneo del Dato","Sigma Dos","Winston","Data10","Sigma Dos","Sigma Dos"],["29–30 oct 26","20–22 oct 26","8–22 oct 26","1–14 oct 26","1–8 oct 26","29 sep–1 oct 26","22 sep–1 oct 26","29 sep–1 oct 26","26–27 ago 26","20–26 ago 26","6–20 jul 26"],["2026-10-30","2026-10-22","2026-10-22","2026-10-14","2026-10-08","2026-10-01","2026-10-01","2026-10-01","2026-08-27","2026-08-26","2026-07-20"],[2505,2000,3122,3007,2017,1500,2116,1201,1500,2173,3690],["—","—","—","—","—","—","—","—","—","—","—"],[31.1,31.1,30.6,31.5,31.9,33.2,32.6,31.3,34.3,33.1,32.8],[24.6,27.6,26.1,25.3,25.3,27.5,25.6,24.9,25.4,25.4,26.1],[19.3,19.8,19.9,19.5,19.1,19.2,18.3,19.1,18.1,17.9,17.3],[9.9,9.5,11,10.9,10.7,10.3,9.9,10.7,9.9,9.4,10.4],["<a href=\"https://www.elmundo.es/espana/encuestas/2026/11/01/6ae77446e4d4d8f3698b458a.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldiario.es/politica/bloque-izquierdas-recorta-distancias-pp-vox-mantienen-mayoria-absoluta_1_13611052.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/10/26/6addf8c4fdddfff23d8b4581.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/10/19/6ad4f168e9cf4a2c7a8b458b.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/10/11/6acba028e85ece77088b4580.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.eldiario.es/politica/suma-pp-vox-supera-holgura-mayoria-absoluta-aventaja-izquierda-15-puntos_1_13559749.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/10/04/6ac25e4dfc6c83bb588b458d.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.articulo14.es/politica/pp-y-vox-ya-suman-204-escanos-y-supera-en-casi-15-puntos-a-la-izquierda-20261004.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://okdiario.com/espana/ceuta-sepulta-sanchez-que-cae-100-escanos-dispara-pp-vox-hasta-mayoria-absoluta-historica-208-20193314\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/08/30/6a93133afc6c831b228b458d.html\" target=\"_blank\">fuente<\/a>","<a href=\"https://www.elmundo.es/espana/encuestas/2026/07/26/6a6629dde4d4d8c4278b459c.html\" target=\"_blank\">fuente<\/a>"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Casa<\/th>\n      <th>Trabajo de campo<\/th>\n      <th>Fecha<\/th>\n      <th>n<\/th>\n      <th>Regionales<\/th>\n      <th>PP<\/th>\n      <th>PSOE<\/th>\n      <th>VOX<\/th>\n      <th>Izquierda<\/th>\n      <th>Enlace<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":10,"scrollX":true,"columnDefs":[{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":6,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":7,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":8,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-right","targets":[3,5,6,7,8]},{"name":"encuestadora","targets":0},{"name":"campo","targets":1},{"name":"fecha","targets":2},{"name":"muestra","targets":3},{"name":"regionales","targets":4},{"name":"PP","targets":5},{"name":"PSOE","targets":6},{"name":"VOX","targets":7},{"name":"izquierda","targets":8},{"name":"enlace","targets":9}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render"],"jsHooks":[]}</script>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="qué-ha-cambiado-esta-semana" class="level2">
+<h2 class="anchored" data-anchor-id="qué-ha-cambiado-esta-semana">¿Qué ha cambiado esta semana?</h2>
+<p>Con las encuestas hasta el 1 nov, frente a las de hasta el 25 oct: PP es quien más se mueve, pierde 2 escaños (de 128 a 126). La mayoría de PP y Vox pasa del 94,6 % al 94,7 %.</p>
+<p>Que una encuesta nueva dé más al PP no quiere decir que lo empuje hacia arriba. El modelo corrige el sesgo de cada casa: si una casa suele dar al PP dos puntos más que la media, un 31 % suyo cuenta como un 29 %. Una casa nueva, con una sola encuesta, no da para estimar su sesgo: el modelo lo encoge hacia el de una casa media, y su única encuesta no suele mover mucho el voto latente.</p>
+<div class="cell">
+<div id="tbl-marcador" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-marcador-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;10: Escaños (mediana) en las últimas actualizaciones, y probabilidad de mayoría de PP y Vox. El cambio se mide frente a cada fecha anterior.
+</figcaption>
+<div aria-describedby="tbl-marcador-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="qrywnajsnr" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#qrywnajsnr table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#qrywnajsnr thead, #qrywnajsnr tbody, #qrywnajsnr tfoot, #qrywnajsnr tr, #qrywnajsnr td, #qrywnajsnr th {
+  border-style: none;
+}
+
+#qrywnajsnr p {
+  margin: 0;
+  padding: 0;
+}
+
+#qrywnajsnr .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#qrywnajsnr .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qrywnajsnr .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qrywnajsnr .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qrywnajsnr .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qrywnajsnr .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qrywnajsnr .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qrywnajsnr .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qrywnajsnr .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#qrywnajsnr .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#qrywnajsnr .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qrywnajsnr .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qrywnajsnr .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qrywnajsnr .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qrywnajsnr .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qrywnajsnr .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#qrywnajsnr .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#qrywnajsnr .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#qrywnajsnr .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qrywnajsnr .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#qrywnajsnr .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qrywnajsnr .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qrywnajsnr .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qrywnajsnr .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qrywnajsnr .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qrywnajsnr .gt_left {
+  text-align: left;
+}
+
+#qrywnajsnr .gt_center {
+  text-align: center;
+}
+
+#qrywnajsnr .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qrywnajsnr .gt_font_normal {
+  font-weight: normal;
+}
+
+#qrywnajsnr .gt_font_bold {
+  font-weight: bold;
+}
+
+#qrywnajsnr .gt_font_italic {
+  font-style: italic;
+}
+
+#qrywnajsnr .gt_super {
+  font-size: 65%;
+}
+
+#qrywnajsnr .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#qrywnajsnr .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#qrywnajsnr .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#qrywnajsnr .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#qrywnajsnr .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#qrywnajsnr .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#qrywnajsnr .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#qrywnajsnr .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#qrywnajsnr div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="partido" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col"></th>
+<th id="f1" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hasta el 25 oct</th>
+<th id="f2" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hasta el 1 nov</th>
+<th id="d_antes" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Cambio desde el 25 oct</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">PP</td>
+<td class="gt_row gt_right" headers="f1">128</td>
+<td class="gt_row gt_right" headers="f2">126</td>
+<td class="gt_row gt_right" headers="d_antes">−2</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">PSOE</td>
+<td class="gt_row gt_right" headers="f1">108</td>
+<td class="gt_row gt_right" headers="f2">108</td>
+<td class="gt_row gt_right" headers="d_antes">=</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">Vox</td>
+<td class="gt_row gt_right" headers="f1">66</td>
+<td class="gt_row gt_right" headers="f2">68</td>
+<td class="gt_row gt_right" headers="d_antes">+2</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="partido">Frente Amplio</td>
+<td class="gt_row gt_right" headers="f1">11</td>
+<td class="gt_row gt_right" headers="f2">11</td>
+<td class="gt_row gt_right" headers="d_antes">=</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="partido">P(PP + Vox ≥ 176)</td>
+<td class="gt_row gt_right" headers="f1">94,6 %</td>
+<td class="gt_row gt_right" headers="f2">94,7 %</td>
+<td class="gt_row gt_right" headers="d_antes">+0,1 pp</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-historico" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-historico-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="seguimiento_files/figure-html/fig-historico-1.png" class="img-fluid figure-img" width="2664">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-historico-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3: Escaños de los cuatro grandes en cada actualización: mediana (línea y número) e IC90 (sombra), en la misma escala. El eje llega hasta el 29-N: la gráfica se irá llenando con cada semana de encuestas.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/muestrear-no-es-pecado\.netlify\.app\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
+<script>
+  function loadGiscus() {
+    // Function to get the theme based on body class
+    const getTheme = () => {
+      let baseTheme = document.getElementById('giscus-base-theme').value;
+      let altTheme = document.getElementById('giscus-alt-theme').value;
+      if (authorPrefersDark) {
+          [baseTheme, altTheme] = [altTheme, baseTheme];
+      }
+      return document.body.classList.contains('quarto-dark') ? altTheme : baseTheme;
+    };
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.dataset.repo = "joscani/blogComments";
+    script.dataset.repoId = "R_kgDOIXA9wA";
+    script.dataset.category = "General";
+    script.dataset.categoryId = "DIC_kwDOIXA9wM4CSZhs";
+    script.dataset.mapping = "title";
+    script.dataset.reactionsEnabled = "1";
+    script.dataset.emitMetadata = "0";
+    script.dataset.inputPosition = "top";
+    script.dataset.theme = getTheme();
+    script.dataset.lang = "en";
+    script.crossOrigin = "anonymous";
+    // Append the script to the desired div instead of at the end of the body
+    document.getElementById("quarto-content").appendChild(script);
+  }
+  loadGiscus();
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

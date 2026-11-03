@@ -7,7 +7,8 @@
 #    campaña), sigma_gen, mu_gen, gamma y Omega (error del consenso).
 # 4. Escaños con el escenario mapa (simular_conjunto()).
 #
-# Salidas (en 2026/10/full-bayesian/):
+# Salidas (en 2026/10/full-bayesian/vivo/, los datos vivos del tracker;
+# las copias en la raíz del folder quedaron congeladas con el post):
 #   fit_conjunto.rds             objeto CmdStanMCMC (no va a git)
 #   conjunto_diagnostico.csv     divergencias, Rhat, ESS
 #   conjunto_parametros.csv      parámetros clave (mediana, IC90)
@@ -39,7 +40,11 @@ variante <- if (length(args) > 0) args[1] else "principal"
 pr <- priors_conjunto
 pr$sigma_rw_campana <- as.integer(variante != "v2")
 sufijo <- if (variante == "principal") "" else paste0("_", variante)
-f_sal <- \(nombre, ext = "csv") file.path(dir_fb, paste0(nombre, sufijo, ".", ext))
+dir_vivo <- file.path(dir_fb, "vivo")
+dir.create(dir_vivo, showWarnings = FALSE)
+f_sal <- \(nombre, ext = "csv") {
+  file.path(dir_vivo, paste0(nombre, sufijo, ".", ext))
+}
 mod <- cmdstan_model(file.path(dir_fb, "modelo_conjunto.stan"))
 dc <- datos_conjunto()
 Kc <- dc$K[dc$C]
@@ -62,12 +67,17 @@ muestrear <- function(prior_only = 0L, iter = 1500) {
 # ---- 1. prior predictive -------------------------------------------------------
 
 fp <- muestrear(prior_only = 1L, iter = 500)
-vp <- unclass(fp$draws(sprintf("v_obj[%d,%d]", seq_len(Kc), Tc), format = "draws_matrix"))
+vp <- unclass(fp$draws(
+  sprintf("v_obj[%d,%d]", seq_len(Kc), Tc),
+  format = "draws_matrix"
+))
 cat("\nPrior predictive, voto el día E (%, q05-q50-q95):\n")
-pp_tab <- round(100 * t(apply(vp, 2, quantile, c(0.05, 0.5, 0.95))), 1) |> `rownames<-`(fams_obj)
+pp_tab <- round(100 * t(apply(vp, 2, quantile, c(0.05, 0.5, 0.95))), 1) |>
+  `rownames<-`(fams_obj)
 print(pp_tab)
 write_csv(
-  as_tibble(pp_tab, rownames = "partido") |> rename(q05 = `5%`, mediana = `50%`, q95 = `95%`),
+  as_tibble(pp_tab, rownames = "partido") |>
+    rename(q05 = `5%`, mediana = `50%`, q95 = `95%`),
   f_sal("conjunto_prior_predictive")
 )
 
@@ -75,11 +85,29 @@ write_csv(
 
 t0 <- Sys.time()
 fit <- muestrear()
-cat("\nTiempo de ajuste:", round(as.numeric(difftime(Sys.time(), t0, units = "mins")), 1), "min\n")
+cat(
+  "\nTiempo de ajuste:",
+  round(as.numeric(difftime(Sys.time(), t0, units = "mins")), 1),
+  "min\n"
+)
 fit$save_object(f_sal("fit_conjunto", "rds"))
 
-claves <- c("sigma_rw", "sigma_rw_c", "tau_rw", "kappa", "sigma_casa", "log_phi", "mu_gen", "mu_aut", "sigma_gen",
-            "sigma_aut", "gamma", "Omega", "sigma_b", "err_new")
+claves <- c(
+  "sigma_rw",
+  "sigma_rw_c",
+  "tau_rw",
+  "kappa",
+  "sigma_casa",
+  "log_phi",
+  "mu_gen",
+  "mu_aut",
+  "sigma_gen",
+  "sigma_aut",
+  "gamma",
+  "Omega",
+  "sigma_b",
+  "err_new"
+)
 diag <- fit$diagnostic_summary(quiet = TRUE)
 res <- fit$summary(c(claves, "theta1"), "rhat", "ess_bulk", "ess_tail")
 diag_tab <- tibble(
@@ -95,7 +123,15 @@ write_csv(diag_tab, f_sal("conjunto_diagnostico"))
 
 # ---- 3. parámetros clave -------------------------------------------------------
 
-grupos_rw <- c("PP", "PSOE", "VOX", "SUMAR", "Podemos+SALF", "regionales", "RESTO")
+grupos_rw <- c(
+  "PP",
+  "PSOE",
+  "VOX",
+  "SUMAR",
+  "Podemos+SALF",
+  "regionales",
+  "RESTO"
+)
 par <- fit$summary(claves, "median", ~ quantile(.x, c(0.05, 0.95))) |>
   mutate(
     i = suppressWarnings(as.integer(str_match(variable, "\\[(\\d+)")[, 2])),
@@ -134,7 +170,12 @@ tend <- tibble(var = colnames(vt)) |>
   select(partido, semana, fecha, mediana, q05, q95)
 write_csv(tend, f_sal("conjunto_tendencia"))
 cat("\nVoto de la media de las casas el día E (%):\n")
-print(tend |> filter(semana == Tc) |> mutate(across(where(is.numeric), \(x) round(x, 1))), n = Inf)
+print(
+  tend |>
+    filter(semana == Tc) |>
+    mutate(across(where(is.numeric), \(x) round(x, 1))),
+  n = Inf
+)
 
 # ---- 4. escaños --------------------------------------------------------------------
 
@@ -144,7 +185,10 @@ presentes <- names(which(colSums(sim$draws[, -1]) > 0))
 esc <- resumen_escanos(sim, width = 0.9) |>
   filter(partido %in% presentes) |>
   select(partido, mediana = escanos, q05 = .lower, q95 = .upper) |>
-  left_join(escanos_resto_mayor(sim) |> rename(etiqueta = escanos), by = "partido")
+  left_join(
+    escanos_resto_mayor(sim) |> rename(etiqueta = escanos),
+    by = "partido"
+  )
 may <- prob_mayorias(sim)
 write_csv(esc, f_sal("conjunto_escanos"))
 write_csv(may, f_sal("conjunto_mayorias"))

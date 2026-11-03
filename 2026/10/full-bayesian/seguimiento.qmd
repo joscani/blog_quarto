@@ -1,0 +1,917 @@
+---
+title: "Generales 2026: el pronóstico vivo del 29-N"
+description: 'Estado vivo del modelo bayesiano conjunto: tendencia del voto, escaños y probabilidad de mayoría. Se actualiza con cada encuesta nueva.'
+categories:
+  - "2026"
+  - encuestas electorales
+  - análisis bayesiano
+lang: es
+execute:
+  message: false
+  warning: false
+  echo: false
+format:
+  html:
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8.88
+    fig-align: center
+---
+
+```{r}
+#| label: setup
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(gt)
+  library(DT)
+})
+
+dir_fb <- here::here("2026/10/full-bayesian")
+dir_vivo <- file.path(dir_fb, "vivo")
+leer <- \(f) read_csv(file.path(dir_vivo, f), show_col_types = FALSE)
+num_es <- function(x, d = 1) {
+  format(round(x, d), decimal.mark = ",", nsmall = d, trim = TRUE)
+}
+fecha_es <- \(d) {
+  meses <- c(
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre"
+  )
+  sprintf(
+    "%d de %s de %d",
+    as.integer(format(d, "%d")),
+    meses[as.integer(format(d, "%m"))],
+    as.integer(format(d, "%Y"))
+  )
+}
+
+# las salidas del pipeline (12, 16, 17, 05) viven en vivo/
+tend <- leer("conjunto_tendencia.csv")
+esc <- leer("conjunto_escanos.csv")
+may <- leer("conjunto_mayorias.csv")
+sim <- readRDS(file.path(dir_vivo, "conjunto_sim.rds"))
+
+# última fecha de campo de las encuestas que entran en el modelo
+meta <- map_dfr(
+  c(
+    "encuestas_meta_grande_sep.csv",
+    "encuestas_meta_bloque.csv",
+    "encuestas_meta_agregadas.csv"
+  ),
+  \(f) read_csv(file.path(here::here("2026/10"), f), show_col_types = FALSE)
+)
+enc_hasta <- max(meta$fecha)
+
+f_hist <- file.path(dir_vivo, "historico_pronostico.csv")
+hist <- if (file.exists(f_hist)) {
+  read_csv(f_hist, show_col_types = FALSE)
+} else {
+  tibble()
+}
+grandes <- c("PP", "PSOE", "VOX", "SUMAR")
+
+# etiquetas de presentación, como en el post: la familia interna sigue
+# llamándose SUMAR (armoniza las encuestas que publican "Frente Amplio")
+etiq <- function(x) {
+  recode(
+    x,
+    SUMAR = "Frente Amplio",
+    VOX = "Vox",
+    PODEMOS = "Podemos",
+    `EH_Bildu` = "EH Bildu",
+    AA = "Adelante Andalucía"
+  )
+}
+
+# colores de los partidos, como en el post de full-bayesian
+colores <- c(
+  "PP" = "#005999",
+  "PSOE" = "#FF0126",
+  "Vox" = "#51962A",
+  "Frente Amplio" = "#A00B85"
+)
+
+# el número de encuestas lo usa el texto, antes del chunk de la tabla.
+# Misma regla de inclusión que el modelo (prep_grande en ajustar_meta.R):
+# fuera las que no publican n, el CIS y ElectoPanel (que solo entra en el
+# modelo del bloque)
+casas_fuera <- c("CIS", "ElectoPanel")
+d_enc <- read_csv(
+  here::here("2026/10/encuestas_meta_grande_sep.csv"),
+  show_col_types = FALSE
+) |>
+  filter(!is.na(muestra), !encuestadora %in% casas_fuera)
+n_enc <- n_distinct(paste(d_enc$encuestadora, d_enc$campo))
+
+# qué encuestas traen (o les rellenaron) el desglose de los regionales
+d_blo <- read_csv(
+  here::here("2026/10/encuestas_meta_bloque.csv"),
+  show_col_types = FALSE
+)
+con_regional <- unique(d_blo$enlace)
+```
+
+Esto es un meta-análisis de encuestas que hago por diversión. No trabajo
+para ningún medio ni tengo que acertar. Hay gente que hace cosas parecidas, y
+muy bien: Kiko Llaneras en El País, [ciento76](https://www.ciento76.es) u
+[objetivo176](https://objetivo176.es/). De sus tablas salen buena parte de
+las encuestas que uso.
+
+Lo mío va por otro lado: todo es bayesiano. Las encuestas, el sesgo de cada
+casa y lo que fallan todas a la vez van en un solo modelo. Ese error común no
+lo pongo a ojo: lo estima el modelo con las elecciones pasadas. Y esa
+incertidumbre llega hasta cada escaño, simulación a simulación. Por eso las
+horquillas salen anchas.
+
+En [Generales 2026, todo bayesiano (I): el voto](full-bayesian.html) puedes ver como lo hice. 
+
+
+
+Esta página es el estado vivo de ese modelo, que normalmente actualizaré  de vez en cuando, conforme vea que van saliendo encuests. El post técnico quedó congelado
+Con cada encuesta nueva se reajusta el modelo y se vuelve a renderizar esta página. 
+Actualizado el **`r fecha_es(Sys.Date())`**, con las
+encuestas publicadas hasta el **`r fecha_es(enc_hasta)`**.
+
+## El voto el 29-N
+
+```{r}
+#| label: voto-29n
+# voto latente: la tendencia en la semana de la votación (sin error);
+# voto con error: los shares nacionales que alimentan la simulación de
+# escaños (sim$shares, en el día E y con el error del consenso)
+ic_es <- \(a, b) paste0(num_es(a), "–", num_es(b))
+v_lat <- tend |>
+  filter(fecha == max(fecha)) |>
+  transmute(partido = etiq(partido), m_lat = mediana, ic_lat = ic_es(q05, q95))
+v_err <- tibble(
+  partido = etiq(colnames(sim$shares)),
+  m_err = apply(sim$shares, 2, median),
+  q05 = apply(sim$shares, 2, quantile, 0.05),
+  q95 = apply(sim$shares, 2, quantile, 0.95)
+) |>
+  mutate(ic_err = ic_es(q05, q95))
+tab_voto <- inner_join(v_lat, v_err, by = "partido") |>
+  arrange(partido == "RESTO", desc(m_lat)) |>
+  mutate(partido = recode(partido, RESTO = "Resto"))
+# para el texto: anchura del IC90 del PP con y sin el error
+pp_lat <- tend |> filter(fecha == max(fecha), partido == "PP")
+pp_err <- v_err |> filter(partido == "PP")
+```
+
+El modelo da dos cifras de voto para el 29-N. El **voto latente** es la media
+de las casas encuestadoras, llevada hasta el día de la votación, dice qué
+cuentan las encuestas. 
+
+El **voto con el error del consenso** le suma lo que
+todas las casas pueden fallar a la vez, estimado con las elecciones pasadas. 
+Los escaños y el voto provincial salen de este segundo. La mediana apenas cambia, pero el intervalo se abre: el IC90
+del PP mide `r num_es(pp_lat$q95 - pp_lat$q05)` puntos sin el error y
+`r num_es(pp_err$q95 - pp_err$q05)` con él.
+
+```{r}
+#| label: tbl-voto-29n
+tab_voto |>
+  select(partido, m_lat, ic_lat, m_err, ic_err) |>
+  gt() |>
+  fmt_number(columns = c(m_lat, m_err), decimals = 1, dec_mark = ",") |>
+  tab_spanner("Voto latente", columns = c(m_lat, ic_lat)) |>
+  tab_spanner("Con el error del consenso", columns = c(m_err, ic_err)) |>
+  cols_label(
+    partido = "Partido",
+    m_lat = "Mediana (%)",
+    ic_lat = "IC90 (%)",
+    m_err = "Mediana (%)",
+    ic_err = "IC90 (%)"
+  ) |>
+  tab_caption(
+    "Voto nacional el 29-N, en % sobre voto a candidaturas. Adelante Andalucía no aparece: su voto lo fija la regla de cada provincia, no el modelo nacional."
+  )
+```
+
+## Tendencia
+
+```{r}
+#| label: fig-tendencia-viva
+#| fig-cap: "Voto latente (media de las casas), sin el error del consenso: mediana e IC90 por semana desde octubre. La primera línea discontinua marca la última encuesta incluida; desde ahí hasta el 29-N el modelo solo extrapola, y por eso el intervalo se abre. El voto provincial y los escaños sí llevan el error del consenso."
+ggplot(
+  tend |>
+    filter(partido %in% grandes, fecha >= as.Date("2026-10-01")) |>
+    mutate(partido = etiq(partido)),
+  aes(fecha, mediana, color = partido, fill = partido)
+) +
+  geom_ribbon(aes(ymin = q05, ymax = q95), alpha = 0.15, color = NA) +
+  geom_line(linewidth = 1) +
+  geom_vline(
+    xintercept = as.Date(c(enc_hasta, "2026-11-29")),
+    linetype = "dashed"
+  ) +
+  scale_colour_manual(values = colores, aesthetics = c("colour", "fill")) +
+  scale_y_continuous(labels = \(x) paste0(x, " %")) +
+  labs(x = NULL, y = NULL, color = NULL, fill = NULL)
+```
+
+## Escaños
+
+```{r}
+#| label: reglas-mapa
+# provincias de cada regla del mapa de listas, tal como las aplicó la
+# simulación (de coaliciones_izquierda_29N_provincias.csv)
+prov_regla <- \(r) {
+  p <- sort(names(sim$regla_prov)[sim$regla_prov == r])
+  if (length(p) > 1) {
+    paste(paste(head(p, -1), collapse = ", "), "y", tail(p, 1))
+  } else {
+    p
+  }
+}
+n_regla <- \(r) sum(sim$regla_prov == r)
+# en % enteros que sumen 100 (redondeados por separado daban 66/30/5)
+pct_cat <- round(100 * sim$transfer_cat_alpha)
+pct_cat[1] <- 100 - sum(pct_cat[-1])
+```
+
+Los escaños salen del **escenario mapa**: el voto nacional se reparte por
+provincias y, antes del D'Hondt, se aplican las candidaturas que de verdad
+se presentan en cada una. Las encuestas preguntan por partidos nacionales,
+pero a la izquierda del PSOE las listas cambian según el territorio:
+
+- **Podemos no se presenta** en `r prov_regla("sin_podemos")`, por su acuerdo
+  con ERC. Su voto se reparte en cada simulación con un sorteo centrado en
+  `r pct_cat[1]` % para ERC, `r pct_cat[2]` % para el Frente Amplio y
+  `r pct_cat[3]` % fuera (abstención u otros).
+- **El Frente Amplio no se presenta** en `r prov_regla("sin_fa")`: CHA-Frente
+  Amplio retiró su lista el 21 de octubre. Su voto va a un sorteo centrado en
+  55 % para el PSOE y 45 % fuera.
+- **Adelante Andalucía** se presenta sola en las `r n_regla("con_aa")`
+  provincias andaluzas. Las encuestas nacionales no la miden, así que su voto
+  sale de las autonómicas del 17 de mayo de 2026
+  (`r num_es(100 * sim$aa_pct_and)` % en Andalucía), con incertidumbre en el
+  paso de autonómicas a generales. Ese voto sale primero de "otros partidos"
+  y después de Podemos y el Frente Amplio.
+
+```{r}
+#| label: fig-escanos-vivos
+#| fig-cap: "Escaños proyectados por partido (escenario mapa): mediana e IC90 de las simulaciones, con el error del consenso incluido."
+d_esc <- as_tibble(sim$draws) |>
+  select(-.draw) |>
+  pivot_longer(everything(), names_to = "partido", values_to = "escanos") |>
+  group_by(partido) |>
+  summarise(
+    mediana = median(escanos),
+    q05 = quantile(escanos, 0.05),
+    q95 = quantile(escanos, 0.95)
+  ) |>
+  filter(mediana > 0) |>
+  mutate(partido = etiq(partido))
+
+ggplot(d_esc, aes(mediana, reorder(partido, mediana), color = partido)) +
+  geom_pointrange(aes(xmin = q05, xmax = q95), linewidth = 1) +
+  scale_colour_manual(values = colores) +
+  labs(x = "Escaños", y = NULL, color = NULL)
+```
+
+```{r}
+#| label: tbl-escanos-vivos
+esc |>
+  transmute(partido = etiq(partido), mediana, q05, q95) |>
+  gt() |>
+  cols_label(
+    partido = "Partido",
+    mediana = "Mediana",
+    q05 = "q05",
+    q95 = "q95"
+  ) |>
+  tab_caption(
+    "Escaños proyectados (escenario mapa, mediana e IC90)."
+  )
+```
+
+```{r}
+#| label: tbl-mayorias
+may |>
+  gt() |>
+  fmt_percent(columns = prob, decimals = 1, dec_mark = ",", sep_mark = ".") |>
+  cols_label(escenario = "Mayoría", prob = "Probabilidad") |>
+  tab_caption("Probabilidad de las mayorías sobre las mismas simulaciones.")
+```
+
+## Provincia a provincia
+
+El modelo no tiene encuestas provinciales, pero sí tiene el
+voto nacional con el error del consenso y un patrón provincial: el del 23-J, ajustado con el
+shock de los regionales (ver el post donde cuento todo eso) y las reglas del mapa de listas. Con eso reparte el
+voto draw a draw entre las 52 provincias, y de ahí sale el D'Hondt. Las tres
+tablas miran esa distribución provincial: primero el voto, luego los escaños,
+y al final el escaño más reñido de cada provincia.
+
+**El voto.** Mediana, en %, del voto (con el error del consenso) que cada
+familia recibe en cada provincia. Con el filtro se busca la que quieras; conviene leerlo como "a
+dónde va el voto", no como encuesta provincial.
+
+```{r}
+#| label: tbl-voto-prov
+#| tbl-cap: "Voto por provincia (con el error del consenso): mediana en % de cada familia."
+pe <- sim$prov_escanos
+fams <- dimnames(pe)[[3]]
+prov <- dimnames(pe)[[2]]
+# gana la provincia el partido con más escaños; con empate, el más votado.
+# El voto es un share (< 1): sumarle la mitad no altera el orden por
+# escaños y solo deshace los empates (which.max se los daría al PP)
+gana_idx <- apply(pe + 0.5 * sim$prov_voto, c(1, 2), which.max)
+p_gana <- t(vapply(
+  seq_along(prov),
+  \(j) {
+    tabulate(gana_idx[, j], length(fams)) / dim(pe)[1]
+  },
+  numeric(length(fams))
+))
+colnames(p_gana) <- fams
+
+# voto provincial (con el error del consenso): mediana del share de cada
+# familia (en %)
+med_v <- apply(sim$prov_voto, c(2, 3), median) * 100
+tab_voto_prov <- as_tibble(med_v, rownames = "provincia") |>
+  rename(!!!setNames(fams, etiq(fams)))
+
+datatable(
+  tab_voto_prov,
+  rownames = FALSE,
+  filter = "top",
+  options = list(pageLength = 10, scrollX = TRUE)
+) |>
+  formatRound(columns = 2:ncol(tab_voto_prov), digits = 1)
+```
+
+**Los escaños.** D'Hondt sobre el voto anterior, draw a draw, con el umbral
+legal del 3 % provincial. Para cada provincia y partido con opciones, los
+escaños en las 6.000 simulaciones. La **media** son los escaños esperados, y
+suma los de la provincia. La mediana y el IC90 son escaños enteros. La nota
+de debajo de la tabla explica por qué las medianas a veces no cuadran.
+
+```{r}
+#| label: tbl-esc-prov
+#| tbl-cap: "Escaños por provincia y partido: media (escaños esperados), mediana e IC90. Solo partidos con opciones (q95 > 0)."
+# escaños por provincia y partido: mediana e IC90 (solo partidos con opciones).
+# Cuantiles con type = 1: devuelven siempre un valor simulado, así que los
+# escaños salen enteros (la mediana por defecto puede dar x,5)
+q_esc <- \(p) apply(pe, c(2, 3), quantile, p, type = 1, names = FALSE)
+mat_long <- function(m, nombre) {
+  as.data.frame.table(m, responseName = nombre) |>
+    as_tibble() |>
+    transmute(
+      provincia = as.character(Var1),
+      partido = as.character(Var2),
+      !!sym(nombre)
+    )
+}
+tab_esc_prov <- mat_long(apply(pe, c(2, 3), mean), "media") |>
+  left_join(
+    mat_long(q_esc(0.5), "mediana"),
+    by = c("provincia", "partido")
+  ) |>
+  left_join(
+    mat_long(q_esc(0.05), "q05"),
+    by = c("provincia", "partido")
+  ) |>
+  left_join(
+    mat_long(q_esc(0.95), "q95"),
+    by = c("provincia", "partido")
+  ) |>
+  filter(q95 > 0) |>
+  mutate(partido = etiq(partido)) |>
+  arrange(provincia, desc(media), partido)
+
+datatable(
+  tab_esc_prov,
+  rownames = FALSE,
+  colnames = c("Provincia", "Partido", "Media", "Mediana", "q05", "q95"),
+  filter = "top",
+  options = list(pageLength = 10, scrollX = TRUE)
+) |>
+  formatRound(columns = 3, digits = 1, dec.mark = ",")
+```
+
+```{r}
+#| label: nota-mediana
+#| output: asis
+# provincias donde las medianas no suman los escaños; el ejemplo es la que
+# reparte menos escaños (en empate, la primera)
+d_med <- tibble(
+  provincia = prov,
+  escanos = rowSums(pe[1, , ]),
+  suma_med = rowSums(q_esc(0.5))
+)
+mal <- filter(d_med, suma_med != escanos)
+if (nrow(mal) > 0) {
+  ej_m <- slice_min(mal, escanos, n = 1, with_ties = FALSE)
+  medias_ej <- tab_esc_prov |>
+    filter(provincia == ej_m$provincia) |>
+    slice_max(media, n = 3)
+  pl <- \(n, s, p) if (n == 1) s else p
+  cat(
+    "::: {.callout-note}",
+    "## Por qué las medianas no siempre suman los escaños",
+    "",
+    "La mediana es el valor del medio de las 6.000 simulaciones, y se calcula",
+    "para cada partido por separado. Por eso las medianas de varios partidos no",
+    "tienen por qué sumar los escaños de la provincia. La media sí los suma: en",
+    "cada simulación los escaños suman el total, y la media conserva esa suma.",
+    "",
+    sprintf(
+      paste(
+        "Pasa cuando un escaño está muy disputado: ahora mismo, en %d de las 52",
+        "provincias. Ejemplo: %s reparte %d %s, pero sus medianas suman %d.",
+        "Las medias de los partidos con más opciones son %s."
+      ),
+      nrow(mal),
+      ej_m$provincia,
+      ej_m$escanos,
+      pl(ej_m$escanos, "escaño", "escaños"),
+      ej_m$suma_med,
+      paste(
+        paste(medias_ej$partido, num_es(medias_ej$media)),
+        collapse = ", "
+      )
+    ),
+    "",
+    "Por eso la tabla se ordena por la media. La mediana y el IC90 dicen otra",
+    "cosa: qué número entero de escaños es el típico para cada partido.",
+    ":::",
+    sep = "\n"
+  )
+}
+```
+
+**El escaño más reñido de cada provincia.** El D'Hondt reparte los escaños
+uno a uno: cada escaño va al cociente más alto, que es el voto del partido
+dividido por los escaños que ya lleva conseguidos, más uno. El último escaño
+en caer es el más ajustado de la provincia. Con 6.000 simulaciones completas
+se puede mirar, en cada una, quién se queda ese escaño y qué partido se
+quedó más cerca de quitárselo; la tabla resume las combinaciones que
+aparecen en cada provincia y con qué frecuencia.
+
+```{r}
+#| label: tbl-ultimo
+#| tbl-cap: "El escaño más reñido de cada provincia: quién se lo lleva, quién se queda más cerca y en qué % de simulaciones."
+tab_ult_raw <- map_dfr(seq_along(prov), \(j) {
+  s <- pe[, j, ]
+  v <- sim$prov_voto[, j, ]
+  # en la simulación de escaños RESTO no compite (se pone a cero antes del
+  # D'Hondt): aquí también, para que el rival del par sea un partido real
+  v[, "RESTO"] <- 0
+  # el último escaño en caer es el que se adjudicó con el cociente MÁS BAJO
+  # (el premiado más ajustado); el contendiente, el mejor cociente sin premio
+  r_h <- v / s
+  r_h[s == 0] <- Inf
+  h <- max.col(-r_h, ties.method = "first")
+  r_c <- v / (s + 1)
+  r_c[v < 0.03] <- -1 # el umbral del 3% los deja fuera del D'Hondt
+  r_c[cbind(seq_len(nrow(r_c)), h)] <- -1
+  c2 <- max.col(r_c, ties.method = "first")
+  tibble(lleva = fams[h], contra = fams[c2]) |>
+    count(lleva, contra, sort = TRUE) |>
+    mutate(
+      provincia = prov[j],
+      gana = fams[which.max(p_gana[j, ])],
+      p_gana = max(p_gana[j, ]),
+      .before = 1
+    )
+}) |>
+  mutate(
+    across(c(gana, lleva, contra), etiq),
+    # el par con guión normal (Vox-PP), para que sea buscable en la tabla
+    par = paste0(lleva, "-", contra),
+    p_gana = round(100 * p_gana),
+    freq = round(100 * n / sum(n), 1),
+    .by = provincia
+  )
+# para el texto: la provincia donde el mismo partido se lleva el escaño
+# más reñido de forma más consistente (el ejemplo de provincia sentenciada)
+ej_dec <- tab_ult_raw |>
+  summarise(lleva_total = sum(freq), .by = c(provincia, lleva)) |>
+  slice_max(lleva_total, n = 1)
+tab_ult <- tab_ult_raw |> select(provincia, gana, p_gana, par, freq)
+
+# probabilidad de llevarse el escaño más reñido, por partido: el marginal
+# de los pares (da igual contra quién); grandes en columnas, el resto en
+# una columna de texto que dice quién es (si no, "Otros" mezclaba a PNV con
+# EH Bildu o a ERC con Junts)
+principales <- c("PP", "PSOE", "Vox", "Frente Amplio")
+p_lleva <- tab_ult_raw |>
+  summarise(n = sum(n), .by = c(provincia, lleva)) |>
+  mutate(prob = 100 * n / sum(n), .by = provincia)
+otros_txt <- p_lleva |>
+  filter(!lleva %in% principales) |>
+  arrange(provincia, desc(prob)) |>
+  summarise(
+    Otros = paste(
+      lleva,
+      if_else(prob < 0.05, "<0,1", num_es(prob)),
+      collapse = " · "
+    ),
+    .by = provincia
+  )
+tab_lleva <- p_lleva |>
+  filter(lleva %in% principales) |>
+  select(provincia, lleva, prob) |>
+  # los grandes en columnas fijas, aunque ninguno lidere en ninguna provincia
+  complete(provincia = unique(p_lleva$provincia), lleva = principales) |>
+  pivot_wider(names_from = lleva, values_from = prob) |>
+  # complete() deja NA en las combinaciones que no ocurren: a cero
+  mutate(across(-provincia, \(x) coalesce(round(x, 1), 0))) |>
+  left_join(otros_txt, by = "provincia") |>
+  mutate(Otros = coalesce(Otros, "—")) |>
+  # de más abierta a más sentenciada: arriba, las que no tienen favorito
+  # claro. El máximo es por partido, también entre los de "Otros"
+  left_join(
+    summarise(p_lleva, q_max = max(prob), .by = provincia),
+    by = "provincia"
+  ) |>
+  arrange(q_max, provincia) |>
+  select(provincia, all_of(principales), Otros)
+
+datatable(
+  tab_ult,
+  rownames = FALSE,
+  colnames = c(
+    "Provincia",
+    "Gana la provincia",
+    "P(gana) %",
+    "El escaño más reñido (se lo lleva-casi se lo lleva)",
+    "% de simulaciones"
+  ),
+  filter = "top",
+  options = list(pageLength = 10, scrollX = TRUE)
+)
+```
+
+Cómo se lee. *Gana la provincia* es el partido con más escaños en ella; si
+dos empatan, el más votado. Un par como `Vox-PP` dice que el escaño más reñido acaba en
+manos de Vox y que el partido que más cerca estuvo de arrebatárselo fue el
+PP; el % de simulaciones dice cuántas veces ocurre eso. Dentro de una misma
+provincia, fíjate en si el que se lo lleva se repite en casi todas las filas
+o va alternando entre partidos. Cuando se repite, la provincia está
+sentenciada: en `r ej_dec$provincia`, `r ej_dec$lleva` se lleva el escaño
+más reñido en el `r num_es(ej_dec$lleva_total, 0)` % de las simulaciones,
+sea cual sea el rival. Cuando alterna, ese escaño está en el aire, y es
+justo donde un pequeño movimiento de voto cambia el color de un escaño. El
+buscador de la tabla sirve para localizarlas: escribe un par concreto (por
+ejemplo, `Vox-PP`) y verás en qué provincias ese escaño está al alcance de
+los dos.
+
+
+Podemos ver la probabilidad de que cada partido se lleve el escaño más reñido de cada
+provincia, sumados todos los pares posibles, en %. El resto de partidos
+va en la última columna, cada uno con su nombre y su %. Las
+provincias van de más abierta a más sentenciada: arriba, escaños que nadie
+controla; abajo, favoritos claros.
+
+```{r}
+#| label: tbl-lleva-ultimo
+#| tbl-cap: "Probabilidad (%) de que cada partido se lleve el escaño más reñido de cada provincia."
+datatable(
+  tab_lleva,
+  rownames = FALSE,
+  colnames = c("Provincia", "PP", "PSOE", "Vox", "Frente Amplio", "Otros (%)"),
+  filter = "top",
+  options = list(pageLength = 10, scrollX = TRUE)
+) |>
+  formatRound(columns = 2:5, digits = 1, dec.mark = ",")
+```
+
+```{r}
+#| label: ejemplo-granada
+#| echo: false
+ej <- tab_ult |>
+  filter(provincia == "Granada") |>
+  arrange(desc(freq))
+ej_gana <- ej$gana[1]
+ej_p_gana <- ej$p_gana[1]
+# las etiquetas del par: ningún nombre de partido lleva guión
+ej_lleva <- sub("-.*$", "", ej$par)
+ej_contra <- sub("^[^-]*-", "", ej$par)
+```
+
+Un ejemplo de provincia en juego, Granada: en
+`r num_es(ej_p_gana, 0)` % de las simulaciones la gana `r ej_gana`, pero el
+escaño más reñido no está nada sentenciado: en el `r num_es(ej$freq[1])` %
+de las simulaciones se lo lleva `r ej_lleva[1]` con `r ej_contra[1]` a las
+puertas, en el `r num_es(ej$freq[2])` % se lo lleva `r ej_lleva[2]` contra
+`r ej_contra[2]`, y así hasta media docena de combinaciones distintas. Ese es
+el escaño que decidiría quién gana Granada si el voto se moviera un poco.
+
+## Las encuestas que entran
+
+Las `r n_enc` encuestas de 2026 con los grandes partidos son la primera tabla,
+ordenadas por fecha. El modelo descarta las que no publican tamaño muestral,
+las del CIS y las de ElectoPanel, que es un panel continuo y solo entra en el
+reparto del bloque.
+La columna *Regionales* marca las que entran también con el desglose de los
+partidos regionales, que se rellena con el scraping de
+[objetivo176](https://objetivo176.es/) (con los arreglos curados a mano por
+encima). Debajo, las encuestas que no publican SALF (Sigma Dos, Winston,
+Ateneo del Dato, Data10). Todas separan Sumar y Podemos; lo que les
+falta es SALF, que es un partido de derechas. Sin SALF no se cierra el
+reparto de los siete partidos, así que entran con menos celdas: PP, PSOE,
+VOX, Sumar + Podemos y un resto con SALF, los regionales y otros. Algunas
+(Sigma Dos, Data10) también arrastran el desglose del bloque desde
+objetivo176.
+
+```{r}
+#| label: tbl-encuestas
+#| tbl-cap: "Encuestas de 2026 que entran en el modelo de voto, con su estimación (%)."
+tab_enc <- d_enc |>
+  select(encuestadora, campo, fecha, muestra, enlace, categoria, pct) |>
+  pivot_wider(names_from = categoria, values_from = pct) |>
+  # pivot_wider ordena las columnas según aparecen en el CSV: se fija el
+  # orden para que case con los colnames del datatable
+  select(
+    encuestadora:enlace,
+    all_of(c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", "BLOQUE"))
+  ) |>
+  mutate(
+    regionales = if_else(enlace %in% con_regional, "sí", "—"),
+    enlace = sprintf('<a href="%s" target="_blank">fuente</a>', enlace),
+    across(
+      all_of(c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", "BLOQUE")),
+      \(x) round(x, 1)
+    )
+  ) |>
+  relocate(regionales, .after = muestra) |>
+  relocate(enlace, .after = last_col()) |>
+  arrange(desc(fecha))
+
+datatable(
+  tab_enc,
+  rownames = FALSE,
+  colnames = c(
+    "Casa",
+    "Trabajo de campo",
+    "Fecha",
+    "n",
+    "Regionales",
+    "PP",
+    "PSOE",
+    "VOX",
+    "SUMAR",
+    "PODEMOS",
+    "SALF",
+    "BLOQUE",
+    "Enlace"
+  ),
+  escape = FALSE,
+  filter = "top",
+  options = list(
+    pageLength = 10,
+    order = list(list(2, "desc")),
+    scrollX = TRUE,
+    columnDefs = list(list(className = "dt-right", targets = 5:11))
+  )
+)
+```
+
+```{r}
+#| label: tbl-agregadas
+#| tbl-cap: "Encuestas sin SALF: entran con celdas agregadas; Izquierda = Sumar + Podemos (%)."
+agr <- read_csv(
+  here::here("2026/10/encuestas_meta_agregadas.csv"),
+  show_col_types = FALSE
+) |>
+  filter(!is.na(muestra))
+
+tab_agr <- agr |>
+  transmute(
+    encuestadora,
+    campo,
+    fecha,
+    muestra,
+    regionales = if_else(enlace %in% con_regional, "sí", "—"),
+    PP,
+    PSOE,
+    VOX,
+    izquierda = izq,
+    enlace = sprintf('<a href="%s" target="_blank">fuente</a>', enlace)
+  ) |>
+  arrange(desc(fecha))
+
+datatable(
+  tab_agr,
+  rownames = FALSE,
+  colnames = c(
+    "Casa",
+    "Trabajo de campo",
+    "Fecha",
+    "n",
+    "Regionales",
+    "PP",
+    "PSOE",
+    "VOX",
+    "Izquierda",
+    "Enlace"
+  ),
+  escape = FALSE,
+  options = list(pageLength = 10, scrollX = TRUE)
+) |>
+  formatRound(columns = 6:9, digits = 1)
+```
+
+## ¿Qué ha cambiado esta semana?
+
+```{r}
+#| label: cambios
+# las tres últimas actualizaciones del histórico (una fila por semana de
+# encuestas): de aquí salen el titular y el marcador
+fecha_corta <- \(d) {
+  m <- c(
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic"
+  )
+  paste(as.integer(format(d, "%d")), m[as.integer(format(d, "%m"))])
+}
+signo <- \(x, d = 0) {
+  case_when(
+    round(x, d) > 0 ~ paste0("+", num_es(x, d)),
+    round(x, d) < 0 ~ paste0("−", num_es(abs(x), d)),
+    .default = "="
+  )
+}
+fechas_h <- sort(unique(hist$encuestas_hasta))
+hay_cambios <- length(fechas_h) >= 2
+if (hay_cambios) {
+  f_ult <- tail(fechas_h, 3)
+  f_ahora <- f_ult[length(f_ult)]
+  f_antes <- f_ult[length(f_ult) - 1]
+  # la previa a la anterior, si ya existe
+  f_previa <- if (length(f_ult) == 3) f_ult[1] else NULL
+  h3 <- hist |> filter(encuestas_hasta %in% f_ult)
+  med_h <- h3 |>
+    filter(partido %in% grandes) |>
+    select(partido, encuestas_hasta, mediana)
+  m_en <- \(f) {
+    med_h |>
+      filter(encuestas_hasta == f) |>
+      select(partido, mediana) |>
+      deframe()
+  }
+  may_en <- \(f) unique(h3$p_pp_vox_176[h3$encuestas_hasta == f])
+  # titular: el partido que más se mueve frente a la anterior (en empate, el
+  # primero de grandes)
+  cambio_sem <- m_en(f_ahora)[grandes] - m_en(f_antes)[grandes]
+  k <- which.max(abs(cambio_sem))
+  titular <- if (cambio_sem[k] == 0) {
+    "ningún gran partido cambia de mediana."
+  } else {
+    sprintf(
+      "%s es quien más se mueve, %s %d %s (de %d a %d).",
+      etiq(grandes[k]),
+      if (cambio_sem[k] > 0) "gana" else "pierde",
+      as.integer(abs(cambio_sem[k])),
+      if (abs(cambio_sem[k]) == 1) "escaño" else "escaños",
+      as.integer(m_en(f_antes)[grandes[k]]),
+      as.integer(m_en(f_ahora)[grandes[k]])
+    )
+  }
+}
+```
+
+```{r}
+#| label: cambios-texto
+#| output: asis
+if (hay_cambios) {
+  cat(
+    sprintf(
+      paste(
+        "Con las encuestas hasta el %s, frente a las de hasta el %s: %s",
+        "La mayoría de PP y Vox pasa del %s %% al %s %%."
+      ),
+      fecha_corta(f_ahora),
+      fecha_corta(f_antes),
+      titular,
+      num_es(100 * may_en(f_antes)),
+      num_es(100 * may_en(f_ahora))
+    ),
+    "\n"
+  )
+} else {
+  cat(
+    "El histórico todavía tiene una sola actualización: los cambios",
+    "aparecerán con la siguiente semana de encuestas.\n"
+  )
+}
+```
+
+Que una encuesta nueva dé más al PP no quiere decir que lo empuje hacia
+arriba. El modelo corrige el sesgo de cada casa: si una casa suele dar al PP
+dos puntos más que la media, un 31 % suyo cuenta como un 29 %. Una casa
+nueva, con una sola encuesta, no da para estimar su sesgo: el modelo lo
+encoge hacia el de una casa media, y su única encuesta no suele mover mucho el voto latente.
+
+```{r}
+#| label: tbl-marcador
+#| tbl-cap: "Escaños (mediana) en las últimas actualizaciones, y probabilidad de mayoría de PP y Vox. El cambio se mide frente a cada fecha anterior."
+if (hay_cambios) {
+  filas_esc <- tibble(partido = grandes) |>
+    mutate(
+      !!!setNames(
+        map(f_ult, \(f) as.character(m_en(f)[grandes])),
+        paste0("f", seq_along(f_ult))
+      ),
+      d_antes = signo(m_en(f_ahora)[grandes] - m_en(f_antes)[grandes]),
+      d_previa = if (!is.null(f_previa)) {
+        signo(m_en(f_ahora)[grandes] - m_en(f_previa)[grandes])
+      },
+      partido = etiq(partido)
+    )
+  fila_may <- tibble(partido = "P(PP + Vox ≥ 176)") |>
+    mutate(
+      !!!setNames(
+        map(f_ult, \(f) paste(num_es(100 * may_en(f)), "%")),
+        paste0("f", seq_along(f_ult))
+      ),
+      d_antes = paste(
+        signo(100 * (may_en(f_ahora) - may_en(f_antes)), 1),
+        "pp"
+      ),
+      d_previa = if (!is.null(f_previa)) {
+        paste(signo(100 * (may_en(f_ahora) - may_en(f_previa)), 1), "pp")
+      }
+    )
+  etiquetas <- c(
+    partido = "",
+    setNames(
+      paste("Hasta el", fecha_corta(f_ult)),
+      paste0("f", seq_along(f_ult))
+    ),
+    d_antes = paste("Cambio desde el", fecha_corta(f_antes)),
+    d_previa = if (!is.null(f_previa)) {
+      paste("Cambio desde el", fecha_corta(f_previa))
+    }
+  )
+  bind_rows(filas_esc, fila_may) |>
+    gt() |>
+    cols_label(.list = as.list(etiquetas)) |>
+    cols_align("right", columns = -partido)
+}
+```
+
+```{r}
+#| label: fig-historico
+#| fig-cap: "Escaños de los cuatro grandes en cada actualización: mediana (línea y número) e IC90 (sombra), en la misma escala. El eje llega hasta el 29-N: la gráfica se irá llenando con cada semana de encuestas."
+if (hay_cambios) {
+  d_h <- hist |>
+    filter(partido %in% grandes) |>
+    mutate(partido = factor(etiq(partido), levels = etiq(grandes)))
+  dia_e <- as.Date("2026-11-29")
+  ggplot(
+    d_h,
+    aes(encuestas_hasta, mediana, color = partido, fill = partido)
+  ) +
+    geom_ribbon(aes(ymin = q05, ymax = q95), alpha = 0.1, color = NA) +
+    geom_line(linewidth = 1) +
+    geom_point(size = 2) +
+    geom_text(
+      data = slice_max(d_h, encuestas_hasta, by = partido),
+      aes(label = paste(partido, mediana)),
+      hjust = -0.1,
+      size = 3.5,
+      show.legend = FALSE
+    ) +
+    geom_vline(xintercept = dia_e, linetype = "dashed") +
+    annotate(
+      "text",
+      x = dia_e,
+      y = Inf,
+      label = "29-N",
+      hjust = 1.2,
+      vjust = 1.5
+    ) +
+    scale_x_date(
+      limits = c(min(d_h$encuestas_hasta), dia_e),
+      breaks = seq(min(d_h$encuestas_hasta), dia_e, by = "week"),
+      labels = fecha_corta
+    ) +
+    scale_colour_manual(values = colores, aesthetics = c("colour", "fill")) +
+    labs(x = "Encuestas hasta", y = "Escaños") +
+    theme(legend.position = "none")
+}
+```

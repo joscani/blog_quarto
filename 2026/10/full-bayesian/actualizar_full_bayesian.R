@@ -1,19 +1,24 @@
 # ============================================================================
-# FULL BAYESIAN 29-N · actualizar el post de arriba a abajo
+# FULL BAYESIAN 29-N · actualizar el pipeline de datos y ajustes
 #
-# El mando único de la cadena del post (ver GUIA.md para los detalles):
+# El mando de datos y ajustes de la cadena (los posts se encargan de su
+# propio render; ver actualizar_seguimiento.R, que es el mando único y
+# llama a este). GUIA.md tiene los detalles:
 #
 #   1. baja las encuestas nuevas (scrape incremental) y reconstruye los CSV
 #   2. compara la huella de los ficheros de entrada con la de antes de bajar:
 #      si no han cambiado, no hay nada que re-ajustar (salvo --forzar)
-#   3. si han cambiado:
-#      - 12_ajustar_conjunto.R (el modelo) + 16 (ablación) + 17 (Omega)
-#      - reajusta los modelos brms cuyas entradas hayan cambiado y
-#        regenera la comparación con octubre (05)
+#   3. si han cambiado: 12_ajustar_conjunto.R (el modelo) + 16 (ablación)
+#      + 17 (Omega). El tracker solo necesita el modelo de Stan: los brms
+#      de la comparación con octubre (05) y sus reajustes solo corren con
+#      --con-comparar
 #   4. (opcional) 13_backtest_conjunto.R: solo con --con-backtest; una
 #      encuesta nueva de 2026 no lo afecta (usa solo historia)
-#   5. renderiza el .qmd
-#   6. sube los ajustes a la release de GitHub (--clobber)
+#   5. sube los ajustes a la release de GitHub (--clobber)
+#
+# Todas las salidas del pipeline van a 2026/10/full-bayesian/vivo/ (los
+# datos vivos del tracker). Las copias en la raíz del folder quedaron
+# congeladas con el post de octubre y nadie las sobrescribe.
 #
 # Lo que NO hace: 06_scrapear_autonomicas.R (historia cerrada), los
 # backtests congelados, los posts anteriores (2026/10/actualizar_pipeline.R).
@@ -22,14 +27,13 @@
 #   Rscript 2026/10/full-bayesian/actualizar_full_bayesian.R
 #     --forzar        reajusta aunque los datos no hayan cambiado
 #     --con-backtest  añade el backtest del 13 (~40 min)
-#     --sin-render    no renderiza el .qmd al final
 #     --sin-publicar  no sube los fits a la release
 # ============================================================================
 
 args <- commandArgs(trailingOnly = TRUE)
 forzar <- "--forzar" %in% args
 con_backtest <- "--con-backtest" %in% args
-con_render <- !"--sin-render" %in% args
+con_comparar <- "--con-comparar" %in% args
 con_publicar <- !"--sin-publicar" %in% args
 
 log <- function(...) cat(format(Sys.time(), "[%H:%M:%S] "), ..., "\n", sep = "")
@@ -43,7 +47,9 @@ inputs <- c(
 )
 hash <- function() vapply(unname(inputs), \(f) unname(tools::md5sum(f)), "")
 dir_fb <- here::here("2026/10/full-bayesian")
-release_tag <- "full-bayesian-29n"
+# la release del post congelado (full-bayesian-29n) queda como archivo: aquí
+# van los fits vivos, que se sobrescriben con cada actualización
+release_tag <- "full-bayesian-29n-vivo"
 
 run <- function(script, ...) {
   log("·", basename(script), paste0(list(...), collapse = " "))
@@ -76,11 +82,12 @@ run(file.path(dir_fb, "12_ajustar_conjunto.R"), "principal")
 run(file.path(dir_fb, "16_ablacion_error.R"))
 run(file.path(dir_fb, "17_sensibilidad_omega.R"))
 
-# ---- 3. comparación con el pipeline de octubre (05) ---------------------------
-# 05 simula el escenario mapa, que lee mod_meta_grande_sep.rds (y el modelo 2
-# del bloque dentro de simular()); solo se refitan los que hayan cambiado.
+# ---- 3. comparación con el pipeline de octubre (05), solo a petición ----------
+# El tracker solo necesita el modelo de Stan. 05 simula el escenario mapa con
+# los brms del pipeline de octubre (mod_meta_grande_sep.rds y el modelo 2 del
+# bloque dentro de simular()); refit y 05 solo corren con --con-comparar.
 
-if (any(c("sep", "bloque") %in% cambiado) || forzar) {
+if (con_comparar) {
   log("3. comparación con octubre: refit de brms y 05")
   source(here::here("2026/10/ajustar_meta.R"))
   if ("sep" %in% cambiado || forzar) {
@@ -91,9 +98,7 @@ if (any(c("sep", "bloque") %in% cambiado) || forzar) {
   }
   run(file.path(dir_fb, "05_comparar.R"))
 } else {
-  log(
-    "3. comparación con octubre: sin cambios en sus entradas, se queda como está"
-  )
+  log("3. comparación con octubre: se salta (usa --con-comparar)")
 }
 
 # ---- 4. backtest (opcional) ---------------------------------------------------
@@ -107,34 +112,27 @@ if (con_backtest) {
   )
 }
 
-# ---- 5. render ----------------------------------------------------------------
-
-if (con_render) {
-  log("5. render del post")
-  st <- system2("quarto", c("render", file.path(dir_fb, "full-bayesian.qmd")))
-  if (st != 0) stop("Falló el render del .qmd (status ", st, ")")
-}
-
-# ---- 6. release ---------------------------------------------------------------
+# ---- 5. release ---------------------------------------------------------------
 
 if (con_publicar) {
   files <- c(
-    file.path(dir_fb, "fit_conjunto.rds"),
-    file.path(dir_fb, "conjunto_sim.rds")
+    file.path(dir_fb, "vivo", "fit_conjunto.rds"),
+    file.path(dir_fb, "vivo", "conjunto_sim.rds")
   )
   if (con_backtest) {
     files <- c(
       files,
       file.path(
         dir_fb,
+        "vivo",
         list.files(
-          dir_fb,
+          file.path(dir_fb, "vivo"),
           "^fit_conjunto_bt_.*principal_26j_28a_10n_23j\\.rds$"
         )
       )
     )
   }
-  log("6. subiendo a la release:", paste(basename(files), collapse = ", "))
+  log("5. subiendo a la release:", paste(basename(files), collapse = ", "))
   st <- system2(
     "gh",
     c("release", "upload", release_tag, shQuote(files), "--clobber")

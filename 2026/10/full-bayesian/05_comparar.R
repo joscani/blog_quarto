@@ -13,7 +13,7 @@
 # fb_sin_err de la vieja arquitectura de dos módulos se retiraron con ella
 # (los scripts, archivados en _archivo_modulos_ab/).
 #
-# Salidas (en 2026/10/full-bayesian/):
+# Salidas (en 2026/10/full-bayesian/vivo/):
 #   comparar_escanos.csv   partido: mediana, IC90 y ancho
 #   comparar_mayorias.csv  P(PP+VOX >= 176), P(izquierda >= 176)
 #
@@ -29,6 +29,8 @@ suppressMessages({
 source(here::here("2026/10/simular_escanos.R"))
 
 dir_fb <- here::here("2026/10/full-bayesian")
+dir_vivo <- file.path(dir_fb, "vivo")
+dir.create(dir_vivo, showWarnings = FALSE)
 seed_comb <- 2029
 n_draws <- 6000
 
@@ -56,8 +58,8 @@ may <- bloques(actual$draws) |>
     p_pp_vox_176 = mean(derecha >= 176),
     p_izquierda_176 = mean(izquierda >= 176)
   )
-write_csv(esc, file.path(dir_fb, "comparar_escanos.csv"))
-write_csv(may, file.path(dir_fb, "comparar_mayorias.csv"))
+write_csv(esc, file.path(dir_vivo, "comparar_escanos.csv"))
+write_csv(may, file.path(dir_vivo, "comparar_mayorias.csv"))
 
 cat("\nEscaños (mediana [IC90], ancho):\n")
 esc |>

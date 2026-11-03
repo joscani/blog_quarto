@@ -5,8 +5,25 @@ salen los datos, qué se ejecuta, qué asume el modelo y qué cosas despistan.
 La versión corta es: **lanza el driver y él solo decide qué toca re-ajustar**.
 
 ```sh
-Rscript 2026/10/full-bayesian/actualizar_full_bayesian.R
+Rscript 2026/10/full-bayesian/actualizar_seguimiento.R
 ```
+
+> **2026-11-02.** Desde que existe el tracker (`seguimiento.qmd`), el pipeline
+> escribe todas sus salidas en `vivo/` (los datos vivos; los CSV van a git,
+> los fits a la release `full-bayesian-29n-vivo`, que se sobrescribe con
+> `--clobber` en cada actualización). Las copias en la raíz del folder
+> (`conjunto_*.csv`, `comparar_*.csv`, `backtest_conjunto_*.csv`,
+> `contraccion_conjunto.csv`) quedaron congeladas con el post publicado y
+> nadie las sobrescribe: el post no se vuelve a renderizar. La release
+> `full-bayesian-29n` queda congelada como archivo del post. El mando único
+> es ahora `actualizar_seguimiento.R`: llama al pipeline
+> (`actualizar_full_bayesian.R`, que ya no renderiza nada), añade la fila
+> semanal a `vivo/historico_pronostico.csv` y renderiza el tracker.
+>
+> El tracker solo necesita el modelo de Stan (12 + 16 + 17): los brms del
+> pipeline de octubre y la comparación (05) solo corren con `--con-comparar`,
+> porque su refit modifica los `2026/10/mod_meta_*.rds`, que están en git
+> (no en ninguna release) y versionan los posts congelados de octubre.
 
 ## 1. De dónde sale cada dato
 

@@ -8,7 +8,7 @@
 # pipeline de octubre, la versión "actual" de comparar_escanos.csv
 # (05_comparar.R); los tres con el escenario mapa y la semilla 2029.
 #
-# Salidas (en 2026/10/full-bayesian/):
+# Salidas (en 2026/10/full-bayesian/vivo/):
 #   conjunto_sin_error.csv   escaños por partido (mediana, IC90)
 #
 # Uso (desde la raíz): Rscript 2026/10/full-bayesian/16_ablacion_error.R
@@ -22,7 +22,9 @@ source(here::here("2026/10/full-bayesian/11_datos_conjunto.R"))
 source(here::here("2026/10/simular_escanos.R"))
 source(here::here("2026/10/full-bayesian/funciones_simular.R"))
 
-fit <- readRDS(file.path(dir_fb, "fit_conjunto.rds"))
+dir_vivo <- file.path(dir_fb, "vivo")
+dir.create(dir_vivo, showWarnings = FALSE)
+fit <- readRDS(file.path(dir_vivo, "fit_conjunto.rds"))
 dc <- datos_conjunto()
 
 Kc <- dc$K[dc$C]
@@ -46,12 +48,12 @@ sim <- simular(
 
 resumen_escanos(sim, width = 0.9) |>
   select(partido, mediana = escanos, q05 = .lower, q95 = .upper) |>
-  write_csv(file.path(dir_fb, "conjunto_sin_error.csv"))
+  write_csv(file.path(dir_vivo, "conjunto_sin_error.csv"))
 
 cat("\nEscaños con solo el voto latente (mediana [IC90]):\n")
 print(
   read_csv(
-    file.path(dir_fb, "conjunto_sin_error.csv"),
+    file.path(dir_vivo, "conjunto_sin_error.csv"),
     show_col_types = FALSE
   ) |>
     mutate(txt = sprintf("%g [%g-%g]", mediana, round(q05), round(q95))) |>

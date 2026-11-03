@@ -78,9 +78,9 @@ fams_campana <- function(id) {
 
 # 2026, grandes: 7 celdas; la del BLOQUE suma las 8 familias regionales.
 # Encuestas agregadas (preparar_meta.R: casas_agregadas, fichero
-# encuestas_meta_agregadas.csv): la fuente publica PP, PSOE, VOX y Sumar +
-# Podemos juntos, y SALF sin separar. Entran con celdas propias: la celda
-# IZQ suma las familias SUMAR y PODEMOS (el mismo agregado que el modelo de
+# encuestas_meta_agregadas.csv): la fuente no publica SALF. Sumar y Podemos
+# vienen separados, pero aquí entran sumados. Entran con celdas propias: la
+# celda IZQ suma las familias SUMAR y PODEMOS (el mismo agregado que el modelo de
 # error usa para la historia) y la residual lleva SALF, el BLOQUE y RESTO,
 # que quedan sin observar por separado.
 encuestas_2026_agregadas <- function() {

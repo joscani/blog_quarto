@@ -13,7 +13,7 @@
 #   vox_pp_05  Omega del posterior con la correlación PP-Vox forzada a +0,5
 #   r_error    la Omega entera del pipeline de octubre (R_error)
 #
-# Salidas (en 2026/10/full-bayesian/):
+# Salidas (en 2026/10/full-bayesian/vivo/):
 #   sensibilidad_omega_mayorias.csv   variante, p_pp_vox_176
 #
 # Uso (desde la raíz): Rscript 2026/10/full-bayesian/17_sensibilidad_omega.R
@@ -27,7 +27,9 @@ source(here::here("2026/10/full-bayesian/11_datos_conjunto.R"))
 source(here::here("2026/10/simular_escanos.R"))
 source(here::here("2026/10/full-bayesian/funciones_simular.R"))
 
-fit <- readRDS(file.path(dir_fb, "fit_conjunto.rds"))
+dir_vivo <- file.path(dir_fb, "vivo")
+dir.create(dir_vivo, showWarnings = FALSE)
+fit <- readRDS(file.path(dir_vivo, "fit_conjunto.rds"))
 dc <- datos_conjunto()
 
 # voto latente del día E (igual que en 16_ablacion_error.R)
@@ -101,10 +103,10 @@ tibble(
   variante = c("base", "vox_pp_05", "r_error"),
   p_pp_vox_176 = c(run(err_base), run(err_A), run(err_B))
 ) |>
-  write_csv(file.path(dir_fb, "sensibilidad_omega_mayorias.csv"))
+  write_csv(file.path(dir_vivo, "sensibilidad_omega_mayorias.csv"))
 
 cat("\nP(PP + VOX >= 176):\n")
 print(read_csv(
-  file.path(dir_fb, "sensibilidad_omega_mayorias.csv"),
+  file.path(dir_vivo, "sensibilidad_omega_mayorias.csv"),
   show_col_types = FALSE
 ))

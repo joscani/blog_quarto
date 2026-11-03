@@ -12,7 +12,8 @@
 # La pregunta: ¿son las horquillas del modelo conjunto demasiado anchas? Si
 # el resultado real cae siempre muy dentro, sí.
 #
-# Salidas (en 2026/10/full-bayesian/):
+# Salidas (en 2026/10/full-bayesian/vivo/; las copias en la raíz quedaron
+# congeladas con el post):
 #   backtest_conjunto_escanos.csv   elección x partido: real, mediana, IC90
 #   backtest_conjunto_votos.csv     lo mismo en voto
 #   backtest_conjunto_resumen.csv   cobertura y anchura frente al pipeline
@@ -31,6 +32,9 @@ suppressMessages({
 })
 source(here::here("2026/10/full-bayesian/11_datos_conjunto.R"))
 source(here::here("2026/10/backtest_pipeline.R"))
+
+dir_vivo <- file.path(dir_fb, "vivo")
+dir.create(dir_vivo, showWarnings = FALSE)
 
 # variante (primer argumento): "principal" (volatilidad propia de cada
 # campaña) o "v2" (volatilidad común, la primera versión).
@@ -75,7 +79,7 @@ backtest_conjunto <- function(id, preps, tau, mapa) {
     refresh = 250
   )
   fit$save_object(file.path(
-    dir_fb,
+    dir_vivo,
     paste0("fit_conjunto_bt_", id, sufijo, ".rds")
   ))
   d <- fit$diagnostic_summary(quiet = TRUE)
@@ -136,11 +140,11 @@ esc <- map_dfr(res, "escanos")
 vot <- map_dfr(res, "votos")
 write_csv(
   esc,
-  file.path(dir_fb, paste0("backtest_conjunto_escanos", sufijo, ".csv"))
+  file.path(dir_vivo, paste0("backtest_conjunto_escanos", sufijo, ".csv"))
 )
 write_csv(
   vot,
-  file.path(dir_fb, paste0("backtest_conjunto_votos", sufijo, ".csv"))
+  file.path(dir_vivo, paste0("backtest_conjunto_votos", sufijo, ".csv"))
 )
 
 leer <- \(f, v) {
@@ -193,7 +197,7 @@ resumen <- bind_rows(
   )
 write_csv(
   resumen,
-  file.path(dir_fb, paste0("backtest_conjunto_resumen", sufijo, ".csv"))
+  file.path(dir_vivo, paste0("backtest_conjunto_resumen", sufijo, ".csv"))
 )
 
 cat("\nEscaños (real, mediana [IC90]):\n")
@@ -218,7 +222,7 @@ write_csv(
     p_pp_vox_176 = map_dbl(res, "p_derecha"),
     real_pp_vox = map_dbl(res, "real_derecha")
   ),
-  file.path(dir_fb, paste0("backtest_conjunto_mayorias", sufijo, ".csv"))
+  file.path(dir_vivo, paste0("backtest_conjunto_mayorias", sufijo, ".csv"))
 )
 cat(
   "\nP(PP+VOX >= 176):",

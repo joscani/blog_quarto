@@ -256,10 +256,10 @@ construir_meta_grande <- function(f_salida = f_grande, separadas = FALSE) {
   invisible(meta)
 }
 
-# Encuestas de casas que no separan toda la categoría de la izquierda:
-# publican PP, PSOE, VOX y el bloque de la izquierda fuera del PSOE
-# (Sumar + Podemos, que es como el modelo de error conoce la historia), y
-# SALF se queda sin observar. Van a un CSV aparte para que el modelo
+# Encuestas de casas que no publican SALF: todas separan Sumar y
+# Podemos, pero sin SALF no se cierran las 7 categorías. Entran con PP,
+# PSOE, VOX y Sumar + Podemos juntos (que es como el modelo de error conoce
+# la historia), y SALF se queda sin observar. Van a un CSV aparte para que el modelo
 # conjunto les dé su propia estructura de celdas (11_datos_conjunto.R) y
 # no contaminen los multinomiales de brms, que exigen las 7 categorías.
 # Si alguna de estas casas publicara el desglose completo, entraría por la
