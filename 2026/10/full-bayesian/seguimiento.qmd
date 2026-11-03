@@ -500,7 +500,36 @@ tab_ult_raw <- map_dfr(seq_along(prov), \(j) {
 ej_dec <- tab_ult_raw |>
   summarise(lleva_total = sum(freq), .by = c(provincia, lleva)) |>
   slice_max(lleva_total, n = 1)
-tab_ult <- tab_ult_raw |> select(provincia, gana, p_gana, par, freq)
+# el mismo par en un solo escenario: el D'Hondt sobre el voto mediano de
+# la provincia. Es la cuenta que uno hace a mano con la tabla del voto; la
+# columna de % dice cuántas simulaciones acaban con cada par
+par_mediano <- map_chr(seq_along(prov), \(j) {
+  vm <- apply(sim$prov_voto[, j, ], 2, median)
+  vm["RESTO"] <- 0
+  vm[vm < 0.03] <- 0 # el umbral del 3%
+  n_esc <- sum(pe[1, j, ])
+  s <- setNames(rep(0, length(vm)), names(vm))
+  for (k in seq_len(n_esc)) {
+    q <- vm / (s + 1)
+    i <- which.max(q)
+    ult <- i
+    s[i] <- s[i] + 1
+  }
+  q <- vm / (s + 1)
+  q[vm == 0] <- -1
+  contra <- which.max(q)
+  paste0(etiq(names(vm)[ult]), "-", etiq(names(vm)[contra]))
+})
+tab_ult <- tab_ult_raw |>
+  left_join(tibble(provincia = prov, par_med = par_mediano), by = "provincia") |>
+  select(provincia, gana, p_gana, par, freq, par_med)
+# para el texto: una provincia donde el par con el voto mediano no es el
+# más frecuente en las simulaciones (Córdoba si cumple, la primera si no)
+ej_med_cand <- tab_ult |>
+  slice_max(freq, n = 1, with_ties = FALSE, by = provincia) |>
+  filter(par != par_med) |>
+  arrange(provincia != "Córdoba")
+ej_med <- ej_med_cand[1, ]
 
 # probabilidad de llevarse el escaño más reñido, por partido: el marginal
 # de los pares (da igual contra quién); grandes en columnas, el resto en
@@ -548,7 +577,8 @@ datatable(
     "Gana la provincia",
     "P(gana) %",
     "El escaño más reñido (se lo lleva-casi se lo lleva)",
-    "% de simulaciones"
+    "% de simulaciones",
+    "Par con el voto mediano"
   ),
   filter = "top",
   options = list(pageLength = 10, scrollX = TRUE)
@@ -569,6 +599,14 @@ buscador de la tabla sirve para localizarlas: escribe un par concreto (por
 ejemplo, `Vox-PP`) y verás en qué provincias ese escaño está al alcance de
 los dos.
 
+La última columna, *Par con el voto mediano*, es la cuenta que harías a mano:
+el D'Hondt sobre la mediana del voto de la tabla de arriba. Es un solo
+escenario y no tiene por qué coincidir con el par más frecuente. En
+`r ej_med$provincia`, con el voto mediano el par es `r ej_med$par_med`, pero
+en las simulaciones el más frecuente es `r ej_med$par` (`r num_es(ej_med$freq)`
+% de las simulaciones). El voto provincial simulado se mueve varios puntos
+de una simulación a otra, y con cocientes tan cercanos basta eso para
+cambiar quién se lleva el último escaño y quién se queda a las puertas.
 
 Podemos ver la probabilidad de que cada partido se lleve el escaño más reñido de cada
 provincia, sumados todos los pares posibles, en %. El resto de partidos
