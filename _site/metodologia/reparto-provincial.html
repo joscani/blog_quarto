@@ -1,0 +1,2656 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="José Luis Cañadas Reche">
+<meta name="description" content="De un voto nacional a 52 votos provinciales: ratios del 23J, shock jerárquico en escala logarítmica, recentrado, reglas del mapa de coaliciones y D’Hondt. Página de referencia para los posts de las generales de 2026.">
+
+<title>Cómo repartimos el voto por provincias – Muestrear no es pecado</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-df07115ad9f15e2ef3479c789e6873c8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-9d96f532d65220ca877c0304385df42f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Muestrear no es pecado</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Buscar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Navegación de palanca" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/joscani"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://bsky.app/profile/joscani.muestrear-no-es-pecado.es"> <i class="bi bi-bluesky" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://x.com/joscani"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://fosstodon.org/@joscani"> <i class="bi bi-mastodon" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../blog.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://rweekly.org/">
+ <span class="dropdown-text">R Weekly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.r-bloggers.com/">
+ <span class="dropdown-text">R Bloggers</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://www.datanalytics.com/">
+ <span class="dropdown-text">Datanalytics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../archive.html"> 
+<span class="menu-text">Archivo</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Alternar modo oscuro"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta página</h2>
+   
+  <ul>
+  <li><a href="#sec-resumen" id="toc-sec-resumen" class="nav-link active" data-scroll-target="#sec-resumen">Los pasos, de un vistazo</a></li>
+  <li><a href="#sec-juguete" id="toc-sec-juguete" class="nav-link" data-scroll-target="#sec-juguete">Un ejemplo que se puede hacer a mano</a></li>
+  <li><a href="#sec-log" id="toc-sec-log" class="nav-link" data-scroll-target="#sec-log">Por qué trabajo en logaritmo</a></li>
+  <li><a href="#sec-granada" id="toc-sec-granada" class="nav-link" data-scroll-target="#sec-granada">El caso real: Granada, de principio a fin</a>
+  <ul class="collapse">
+  <li><a href="#sec-ratios" id="toc-sec-ratios" class="nav-link" data-scroll-target="#sec-ratios">Los ratios</a></li>
+  <li><a href="#sin-shock" id="toc-sin-shock" class="nav-link" data-scroll-target="#sin-shock">Sin shock</a></li>
+  <li><a href="#el-shock-de-vox" id="toc-el-shock-de-vox" class="nav-link" data-scroll-target="#el-shock-de-vox">El shock de VOX</a></li>
+  <li><a href="#la-regla-del-mapa-adelante-andalucía" id="toc-la-regla-del-mapa-adelante-andalucía" class="nav-link" data-scroll-target="#la-regla-del-mapa-adelante-andalucía">La regla del mapa: Adelante Andalucía</a></li>
+  <li><a href="#umbral-y-dhondt" id="toc-umbral-y-dhondt" class="nav-link" data-scroll-target="#umbral-y-dhondt">Umbral y D’Hondt</a></li>
+  </ul></li>
+  <li><a href="#sec-formula" id="toc-sec-formula" class="nav-link" data-scroll-target="#sec-formula">La fórmula general</a></li>
+  <li><a href="#sec-tau" id="toc-sec-tau" class="nav-link" data-scroll-target="#sec-tau">De dónde salen los tau</a>
+  <ul class="collapse">
+  <li><a href="#los-partidos-grandes" id="toc-los-partidos-grandes" class="nav-link" data-scroll-target="#los-partidos-grandes">Los partidos grandes</a></li>
+  <li><a href="#los-demás-partidos" id="toc-los-demás-partidos" class="nav-link" data-scroll-target="#los-demás-partidos">Los demás partidos</a></li>
+  </ul></li>
+  <li><a href="#sec-real" id="toc-sec-real" class="nav-link" data-scroll-target="#sec-real">Qué ocurre en la simulación real</a>
+  <ul class="collapse">
+  <li><a href="#el-patrón-del-23j-y-su-incertidumbre" id="toc-el-patrón-del-23j-y-su-incertidumbre" class="nav-link" data-scroll-target="#el-patrón-del-23j-y-su-incertidumbre">El patrón del 23J y su incertidumbre</a></li>
+  <li><a href="#sec-dispersion" id="toc-sec-dispersion" class="nav-link" data-scroll-target="#sec-dispersion">La dispersión final es menor que tau</a></li>
+  <li><a href="#correlaciones-entre-provincias" id="toc-correlaciones-entre-provincias" class="nav-link" data-scroll-target="#correlaciones-entre-provincias">Correlaciones entre provincias</a></li>
+  <li><a href="#sec-deriva" id="toc-sec-deriva" class="nav-link" data-scroll-target="#sec-deriva">El voto nacional se mueve un poco</a></li>
+  </ul></li>
+  <li><a href="#sec-mapa" id="toc-sec-mapa" class="nav-link" data-scroll-target="#sec-mapa">Las reglas del mapa de coaliciones</a></li>
+  <li><a href="#sec-validacion" id="toc-sec-validacion" class="nav-link" data-scroll-target="#sec-validacion">Por qué funciona mejor que la Dirichlet</a></li>
+  <li><a href="#sec-dirichlet" id="toc-sec-dirichlet" class="nav-link" data-scroll-target="#sec-dirichlet">La Dirichlet: historia y dónde sigue</a></li>
+  <li><a href="#sec-limitaciones" id="toc-sec-limitaciones" class="nav-link" data-scroll-target="#sec-limitaciones">Limitaciones</a>
+  <ul class="collapse">
+  <li><a href="#sec-tenerife" id="toc-sec-tenerife" class="nav-link" data-scroll-target="#sec-tenerife">VOX en Santa Cruz de Tenerife: una corrección</a></li>
+  <li><a href="#otras-limitaciones" id="toc-otras-limitaciones" class="nav-link" data-scroll-target="#otras-limitaciones">Otras limitaciones</a></li>
+  </ul></li>
+  <li><a href="#sec-codigo" id="toc-sec-codigo" class="nav-link" data-scroll-target="#sec-codigo">Dónde está el código</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Cómo repartimos el voto por provincias</h1>
+</div>
+
+<div>
+  <div class="description">
+    De un voto nacional a 52 votos provinciales: ratios del 23J, shock jerárquico en escala logarítmica, recentrado, reglas del mapa de coaliciones y D’Hondt. Página de referencia para los posts de las generales de 2026.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>José Luis Cañadas Reche </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">4 de noviembre de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Esta página explica cómo paso del voto nacional al voto de cada provincia en las simulaciones de escaños de las generales del 29-N. Los posts enlazan aquí para no repetir la explicación.</p>
+<p><strong>La idea:</strong> cada partido conserva el patrón geográfico que tuvo el 23J, pero ese patrón se mueve en cada simulación. El movimiento tiene dos partes, una común a la comunidad autónoma y otra propia de la provincia. Su tamaño sale de cuánto cambió la geografía del voto entre elecciones pasadas.</p>
+<p>Al principio usé una Dirichlet para mover ese patrón. La <a href="#sec-dirichlet">jubilé</a> porque el backtest mostró que se quedaba corta.</p>
+<section id="sec-resumen" class="level2">
+<h2 class="anchored" data-anchor-id="sec-resumen">Los pasos, de un vistazo</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 42%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Paso</th>
+<th>Qué hace</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Toma el voto nacional del draw</td>
+<td>Lo fija el modelo de encuestas</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Lo multiplica por el ratio del partido en la provincia</td>
+<td>Conserva el patrón geográfico del 23J</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Aplica un shock al ratio, en escala log</td>
+<td>La geografía también cambia entre elecciones</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Recentra los ratios de cada partido</td>
+<td>El shock mueve voto entre provincias, no crea voto nacional</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>Renormaliza la provincia a 100 %</td>
+<td>Los votos de una provincia deben sumar 100 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td>Aplica la regla del mapa de coaliciones</td>
+<td>Cada provincia tiene su oferta de candidaturas</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td>Aplica el umbral del 3 %, quita <code>RESTO</code> y ejecuta D’Hondt</td>
+<td>Es la ley electoral, con una simplificación para <code>RESTO</code></td>
+</tr>
+</tbody>
+</table>
+<p>Un <em>draw</em> es una muestra del posterior, es decir, una versión posible de la elección. Todo lo anterior se repite en cada draw y en cada una de las 52 provincias.</p>
+<p>Este mecanismo es el de <code>simular()</code>, en <a href="../2026/10/simular_escanos.R"><code>simular_escanos.R</code></a>. Lo usan estos posts:</p>
+<ul>
+<li><a href="../2026/10/meta-analisis-generales-escanos-jlcr.html">De voto a escaños</a>, donde conté el cambio de la Dirichlet al shock.</li>
+<li><a href="../2026/10/frente_amplio_y_adelante_andalucia/frente_amplio_y_adelante_andalucia.html">Frente Amplio y Adelante Andalucía</a>, que introdujo el escenario mapa.</li>
+<li><a href="../2026/10/full-bayesian/full-bayesian.html">El modelo full bayesian</a> y su <a href="../2026/10/full-bayesian/seguimiento.html">seguimiento</a>.</li>
+</ul>
+<p>El <a href="../2026/11/mrp-multiencuesta/index.html">MRP multiencuesta</a> <strong>no</strong> usa este reparto. El MRP estima directamente el voto de cada provincia, así que no necesita ratios ni shock. Sí comparte las reglas del mapa, con una diferencia en <a href="#sec-mapa">Teruel</a>.</p>
+</section>
+<section id="sec-juguete" class="level2">
+<h2 class="anchored" data-anchor-id="sec-juguete">Un ejemplo que se puede hacer a mano</h2>
+<p>Antes de las fórmulas, un ejemplo inventado con dos provincias y dos partidos.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># números con coma decimal en el texto</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>num_es <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">d =</span> <span class="dv">2</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">format</span>(<span class="fu">round</span>(x, d), <span class="at">nsmall =</span> d, <span class="at">decimal.mark =</span> <span class="st">","</span>, <span class="at">big.mark =</span> <span class="st">"."</span>, <span class="at">trim =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>La provincia A tiene el 60 % de los votos y la B, el 40 %. En la elección de referencia, el partido X sacó un 70 % en A y un 45 % en B. El partido Y sacó el resto.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>juguete <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>provincia, <span class="sc">~</span>peso, <span class="sc">~</span>partido, <span class="sc">~</span>voto_ref,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"A"</span>,        <span class="fl">0.6</span>,   <span class="st">"X"</span>,      <span class="dv">70</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"A"</span>,        <span class="fl">0.6</span>,   <span class="st">"Y"</span>,      <span class="dv">30</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"B"</span>,        <span class="fl">0.4</span>,   <span class="st">"X"</span>,      <span class="dv">45</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"B"</span>,        <span class="fl">0.4</span>,   <span class="st">"Y"</span>,      <span class="dv">55</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># voto nacional de referencia: media de las provincias, ponderada por su peso</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>juguete <span class="ot">&lt;-</span> juguete <span class="sc">|&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(partido) <span class="sc">|&gt;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nacional_ref =</span> <span class="fu">sum</span>(peso <span class="sc">*</span> voto_ref)) <span class="sc">|&gt;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ratio =</span> voto_ref <span class="sc">/</span> nacional_ref)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>juguete</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia  peso partido voto_ref nacional_ref ratio</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;        &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 A           0.6 X             70           60  1.17</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 A           0.6 Y             30           40  0.75</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 B           0.4 X             45           60  0.75</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 B           0.4 Y             55           40  1.38</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Paso 1: el ratio.</strong> X sacó un 60 % nacional y un 70 % en A. Su ratio en A es 70 / 60 = 1,17. Un ratio mayor que 1 indica que el partido va mejor allí que en el conjunto del país.</p>
+<p><strong>Paso 2: el voto nuevo.</strong> Supón que ahora las encuestas dan un 50 % a cada partido. Multiplico ese voto por el ratio y renormalizo cada provincia:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sin_shock <span class="ot">&lt;-</span> juguete <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_bruto =</span> <span class="dv">50</span> <span class="sc">*</span> ratio) <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(provincia) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">suma_provincia =</span> <span class="fu">sum</span>(voto_bruto),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_final =</span> <span class="dv">100</span> <span class="sc">*</span> voto_bruto <span class="sc">/</span> suma_provincia</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>sin_shock <span class="sc">|&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(provincia, partido, ratio, voto_bruto, suma_provincia, voto_final)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia partido ratio voto_bruto suma_provincia voto_final</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt;      &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 A         X        1.17       58.3           95.8       60.9</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 A         Y        0.75       37.5           95.8       39.1</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 B         X        0.75       37.5          106.        35.3</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 B         Y        1.38       68.8          106.        64.7</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>La provincia A suma 95,8 y la B, 106,3. Por eso hace falta renormalizar. Esta división tiene una consecuencia pequeña: el voto nacional de X ya no es exactamente 50 %.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sin_shock <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(partido) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">voto_nacional =</span> <span class="fu">sum</span>(peso <span class="sc">*</span> voto_final))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   partido voto_nacional</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;           &lt;dbl&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 X                50.6</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Y                49.4</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Paso 3: el shock.</strong> Ahora muevo solo el ratio de X. Sumo +0,10 a su logaritmo en A y resto 0,05 en B. Sumar en logaritmo equivale a multiplicar: <code>exp(0,10)</code> = 1,105 y <code>exp(-0,05)</code> = 0,951.</p>
+<p><strong>Paso 4: el recentrado.</strong> La media ponderada de los ratios de X debe seguir valiendo 1. Sin esa corrección, el shock habría creado voto nacional:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> juguete <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(partido <span class="sc">==</span> <span class="st">"X"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">shock_log =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="sc">-</span><span class="fl">0.05</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">multiplicador =</span> <span class="fu">exp</span>(shock_log),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ratio_con_shock =</span> ratio <span class="sc">*</span> multiplicador</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>media_ponderada <span class="ot">&lt;-</span> <span class="fu">sum</span>(x<span class="sc">$</span>peso <span class="sc">*</span> x<span class="sc">$</span>ratio_con_shock)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>media_ponderada</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.058988</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> x <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">ratio_recentrado =</span> ratio_con_shock <span class="sc">/</span> media_ponderada)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>x <span class="sc">|&gt;</span> <span class="fu">select</span>(provincia, ratio, multiplicador, ratio_con_shock, ratio_recentrado)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia ratio multiplicador ratio_con_shock ratio_recentrado</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;            &lt;dbl&gt;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 A          1.17         1.11            1.29             1.22 </span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 B          0.75         0.951           0.713            0.674</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># comprobación: la media ponderada vuelve a 1</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(x<span class="sc">$</span>peso <span class="sc">*</span> x<span class="sc">$</span>ratio_recentrado)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Paso 5: el voto final.</strong> Uso los ratios recentrados de X, dejo los de Y como estaban y renormalizo:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> juguete <span class="sc">|&gt;</span> <span class="fu">filter</span>(partido <span class="sc">==</span> <span class="st">"Y"</span>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">ratio_recentrado =</span> ratio)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>juguete_final <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(x, y) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_bruto =</span> <span class="dv">50</span> <span class="sc">*</span> ratio_recentrado) <span class="sc">|&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(provincia) <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_final =</span> <span class="dv">100</span> <span class="sc">*</span> voto_bruto <span class="sc">/</span> <span class="fu">sum</span>(voto_bruto)) <span class="sc">|&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(provincia, partido)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>juguete_final <span class="sc">|&gt;</span> <span class="fu">select</span>(provincia, partido, ratio_recentrado, voto_bruto, voto_final)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia partido ratio_recentrado voto_bruto voto_final</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;              &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 A         X                  1.22        60.9       61.9</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 A         Y                  0.75        37.5       38.1</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 B         X                  0.674       33.7       32.9</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 B         Y                  1.38        68.8       67.1</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Todo el mecanismo está en este ejemplo. El caso real solo añade más partidos y provincias, y saca los shocks de una distribución.</p>
+</section>
+<section id="sec-log" class="level2">
+<h2 class="anchored" data-anchor-id="sec-log">Por qué trabajo en logaritmo</h2>
+<p>El ratio cambia de forma proporcional, y el logaritmo convierte las multiplicaciones en sumas. Esto da tres ventajas:</p>
+<ul>
+<li><strong>Simetría.</strong> Multiplicar por 1,10 suma 0,095. Dividir por 1,10 resta 0,095.</li>
+<li><strong>Ratios siempre positivos.</strong> El PP tuvo un ratio de 0,42 en Barcelona. Un shock aditivo de −0,5 lo dejaría en −0,08, que no tiene sentido. Con <code>exp()</code> eso no puede ocurrir.</li>
+<li><strong>El mismo cambio relativo.</strong> Un shock de +0,05 sube un 5 % tanto un ratio de 0,42 como uno de 1,30.</li>
+</ul>
+<p>Por eso el shock es normal en la escala logarítmica y multiplica en la escala del ratio.</p>
+</section>
+<section id="sec-granada" class="level2">
+<h2 class="anchored" data-anchor-id="sec-granada">El caso real: Granada, de principio a fin</h2>
+<p>Ahora sigo a una provincia real por todos los pasos. Uso la referencia provincial del 23J, con el reparto entre Sumar y Podemos, y la simulación del modelo conjunto del 3 de noviembre de 2026. Esa simulación tiene 6.000 draws.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ref <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/ref_provincial_23J_14.csv"</span>),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/full-bayesian/vivo/conjunto_sim.rds"</span>))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># voto nacional de ejemplo: la media de los draws, en %</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>voto_nacional <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(sim<span class="sc">$</span>shares)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(voto_nacional, <span class="dv">2</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       PP     PSOE      VOX    SUMAR  PODEMOS     SALF    Junts      ERC </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    30.71    27.18    19.45     6.91     2.55     1.91     1.33     2.10 </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      PNV EH Bildu      BNG       CC      UPN    RESTO </span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     0.89     1.25     0.85     0.42     0.15     4.30</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(voto_nacional)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 100</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="sec-ratios" class="level3">
+<h3 class="anchored" data-anchor-id="sec-ratios">Los ratios</h3>
+<p>El ratio divide el voto del partido en la provincia entre su voto nacional:</p>
+<p><span class="math display">\[
+r_{f,p} = \frac{\text{\% del partido } f \text{ en la provincia } p}{\text{\% nacional del partido } f}
+\]</span></p>
+<p>Este es el patrón de tres partidos en tres provincias:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ref <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    provincia <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Granada"</span>, <span class="st">"Madrid"</span>, <span class="st">"Barcelona"</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    partido <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"PP"</span>, <span class="st">"PSOE"</span>, <span class="st">"VOX"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(provincia, partido, ratio) <span class="sc">|&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ratio =</span> <span class="fu">round</span>(ratio, <span class="dv">2</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> partido, <span class="at">values_from =</span> ratio)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia    PP  PSOE   VOX</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Barcelona  0.42  1.13  0.61</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Granada    1.12  1.04  1.3 </span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Madrid     1.23  0.88  1.13</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>El voto en Granada sale de tres fuentes:</p>
+<ul>
+<li><strong>Casi todos los partidos:</strong> el 23J.</li>
+<li><strong>SALF:</strong> las Europeas de 2024, porque no existía en 2023.</li>
+<li><strong>Sumar y Podemos:</strong> el voto de Sumar del 23J se parte con su peso relativo en las Europeas de 2024.</li>
+</ul>
+<p>Un partido sin votos en la provincia tiene ratio 0 y sigue en 0 aunque reciba un shock. Por eso ERC no aparece en Granada. Hay una excepción corregida a mano: <a href="#sec-tenerife">VOX en Santa Cruz de Tenerife</a>.</p>
+</section>
+<section id="sin-shock" class="level3">
+<h3 class="anchored" data-anchor-id="sin-shock">Sin shock</h3>
+<p>Multiplico el voto nacional por el ratio y renormalizo:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>granada <span class="ot">&lt;-</span> ref <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(provincia <span class="sc">==</span> <span class="st">"Granada"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(partido, <span class="at">voto_23J =</span> pct_prov, ratio) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_nacional =</span> voto_nacional[partido]) <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_bruto =</span> voto_nacional <span class="sc">*</span> ratio) <span class="sc">|&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">voto_provincial =</span> <span class="dv">100</span> <span class="sc">*</span> voto_bruto <span class="sc">/</span> <span class="fu">sum</span>(voto_bruto)) <span class="sc">|&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(voto_provincial))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>granada <span class="sc">|&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ratio <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>)))</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 6</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   partido voto_23J ratio voto_nacional voto_bruto voto_provincial</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;      &lt;dbl&gt;           &lt;dbl&gt;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 PP         37.3   1.12         30.7       34.4            33.6 </span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 PSOE       33.2   1.04         27.2       28.3            27.7 </span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 VOX        16.3   1.3          19.4       25.3            24.8 </span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 SUMAR       7.22  1             6.91       6.9             6.75</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 RESTO       1.46  0.59          4.3        2.54            2.48</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 SALF        6.02  1.3           1.91       2.49            2.43</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 PODEMOS     4.52  0.87          2.55       2.22            2.17</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(granada<span class="sc">$</span>voto_bruto)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 102.1169</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Los votos brutos suman 102,1, no 100. VOX ha subido desde el 23J y Granada es una provincia donde VOX tiene un ratio alto. Además, en Granada no compiten los partidos regionales, que suponen parte del voto nacional. Al renormalizar, todos los partidos de la provincia bajan en la misma proporción. Esto importa más adelante, en la sección sobre <a href="#sec-dispersion">la dispersión final</a>.</p>
+</section>
+<section id="el-shock-de-vox" class="level3">
+<h3 class="anchored" data-anchor-id="el-shock-de-vox">El shock de VOX</h3>
+<p>El shock de un partido en una provincia tiene dos partes:</p>
+<ul>
+<li><strong><code>eta</code>, de comunidad:</strong> es el mismo en todas las provincias de la comunidad, en ese draw y para ese partido.</li>
+<li><strong><code>eps</code>, de provincia:</strong> es propio de cada provincia.</li>
+</ul>
+<p>Sorteo los dos para VOX en las 52 provincias, con las medianas de sus tau. Más abajo explico <a href="#sec-tau">de dónde salen los tau</a>. Aquí uso un solo sorteo, con fines ilustrativos.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tau_vox_c <span class="ot">&lt;-</span> <span class="fl">0.124</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tau_vox_p <span class="ot">&lt;-</span> <span class="fl">0.195</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>vox <span class="ot">&lt;-</span> ref <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(partido <span class="sc">==</span> <span class="st">"VOX"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(provincia, ccaa, ratio)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># peso de cada provincia: sus votos en la referencia</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>pesos <span class="ot">&lt;-</span> ref <span class="sc">|&gt;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(provincia) <span class="sc">|&gt;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">votos =</span> <span class="fu">sum</span>(votos)) <span class="sc">|&gt;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">peso =</span> votos <span class="sc">/</span> <span class="fu">sum</span>(votos))</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>vox <span class="ot">&lt;-</span> <span class="fu">left_join</span>(vox, <span class="fu">select</span>(pesos, provincia, peso), <span class="at">by =</span> <span class="st">"provincia"</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2029</span>)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co"># un eta por comunidad</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>etas <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">ccaa =</span> <span class="fu">unique</span>(vox<span class="sc">$</span>ccaa)) <span class="sc">|&gt;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">eta =</span> <span class="fu">rnorm</span>(<span class="fu">n</span>(), <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> tau_vox_c))</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co"># un eps por provincia</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>vox <span class="ot">&lt;-</span> vox <span class="sc">|&gt;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(etas, <span class="at">by =</span> <span class="st">"ccaa"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">eps =</span> <span class="fu">rnorm</span>(<span class="fu">n</span>(), <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> tau_vox_p),</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">multiplicador =</span> <span class="fu">exp</span>(eta <span class="sc">+</span> eps),</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">ratio_con_shock =</span> ratio <span class="sc">*</span> multiplicador</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co"># el recentrado</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>media_vox <span class="ot">&lt;-</span> <span class="fu">sum</span>(vox<span class="sc">$</span>peso <span class="sc">*</span> vox<span class="sc">$</span>ratio_con_shock)</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>media_vox</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1.016485</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>vox <span class="ot">&lt;-</span> vox <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">ratio_recentrado =</span> ratio_con_shock <span class="sc">/</span> media_vox)</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>vox <span class="sc">|&gt;</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ccaa <span class="sc">==</span> <span class="st">"Andalucía"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(provincia, ratio, eta, eps, multiplicador, ratio_recentrado) <span class="sc">|&gt;</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>)))</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 6</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   provincia ratio    eta    eps multiplicador ratio_recentrado</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Almería    1.72 -0.016  0.24          1.25             2.12 </span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Cádiz      1.23 -0.016 -0.214         0.794            0.961</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Córdoba    1.13 -0.016  0.099         1.09             1.20 </span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Granada    1.30 -0.016 -0.095         0.895            1.15 </span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 Huelva     1.18 -0.016 -0.02          0.965            1.12 </span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 Jaén       1.19 -0.016 -0.227         0.784            0.918</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 Málaga     1.33 -0.016 -0.305         0.725            0.95 </span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 Sevilla    1.08 -0.016 -0.103         0.888            0.942</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Todas las provincias andaluzas comparten <code>eta</code> en esta tabla, y cada una tiene su <code>eps</code>. La media ponderada de los ratios con shock vale 1,016, así que el recentrado los divide a todos por ese valor.</p>
+<p>Para Granada, las cuentas son estas:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>vox_granada <span class="ot">&lt;-</span> vox <span class="sc">|&gt;</span> <span class="fu">filter</span>(provincia <span class="sc">==</span> <span class="st">"Granada"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">paso =</span> <span class="fu">c</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Ratio del 23J"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Logaritmo del ratio"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Logaritmo + eta + eps"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Ratio con shock (exp)"</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Ratio recentrado"</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">valor =</span> <span class="fu">c</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    vox_granada<span class="sc">$</span>ratio,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log</span>(vox_granada<span class="sc">$</span>ratio),</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log</span>(vox_granada<span class="sc">$</span>ratio) <span class="sc">+</span> vox_granada<span class="sc">$</span>eta <span class="sc">+</span> vox_granada<span class="sc">$</span>eps,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    vox_granada<span class="sc">$</span>ratio_con_shock,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    vox_granada<span class="sc">$</span>ratio_recentrado</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">valor =</span> <span class="fu">round</span>(valor, <span class="dv">3</span>))</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   paso                  valor</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Ratio del 23J         1.30 </span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Logaritmo del ratio   0.264</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Logaritmo + eta + eps 0.153</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Ratio con shock (exp) 1.16 </span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 Ratio recentrado      1.15</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="la-regla-del-mapa-adelante-andalucía" class="level3">
+<h3 class="anchored" data-anchor-id="la-regla-del-mapa-adelante-andalucía">La regla del mapa: Adelante Andalucía</h3>
+<p>Granada es una provincia <code>con_aa</code>. Para que el ejemplo se siga bien, aquí solo VOX lleva shock. En la simulación real, todos los partidos llevan el suyo, salvo <code>RESTO</code>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>granada2 <span class="ot">&lt;-</span> granada <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(partido, voto_nacional, ratio) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">ratio_usado =</span> <span class="fu">if_else</span>(partido <span class="sc">==</span> <span class="st">"VOX"</span>, vox_granada<span class="sc">$</span>ratio_recentrado, ratio),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_bruto =</span> voto_nacional <span class="sc">*</span> ratio_usado,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto =</span> <span class="dv">100</span> <span class="sc">*</span> voto_bruto <span class="sc">/</span> <span class="fu">sum</span>(voto_bruto)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># voto de cada partido antes de la regla, con su nombre</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>voto_antes <span class="ot">&lt;-</span> <span class="fu">setNames</span>(granada2<span class="sc">$</span>voto, granada2<span class="sc">$</span>partido)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(voto_antes[voto_antes <span class="sc">&gt;</span> <span class="dv">0</span>], <span class="dv">2</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      PP    PSOE     VOX   SUMAR   RESTO    SALF PODEMOS </span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   34.67   28.56   22.50    6.96    2.56    2.51    2.24</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>La cuota de AA no sale de las encuestas. Sale de su resultado en las autonómicas del 17 de mayo de 2026 (9,62 % en Andalucía) y de su patrón provincial. El multiplicador de Granada es 0,710.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>voto_aa <span class="ot">&lt;-</span> <span class="fl">9.62</span> <span class="sc">*</span> sim<span class="sc">$</span>g_aa[<span class="st">"Granada"</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>voto_aa <span class="ot">&lt;-</span> <span class="fu">unname</span>(voto_aa)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>voto_aa</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 6.828358</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># primero sale de RESTO, que es donde el modelo tiene hoy a AA</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>de_resto <span class="ot">&lt;-</span> <span class="fu">min</span>(voto_antes[<span class="st">"RESTO"</span>], voto_aa)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>falta <span class="ot">&lt;-</span> voto_aa <span class="sc">-</span> de_resto</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># lo que falte, sale de Podemos, Sumar y PSOE, en proporción 4:4:1</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co"># (en la simulación estos pesos se sortean en cada draw)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>pesos_aa <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">PODEMOS =</span> <span class="dv">4</span>, <span class="at">SUMAR =</span> <span class="dv">4</span>, <span class="at">PSOE =</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">9</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>quita <span class="ot">&lt;-</span> <span class="fu">pmin</span>(falta <span class="sc">*</span> pesos_aa, voto_antes[<span class="fu">names</span>(pesos_aa)])</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>voto_despues <span class="ot">&lt;-</span> voto_antes</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>voto_despues[<span class="st">"RESTO"</span>] <span class="ot">&lt;-</span> voto_despues[<span class="st">"RESTO"</span>] <span class="sc">-</span> de_resto</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>voto_despues[<span class="fu">names</span>(pesos_aa)] <span class="ot">&lt;-</span> voto_despues[<span class="fu">names</span>(pesos_aa)] <span class="sc">-</span> quita</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>voto_despues[<span class="st">"AA"</span>] <span class="ot">&lt;-</span> voto_aa</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">concepto =</span> <span class="fu">c</span>(<span class="st">"Voto de AA"</span>, <span class="st">"Sale de RESTO"</span>, <span class="st">"Sale de Podemos"</span>, <span class="st">"Sale de Sumar"</span>, <span class="st">"Sale de PSOE"</span>),</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">puntos =</span> <span class="fu">c</span>(voto_aa, de_resto, quita[<span class="st">"PODEMOS"</span>], quita[<span class="st">"SUMAR"</span>], quita[<span class="st">"PSOE"</span>])</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">puntos =</span> <span class="fu">round</span>(puntos, <span class="dv">2</span>))</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   concepto        puntos</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;            &lt;dbl&gt;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Voto de AA        6.83</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Sale de RESTO     2.56</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Sale de Podemos   1.9 </span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 Sale de Sumar     1.9 </span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 Sale de PSOE      0.47</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(voto_despues[voto_despues <span class="sc">&gt;</span> <span class="dv">0</span>], <span class="dv">2</span>)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      PP    PSOE     VOX   SUMAR    SALF PODEMOS      AA </span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   34.67   28.08   22.50    5.06    2.51    0.34    6.83</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(voto_despues)</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 100</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="umbral-y-dhondt" class="level3">
+<h3 class="anchored" data-anchor-id="umbral-y-dhondt">Umbral y D’Hondt</h3>
+<p>Quedan tres operaciones:</p>
+<ol type="1">
+<li>Pongo a 0 los partidos con menos del 3 %.</li>
+<li>Pongo a 0 <code>RESTO</code>. Es un agregado de partidos pequeños y no una candidatura real.</li>
+<li>Reparto los 7 escaños de Granada con D’Hondt.</li>
+</ol>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>voto_dh <span class="ot">&lt;-</span> voto_despues</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>voto_dh[voto_dh <span class="sc">&lt;</span> <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>voto_dh[<span class="st">"RESTO"</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>voto_dh <span class="ot">&lt;-</span> voto_dh[voto_dh <span class="sc">&gt;</span> <span class="dv">0</span>]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(voto_dh, <span class="dv">2</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    PP  PSOE   VOX SUMAR    AA </span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 34.67 28.08 22.50  5.06  6.83</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># D'Hondt: en cada ronda, el escaño va al mayor cociente voto / (escaños + 1)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>escanos <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(voto_dh)), <span class="fu">names</span>(voto_dh))</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ronda <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>) {</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  cocientes <span class="ot">&lt;-</span> voto_dh <span class="sc">/</span> (escanos <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  ganador <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">which.max</span>(cocientes))</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  escanos[ganador] <span class="ot">&lt;-</span> escanos[ganador] <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Escaño"</span>, ronda, <span class="st">"-&gt;"</span>, ganador,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"(cociente"</span>, <span class="fu">round</span>(<span class="fu">max</span>(cocientes), <span class="dv">2</span>), <span class="st">")</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 1 -&gt; PP (cociente 34.67 )</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 2 -&gt; PSOE (cociente 28.08 )</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 3 -&gt; VOX (cociente 22.5 )</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 4 -&gt; PP (cociente 17.34 )</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 5 -&gt; PSOE (cociente 14.04 )</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 6 -&gt; PP (cociente 11.56 )</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Escaño 7 -&gt; VOX (cociente 11.25 )</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>escanos</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    PP  PSOE   VOX SUMAR    AA </span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     3     2     2     0     0</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Eso da un resultado para un draw. La simulación repite el proceso en todos los draws, con todos los shocks y la incertidumbre del voto nacional. Esta tabla da el reparto de los 7 escaños de Granada en los 6.000 draws:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>esc_granada <span class="ot">&lt;-</span> sim<span class="sc">$</span>prov_escanos[, <span class="st">"Granada"</span>, <span class="fu">c</span>(<span class="st">"PP"</span>, <span class="st">"PSOE"</span>, <span class="st">"VOX"</span>, <span class="st">"SUMAR"</span>, <span class="st">"AA"</span>)]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>(esc_granada) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"partido"</span>, <span class="at">values_to =</span> <span class="st">"escanos"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">escanos =</span> <span class="fu">if_else</span>(escanos <span class="sc">&gt;=</span> <span class="dv">4</span>, <span class="st">"4 o más"</span>, <span class="fu">as.character</span>(escanos))) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(partido, escanos) <span class="sc">|&gt;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(partido) <span class="sc">|&gt;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">porcentaje =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> n <span class="sc">/</span> <span class="fu">sum</span>(n), <span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>n) <span class="sc">|&gt;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> escanos, <span class="at">values_from =</span> porcentaje, <span class="at">values_fill =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(partido, <span class="st">`</span><span class="at">0</span><span class="st">`</span>, <span class="st">`</span><span class="at">1</span><span class="st">`</span>, <span class="st">`</span><span class="at">2</span><span class="st">`</span>, <span class="st">`</span><span class="at">3</span><span class="st">`</span>, <span class="st">`</span><span class="at">4 o más</span><span class="st">`</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="st">`</span><span class="at">4 o más</span><span class="st">`</span>), <span class="fu">desc</span>(<span class="st">`</span><span class="at">3</span><span class="st">`</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-granada-escanos" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-granada-escanos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;1: Escaños en Granada. Porcentaje de draws con cada número de escaños. Simulación del 3 de noviembre de 2026, 6.000 draws.
+</figcaption>
+<div aria-describedby="tbl-granada-escanos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: right;">0</th>
+<th style="text-align: right;">1</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">3</th>
+<th style="text-align: right;">4 o más</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PP</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">28.1</td>
+<td style="text-align: right;">58.7</td>
+<td style="text-align: right;">12.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">24.6</td>
+<td style="text-align: right;">60.1</td>
+<td style="text-align: right;">14.3</td>
+<td style="text-align: right;">0.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PSOE</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">7.7</td>
+<td style="text-align: right;">66.4</td>
+<td style="text-align: right;">25.2</td>
+<td style="text-align: right;">0.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AA</td>
+<td style="text-align: right;">95.4</td>
+<td style="text-align: right;">4.6</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SUMAR</td>
+<td style="text-align: right;">98.8</td>
+<td style="text-align: right;">1.2</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-formula" class="level2">
+<h2 class="anchored" data-anchor-id="sec-formula">La fórmula general</h2>
+<p>Con el ejemplo hecho, esta es la versión general para el draw <span class="math inline">\(s\)</span>, el partido <span class="math inline">\(f\)</span> y la provincia <span class="math inline">\(p\)</span>. El índice <span class="math inline">\(c(p)\)</span> es la comunidad de la provincia.</p>
+<p><strong>Shock sobre el ratio:</strong></p>
+<p><span class="math display">\[
+\log \tilde r^{(s)}_{f,p} = \log r_{f,p} + \eta^{(s)}_{f,c(p)} + \varepsilon^{(s)}_{f,p},
+\qquad
+\eta^{(s)}_{f,c} \sim \mathcal{N}\left(0, \tau^{(s)}_{c,f}\right),
+\quad
+\varepsilon^{(s)}_{f,p} \sim \mathcal{N}\left(0, \tau^{(s)}_{p,f}\right)
+\]</span></p>
+<p><strong>Recentrado,</strong> donde <span class="math inline">\(w_p\)</span> es el peso de la provincia, medido con sus votos en la referencia:</p>
+<p><span class="math display">\[
+k^{(s)}_f = \frac{1}{\sum_{p} w_p \, \tilde r^{(s)}_{f,p}}
+\]</span></p>
+<p><strong>Voto provincial,</strong> donde <span class="math inline">\(S^{(s)}_f\)</span> es el voto nacional del partido en el draw:</p>
+<p><span class="math display">\[
+v^{(s)}_{f,p} = \frac{S^{(s)}_f \, k^{(s)}_f \, \tilde r^{(s)}_{f,p}}
+{\sum_{g} S^{(s)}_g \, k^{(s)}_g \, \tilde r^{(s)}_{g,p}}
+\]</span></p>
+<p><strong>Después,</strong> la simulación aplica la regla del mapa a <span class="math inline">\(v^{(s)}_{f,p}\)</span>, el umbral del 3 % y D’Hondt.</p>
+<p>En el código, los shocks se sortean por separado para cada partido. Dos partidos no comparten shock, ni siquiera Sumar y Podemos. Tampoco hay correlación entre sus shocks. Sí existe una relación indirecta, porque todos comparten la renormalización de la provincia.</p>
+</section>
+<section id="sec-tau" class="level2">
+<h2 class="anchored" data-anchor-id="sec-tau">De dónde salen los tau</h2>
+<p>Los tau miden cuánto se mueve la geografía del voto de un partido. No los fijo a mano: salen de cómo cambiaron los ratios entre generales consecutivas.</p>
+<p><span class="math display">\[
+\Delta \log r_{f,t,p} = \log \frac{r_{f,p}\ \text{en la elección nueva}}{r_{f,p}\ \text{en la anterior}}
+\]</span></p>
+<p>Por ejemplo, si un ratio pasa de 1,20 a 1,30, entonces <span class="math inline">\(\Delta \log r = \log(1{,}30 / 1{,}20) = 0{,}08\)</span>.</p>
+<p>Uso cuatro transiciones:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Transición</th>
+<th>Tipo</th>
+<th>Comentario</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>20D→26J</td>
+<td>Repetición</td>
+<td>VOX queda fuera: no tenía voto comparable</td>
+</tr>
+<tr class="even">
+<td>26J→28A</td>
+<td>Fresca</td>
+<td>VOX queda fuera por el mismo motivo</td>
+</tr>
+<tr class="odd">
+<td>28A→10N</td>
+<td>Repetición</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>10N→23J</td>
+<td>Fresca</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Una <em>repetición</em> es una elección convocada poco después de la anterior. El ratio cambia poco en ellas. Una elección <em>fresca</em> es el caso que quiero predecir: de 2023 a 2026 han pasado más de tres años.</p>
+<section id="los-partidos-grandes" class="level3">
+<h3 class="anchored" data-anchor-id="los-partidos-grandes">Los partidos grandes</h3>
+<p>El modelo se ajusta con brms en <a href="../2026/10/backtest_prov_loto.R"><code>backtest_prov_loto.R</code></a>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bf</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  dlr <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> familia <span class="sc">+</span> repeticion <span class="sc">+</span> (<span class="dv">0</span> <span class="sc">+</span> familia <span class="sc">||</span> codigo_ccaa),</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  sigma <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> celda_sigma    <span class="co"># celda = partido × {fresca, repetición}</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong><code>tau_c</code></strong> es la desviación típica de los efectos de comunidad. Agrupa las transiciones frescas y las repeticiones, porque no es sencillo separarlas.</li>
+<li><strong><code>tau_p</code></strong> es la desviación típica residual de la celda fresca del partido.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tau_brms <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/tau_shock_brms.csv"</span>),</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>tau_brms <span class="sc">|&gt;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">partido =</span> familia,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">tau_c =</span> <span class="fu">str_c</span>(</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">num_es</span>(tau_c_med, <span class="dv">3</span>), <span class="st">" ["</span>, <span class="fu">num_es</span>(tau_c_ic05, <span class="dv">3</span>), <span class="st">"; "</span>, <span class="fu">num_es</span>(tau_c_ic95, <span class="dv">3</span>), <span class="st">"]"</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">tau_p =</span> <span class="fu">str_c</span>(</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">num_es</span>(tau_p_med, <span class="dv">3</span>), <span class="st">" ["</span>, <span class="fu">num_es</span>(tau_p_ic05, <span class="dv">3</span>), <span class="st">"; "</span>, <span class="fu">num_es</span>(tau_p_ic95, <span class="dv">3</span>), <span class="st">"]"</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-tau-grandes" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-tau-grandes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;2: Posterior de los tau de los cuatro grandes: mediana e IC90, escala log-ratio.
+</figcaption>
+<div aria-describedby="tbl-tau-grandes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: left;">tau_c</th>
+<th style="text-align: left;">tau_p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PP</td>
+<td style="text-align: left;">0,040 [0,026; 0,060]</td>
+<td style="text-align: left;">0,171 [0,153; 0,193]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSOE</td>
+<td style="text-align: left;">0,023 [0,010; 0,040]</td>
+<td style="text-align: left;">0,154 [0,137; 0,173]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SUMAR</td>
+<td style="text-align: left;">0,057 [0,030; 0,095]</td>
+<td style="text-align: left;">0,160 [0,143; 0,181]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: left;">0,124 [0,090; 0,172]</td>
+<td style="text-align: left;">0,195 [0,162; 0,234]</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>La tabla muestra dos cosas:</p>
+<ul>
+<li><strong>VOX se mueve en bloque por comunidad.</strong> Su <code>tau_c</code> es el mayor de los cuatro.</li>
+<li><strong>El PSOE y el PP se mueven sobre todo provincia a provincia.</strong> Su <code>tau_c</code> es mucho menor que su <code>tau_p</code>.</li>
+</ul>
+<p>Cada draw de la simulación usa un draw del posterior de los tau (<code>tau_shock_draws.csv</code>). Así, la incertidumbre sobre el tamaño del shock también pasa a los escaños.</p>
+</section>
+<section id="los-demás-partidos" class="level3">
+<h3 class="anchored" data-anchor-id="los-demás-partidos">Los demás partidos</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/tau_regionales.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">partido =</span> familia,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">tau_c =</span> <span class="fu">round</span>(tau_c, <span class="dv">3</span>),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tau_p =</span> <span class="fu">round</span>(tau_p, <span class="dv">3</span>),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">saltos frescos</span><span class="st">`</span> <span class="ot">=</span> n_fresh_trans,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">provincias =</span> P,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    fuente</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-tau-regionales" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-tau-regionales-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;3: Tau de los partidos regionales, estimados en dos etapas. Son valores fijos, sin posterior.
+</figcaption>
+<div aria-describedby="tbl-tau-regionales-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 20%">
+<col style="width: 15%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: right;">tau_c</th>
+<th style="text-align: right;">tau_p</th>
+<th style="text-align: right;">saltos frescos</th>
+<th style="text-align: right;">provincias</th>
+<th style="text-align: left;">fuente</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">BNG</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.106</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CC</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.090</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EH Bildu</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.107</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ERC</td>
+<td style="text-align: right;">0.161</td>
+<td style="text-align: right;">0.068</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Junts</td>
+<td style="text-align: right;">0.107</td>
+<td style="text-align: right;">0.048</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PNV</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">estimado</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">UPN</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.115</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">heredado (RMS del resto)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 44%">
+<col style="width: 44%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Partido</th>
+<th>De dónde salen sus tau</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ERC, Junts, PNV, EH Bildu, BNG, CC</td>
+<td>Dos etapas sobre saltos frescos</td>
+<td>Compiten en una o dos comunidades, sin contraste entre comunidades</td>
+</tr>
+<tr class="even">
+<td>UPN</td>
+<td>Media cuadrática de los demás regionales, todo en <code>tau_p</code></td>
+<td>Una provincia y coaliciones con el PP en el pasado</td>
+</tr>
+<tr class="odd">
+<td>SALF</td>
+<td>Media cuadrática de los 4 grandes, draw a draw</td>
+<td>No tiene historia antes de 2024</td>
+</tr>
+<tr class="even">
+<td>Podemos</td>
+<td>Los mismos valores que Sumar</td>
+<td>La historia solo conoce la suma de los dos</td>
+</tr>
+<tr class="odd">
+<td>AA</td>
+<td>Los mismos valores que SALF</td>
+<td>No tiene historia en generales</td>
+</tr>
+<tr class="even">
+<td><code>RESTO</code></td>
+<td>Sin shock</td>
+<td>Es un residual, no un partido</td>
+</tr>
+</tbody>
+</table>
+<p>En las dos etapas, <code>tau_p</code> es la dispersión provincial dentro de cada salto fresco. <code>tau_c</code> es la dispersión entre las medias de los saltos, corregida por <span class="math inline">\(\tau_p^2 / P\)</span>, donde <span class="math inline">\(P\)</span> es el número de provincias. Con dos saltos, esta estimación es frágil. CC tiene un solo salto porque excluyo 10N→23J: ese año Nueva Canarias salió de la coalición.</p>
+</section>
+</section>
+<section id="sec-real" class="level2">
+<h2 class="anchored" data-anchor-id="sec-real">Qué ocurre en la simulación real</h2>
+<p>Las secciones anteriores describen el mecanismo. Esta mide lo que produce en la simulación del 3 de noviembre. El voto y el ratio final se leen de <code>sim$prov_voto</code>, que guarda el voto provincial después de la regla del mapa y antes del umbral.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ratio final de un partido en una provincia, draw a draw</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>ratio_final <span class="ot">&lt;-</span> <span class="cf">function</span>(partido, provincia) {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> sim<span class="sc">$</span>prov_voto[, provincia, partido] <span class="sc">/</span> sim<span class="sc">$</span>shares[, partido]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="el-patrón-del-23j-y-su-incertidumbre" class="level3">
+<h3 class="anchored" data-anchor-id="el-patrón-del-23j-y-su-incertidumbre">El patrón del 23J y su incertidumbre</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>provincias <span class="ot">&lt;-</span> sim<span class="sc">$</span>prov_ref<span class="sc">$</span>provincia</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>vox_prov <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">provincia =</span> provincias) <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">q05 =</span> <span class="fu">map_dbl</span>(provincia, \(p) <span class="fu">quantile</span>(<span class="fu">ratio_final</span>(<span class="st">"VOX"</span>, p), <span class="fl">0.05</span>)),</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mediana =</span> <span class="fu">map_dbl</span>(provincia, \(p) <span class="fu">median</span>(<span class="fu">ratio_final</span>(<span class="st">"VOX"</span>, p))),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">q95 =</span> <span class="fu">map_dbl</span>(provincia, \(p) <span class="fu">quantile</span>(<span class="fu">ratio_final</span>(<span class="st">"VOX"</span>, p), <span class="fl">0.95</span>))</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    ref <span class="sc">|&gt;</span> <span class="fu">filter</span>(partido <span class="sc">==</span> <span class="st">"VOX"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(provincia, <span class="at">ratio_23J =</span> ratio),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"provincia"</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">provincia =</span> <span class="fu">fct_reorder</span>(provincia, ratio_23J))</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(vox_prov, <span class="fu">aes</span>(<span class="at">y =</span> provincia)) <span class="sc">+</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">1</span>, <span class="at">colour =</span> <span class="st">"grey70"</span>, <span class="at">linewidth =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">xmin =</span> q05, <span class="at">xmax =</span> q95),</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"#51962A"</span>,</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.45</span>,</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> mediana, <span class="at">shape =</span> <span class="st">"Mediana simulada"</span>), <span class="at">colour =</span> <span class="st">"#51962A"</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> ratio_23J, <span class="at">shape =</span> <span class="st">"Ratio del 23J"</span>), <span class="at">colour =</span> <span class="st">"grey25"</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_shape_manual</span>(</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="cn">NULL</span>,</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Mediana simulada"</span> <span class="ot">=</span> <span class="dv">16</span>, <span class="st">"Ratio del 23J"</span> <span class="ot">=</span> <span class="dv">5</span>)</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Ratio (voto en la provincia / voto nacional)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"top"</span>,</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-vox-provincias" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Gráfico de puntos con las 52 provincias ordenadas por el ratio de VOX en el 23J. Cada provincia tiene un intervalo del 90 %, un punto con la mediana simulada y un rombo con el valor del 23J.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-vox-provincias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="reparto-provincial_files/figure-html/fig-vox-provincias-1.png" class="img-fluid figure-img" alt="Gráfico de puntos con las 52 provincias ordenadas por el ratio de VOX en el 23J. Cada provincia tiene un intervalo del 90 %, un punto con la mediana simulada y un rombo con el valor del 23J." width="2664">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-vox-provincias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;1: Ratio de VOX por provincia: valor del 23J y ratio final en la simulación, con mediana e intervalo del 90 %. Simulación del 3 de noviembre de 2026, 6.000 draws.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>La línea vertical marca el ratio 1, donde la provincia vota a VOX igual que el conjunto del país. Las medianas simuladas quedan cerca del valor del 23J. Atribuyo esas diferencias a la renormalización y, en Teruel, a la regla del mapa, aunque no las he descompuesto provincia a provincia. Santa Cruz de Tenerife aparece con un ratio del 23J de 0 y una mediana simulada mayor, por <a href="#sec-tenerife">la corrección que explico abajo</a>.</p>
+</section>
+<section id="sec-dispersion" class="level3">
+<h3 class="anchored" data-anchor-id="sec-dispersion">La dispersión final es menor que tau</h3>
+<p>El shock se aplica antes de renormalizar, y la renormalización absorbe parte de él. Si VOX sube en una provincia, la suma de la provincia también sube, y la división posterior devuelve una parte de esa subida. El efecto es mayor cuanto más voto tiene el partido en la provincia. El recentrado también reduce algo la dispersión.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>celdas <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>partido, <span class="sc">~</span>provincia,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VOX"</span>,    <span class="st">"Granada"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VOX"</span>,    <span class="st">"Madrid"</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VOX"</span>,    <span class="st">"Barcelona"</span>,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"PP"</span>,     <span class="st">"Granada"</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"PP"</span>,     <span class="st">"Barcelona"</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"PSOE"</span>,   <span class="st">"Barcelona"</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>celdas <span class="sc">|&gt;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    tau_brms <span class="sc">|&gt;</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">transmute</span>(<span class="at">partido =</span> familia, <span class="at">tau_total =</span> <span class="fu">sqrt</span>(tau_c_med<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> tau_p_med<span class="sc">^</span><span class="dv">2</span>)),</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"partido"</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_mediano =</span> <span class="fu">map2_dbl</span>(</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>      partido, provincia, \(f, p) <span class="dv">100</span> <span class="sc">*</span> <span class="fu">median</span>(sim<span class="sc">$</span>prov_voto[, p, f])</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_log_final =</span> <span class="fu">map2_dbl</span>(partido, provincia, \(f, p) <span class="fu">sd</span>(<span class="fu">log</span>(<span class="fu">ratio_final</span>(f, p))))</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_mediano =</span> <span class="fu">round</span>(voto_mediano, <span class="dv">1</span>),</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">tau_total =</span> <span class="fu">round</span>(tau_total, <span class="dv">3</span>),</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_log_final =</span> <span class="fu">round</span>(sd_log_final, <span class="dv">3</span>)</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">`</span><span class="at">voto mediano (%)</span><span class="st">`</span> <span class="ot">=</span> voto_mediano) <span class="sc">|&gt;</span></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-dispersion" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dispersion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;4: Desviación típica del log-ratio final frente al tau total. Simulación del 3 de noviembre de 2026, 6.000 draws. Método: tau total = raíz de (tau_c² + tau_p²), con las medianas de cada tau.
+</figcaption>
+<div aria-describedby="tbl-dispersion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: left;">provincia</th>
+<th style="text-align: right;">tau_total</th>
+<th style="text-align: right;">voto mediano (%)</th>
+<th style="text-align: right;">sd_log_final</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: left;">Granada</td>
+<td style="text-align: right;">0.231</td>
+<td style="text-align: right;">23.8</td>
+<td style="text-align: right;">0.184</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: left;">Madrid</td>
+<td style="text-align: right;">0.231</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">0.175</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: left;">Barcelona</td>
+<td style="text-align: right;">0.231</td>
+<td style="text-align: right;">11.5</td>
+<td style="text-align: right;">0.208</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PP</td>
+<td style="text-align: left;">Granada</td>
+<td style="text-align: right;">0.176</td>
+<td style="text-align: right;">33.5</td>
+<td style="text-align: right;">0.138</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PP</td>
+<td style="text-align: left;">Barcelona</td>
+<td style="text-align: right;">0.176</td>
+<td style="text-align: right;">12.9</td>
+<td style="text-align: right;">0.165</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSOE</td>
+<td style="text-align: left;">Barcelona</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: right;">31.1</td>
+<td style="text-align: right;">0.108</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Esto tiene una consecuencia para leer los tau. Un <code>tau_total</code> de 0,23 no significa que el ratio de VOX en Granada se mueva 0,23 al final del proceso.</p>
+</section>
+<section id="correlaciones-entre-provincias" class="level3">
+<h3 class="anchored" data-anchor-id="correlaciones-entre-provincias">Correlaciones entre provincias</h3>
+<p>El efecto de comunidad hace que las provincias de una misma comunidad se muevan juntas. El recentrado añade una relación negativa con las demás: si el shock sube mucho a VOX en Madrid, que pesa cerca del 15 %, el recentrado baja al resto.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tribble</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>par,                <span class="sc">~</span>a,        <span class="sc">~</span>b,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Granada y Sevilla"</span>, <span class="st">"Granada"</span>, <span class="st">"Sevilla"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Granada y Madrid"</span>,  <span class="st">"Granada"</span>, <span class="st">"Madrid"</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">correlacion =</span> <span class="fu">map2_dbl</span>(</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>      a, b, \(x, y) <span class="fu">cor</span>(<span class="fu">log</span>(<span class="fu">ratio_final</span>(<span class="st">"VOX"</span>, x)), <span class="fu">log</span>(<span class="fu">ratio_final</span>(<span class="st">"VOX"</span>, y)))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">correlacion =</span> <span class="fu">round</span>(correlacion, <span class="dv">2</span>)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(par, correlacion) <span class="sc">|&gt;</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-correlaciones" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-correlaciones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;5: Correlación del log-ratio final de VOX entre provincias. Simulación del 3 de noviembre de 2026, 6.000 draws.
+</figcaption>
+<div aria-describedby="tbl-correlaciones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">par</th>
+<th style="text-align: right;">correlacion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Granada y Sevilla</td>
+<td style="text-align: right;">0.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Granada y Madrid</td>
+<td style="text-align: right;">-0.22</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Lo compruebo con los shocks solos, sin modelo ni renormalización:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>vox_ref <span class="ot">&lt;-</span> ref <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(partido <span class="sc">==</span> <span class="st">"VOX"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="fu">select</span>(pesos, provincia, peso), <span class="at">by =</span> <span class="st">"provincia"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>n_sorteos <span class="ot">&lt;-</span> <span class="dv">6000</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>n_prov <span class="ot">&lt;-</span> <span class="fu">nrow</span>(vox_ref)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>comunidades <span class="ot">&lt;-</span> <span class="fu">unique</span>(vox_ref<span class="sc">$</span>ccaa)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2029</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>log_shock <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, n_sorteos, n_prov, <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, vox_ref<span class="sc">$</span>provincia))</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>log_recentrado <span class="ot">&lt;-</span> log_shock</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (s <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_sorteos) {</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  eta_s <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">rnorm</span>(<span class="fu">length</span>(comunidades), <span class="dv">0</span>, tau_vox_c), comunidades)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  eps_s <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n_prov, <span class="dv">0</span>, tau_vox_p)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  shock_s <span class="ot">&lt;-</span> eta_s[vox_ref<span class="sc">$</span>ccaa] <span class="sc">+</span> eps_s</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  ratio_s <span class="ot">&lt;-</span> vox_ref<span class="sc">$</span>ratio <span class="sc">*</span> <span class="fu">exp</span>(shock_s)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  log_shock[s, ] <span class="ot">&lt;-</span> shock_s</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>  log_recentrado[s, ] <span class="ot">&lt;-</span> <span class="fu">log</span>(ratio_s <span class="sc">/</span> <span class="fu">sum</span>(vox_ref<span class="sc">$</span>peso <span class="sc">*</span> ratio_s))</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">par =</span> <span class="fu">c</span>(<span class="st">"Granada y Sevilla"</span>, <span class="st">"Granada y Madrid"</span>),</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">sin_recentrar =</span> <span class="fu">c</span>(</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(log_shock[, <span class="st">"Granada"</span>], log_shock[, <span class="st">"Sevilla"</span>]),</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(log_shock[, <span class="st">"Granada"</span>], log_shock[, <span class="st">"Madrid"</span>])</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">con_recentrado =</span> <span class="fu">c</span>(</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(log_recentrado[, <span class="st">"Granada"</span>], log_recentrado[, <span class="st">"Sevilla"</span>]),</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cor</span>(log_recentrado[, <span class="st">"Granada"</span>], log_recentrado[, <span class="st">"Madrid"</span>])</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>)))</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   par               sin_recentrar con_recentrado</span></span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                     &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Granada y Sevilla          0.27           0.19</span></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Granada y Madrid           0.01          -0.2</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Sin recentrar, Granada y Madrid no están correlacionadas, como debe ser. La relación negativa aparece con el recentrado.</p>
+</section>
+<section id="sec-deriva" class="level3">
+<h3 class="anchored" data-anchor-id="sec-deriva">El voto nacional se mueve un poco</h3>
+<p>El recentrado conserva el voto nacional antes de renormalizar. La renormalización provincial y las reglas del mapa rompen esa igualdad en una cantidad pequeña:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>pesos_prov <span class="ot">&lt;-</span> pesos<span class="sc">$</span>peso[<span class="fu">match</span>(provincias, pesos<span class="sc">$</span>provincia)]</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>deriva <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">partido =</span> <span class="fu">c</span>(<span class="st">"PP"</span>, <span class="st">"PSOE"</span>, <span class="st">"VOX"</span>, <span class="st">"SALF"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_modelo =</span> <span class="fu">map_dbl</span>(partido, \(f) <span class="fu">mean</span>(sim<span class="sc">$</span>shares[, f])),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">voto_agregado =</span> <span class="fu">map_dbl</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>      partido,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>      \(f) <span class="fu">mean</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">as.numeric</span>(sim<span class="sc">$</span>prov_voto[, , f] <span class="sc">%*%</span> pesos_prov))</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">diferencia_pp =</span> voto_agregado <span class="sc">-</span> voto_modelo</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>deriva <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>))) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-deriva" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-deriva-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;6: Voto nacional del modelo frente a la suma ponderada del voto provincial. Simulación del 3 de noviembre de 2026, 6.000 draws. Método: suma ponderada con los votos de la referencia; la diferencia se calcula draw a draw.
+</figcaption>
+<div aria-describedby="tbl-deriva-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: right;">voto_modelo</th>
+<th style="text-align: right;">voto_agregado</th>
+<th style="text-align: right;">diferencia_pp</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PP</td>
+<td style="text-align: right;">30.71</td>
+<td style="text-align: right;">30.52</td>
+<td style="text-align: right;">-0.19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSOE</td>
+<td style="text-align: right;">27.18</td>
+<td style="text-align: right;">26.87</td>
+<td style="text-align: right;">-0.31</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: right;">19.45</td>
+<td style="text-align: right;">19.22</td>
+<td style="text-align: right;">-0.23</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SALF</td>
+<td style="text-align: right;">1.91</td>
+<td style="text-align: right;">1.90</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>La diferencia es de pocas décimas. Conviene tenerla presente, porque el voto nacional que muestra un post y el que resulta de sumar las provincias no son exactamente el mismo. Mi lectura, sin haberla separado en partes, es que el efecto viene de la renormalización: VOX, PP y PSOE tienen sus ratios altos en provincias donde la suma bruta supera 100 %, como ocurre en Granada.</p>
+</section>
+</section>
+<section id="sec-mapa" class="level2">
+<h2 class="anchored" data-anchor-id="sec-mapa">Las reglas del mapa de coaliciones</h2>
+<p>El escenario mapa parte de 14 familias, con Sumar y Podemos separados. Después añade Adelante Andalucía como familia 15. Cada provincia aplica una regla de <a href="../2026/10/coaliciones_izquierda_29N_provincias.csv"><code>coaliciones_izquierda_29N_provincias.csv</code></a>:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">provincia =</span> <span class="fu">names</span>(sim<span class="sc">$</span>regla_prov), <span class="at">regla =</span> <span class="fu">unname</span>(sim<span class="sc">$</span>regla_prov)) <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(sim<span class="sc">$</span>prov_ref, provincia, ccaa, <span class="at">escanos =</span> diputados),</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"provincia"</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(regla) <span class="sc">|&gt;</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">provincias =</span> <span class="fu">n</span>(),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">escanos =</span> <span class="fu">sum</span>(escanos),</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">comunidades =</span> <span class="fu">if_else</span>(</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">first</span>(regla) <span class="sc">==</span> <span class="st">"separadas"</span>,</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Las demás"</span>,</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_c</span>(<span class="fu">unique</span>(ccaa), <span class="at">collapse =</span> <span class="st">", "</span>)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(escanos)) <span class="sc">|&gt;</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-reglas" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reglas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;7: Provincias y escaños del 29-N por regla del mapa.
+</figcaption>
+<div aria-describedby="tbl-reglas-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 14%">
+<col style="width: 10%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">regla</th>
+<th style="text-align: right;">provincias</th>
+<th style="text-align: right;">escanos</th>
+<th style="text-align: left;">comunidades</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">separadas</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">183</td>
+<td style="text-align: left;">Las demás</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">con_aa</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">Andalucía</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">unida</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: left;">Comunitat Valenciana, Balears, Illes, Canarias</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sin_podemos</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: left;">Cataluña</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sin_fa</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">Aragón</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 44%">
+<col style="width: 44%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Regla</th>
+<th>Qué hace con el voto</th>
+<th>Parámetros</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>separadas</code></td>
+<td>Nada: Sumar y Podemos compiten por separado</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>unida</code></td>
+<td>Suma el voto de Podemos a Sumar, en una sola lista</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>sin_podemos</code></td>
+<td>Reparte el voto de Podemos entre ERC, Sumar y fuera</td>
+<td>Dirichlet(10; 4,5; 0,75)</td>
+</tr>
+<tr class="even">
+<td><code>sin_fa</code></td>
+<td>Reparte el voto de la familia Sumar entre PSOE y fuera</td>
+<td>Dirichlet(5,5; 4,5)</td>
+</tr>
+<tr class="odd">
+<td><code>con_aa</code></td>
+<td>Añade AA y le quita el voto a <code>RESTO</code>, y después a Podemos, Sumar y PSOE</td>
+<td>Dirichlet(4; 4; 1) para los pesos</td>
+</tr>
+</tbody>
+</table>
+<p>“Fuera” significa abstención u otras candidaturas. Esa parte sale del voto válido, y la provincia se renormaliza después.</p>
+<p><strong>Adelante Andalucía</strong> no sale de las encuestas. Su voto andaluz se sortea en cada draw con una logit-normal centrada en 9,62 % y desviación típica 0,2 en logit. Su patrón provincial lleva un shock, con los mismos tau que SALF.</p>
+<p><strong>Teruel</strong> es el caso en que difieren <code>simular()</code> y el MRP. El primero usa Dirichlet(PSOE 5,5; fuera 4,5), y el MRP usa Dirichlet(PSOE 9; fuera 1).</p>
+<p><strong>Madrid y Cádiz:</strong> la simulación usa el reparto de escaños del 29-N. Madrid pasa de 37 a 38 escaños y Cádiz, de 9 a 8.</p>
+<p>Las reglas se aplican después de repartir el voto y antes del umbral. El modelo de encuestas estima a Podemos como si se presentara en las 52 provincias.</p>
+</section>
+<section id="sec-validacion" class="level2">
+<h2 class="anchored" data-anchor-id="sec-validacion">Por qué funciona mejor que la Dirichlet</h2>
+<p>El backtest repite el reparto provincial en las cinco últimas generales, desde 20D-2015 hasta 23J-2023. La pregunta es si el resultado real cae dentro del IC90 del voto provincial. Si el ruido está bien calibrado, debe caer cerca del 90 % de las veces.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>comparacion <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/backtest_prov_comparacion.csv"</span>),</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>comparacion <span class="sc">|&gt;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variante <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"dirichlet (baseline)"</span>, <span class="st">"shock brms (draws)"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">ruido =</span> <span class="fu">if_else</span>(<span class="fu">str_detect</span>(variante, <span class="st">"dirichlet"</span>), <span class="st">"dirichlet"</span>, <span class="st">"shock"</span>),</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">cobertura =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> cobertura, <span class="dv">1</span>),</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ancho =</span> <span class="fu">round</span>(ancho, <span class="dv">1</span>)</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">partido =</span> familia, celdas, ruido, cobertura, ancho) <span class="sc">|&gt;</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> ruido, <span class="at">values_from =</span> <span class="fu">c</span>(cobertura, ancho)) <span class="sc">|&gt;</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-cobertura" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cobertura-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;8: Backtest provincial. Cobertura del IC90 (% de celdas partido × provincia × elección) y ancho medio del intervalo en puntos porcentuales.
+</figcaption>
+<div aria-describedby="tbl-cobertura-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 8%">
+<col style="width: 25%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">partido</th>
+<th style="text-align: right;">celdas</th>
+<th style="text-align: right;">cobertura_dirichlet</th>
+<th style="text-align: right;">cobertura_shock</th>
+<th style="text-align: right;">ancho_dirichlet</th>
+<th style="text-align: right;">ancho_shock</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PP</td>
+<td style="text-align: right;">255</td>
+<td style="text-align: right;">73.3</td>
+<td style="text-align: right;">96.1</td>
+<td style="text-align: right;">6.9</td>
+<td style="text-align: right;">14.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSOE</td>
+<td style="text-align: right;">260</td>
+<td style="text-align: right;">70.0</td>
+<td style="text-align: right;">95.4</td>
+<td style="text-align: right;">5.6</td>
+<td style="text-align: right;">12.9</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SUMAR</td>
+<td style="text-align: right;">259</td>
+<td style="text-align: right;">58.7</td>
+<td style="text-align: right;">90.3</td>
+<td style="text-align: right;">5.4</td>
+<td style="text-align: right;">9.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VOX</td>
+<td style="text-align: right;">138</td>
+<td style="text-align: right;">55.8</td>
+<td style="text-align: right;">93.5</td>
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">10.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TOTAL</td>
+<td style="text-align: right;">912</td>
+<td style="text-align: right;">65.6</td>
+<td style="text-align: right;">93.9</td>
+<td style="text-align: right;">5.7</td>
+<td style="text-align: right;">12.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>El shock acerca la cobertura al 90 % nominal, a cambio de intervalos del doble de ancho. En el conjunto de celdas se queda algo por encima del 90 %.</p>
+<p><strong>¿Sobra la Dirichlet si ya está el shock?</strong> Sí. Con los dos superpuestos, la cobertura casi no cambia:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>celdas_ambos <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/backtest_prov_celdas_shock_mas_dir.csv"</span>),</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>ref_ratio_cero)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>celdas_ambos <span class="sc">|&gt;</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">celdas =</span> <span class="fu">n</span>(),</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">cobertura =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(dentro), <span class="dv">1</span>),</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ancho =</span> <span class="fu">round</span>(<span class="fu">mean</span>(q95 <span class="sc">-</span> q05), <span class="dv">1</span>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   celdas cobertura ancho</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;int&gt;     &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    912      94.2  12.1</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>¿Es una validación honesta?</strong> Los tau se estiman con las mismas transiciones que prueba el backtest. Por eso lo repito con un <em>leave-one-transition-out</em> (LOTO): reajusto los tau sin la transición de la elección que pruebo.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"2026/10/backtest_prov_loto_resumen.csv"</span>),</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">cobertura =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> cobertura, <span class="dv">1</span>),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">ancho_medio =</span> <span class="fu">round</span>(ancho_medio, <span class="dv">1</span>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-loto" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-loto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;9: Cobertura del IC90 con los tau del ajuste completo (in-sample) y reestimados sin la transición probada (LOTO). El 20D no entra en el LOTO: su geografía viene del 11D, que no está en la calibración.
+</figcaption>
+<div aria-describedby="tbl-loto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">eleccion</th>
+<th style="text-align: left;">variante</th>
+<th style="text-align: right;">celdas</th>
+<th style="text-align: right;">cobertura</th>
+<th style="text-align: right;">ancho_medio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">20d</td>
+<td style="text-align: left;">in-sample (oos)</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">83.8</td>
+<td style="text-align: right;">12.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">26j</td>
+<td style="text-align: left;">loto</td>
+<td style="text-align: right;">155</td>
+<td style="text-align: right;">99.4</td>
+<td style="text-align: right;">13.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">26j</td>
+<td style="text-align: left;">in-sample</td>
+<td style="text-align: right;">155</td>
+<td style="text-align: right;">99.4</td>
+<td style="text-align: right;">13.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">28a</td>
+<td style="text-align: left;">loto</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">90.5</td>
+<td style="text-align: right;">11.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">28a</td>
+<td style="text-align: left;">in-sample</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">89.9</td>
+<td style="text-align: right;">11.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">10n</td>
+<td style="text-align: left;">loto</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: right;">99.0</td>
+<td style="text-align: right;">11.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">10n</td>
+<td style="text-align: left;">in-sample</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: right;">99.0</td>
+<td style="text-align: right;">11.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">23j</td>
+<td style="text-align: left;">loto</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: right;">95.2</td>
+<td style="text-align: right;">11.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">23j</td>
+<td style="text-align: left;">in-sample</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: right;">95.7</td>
+<td style="text-align: right;">11.8</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>LOTO e in-sample casi coinciden, así que los tau no están sobreajustados. Esta prueba valida la calibración del ruido territorial, no toda la cadena. El post <a href="../2026/10/meta-analisis-generales-escanos-jlcr.html">De voto a escaños</a> prueba la cadena completa con un backtest nacional.</p>
+</section>
+<section id="sec-dirichlet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-dirichlet">La Dirichlet: historia y dónde sigue</h2>
+<p>La primera versión, igual que en Andalucía, movía el patrón con una Dirichlet:</p>
+<p><span class="math display">\[
+\boldsymbol{\pi}^{(s)}_p \sim \text{Dirichlet}\left(\frac{V_p}{1000}\,\boldsymbol{\pi}^{23J}_p\right),
+\qquad
+r^{(s)}_{f,p} = r_{f,p} \cdot \frac{\pi^{(s)}_{f,p}}{\pi^{23J}_{f,p}}
+\]</span></p>
+<p>Aquí <span class="math inline">\(V_p\)</span> son los votos de la provincia. La Dirichlet equivale a volver a votar el 23J con una muestra de <span class="math inline">\(V_p / 1000\)</span> personas. Tenía dos problemas:</p>
+<ol type="1">
+<li><strong>El divisor de 1.000 era una decisión mía,</strong> sin respaldo en los datos.</li>
+<li><strong>La dispersión dependía del tamaño de la provincia.</strong> Provincias grandes como Madrid casi no se movían. Los datos no apoyan esa relación: la correlación de <span class="math inline">\(|\Delta \log r|\)</span> con los votos provinciales va de −0,3 a 0.</li>
+</ol>
+<p>Además, trataba cada provincia por separado. No podía recoger un cambio común a toda una comunidad, como la subida del PSC en 2023.</p>
+<p>El mecanismo sigue disponible con <code>simular(modo_ruido = "dirichlet")</code>, solo para comparar. Si ves una Dirichlet en el escenario mapa, no mueve la geografía: reparte el voto de las transferencias de la tabla anterior.</p>
+</section>
+<section id="sec-limitaciones" class="level2">
+<h2 class="anchored" data-anchor-id="sec-limitaciones">Limitaciones</h2>
+<section id="sec-tenerife" class="level3">
+<h3 class="anchored" data-anchor-id="sec-tenerife">VOX en Santa Cruz de Tenerife: una corrección</h3>
+<p>El 23J, VOX no tuvo lista al Congreso en esta provincia, porque sus candidatos renunciaron a última hora. Su ratio de referencia es 0, y un ratio 0 sigue en 0 con cualquier shock. Hasta el 4 de noviembre de 2026, esto dejaba a VOX sin voto ni escaños en esta provincia en las simulaciones, aunque el 29-N sí tiene <a href="https://rtvc.es/diputado-alberto-rodriguez-repite-cabeza-lista-vox-congreso-palmas-21-octubre-2026/">candidato allí</a>.</p>
+<p><code>simular()</code> ahora usa su ratio del 10N, su última general en esta provincia: 11,54 % / 15,08 % = 0,765. Los CSV de referencia conservan el resultado real del 23J. Si otra familia nacional tuviera ratio 0 en alguna provincia, <code>simular_escanos.R</code> se detendría con un error.</p>
+<p>Para medir el efecto, comparo las dos versiones con el mismo voto nacional y la misma semilla. El script es <a href="vox_tenerife_contrafactual.R"><code>vox_tenerife_contrafactual.R</code></a>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"metodologia/vox_tenerife_contrafactual.csv"</span>),</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-tenerife" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-tenerife-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabla&nbsp;10: Simulación del 3 de noviembre de 2026 (6.000 draws), con el ratio de VOX en Santa Cruz de Tenerife a 0 y con la corrección (0,765).
+</figcaption>
+<div aria-describedby="tbl-tenerife-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">medida</th>
+<th style="text-align: right;">sin_corregir</th>
+<th style="text-align: right;">corregido</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">VOX en Tenerife: escaños medios</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.96</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VOX en Tenerife: voto mediano (%)</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">13.44</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PP en Tenerife: escaños medios</td>
+<td style="text-align: right;">3.09</td>
+<td style="text-align: right;">2.68</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSOE en Tenerife: escaños medios</td>
+<td style="text-align: right;">2.67</td>
+<td style="text-align: right;">2.29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">VOX en España: escaños medios</td>
+<td style="text-align: right;">68.31</td>
+<td style="text-align: right;">68.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PP en España: escaños medios</td>
+<td style="text-align: right;">126.44</td>
+<td style="text-align: right;">126.58</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PSOE en España: escaños medios</td>
+<td style="text-align: right;">108.52</td>
+<td style="text-align: right;">108.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PP + VOX en España: escaños medios</td>
+<td style="text-align: right;">194.75</td>
+<td style="text-align: right;">194.68</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P(PP + VOX &gt;= 176) (%)</td>
+<td style="text-align: right;">94.77</td>
+<td style="text-align: right;">94.58</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>El reparto de esta provincia cambia mucho, pero los totales de España casi no se mueven. El voto nacional de VOX lo fija el modelo, así que el recentrado baja sus ratios en las otras 51 provincias. Lo que VOX gana en Tenerife, lo pierde en otras.</p>
+<p>Los posts publicados antes de la corrección conservan sus cifras congeladas. Sus totales de escaños y de mayoría no cambian de forma apreciable, pero sus datos por provincia sí dejan a VOX en 0 en esta provincia.</p>
+</section>
+<section id="otras-limitaciones" class="level3">
+<h3 class="anchored" data-anchor-id="otras-limitaciones">Otras limitaciones</h3>
+<ul>
+<li><strong>El efecto PSC.</strong> Los tres fallos catalanes del PSOE en el 23J quedan fuera del intervalo incluso con el shock. Un cambio de ese tamaño requiere información actual por comunidad, como encuestas autonómicas.</li>
+<li><strong>La referencia es una sola elección.</strong> Los ratios centrales son los del 23J. La deriva de 2023 a 2026 solo entra como ruido de media cero.</li>
+<li><strong>Shocks independientes entre partidos.</strong> El shock de un partido no depende del shock de otro en la misma comunidad. No he medido si esa relación existe en los datos.</li>
+<li><strong>El efecto de Sumar está inflado.</strong> Parte de su <span class="math inline">\(\Delta \log r\)</span> refleja cambios en la composición de las coaliciones, no geografía.</li>
+<li><strong>Pocas transiciones.</strong> Hay cuatro para los grandes y dos para los regionales y VOX. Por eso los tau de los regionales son valores fijos y frágiles.</li>
+<li><strong>SALF, Podemos y AA heredan sus tau.</strong> Sus patrones geográficos tienen poca historia: una elección europea, en el caso de los dos primeros, y unas autonómicas, en el de AA.</li>
+<li><strong><code>RESTO</code> no compite.</strong> Sus votos no reciben escaños, aunque en algunas provincias pesa mucho: en la simulación del 3 de noviembre, su voto mediano es del 29 % en Soria y del 25 % en Teruel. Una candidatura de ese grupo podría ganar un escaño, y un partido nuevo sin datos previos también acabaría aquí.</li>
+<li><strong>El umbral es algo más estricto que el legal.</strong> La ley cuenta los votos en blanco, y aquí no se simulan.</li>
+<li><strong>Los tau se miden en el ratio final, pero entran antes de renormalizar.</strong> Por eso la dispersión final es <a href="#sec-dispersion">menor que tau</a>. El backtest mide el resultado final, así que la cobertura ya incluye ese efecto.</li>
+</ul>
+</section>
+</section>
+<section id="sec-codigo" class="level2">
+<h2 class="anchored" data-anchor-id="sec-codigo">Dónde está el código</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Fichero</th>
+<th>Qué contiene</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../2026/10/simular_escanos.R"><code>simular_escanos.R</code></a></td>
+<td><code>simular()</code>, <code>aplicar_regla_mapa()</code>, <code>dhondt()</code> y <code>preparar_tau_simular()</code></td>
+</tr>
+<tr class="even">
+<td><a href="../2026/10/shock_jerarquico.R"><code>shock_jerarquico.R</code></a></td>
+<td><span class="math inline">\(\Delta \log r\)</span>, tau de los regionales y <code>extraer_tau_draws()</code></td>
+</tr>
+<tr class="odd">
+<td><a href="../2026/10/backtest_prov_loto.R"><code>backtest_prov_loto.R</code></a></td>
+<td>Ajuste brms de los tau (<code>ajustar_tau_brm()</code>) y LOTO</td>
+</tr>
+<tr class="even">
+<td><a href="../2026/10/backtest_provincial.R"><code>backtest_provincial.R</code></a></td>
+<td>Backtest provincial</td>
+</tr>
+<tr class="odd">
+<td><code>ref_provincial_23J_14.csv</code></td>
+<td>Ratios de la referencia, con Sumar y Podemos separados</td>
+</tr>
+<tr class="even">
+<td><code>tau_shock_draws.csv</code>, <code>tau_regionales.csv</code></td>
+<td>Tau que usa la simulación</td>
+</tr>
+<tr class="odd">
+<td><code>coaliciones_izquierda_29N_provincias.csv</code></td>
+<td>Regla de cada provincia</td>
+</tr>
+</tbody>
+</table>
+<p>La llamada que usan los posts recientes es esta:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">simular</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_draws =</span> <span class="fu">nrow</span>(shares),</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">listas =</span> <span class="st">"mapa"</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">provincial =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">shares_ext =</span> shares   <span class="co"># voto nacional del modelo, en %, con el error incluido</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Por defecto, <code>simular()</code> usa <code>modo_ruido = "shock"</code> y <code>swing = "proporcional"</code>. La opción <code>swing = "logit"</code> existe, pero sus tau siguen calibrados en log-ratio.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/muestrear-no-es-pecado\.netlify\.app\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

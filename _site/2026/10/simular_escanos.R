@@ -170,6 +170,45 @@ ref14 <- read_csv(f_ref14, show_col_types = FALSE)
 fams14 <- c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF", fams_bloque)
 stopifnot(setequal(fams14, unique(ref14$partido)))
 
+# VOX en Santa Cruz de Tenerife: el 23J no tuvo lista al Congreso porque sus
+# candidatos renunciaron a última hora, así que su ratio en la ref es 0. Un
+# ratio 0 significa "no se presenta" y anularía su voto el 29-N, donde sí
+# compite. Se usa el ratio del 10N, su última general allí: 11,54 % en la
+# provincia / 15,08 % nacional = 0,765 (voto real en
+# backtest_prov_celdas_shock_brms.csv). Los CSV conservan el resultado real del
+# 23J; ref13_23j queda sin corregir para sim_validacion_23j().
+ref13_23j <- ref13
+corregir_ausencias_23j <- function(ref) {
+  es_vox_tf <- ref$codigo_provincia == "38" & ref$partido == "VOX"
+  es_tf <- ref$codigo_provincia == "38" & ref$partido != "SALF"
+  stopifnot(sum(es_vox_tf) == 1, ref$votos[es_vox_tf] == 0)
+  ratio_10n <- 0.765
+  pct <- ratio_10n * ref$pct_nac[es_vox_tf]
+  ref$ratio[es_vox_tf] <- ratio_10n
+  ref$pct_prov[es_vox_tf] <- pct
+  ref$votos[es_vox_tf] <- round(sum(ref$votos[es_tf]) * pct / (100 - pct))
+  ref
+}
+ref13 <- corregir_ausencias_23j(ref13)
+ref14 <- corregir_ausencias_23j(ref14)
+
+# una familia nacional con ratio 0 quedaría sin voto en esa provincia:
+# cualquier caso nuevo debe revisarse y corregirse a mano, como el de arriba
+comprobar_ratios_nacionales <- function(ref, fams) {
+  ceros <- ref |> filter(partido %in% fams, ratio <= 0)
+  if (nrow(ceros) > 0) {
+    stop(
+      "Familia nacional con ratio 0: ",
+      paste(ceros$partido, ceros$provincia, sep = " en ", collapse = "; ")
+    )
+  }
+}
+comprobar_ratios_nacionales(ref13, c("PP", "PSOE", "VOX", "SUMAR", "SALF"))
+comprobar_ratios_nacionales(
+  ref14,
+  c("PP", "PSOE", "VOX", "SUMAR", "PODEMOS", "SALF")
+)
+
 # escenario "mapa": regla de cada provincia
 # (separadas, unida, sin_podemos, con_aa, sin_fa)
 f_mapa_listas <- here::here("2026/10/coaliciones_izquierda_29N_provincias.csv")
@@ -358,7 +397,7 @@ stopifnot(
 # reparto del 29-N (RD 806/2026, anexo): Madrid 37 -> 38, Cádiz 9 -> 8. La
 # validación con el 23J se queda con el mapa de 2023 (prov_datos_23j) para
 # reproducir sus 350 escaños; la simulación usa el nuevo.
-prov_datos_23j <- prov_datos
+prov_datos_23j <- preparar_prov_datos(ref13_23j, fams13)
 escanos_29n <- c("28" = 38, "11" = 8)
 aplicar_escanos_29n <- function(d) {
   i <- match(names(escanos_29n), d$codigo_provincia)
@@ -984,7 +1023,7 @@ prob_mayorias <- function(sim) {
 # ---- validación con el 23J ---------------------------------------------------
 
 sim_validacion_23j <- function() {
-  nac <- ref13 |>
+  nac <- ref13_23j |>
     group_by(partido) |>
     summarise(votos_nac = sum(votos), .groups = "drop") |>
     arrange(match(partido, fams13))
