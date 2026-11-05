@@ -42,6 +42,137 @@ producción `"nuts"` (constantes al principio de cada script, sin argumentos).
 
 Orden: `01 → 02 → 03 → 06 → (stan | numpyro | rtmb) → 07 → 08 → 09`.
 
+## Estado al 2026-11-05: base del post (III)
+
+**El modelo de voto del post (III) es el de seguro / dudoso** (decisión de
+José, 2026-11-03), en `completo/`. **Las cifras del post salen del ajuste de
+Stan** (decisión de José, 2026-11-05). Detalle y resultados en
+`PARTICIPACION.md`, sección "El modelo hecho".
+
+**Para seguir en otra máquina** (código en `master`, datos en la release
+`mrp-multiencuesta-completo`): `bash
+2026/11/mrp-multiencuesta/completo/baja_datos.sh`. No hace falta compilar ni
+reajustar nada, ni `post_celdas_casa_media_part.rds`, ni Python.
+
+- Orden: `completo/10_datos_voto_seg.R` → `completo/11_ajusta_voto_seg.R`
+  (`completo/stan/mrp_voto_seg.stan`; 256 min con `HILOS=2`) →
+  `completo/11b_entradas_escenarios.R` → `completo/12_escenarios_voto_seg.R`
+  (~4 min) → `14`, `15`, `16` (cifras de apoyo).
+- Ajuste de Stan: 4 × 1.000, `max_treedepth = 8`, `adapt_delta = 0.95`,
+  0 divergencias de 4.000, Rhat máx 1,012, ESS bulk mín 535, E-BFMI 0,83–0,95
+  (`completo/datos/log_voto_seg_h2.txt`). Con `max_treedepth = 10` iba a
+  ~25 s por iteración (más de 10 h).
+- NumPyro, para iterar: `completo/numpyro/exporta_voto_seg_npz.R` →
+  `completo/numpyro/mrp_voto_seg_np.py --modo nuts` (~50 min) →
+  `FUENTE=numpyro completo/12_escenarios_voto_seg.R` (salidas en
+  `completo/datos/escenarios_seg_numpyro/`). Medias casi iguales a Stan en los
+  2.895 valores (diferencia máx 0,095 sd) y media de escaños con diferencia
+  máx 0,15 en las 104 combinaciones de método, escenario y partido.
+- Optimizar el `.stan` no compensa (medido el 2026-11-05, una corrida de 40
+  iteraciones): saltarse las casillas con offset −20, 23,9 → 25,4 ms por paso;
+  `STAN_NO_RANGE_CHECKS` + `STAN_CPP_OPTIMS`, 22,4 ms; `--territorio` en NumPyro
+  sigue en 255 pasos, sin mejora clara de ESS.
+- Lecciones del día: (1) forma no centrada en todo (la centrada no
+  convergió); (2) en NumPyro, guardar los draws antes de arviz (arviz 1.3
+  cambió `from_dict` y se perdió un ajuste de 46 min); (3) bajo consumo en
+  el Mac: la mitad de núcleos y el doble de tiempo.
+
+**Guion del post (III)** (discutido con José el 2026-11-03; lo escribe él,
+previsto para el finde 7–8 nov 2026). El texto es de José; aquí solo la
+estructura y las cifras de apoyo. Criterio: pocos insights, y cada uno
+enseña una pieza del método (bruto frente a MRP, y por qué difieren).
+
+0. **Pregunta de entrada**: ¿qué pasa si vota más gente? Empezar por la
+   pregunta, no por el método.
+1. **Dónde estábamos**: (I) y (II) en tres frases, con enlaces.
+2. **Voto + simpatía** (`voto_sim`): por qué, y cuántas entrevistas se
+   ganan (tabla de n con y sin simpatía; cifra pendiente de sacar).
+3. **Seguro / dudoso en los datos** (no b_dud del modelo: aún no se ha
+   presentado). Seguro = dice 10. Secuencia:
+   - Tabla bruta de % de voto (20.552 entrevistas con seg y provincia;
+     fuera 4.201 de Ateneo y MIC sin provincia): seguros / dudosos,
+     PP 25,4 / 21,0; PSOE 31,2 / 25,9; VOX 15,6 / 14,7; SUMAR 8,6 / 7,7;
+     OTROS 6,4 / 11,6; BLANCO 2,2 / 8,1; partidos pequeños en "resto".
+   - Tabla de composición: los dudosos son otra gente. 18-34 años: 30,8 %
+     de los dudosos frente a 16,5 % de los seguros; recuerdo ABST: 19,6 %
+     frente a 3,1 %.
+   - Una frase: con el mismo perfil, VOX baja entre los dudosos (en 6 de 7
+     tramos de edad; entre ABST, 17,7 % frente a 27,8 %). En bruto parecía
+     que no (0,94 frente a 0,83 de PP). Estandarizado edad x recuerdo x
+     casa, VOX -0,28 frente a PP -0,16; el modelo, -0,40 frente a -0,14.
+     La tabla estandarizada no va al post (paso de método que sobra).
+   - Ojo: % de dudosos por casa: 40dB 35, MIC 29, CIS 17 (¿cómo pregunta
+     cada casa la escala?, sin comprobar en los cuestionarios). Una frase.
+   - Script: `completo/14_vox_seguro_dudoso.R`.
+4. **Una variable que no está en la tabla** (núcleo didáctico): primero
+   una celda con números (cuántos seguros y dudosos, cómo vota cada grupo),
+   después P(voto | celda, seg) · P(seg | celda). Ejemplo en
+   `PARTICIPACION.md` ("la enmienda, en corto"). Aquí entra b_dud (BLANCO
+   +1,00, VOX -0,40), mejor como probabilidades de una celda típica que en
+   log-odds.
+5. **Escenarios de participación**: titular en la contraintuición. De 65 %
+   a 80 %, PP+VOX pasa de 199,4 a 197,7 escaños (método `seg`), intervalos
+   casi iguales. Después, quién entra (70,4 % → 80 %): VOX 18,5 %, OTROS
+   10,9 %, BLANCO 8,9 %. Un solo método en el texto (`seg`); `celda` en
+   nota o caja plegada. PENDIENTE: por qué `seg` y `celda` difieren ya en
+   la participación base (198,6 frente a 195,1).
+6. **Lo que la encuesta no ve** (dos insights):
+   - *Multinivel (pooling)*: Segovia y Soria, VOX. Bruto: Segovia 10,0 %
+     (5 de 50), Soria 22,2 % (8 de 36), 12 puntos de hueco decididos por
+     3 personas. MRP: 21,3 [18,0, 25,3] y 20,2 [16,8, 24,9]. Castilla y
+     León bruto 15,2 %. Control: Madrid (n = 3.331) 15,5 → 20,1. Poner
+     la fila España (15,4 → 19,7): ese +4,3 es común a todas y no es
+     pooling. Script: `completo/15_vox_provincia.R`.
+   - *Postestratificación*: la muestra tiene de más a los del PSOE de 2023
+     y de menos a los abstencionistas. Recuerdo PSOE: muestra 33,5 %,
+     votantes 25,9 % (VOX dentro: 2,7 %); ABST: 6,8 % frente a 13,5 % (VOX
+     dentro: 21,3 %); NO_PODIA: 2,4 % frente a 3,6 % (23,5 %). Enlaza con
+     la sección 3 (los abstencionistas otra vez).
+     Descomposición del +4,3 (pasos sucesivos, depende del orden): bruto
+     15,4 → recuerdo x edad 16,8 (+1,4) → casa media 18,2 (+1,4) → MRP
+     19,7 (+1,5 sin separar: Ateneo, edu/sexo/provincia, pooling, mezcla).
+     Script: `completo/16_vox_salto_nacional.R`.
+7. **Supuestos y límites**: los dudosos que entran votan como los dudosos
+   de su celda; `c_mezcla`; casa media es una elección (CIS 12,8 % de VOX
+   en bruto frente a 40dB 20,9 % y MIC 19,8 %; el CIS es el 68 % de la
+   muestra); el modelo no tiene mujer x edad, así que no puede ver una
+   brecha de género propia de los jóvenes (la postestratificación no
+   inventa).
+
+Fuera del post (o caja plegada al final): NumPyro frente a Stan, forma no
+centrada, glmmTMB como comprobación. Fuera: matriz de transferencias
+completa, VOX por estudios, pesos por celda y xgboost (como mucho, un
+párrafo de "otras formas de hacerlo"; si se hace el xgboost, tidymodels
+con `finetune::tune_race_anova()`, `mn_log_loss` y CV agrupada por
+encuesta).
+
+Pendientes antes de escribir: n con y sin simpatía (sección 2); por qué
+`seg` y `celda` difieren en la base (sección 5); la referencia
+`2026/10/ref_provincial_23J_13.csv` tiene VOX = 0 en Santa Cruz de
+Tenerife (no usada; revisar si se usa).
+
+**Apuntes para discutir (José, 2026-11-03), con la valoración hablada:**
+- Pesos por celda (N_celda / n_celda) a cada entrevistado y un modelo
+  ponderado, recortando pesos altos. Valoración: funciona, pero pierde lo
+  que da el MRP. Celdas pequeñas con pesos enormes (recortar mete sesgo),
+  celdas vacías sin peso (hay que fundirlas, como en el raking), y con
+  pesos en la verosimilitud la "posterior" no está bien calibrada. No
+  arregla seguro / dudoso: los pesos no saben quién es seguro. Útil como
+  contraste en el post ("con pesos sale X, con MRP Y, la diferencia está
+  en las celdas pequeñas"), no como modelo principal.
+- Un xgboost multinomial como modelo de voto (`multi:softprob`, 15
+  clases). Hay literatura de árboles en lugar del multinivel en el MRP (de
+  memoria, sin comprobar: BARP, Bisbee 2019; autoMrP, Broniecki, Leemann y
+  Wüest 2022). A favor: encuentra solo las interacciones, rápido, seguro /
+  dudoso es una variable más. En contra: sin posterior (bootstrap), riesgo
+  de sobreajuste en partidos pequeños (CV con log-loss), efecto casa sin
+  pooling (predecir con cada casa y promediar), no admite la mezcla de
+  provincias, máscara de territorio después de predecir, calibración en
+  clases raras. Valoración: como comprobación, no para las cifras; si
+  encuentra una interacción fuerte que el multinivel no tiene, es la
+  pista. Como glmmTMB: herramientas rápidas para decidir la estructura, el
+  bayesiano para las cifras.
+
 ## Decisiones y pendientes
 
 - **UPN** como categoría propia (ceros estructurales fuera de Navarra).
@@ -72,6 +203,62 @@ Orden: `01 → 02 → 03 → 06 → (stan | numpyro | rtmb) → 07 → 08 → 09
   con las celdas actuales (ver pendientes).
 - Los fits de Stan/numpyro/RTMB de voto en `datos/` (y en la release) están al
   día con AA (2026-10-30). El de brms no (ver pendientes).
+- **Idea para explorar (José, 2026-11-03): el voto como Poisson en glmmTMB**
+  (truco multinomial–Poisson). Sin hacer ni probar. Para explorar
+  estructuras rápido (¿sobra dudoso × edad?, ¿casa × recuerdo?), no para
+  las cifras del post: es máxima verosimilitud con Laplace, sin draws.
+  - Datos en largo: una fila por celda × partido, con los ceros. Las
+    casillas imposibles (regionales fuera de su territorio, AA en
+    encuestas sin AA) se quitan, sin offset de −20 ni condicionado.
+  - Hace falta un **efecto fijo por celda** (φ_celda), no basta el offset
+    log(n): con solo el offset, Σ_partido exp(η) no vale 1 y el modelo
+    intenta explicar también el tamaño de cada celda. Con φ_celda la
+    verosimilitud de η es la del multinomial. El offset log(N) de binomial
+    a Poisson es solo una aproximación para sucesos raros (p pequeña).
+  - Solo cuentan los términos con `partido`: lo que no interactúa con
+    partido lo absorbe φ_celda.
+  - `glmer` no sirve: ~14.700 columnas de `celda` en una matriz densa de
+    ~220.000 filas (~26 GB), y con factores no da una sd por partido.
+    glmmTMB sí: `sparseX = c(cond = TRUE)` y `diag(0 + partido | edad)`
+    (una sd por partido, sin correlaciones). Citado de memoria, sin
+    comprobar la versión instalada.
+  - Esbozo: `y ~ 0 + celda + partido + partido:mujer + partido:dudoso +
+    diag(0 + partido | casa) + ... + diag(0 + partido | prov) +
+    diag(0 + partido | casa:rec) + diag(0 + partido:dudoso | edad) +
+    diag(0 + partido:dudoso | rec)`, `family = poisson`, con `dudoso`
+    numérico 0/1. Sin la mezcla de provincias (solo filas con provincia).
+  - Mejor que `0 + celda` (~14.700 parámetros en el optimizador externo):
+    **`(1 | celda)` con la sd fija y grande** (p. ej. 10) con `start` y
+    `map` de glmmTMB. Deducido (sin probar): con prior plano, Laplace
+    sobre φ_celda es exacto para η, porque lo que depende de η es
+    S^(−n), con S = Σ_partido exp(η), igual que la integral exacta
+    Γ(n)/S^n; Laplace solo falla en la constante de Stirling, que no
+    depende de parámetros. Cada φ toca solo su celda: hessiano casi
+    diagonal, barato. Con la sd estimada (no fija) deja de ser
+    equivalente. INLA hace lo mismo con un `iid` de precisión fija
+    (de memoria).
+  - **Decisión (José, 2026-11-03): glmmTMB solo como prueba; RTMB no** (el
+    RTMB del modelo completo agotó 48 GB el 2026-11-02). Script:
+    `completo/13_glmmtmb_voto_seg.R`. Prueba con el 20 % de las celdas: 7,3 min,
+    1,3 GB, un núcleo (sin OpenMP), hessiano no definido positivo, muchas
+    sd en 0 y b_dud extremos en partidos pequeños (UPN −4,27, PNV +2,27);
+    BLANCO igual que NumPyro (+1,00 frente a +1,01).
+    Completo (14.692 celdas, 112.380 filas en largo, sin filas con mezcla):
+    17,7 min, 3,0 GB, un núcleo; hessiano no definido positivo. b_dud:
+    correlación 0,97 con NumPyro (VOX −0,38 frente a −0,40; BLANCO +1,00
+    frente a +1,01; diferencias mayores en BILDU −0,61 / −0,43 y JUNTS).
+    sd de dudoso × recuerdo en 0 en 10 de 15 partidos (NumPyro: 0,24–0,55):
+    máxima verosimilitud lleva al borde las sd poco identificadas. Sirve
+    para los efectos fijos y para explorar; las sd, del bayesiano.
+  - **Decisión anterior (José, 2026-11-03): probar glmmTMB.** Alternativa en `glmer`
+    (deducido, sin probar): `(1 | celda)` es efecto aleatorio, va en la Z
+    dispersa y no tiene el problema de memoria de `0 + celda`. Con
+    `nAGQ = 0` β se estima en PIRLS con φ y la equivalencia se mantiene
+    (la curvatura de φ_i en su máximo es n_i, sin η; perfilar φ deja el
+    multinomial). Fijar la sd de celda exige la interfaz modular
+    (`glFormula` → `mkGlmerDevfun(nAGQ = 0)` → `bobyqa` con esa sd fija),
+    y una sd por partido exige ~150 términos a mano y `bobyqa` sin
+    gradientes: viable solo con una sd por efecto (`(1 | partido:edad)`).
 
 ## Pendientes para el Mac (2026-10-30)
 
@@ -252,6 +439,14 @@ Exploración hecha (el 31, sin escribir nada en el post):
 
 ## Datos y releases
 
+Lo del post (III) va en la release `mrp-multiencuesta-completo`
+(`completo/datos/*` está en .gitignore); se baja con `completo/baja_datos.sh`.
+Lleva `fit_voto_seg.rds` (Stan; sus draws van dentro, no hacen falta los CSV),
+`voto_seg_numpyro_draws_nuts.npz`, `datos_voto_seg.rds`, `entradas_escenarios.rds`,
+`encuestas_completo.rds`, `escenarios_seg.tar.gz` (Stan y NumPyro) y los logs.
+No lleva los ajustes de ideología y 3 niveles (`fit_ideol.rds`, `fit_part.rds`),
+fuera del post.
+
 Los datos y fits van en la release `mrp-multiencuesta-datos` (no en git;
 `datos/*` está en .gitignore salvo `celdas_brms.rds`, `celdas_part.rds`,
 `tabla_post_prov.rds` y `prov_ccaa.rds`). Actualizar con
@@ -292,7 +487,86 @@ Los `post_celdas_*` (358-672 MB) no se suben: se regeneran con
   7. Los escaños: D'Hondt draw a draw, mayorías.
   8. Los tres backends como servicio (no el core): tiempos e igualdad.
   9. Coda: el multinivel corrige el muestreo, no la casa; remite a (III).
-- **(III)**: insights bayesianos (escenarios de participación, dónde votan
+- **(III)**, estructura decidida por José (2026-11-02):
+  1. Enmienda corta al (II), sin mucha historia: participación aparte del
+     voto, y el modelo de voto con `voto` en vez de `voto_sim`.
+  2. Quizá el ejemplo de cómo usar ideología y participación en el MRP
+     aunque no estén en la población (ejemplo numérico de una celda).
+  3. Directo a insights que solo puede contestar el bayesiano: voto de las
+     mujeres por edad, provincias, la transferencia (23-J → hoy).
+  **Antes del (III), el modelo completo** («da tiempo de sobra»): un solo
+  reajuste del voto con `voto_sim`, ideología y nivel de participación
+  como predictores, y el blanco fuera de OTROS; ideología y participación
+  como modelos aparte (ver `PARTICIPACION.md`). **Separado del flujo
+  principal** (petición de José): todo en `completo/` (scripts, Stan y
+  salidas en `completo/datos/`); solo lee `datos/` y no toca
+  `00_partidos.R`, `01_armoniza.R` ni los scripts 03–08.
+  Estado de `completo/` (2026-11-02):
+  - Parte 1, ideología: `stan/mrp_ideol.stan` (sencillo: sexo, casa,
+    edad, recuerdo, CCAA; sin mes, estudios ni provincia). 5,9 min, Rhat
+    1,005, 9 divergencias de 4.000 (subir adapt_delta en el final).
+    Reparto nacional igual que el modelo con provincia (±0,2 puntos).
+  - Parte 2, participación: `stan/mrp_part3.stan` (3 niveles, ideología
+    como predictor, umbrales por casa, sin provincia). 10 min, 1
+    divergencia, Rhat 1,007. U por ideología: centro −0,45, der +0,60.
+  - Parte 3, voto: **decisión de José: sin la interacción CCAA ×
+    recuerdo** (3.724 de ~6.000 parámetros; mediana de |efecto| 0,003,
+    máximo 0,25). Prueba de parametrización en curso con
+    `stan/mrp_voto3.stan` (suma cero entre niveles; recuerdo y edad
+    centrados) frente a 255 pasos por iteración de `stan/mrp_voto.stan`.
+    Pendiente de comprobar: voto por CCAA con y sin la interacción (<1
+    punto en los partidos grandes).
+  Plan de trabajo (José, 2026-11-02): **prototipo con solo el CIS** (sin
+  casa ni mezcla de provincias; rápido) para escribir y probar la cadena
+  y la postestratificación; **final con las 4 casas, ajustado de noche**.
+  En el post, las cifras de las 4 casas; el del CIS, como mucho un
+  párrafo de comparación («con solo el CIS, el PSOE saldría X puntos
+  más»), que refuerza la idea multiencuesta.
+  Backend (José, 2026-11-02): por ahora Stan. NumPyro queda como opción
+  para el voto final de las 4 casas (en el (II): 18,4 min frente a 121 min
+  en Stan; port en `numpyro/mrp_voto_np.py`, sin adaptar).
+  **Estado al cerrar (2026-11-02, 19:00):** ajustados y guardados en
+  `completo/datos/`: `fit_ideol.rds` (parte 1) y `fit_part.rds` (parte 2).
+  Parados sin terminar (lentos, ~12 s por iteración en warmup): la prueba
+  B de las 4 casas (`stan/mrp_voto3.stan`, 1 cadena, iteración 100 de
+  300) y el prototipo del CIS (`stan/mrp_voto_cis.stan`, 4 cadenas, menos
+  de 50 de 2.000). Mañana: relanzar el voto mientras José está en la
+  piscina; primero el prototipo del CIS (`08_ajusta_voto_cis.R`).
+  Prueba glm (19:08–19:18): `stan/mrp_voto_cis_glm.stan` (CIS, una fila
+  por entrevistado, `categorical_logit_glm`) no aceleró claramente: ~6 s
+  por iteración en warmup, como el bucle. Deducción sin confirmar: el
+  freno son los pasos por iteración (geometría), no el coste de cada
+  paso. Parado en la iteración 100 de 1.000. Mañana: ver pasos por
+  iteración en el sampling antes de decidir (Stan, NumPyro o más
+  simplificación).
+  **Decisión de José (2026-11-02, cierre):** el modelo de voto de las 4
+  casas se itera en NumPyro o RTMB (ports ya existentes en `numpyro/` y
+  `rtmb/`; en el (II): 18,4 min y 5,6 min frente a 121 min en Stan).
+  Solo cuando la estructura esté decidida se hace el ajuste final en
+  Stan.
+  Primer intento RTMB de las 4 casas (19:29–19:40,
+  `completo/rtmb/mrp_voto_completo_rtmb.R`): se quedó sin memoria (48 GB
+  ocupados, 36 GB comprimidos; en 10 min ni una línea de `nlminb`).
+  Parado. Deducción sin comprobar: la cinta de AD de la mezcla provincia
+  x nivel (hasta 27 combinaciones por fila, antes 9) y los 2.998 efectos.
+  Siguiente intento: sin Ateneo (máximo 9 combinaciones, como el (II)) o
+  quitando de la mezcla las provincias con peso pequeño.
+  Intentos RTMB 2 y 3 (19:41–19:44): con la mezcla reducida (21.194
+  entradas, como el (II)) y con 2 hilos en vez de 8, la memoria
+  comprimida pasa de 16 GB en 1–2 min (vigilante en
+  `vigila_rtmb.sh` del scratchpad; no persiste). Descartados el relleno
+  y los hilos. Sin saber: memoria del RTMB del (II). Mañana: medir en
+  modo prueba (10 %) el del (II) y el nuevo; si el nuevo gasta mucho más
+  por fila, quitar piezas nuevas de una en una (casa x nivel, casa x
+  ideología, mezcla de nivel). `HILOS=n` como variable de entorno.
+  Detalle anterior:
+  abre con una enmienda corta al (II) sobre la participación
+  (decisión de José, 2026-11-02: que ocupe poco y pase a los insights);
+  borrador con el ejemplo numérico en `PARTICIPACION.md`, sección "Para
+  el post (III)". La idea general (ampliar el MRP con variables sin
+  censo: cadena ideología → participación → voto, ajuste por partes,
+  indecisos dentro) está en la sección "La idea general" del mismo
+  fichero; a José le parece la idea más potente de la serie. Después, insights bayesianos (escenarios de participación, dónde votan
   VOX los jóvenes, el escaño más disputado, mapa 29-N) y los sesgos que la
   postestratificación no corrige: fidelidad por casa (MIC y sus votantes
   superfieles al PSOE; el sesgo de recuerdo medido, no solo del CIS),
@@ -306,6 +580,58 @@ Los `post_celdas_*` (358-672 MB) no se suben: se regeneran con
     diferencias entre perfiles — sumar lo mismo a todos los logits preserva
     los odds ratios — y se propaga draw a draw a escaños y mayorías.
     «Lo mismo lo hago para el siguiente post».
+    **Problema (2026-11-02):** así, más participación favorece a la
+    derecha, y José sabe que no es así. Causa: `mrp_voto.stan` no usa
+    `prob_voto` y el votante nuevo vota como la media de su celda, que
+    dominan los seguros. Datos crudos, abstencionistas del 23-J: derecha
+    54,4 % en seguros frente a 38,1 % en no seguros. Meter la abstención
+    como categoría del multinomial no lo arregla (el softmax reparte en
+    proporción al voto de la celda). Dos alternativas; elegida B, con
+    prueba antes del finde del 7–8 nov. Explicación sencilla de las dos en
+    `PARTICIPACION.md`; scripts `15_delta_seguro.R` y
+    `16_escenarios_part.R`, con salidas fuera de `datos/` (`DIR_SALIDA`):
+    - **A. Modelo conjunto (reajusta todo).** Propensión ordinal en 3
+      niveles (10 / 5–9 / 0–4) con los efectos de celda de
+      `mrp_part.stan`; voto condicionado al nivel (efecto del nivel +
+      nivel × recuerdo, con pooling). Casas sin `prob_voto` (Ateneo):
+      nivel marginalizado con las probabilidades de la ordinal.
+      Calibración al 23-J con un intercepto común. Escenarios = mover los
+      umbrales: entra un "probable" con su voto. Sensibilidad γ para quien
+      no contesta. Coste: reajustar el voto (hoy 121 min con 3 hilos) y
+      algo más por la interacción. Pendiente: confirmar los cortes.
+    - **B. Corrección en la postestratificación (sin reajustar).** q_s =
+      P("10") por celda, de los draws de `mrp_part.stan`. Modelo pequeño
+      sobre microdatos con `prob_voto`: multinomial seguro/no seguro ×
+      recuerdo (quizá edad), con pooling → δ = log-odds no seguros −
+      seguros. Por celda y draw, separar v en v_s y v_n con δ y la
+      condición q_s·v_s + (1 − q_s)·v_n = v (el escenario base no cambia).
+      En los escenarios, los votantes nuevos votan con v_n. Limitaciones:
+      δ solo varía con recuerdo (y edad); su incertidumbre se combina como
+      independiente de los otros dos modelos. Recomendada para el (III).
+      Detalles de B (conversación desde el móvil, 2026-11-02):
+      - Escenarios con un peso α sobre los no seguros, en vez de δ en logit
+        sobre todos: voto_k ∝ Σ_j N_j·[p_j·P(k|j,s) + α·(1 − p_j)·P(k|j,n)],
+        con α calibrado a la participación del escenario (60 %, 70 %...).
+        Es otro supuesto sobre quién entra a votar, y se explica mejor.
+      - Tilt: P(k|j,l) = P(k|j)·exp(Δ_kl) / Σ_k' P(k'|j)·exp(Δ_k'l), con Δ
+        centrado para que la mezcla de niveles devuelva P(k|j).
+      - Ordinal (probable / dudoso) solo si se quieren escenarios tipo «se
+        movilizan los probables, no los dudosos»: reajusta solo
+        `mrp_part.stan`, que es pequeño (11,5 min). Enseñar dos variantes.
+      - Sensibilidad más barata: Δ fijado a mano por escenario (p. ej. los
+        movilizados votan como los de 18–34, o como los abstencionistas
+        del 23-J).
+      - **Comprobado (2026-11-02, `datos/encuestas.rds` con el filtro de
+        `03_celdas.R:31`):** el modelo de voto entra con todos los que
+        declaran partido, sea cual sea su `prob_voto`. P(k|j) es una mezcla
+        con mayoría de seguros: CIS 85,8 % (n = 12.473), More in Common
+        72,2 % (n = 3.559), 40dB 65,7 % (n = 5.506); Ateneo sin
+        `prob_voto` (n = 1.260). Esa proporción es mayor que la del modelo
+        de participación, que cuenta también a quien no da partido
+        (comprobado, % de "10" sin filtrar por voto, todas las entrevistas
+        con `prob_voto`): CIS 78,5 %, More in Common 64,7 %, 40dB 60,6 %.
+        Entre quien no da partido, solo 32–56 %. El centrado de Δ debe usar
+        la mezcla del modelo de voto, no p_j.
   - Estimaciones por provincia × nivel de estudios con intervalos, y
     comparación con lo que dice la encuesta cruda (la reproducción de la
     estimación publicada de MIC ya está en PLAN.md).
