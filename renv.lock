@@ -28,27 +28,37 @@
     },
     "Brobdingnag": {
       "Package": "Brobdingnag",
-      "Version": "1.2-9",
+      "Version": "1.3-1",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Very Large Numbers in R",
       "Authors@R": "person(given=c(\"Robin\", \"K. S.\"), family=\"Hankin\", role = c(\"aut\",\"cre\"), email=\"hankin.robin@gmail.com\", comment = c(ORCID = \"0000-0001-5982-0415\"))",
       "Maintainer": "Robin K. S. Hankin <hankin.robin@gmail.com>",
       "Depends": [
-        "R (>= 2.13.0)",
-        "methods",
-        "Matrix (>= 1.5-0)"
+        "R (>= 3.5.0)"
       ],
       "Description": "Very large numbers in R.  Real numbers are held using their natural logarithms, plus a logical flag indicating sign.  Functionality for complex numbers is also provided.  The package includes a vignette that gives a step-by-step introduction to using S4 methods.",
+      "Imports": [
+        "methods",
+        "Matrix (>= 1.5-0)",
+        "graphics"
+      ],
       "Suggests": [
         "cubature",
-        "testthat"
+        "testthat",
+        "knitr",
+        "markdown",
+        "rmarkdown"
       ],
+      "VignetteBuilder": "knitr",
       "License": "GPL",
       "Repository": "CRAN",
-      "URL": "https://github.com/RobinHankin/Brobdingnag",
+      "URL": "https://github.com/RobinHankin/Brobdingnag, https://robinhankin.github.io/Brobdingnag/",
+      "BugReports": "https://github.com/RobinHankin/Brobdingnag/issues",
+      "Encoding": "UTF-8",
+      "Config/roxygen2/version": "8.1.0",
       "NeedsCompilation": "no",
-      "Author": "Robin K. S. Hankin [aut, cre] (<https://orcid.org/0000-0001-5982-0415>)"
+      "Author": "Robin K. S. Hankin [aut, cre] (ORCID: <https://orcid.org/0000-0001-5982-0415>)"
     },
     "DT": {
       "Package": "DT",
@@ -692,29 +702,31 @@
     },
     "bayesplot": {
       "Package": "bayesplot",
-      "Version": "1.15.0",
+      "Version": "1.16.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Plotting for Bayesian Models",
-      "Date": "2025-12-11",
-      "Authors@R": "c(person(\"Jonah\", \"Gabry\", role = c(\"aut\", \"cre\"), email = \"jgabry@gmail.com\"), person(\"Tristan\", \"Mahr\", role = \"aut\", comment = c(ORCID = \"0000-0002-8890-5116\")), person(\"Paul-Christian\", \"Bürkner\", role = \"ctb\"), person(\"Martin\", \"Modrák\", role = \"ctb\"), person(\"Malcolm\", \"Barrett\", role = \"ctb\"), person(\"Frank\", \"Weber\", role = \"ctb\"), person(\"Eduardo\", \"Coronado Sroka\", role = \"ctb\"), person(\"Teemu\", \"Sailynoja\", role = \"ctb\"), person(\"Aki\", \"Vehtari\", role = \"ctb\"),  person(\"Behram\", \"Ulukır\", role = \"ctb\"),  person(\"Visruth\", \"Srimath Kandali\", role = \"ctb\"))",
+      "Date": "2026-08-24",
+      "Authors@R": "c(person(\"Jonah\", \"Gabry\", role = c(\"aut\", \"cre\"), email = \"jgabry@gmail.com\"), person(\"Tristan\", \"Mahr\", role = \"aut\", comment = c(ORCID = \"0000-0002-8890-5116\")), person(\"Paul-Christian\", \"Bürkner\", role = \"ctb\"), person(\"Martin\", \"Modrák\", role = \"ctb\"), person(\"Malcolm\", \"Barrett\", role = \"ctb\"), person(\"Frank\", \"Weber\", role = \"ctb\"), person(\"Eduardo\", \"Coronado Sroka\", role = \"ctb\"), person(\"Teemu\", \"Sailynoja\", role = \"ctb\"), person(\"Aki\", \"Vehtari\", role = \"ctb\"), person(\"Behram\", \"Ulukır\", role = \"ctb\"), person(\"Visruth\", \"Srimath Kandali\", role = \"ctb\"), person(\"Mattan S.\", \"Ben-Shachar\", role = \"ctb\"), person(\"Ishaan\", \"Arora\", role = \"ctb\"), person(\"Utkarsh\", \"Pawade\", role = \"ctb\"), person(\"Florence\", \"Bockting\", role = \"ctb\"))",
       "Maintainer": "Jonah Gabry <jgabry@gmail.com>",
       "Description": "Plotting functions for posterior analysis, MCMC diagnostics, prior and posterior predictive checks, and other visualizations to support the applied Bayesian workflow advocated in Gabry, Simpson, Vehtari, Betancourt, and Gelman (2019) <doi:10.1111/rssa.12378>. The package is designed not only to provide convenient functionality for users, but also a common set of functions that can be easily used by developers working on a variety of R packages for Bayesian modeling, particularly (but not exclusively) packages interfacing with 'Stan'.",
       "License": "GPL (>= 3)",
       "URL": "https://mc-stan.org/bayesplot/",
       "BugReports": "https://github.com/stan-dev/bayesplot/issues/",
-      "SystemRequirements": "pandoc (>= 1.12.3), pandoc-citeproc",
+      "SystemRequirements": "pandoc (>= 1.12.3)",
       "Depends": [
         "R (>= 4.1.0)"
       ],
       "Imports": [
-        "dplyr (>= 0.8.0)",
-        "ggplot2 (>= 3.4.0)",
+        "dplyr (>= 1.0.0)",
+        "ggdist",
+        "ggplot2 (>= 3.5.0)",
         "ggridges (>= 0.5.5)",
         "glue",
-        "posterior",
+        "lifecycle",
+        "posterior (>= 1.7.0)",
         "reshape2",
-        "rlang (>= 0.3.0)",
+        "rlang (>= 1.0.0)",
         "stats",
         "tibble (>= 2.0.0)",
         "tidyr",
@@ -722,29 +734,32 @@
         "utils"
       ],
       "Suggests": [
-        "ggdist",
+        "cmdstanr",
         "ggfortify",
         "gridExtra (>= 2.2.1)",
         "hexbin",
         "knitr (>= 1.16)",
         "loo (>= 2.0.0)",
+        "monotone",
+        "patchwork",
         "RColorBrewer",
         "rmarkdown (>= 1.0.0)",
         "rstan (>= 2.17.1)",
         "rstanarm (>= 2.17.4)",
-        "rstantools (>= 1.5.0)",
+        "rstantools (>= 2.0.0)",
         "scales",
         "shinystan (>= 2.3.0)",
         "survival",
         "testthat (>= 3.0.0)",
         "vdiffr (>= 1.0.2)"
       ],
-      "RoxygenNote": "7.3.3",
       "VignetteBuilder": "knitr",
       "Encoding": "UTF-8",
       "Config/testthat/edition": "3",
+      "Additional_repositories": "https://stan-dev.r-universe.dev/",
+      "Config/roxygen2/version": "8.0.0",
       "NeedsCompilation": "no",
-      "Author": "Jonah Gabry [aut, cre], Tristan Mahr [aut] (ORCID: <https://orcid.org/0000-0002-8890-5116>), Paul-Christian Bürkner [ctb], Martin Modrák [ctb], Malcolm Barrett [ctb], Frank Weber [ctb], Eduardo Coronado Sroka [ctb], Teemu Sailynoja [ctb], Aki Vehtari [ctb], Behram Ulukır [ctb], Visruth Srimath Kandali [ctb]",
+      "Author": "Jonah Gabry [aut, cre], Tristan Mahr [aut] (ORCID: <https://orcid.org/0000-0002-8890-5116>), Paul-Christian Bürkner [ctb], Martin Modrák [ctb], Malcolm Barrett [ctb], Frank Weber [ctb], Eduardo Coronado Sroka [ctb], Teemu Sailynoja [ctb], Aki Vehtari [ctb], Behram Ulukır [ctb], Visruth Srimath Kandali [ctb], Mattan S. Ben-Shachar [ctb], Ishaan Arora [ctb], Utkarsh Pawade [ctb], Florence Bockting [ctb]",
       "Repository": "CRAN"
     },
     "bit": {
@@ -782,7 +797,7 @@
     },
     "bit64": {
       "Package": "bit64",
-      "Version": "4.8.2",
+      "Version": "4.8.6",
       "Source": "Repository",
       "Title": "A S3 Class for Vectors of 64bit Integers",
       "Authors@R": "c( person(\"Michael\", \"Chirico\", email=\"michaelchirico4@gmail.com\", role=c(\"aut\", \"cre\")), person(\"Jens\", \"Oehlschlägel\", role=\"aut\"), person(\"Leonardo\", \"Silvestri\", role=\"ctb\"), person(\"Ofek\", \"Shilon\", role=\"ctb\"), person(\"Christian\", \"Ullerich\", role=\"ctb\") )",
@@ -810,11 +825,11 @@
       "Config/testthat/edition": "3",
       "Config/Needs/development": "patrick, testthat",
       "Config/Needs/website": "tidyverse/tidytemplate",
-      "RoxygenNote": "7.3.3",
+      "Config/roxygen2/version": "8.0.0",
       "NeedsCompilation": "yes",
       "Author": "Michael Chirico [aut, cre], Jens Oehlschlägel [aut], Leonardo Silvestri [ctb], Ofek Shilon [ctb], Christian Ullerich [ctb]",
       "Maintainer": "Michael Chirico <michaelchirico4@gmail.com>",
-      "Repository": "https://packagemanager.posit.co/cran/latest"
+      "Repository": "CRAN"
     },
     "bridgesampling": {
       "Package": "bridgesampling",
@@ -955,7 +970,7 @@
     },
     "bslib": {
       "Package": "bslib",
-      "Version": "0.11.0",
+      "Version": "0.12.0",
       "Source": "Repository",
       "Title": "Custom 'Bootstrap' 'Sass' Themes for 'shiny' and 'rmarkdown'",
       "Authors@R": "c( person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"), person(\"Garrick\", \"Aden-Buie\", , \"garrick@posit.co\", role = \"aut\", comment = c(ORCID = \"0000-0002-7111-0077\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(, \"Bootstrap contributors\", role = \"ctb\", comment = \"Bootstrap library\"), person(, \"Twitter, Inc\", role = \"cph\", comment = \"Bootstrap library\"), person(\"Javi\", \"Aguilar\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap colorpicker library\"), person(\"Thomas\", \"Park\", role = c(\"ctb\", \"cph\"), comment = \"Bootswatch library\"), person(, \"PayPal\", role = c(\"ctb\", \"cph\"), comment = \"Bootstrap accessibility plugin\") )",
@@ -1008,7 +1023,7 @@
       "Config/testthat/parallel": "true",
       "Config/testthat/start-first": "zzzz-bs-sass, fonts, zzz-precompile, theme-*, rmd-*",
       "Encoding": "UTF-8",
-      "Collate": "'accordion.R' 'breakpoints.R' 'bs-current-theme.R' 'bs-dependencies.R' 'bs-global.R' 'bs-remove.R' 'bs-theme-layers.R' 'bs-theme-preset-bootswatch.R' 'bs-theme-preset-brand.R' 'bs-theme-preset-builtin.R' 'bs-theme-preset.R' 'utils.R' 'bs-theme-preview.R' 'bs-theme-update.R' 'bs-theme.R' 'bslib-package.R' 'buttons.R' 'card.R' 'deprecated.R' 'files.R' 'fill.R' 'imports.R' 'input-code-editor.R' 'input-dark-mode.R' 'input-submit.R' 'input-switch.R' 'layout.R' 'nav-items.R' 'nav-update.R' 'navbar_options.R' 'navs-legacy.R' 'navs.R' 'onLoad.R' 'page.R' 'popover.R' 'precompiled.R' 'print.R' 'shiny-devmode.R' 'sidebar.R' 'staticimports.R' 'toast.R' 'toolbar.R' 'tooltip.R' 'utils-deps.R' 'utils-shiny.R' 'utils-tags.R' 'value-box.R' 'version-default.R' 'versions.R'",
+      "Collate": "'accordion.R' 'breakpoints.R' 'bs-current-theme.R' 'bs-dependencies.R' 'bs-global.R' 'bs-remove.R' 'bs-theme-layers.R' 'bs-theme-preset-bootswatch.R' 'bs-theme-preset-brand.R' 'bs-theme-preset-builtin.R' 'bs-theme-preset.R' 'utils.R' 'bs-theme-preview.R' 'bs-theme-update.R' 'bs-theme.R' 'bslib-package.R' 'buttons.R' 'card.R' 'deprecated.R' 'files.R' 'fill.R' 'imports.R' 'input-code-editor.R' 'input-dark-mode.R' 'input-submit.R' 'input-switch.R' 'layout.R' 'nav-items.R' 'nav-update.R' 'navbar_options.R' 'navs-legacy.R' 'navs.R' 'offcanvas.R' 'onLoad.R' 'page.R' 'popover.R' 'precompiled.R' 'print.R' 'shiny-devmode.R' 'sidebar.R' 'staticimports.R' 'toast.R' 'toolbar.R' 'tooltip.R' 'utils-deps.R' 'utils-shiny.R' 'utils-tags.R' 'value-box.R' 'version-default.R' 'versions.R'",
       "NeedsCompilation": "no",
       "Author": "Carson Sievert [aut, cre] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Joe Cheng [aut], Garrick Aden-Buie [aut] (ORCID: <https://orcid.org/0000-0002-7111-0077>), Posit Software, PBC [cph, fnd], Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Javi Aguilar [ctb, cph] (Bootstrap colorpicker library), Thomas Park [ctb, cph] (Bootswatch library), PayPal [ctb, cph] (Bootstrap accessibility plugin)",
       "Maintainer": "Carson Sievert <carson@posit.co>",
@@ -1421,7 +1436,7 @@
     },
     "curl": {
       "Package": "curl",
-      "Version": "7.1.0",
+      "Version": "8.1.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Modern and Flexible Web Client for R",
@@ -1445,13 +1460,13 @@
       "Depends": [
         "R (>= 3.0.0)"
       ],
-      "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
       "Language": "en-US",
+      "Config/roxygen2/version": "8.0.0",
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Hadley Wickham [ctb], Posit Software, PBC [cph]",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-      "Repository": "https://packagemanager.posit.co/cran/latest"
+      "Repository": "CRAN"
     },
     "data.table": {
       "Package": "data.table",
@@ -3095,6 +3110,92 @@
       "URL": "https://github.com/HenrikBengtsson/matrixStats",
       "BugReports": "https://github.com/HenrikBengtsson/matrixStats/issues",
       "RoxygenNote": "7.3.2",
+      "Repository": "CRAN"
+    },
+    "mclogit": {
+      "Package": "mclogit",
+      "Version": "0.9.15",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Multinomial Logit Models for Categorical Responses and Discrete Choices",
+      "Date": "2025-12-15",
+      "Authors@R": "person(given = \"Martin\", family = \"Elff\", role = c(\"aut\", \"cre\"), email = \"martin@elff.eu\")",
+      "Maintainer": "Martin Elff <martin@elff.eu>",
+      "Description": "Provides estimators for multinomial logit models in their conditional logit (for discrete choices) and baseline logit variants (for categorical responses), optionally with overdispersion or random effects. Random effects models are estimated using the PQL technique (based on a Laplace approximation) or the MQL technique (based on a Solomon-Cox approximation). Estimates should be treated with caution if the group sizes are small.",
+      "License": "GPL-2",
+      "Depends": [
+        "stats",
+        "Matrix"
+      ],
+      "Imports": [
+        "MASS",
+        "memisc",
+        "methods",
+        "nlme"
+      ],
+      "Suggests": [
+        "nnet",
+        "ucminf",
+        "knitr",
+        "rmarkdown"
+      ],
+      "LazyLoad": "Yes",
+      "VignetteBuilder": "knitr",
+      "URL": "http://melff.github.io/mclogit/,https://github.com/melff/mclogit/",
+      "BugReports": "https://github.com/melff/mclogit/issues",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
+      "NeedsCompilation": "no",
+      "Author": "Martin Elff [aut, cre]",
+      "Repository": "CRAN"
+    },
+    "memisc": {
+      "Package": "memisc",
+      "Version": "0.99.31.8.3",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Management of Survey Data and Presentation of Analysis Results",
+      "Date": "2025-04-13",
+      "Authors@R": "c(person(given = \"Martin\", family = \"Elff\", role = c(\"aut\", \"cre\"), email = \"memisc@elff.eu\"), person(given = \"Christopher N.\", family = \"Lawrence\", role = \"ctb\"), person(given = \"Dave\", family = \"Atkins\", role = \"ctb\"), person(given = \"Jason W.\", family = \"Morgan\", role = \"ctb\"), person(given = \"Achim\", family = \"Zeileis\", role = \"ctb\"), person(given = \"Mael\", family = \"Astruc-Le Souder\", role = \"ctb\"), person(given = \"Kiril\", family = \"Mueller\", role = \"ctb\"), person(given = \"Pieter\", family = \"Schoonees\", role = \"ctb\"))",
+      "Maintainer": "Martin Elff <memisc@elff.eu>",
+      "Description": "An infrastructure for the management of survey data including value labels, definable missing values, recoding of variables, production of code books, and import of (subsets of) 'SPSS' and 'Stata' files is provided. Further, the package allows to produce tables and data frames of arbitrary descriptive statistics and (almost) publication-ready tables of regression model estimates, which can be exported to 'LaTeX' and HTML.",
+      "License": "GPL-2 | GPL-3",
+      "LazyLoad": "Yes",
+      "Depends": [
+        "R (>= 3.3.0)",
+        "lattice",
+        "stats",
+        "methods",
+        "utils",
+        "MASS"
+      ],
+      "Suggests": [
+        "splines",
+        "knitr",
+        "rmarkdown",
+        "sandwich"
+      ],
+      "Enhances": [
+        "AER",
+        "car",
+        "eha",
+        "lme4",
+        "ordinal",
+        "simex",
+        "tibble",
+        "haven"
+      ],
+      "Imports": [
+        "grid",
+        "data.table",
+        "yaml",
+        "jsonlite"
+      ],
+      "VignetteBuilder": "knitr",
+      "URL": "https://melff.github.io/memisc/,https://github.com/melff/memisc/",
+      "BugReports": "https://github.com/melff/memisc/issues",
+      "NeedsCompilation": "yes",
+      "Author": "Martin Elff [aut, cre], Christopher N. Lawrence [ctb], Dave Atkins [ctb], Jason W. Morgan [ctb], Achim Zeileis [ctb], Mael Astruc-Le Souder [ctb], Kiril Mueller [ctb], Pieter Schoonees [ctb]",
       "Repository": "CRAN"
     },
     "memoise": {
