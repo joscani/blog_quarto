@@ -6,8 +6,11 @@
 # llama a este). GUIA.md tiene los detalles:
 #
 #   1. baja las encuestas nuevas (scrape incremental) y reconstruye los CSV
-#   2. compara la huella de los ficheros de entrada con la de antes de bajar:
-#      si no han cambiado, no hay nada que re-ajustar (salvo --forzar)
+#   2. compara la huella (md5) de los ficheros de entrada con la del ÚLTIMO
+#      AJUSTE (vivo/huella_entradas.csv): si coinciden, no hay nada que
+#      re-ajustar (salvo --forzar). Hasta el 7 nov 2026 se comparaba con la
+#      de antes de bajar, y fallaba si otro proceso ya había bajado las
+#      encuestas (scripts/actualizar.sh de las slides, u otro equipo vía git)
 #   3. si han cambiado: 12_ajustar_conjunto.R (el modelo) + 16 (ablación)
 #      + 17 (Omega). El tracker solo necesita el modelo de Stan: los brms
 #      de la comparación con octubre (05) y sus reajustes solo corren con
@@ -59,15 +62,26 @@ run <- function(script, ...) {
 
 # ---- 1. datos ---------------------------------------------------------------
 
-antes <- hash()
 log("1. bajar encuestas nuevas y reconstruir los CSV")
 source(here::here("2026/10/preparar_meta.R"))
 preparar_todo(actualizar = TRUE)
 
-cambiado <- names(inputs)[antes != hash()]
+# huella (md5) de las entradas con las que se hizo el último ajuste correcto.
+# Se compara con ella y no con la de antes de bajar: si otro proceso ya bajó
+# las encuestas (scripts/actualizar.sh de las slides, u otro equipo vía git),
+# la descarga de aquí no cambia nada, pero el ajuste sigue sin ellas. Si falta
+# el fichero, se reajusta
+f_huella <- file.path(dir_fb, "vivo", "huella_entradas.csv")
+previa <- if (file.exists(f_huella)) {
+  h <- read.csv(f_huella, colClasses = "character")
+  h$md5[match(names(inputs), h$entrada)]
+} else {
+  rep(NA_character_, length(inputs))
+}
+cambiado <- names(inputs)[is.na(previa) | previa != hash()]
 if (length(cambiado) == 0 && !forzar) {
   log(
-    "Los datos de entrada no han cambiado: nada que re-ajustar. ",
+    "Las entradas son las del último ajuste: nada que re-ajustar. ",
     "(Si ha bajado una encuesta nueva, ha quedado excluida por las reglas ",
     "de inclusión; ver GUIA.md, sección 4. --forzar para reajustar igualmente.)"
   )
@@ -81,6 +95,13 @@ log("2. modelo conjunto (12) y derivados (16, 17)")
 run(file.path(dir_fb, "12_ajustar_conjunto.R"), "principal")
 run(file.path(dir_fb, "16_ablacion_error.R"))
 run(file.path(dir_fb, "17_sensibilidad_omega.R"))
+# solo tras un ajuste correcto: si algo falla antes, la próxima vez reajusta
+write.csv(
+  data.frame(entrada = names(inputs), md5 = hash()),
+  f_huella,
+  row.names = FALSE
+)
+log("Huella de las entradas guardada en vivo/huella_entradas.csv")
 
 # ---- 3. comparación con el pipeline de octubre (05), solo a petición ----------
 # El tracker solo necesita el modelo de Stan. 05 simula el escenario mapa con

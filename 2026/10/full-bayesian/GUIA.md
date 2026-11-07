@@ -84,13 +84,21 @@ Rscript 2026/10/full-bayesian/actualizar_full_bayesian.R --sin-render     # solo
 Rscript 2026/10/full-bayesian/actualizar_full_bayesian.R --sin-publicar   # no toca la release
 ```
 
-Cómo decide: toma la huella md5 de los cuatro ficheros de entrada
-(`encuestas_meta_grande_sep.csv`, `encuestas_meta_bloque.csv`,
-`encuestas_meta_agregadas.csv`, `errores_autonomicas.csv`), baja las
-encuestas nuevas y vuelve a tomarla. Si no ha cambiado nada —porque la
-encuesta nueva acaba excluida, como las de NC Report que no publican
-SALF— no hay nada que re-ajustar y termina sin tocar nada. Si algo ha
-cambiado, reajusta lo que depende de lo cambiado y nada más.
+Cómo decide: baja las encuestas nuevas y compara la huella md5 de los
+cuatro ficheros de entrada (`encuestas_meta_grande_sep.csv`,
+`encuestas_meta_bloque.csv`, `encuestas_meta_agregadas.csv`,
+`errores_autonomicas.csv`) con la del **último ajuste correcto**, guardada en
+`vivo/huella_entradas.csv` (en git). Si coinciden —porque no hay encuestas
+nuevas, o porque la nueva acaba excluida, como las de NC Report que no
+publican SALF— no hay nada que re-ajustar y termina sin tocar nada. Si algo
+ha cambiado, reajusta lo que depende de lo cambiado y nada más. Si falta
+`huella_entradas.csv`, reajusta.
+
+Hasta el 7 nov 2026 comparaba con la huella de antes de bajar. Fallaba si
+otro proceso ya había bajado las encuestas: `scripts/actualizar.sh` de las
+slides (`bayesian-metaanalisis`), que también sube los CSV al blog, u otro
+equipo vía git. La descarga de aquí no cambiaba nada y el modelo no se
+reajustaba.
 
 Lo que **no** hace (a mano, y no por encuesta nueva):
 
