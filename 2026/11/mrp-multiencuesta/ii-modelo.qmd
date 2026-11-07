@@ -106,7 +106,9 @@ suppressPackageStartupMessages({
 dir_proy <- here::here("2026/11/mrp-multiencuesta")
 dir_datos <- file.path(dir_proy, "datos")
 read_csv_here <- function(f) read.csv(file.path(dir_proy, f))
-num <- function(x, d = 0) format(round(x, d), big.mark = ".", decimal.mark = ",", nsmall = d)
+num <- function(x, d = 0) {
+  format(round(x, d), big.mark = ".", decimal.mark = ",", nsmall = d)
+}
 
 celdas <- readRDS(file.path(dir_datos, "celdas_brms.rds"))
 provincias <- readRDS(file.path(dir_datos, "estim_escanos_mrp.rds"))$prov_ref |>
@@ -140,7 +142,8 @@ ggplot(n_prov, aes(n, reorder(provincia, n))) +
   scale_fill_manual(values = c(`FALSE` = "grey60", `TRUE` = "#d95f02")) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
   labs(
-    x = "entrevistas con voto válido (nueve encuestas)", y = NULL,
+    x = "entrevistas con voto válido (nueve encuestas)",
+    y = NULL,
     caption = "Sin las filas de More in Common y Ateneo del Dato que no tienen provincia."
   ) +
   theme_minimal(base_size = 10) +
@@ -170,7 +173,9 @@ soria |>
   gt(rowname_col = "rec") |>
   sub_missing(missing_text = "·") |>
   tab_stubhead("recuerdo 23-J") |>
-  tab_caption("Entrevistas de Soria por recuerdo y edad (nueve encuestas). Un punto: ninguna.")
+  tab_caption(
+    "Entrevistas de Soria por recuerdo y edad (nueve encuestas). Un punto: ninguna."
+  )
 ```
 
 La población, en cambio, no tiene esos huecos. La misma tabla con los
@@ -195,7 +200,9 @@ pob_rec_edad |>
   gt(rowname_col = "rec") |>
   sub_missing(missing_text = "·") |>
   tab_stubhead("recuerdo 23-J") |>
-  tab_caption("Población de Soria por recuerdo y edad (tabla de postestratificación). Un punto: nadie.")
+  tab_caption(
+    "Población de Soria por recuerdo y edad (tabla de postestratificación). Un punto: nadie."
+  )
 ```
 
 Dos detalles de la tabla de población: los que en 2023 no podían votar solo
@@ -205,7 +212,6 @@ población: por eso el modelo ni se plantea repartirles escaños allí.
 
 
 ```{r}
-
 soria_celdas <- soria |> summarise(n = sum(n), .by = c(sexo, edad, edu, rec))
 n_celdas_soria <- sum(pob_soria > 0)
 n_celdas_total <- sum(tabla_pob > 0)
@@ -280,7 +286,9 @@ sin_prov |>
   arrange(provincia, desc(`More in Common`)) |>
   mutate(ccaa = as.character(ccaa)) |>
   gt(rowname_col = "ccaa", groupname_col = "provincia") |>
-  tab_caption("Entrevistas con voto válido de More in Common y Ateneo del Dato, por CCAA.")
+  tab_caption(
+    "Entrevistas con voto válido de More in Common y Ateneo del Dato, por CCAA."
+  )
 ```
 
 Son `r num(n_sin_prov)` entrevistas sin provincia, un
@@ -346,16 +354,23 @@ mun <- readRDS(file.path(dir_datos, "mun_23j.rds")) |>
   filter(codigo_provincia %in% c("35", "38"))
 
 validos <- mun |>
-  distinct(codigo_provincia, codigo_municipio, votos_candidaturas, votos_blancos) |>
+  distinct(
+    codigo_provincia,
+    codigo_municipio,
+    votos_candidaturas,
+    votos_blancos
+  ) |>
   group_by(codigo_provincia) |>
   summarise(validos = sum(votos_candidaturas + votos_blancos))
 
 canarias <- mun |>
-  mutate(g = case_when(
-    siglas == "CCa" ~ "CC",
-    siglas %in% c("PP", "PSOE") ~ "PP+PSOE",
-    TRUE ~ "resto"
-  )) |>
+  mutate(
+    g = case_when(
+      siglas == "CCa" ~ "CC",
+      siglas %in% c("PP", "PSOE") ~ "PP+PSOE",
+      TRUE ~ "resto"
+    )
+  ) |>
   group_by(codigo_provincia, g) |>
   summarise(votos = sum(votos), .groups = "drop") |>
   left_join(validos, by = "codigo_provincia") |>
@@ -464,12 +479,18 @@ Andalucía:
 ```{r aa}
 celdas |>
   filter(ccaa == "Andalucía") |>
-  summarise(entrevistas = sum(n), `menciones de AA` = sum(AA), .by = c(estudio, sin_aa)) |>
+  summarise(
+    entrevistas = sum(n),
+    `menciones de AA` = sum(AA),
+    .by = c(estudio, sin_aa)
+  ) |>
   mutate(`¿ofrece AA?` = if_else(sin_aa, "no", "sí")) |>
   arrange(sin_aa, estudio) |>
   select(estudio, `¿ofrece AA?`, entrevistas, `menciones de AA`) |>
   gt() |>
-  tab_caption("Andalucía: entrevistas con voto válido y menciones de AA por encuesta.")
+  tab_caption(
+    "Andalucía: entrevistas con voto válido y menciones de AA por encuesta."
+  )
 ```
 
 Las encuestas que ofrecen AA le dan entre un 3 y un 6 % de las menciones en
@@ -586,21 +607,23 @@ cruda9 <- celdas |>
   pivot_longer(c(PP, PSOE, VOX), names_to = "partido", values_to = "y")
 
 celdas_fig <- tribble(
-  ~partido, ~prov, ~sexo, ~edad,   ~edu,    ~rec,
-  "PSOE",   "40",  "M",   "65+",   "baja",  "PSOE",
-  "VOX",    "35",  "H",   "25-34", "media", "PSOE",
-  "VOX",    "35",  "H",   "25-34", "media", "PP",
-  "PP",     "46",  "M",   "65+",   "alta",  "PP",
-  "VOX",    "28",  "H",   "25-34", "alta",  "PP",
-  "PP",     "28",  "H",   "55-64", "alta",  "PP"
+  ~partido , ~prov , ~sexo , ~edad   , ~edu    , ~rec   ,
+  "PSOE"   , "40"  , "M"   , "65+"   , "baja"  , "PSOE" ,
+  "VOX"    , "35"  , "H"   , "25-34" , "media" , "PSOE" ,
+  "VOX"    , "35"  , "H"   , "25-34" , "media" , "PP"   ,
+  "PP"     , "46"  , "M"   , "65+"   , "alta"  , "PP"   ,
+  "VOX"    , "28"  , "H"   , "25-34" , "alta"  , "PP"   ,
+  "PP"     , "28"  , "H"   , "55-64" , "alta"  , "PP"
 )
 
 a_chr <- \(d) mutate(d, across(all_of(claves), as.character))
 
 fig <- celdas_fig |>
   left_join(a_chr(cruda9), by = c("partido", claves)) |>
-  left_join(a_chr(d_pool) |> select(all_of(c("partido", claves)), media, q05, q95),
-            by = c("partido", claves)) |>
+  left_join(
+    a_chr(d_pool) |> select(all_of(c("partido", claves)), media, q05, q95),
+    by = c("partido", claves)
+  ) |>
   left_join(provincias, by = "prov") |>
   rowwise() |>
   mutate(
@@ -610,26 +633,52 @@ fig <- celdas_fig |>
   ungroup() |>
   mutate(
     estudios = c(baja = "bajos", media = "medios", alta = "altos")[edu],
-    etq = sprintf("%s · %s %s · estudios %s · rec. %s → %s  (n = %d)",
-                  provincia, sexo, edad, estudios, rec, partido, n),
+    etq = sprintf(
+      "%s · %s %s · estudios %s · rec. %s → %s  (n = %d)",
+      provincia,
+      sexo,
+      edad,
+      estudios,
+      rec,
+      partido,
+      n
+    ),
     etq = reorder(etq, -n)
   )
 
 ggplot(fig, aes(y = etq)) +
-  geom_linerange(aes(xmin = 100 * cp_lo, xmax = 100 * cp_hi),
-                 color = "grey70", linewidth = 2.5,
-                 position = position_nudge(y = 0.15)) +
-  geom_point(aes(x = 100 * y / n), color = "grey40", size = 2.5,
-             position = position_nudge(y = 0.15)) +
-  geom_linerange(aes(xmin = 100 * q05, xmax = 100 * q95),
-                 color = "#d95f02", linewidth = 2.5,
-                 position = position_nudge(y = -0.15)) +
-  geom_point(aes(x = 100 * media), color = "#a63603", size = 2.5,
-             position = position_nudge(y = -0.15)) +
-  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
-                     labels = \(x) paste0(x, " %")) +
+  geom_linerange(
+    aes(xmin = 100 * cp_lo, xmax = 100 * cp_hi),
+    color = "grey70",
+    linewidth = 2.5,
+    position = position_nudge(y = 0.15)
+  ) +
+  geom_point(
+    aes(x = 100 * y / n),
+    color = "grey40",
+    size = 2.5,
+    position = position_nudge(y = 0.15)
+  ) +
+  geom_linerange(
+    aes(xmin = 100 * q05, xmax = 100 * q95),
+    color = "#d95f02",
+    linewidth = 2.5,
+    position = position_nudge(y = -0.15)
+  ) +
+  geom_point(
+    aes(x = 100 * media),
+    color = "#a63603",
+    size = 2.5,
+    position = position_nudge(y = -0.15)
+  ) +
+  scale_x_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 25),
+    labels = \(x) paste0(x, " %")
+  ) +
   labs(
-    x = "probabilidad de votar al partido", y = NULL,
+    x = "probabilidad de votar al partido",
+    y = NULL,
     caption = "Gris: proporción cruda (nueve encuestas) e IC90 de Clopper-Pearson. Naranja: modelo, media e IC90 (casa media).\nLa cruda es de casas concretas y el modelo, de la casa media: parte de la distancia puede ser efecto casa."
   ) +
   theme_minimal() +
@@ -644,12 +693,24 @@ votará al PP:
 partidos_fig <- c("PP", "PSOE", "VOX", "SUMAR", "BILDU")
 
 celdas |>
-  filter(prov == "40", sexo == "M", edad == "65+", edu == "baja", rec == "PSOE") |>
+  filter(
+    prov == "40",
+    sexo == "M",
+    edad == "65+",
+    edu == "baja",
+    rec == "PSOE"
+  ) |>
   select(all_of(partidos_fig), n) |>
   pivot_longer(-n, names_to = "partido", values_to = "encuestadas") |>
   left_join(
     d_pool |>
-      filter(prov == "40", sexo == "M", edad == "65+", edu == "baja", rec == "PSOE") |>
+      filter(
+        prov == "40",
+        sexo == "M",
+        edad == "65+",
+        edu == "baja",
+        rec == "PSOE"
+      ) |>
       select(partido, media),
     by = "partido"
   ) |>
@@ -660,8 +721,14 @@ celdas |>
   select(partido, encuestadas, modelo) |>
   gt() |>
   sub_missing(missing_text = "·") |>
-  cols_label(partido = "partido", encuestadas = "encuestadas", modelo = "el modelo") |>
-  tab_caption("La celda de la primera fila de la figura: lo que contesta su única encuestada y lo que estima el modelo. Un punto: nadie la elige.")
+  cols_label(
+    partido = "partido",
+    encuestadas = "encuestadas",
+    modelo = "el modelo"
+  ) |>
+  tab_caption(
+    "La celda de la primera fila de la figura: lo que contesta su única encuestada y lo que estima el modelo. Un punto: nadie la elige."
+  )
 ```
 
 Con una sola entrevista el modelo no tiene demasiado que aprender de esa celda,
@@ -710,7 +777,10 @@ stopifnot(psoe_mue > pp_mue, pp_pob > psoe_pob)
 
 pe |>
   bind_rows(tibble(
-    rec = c("voto ponderando con la muestra", "voto ponderando con la población"),
+    rec = c(
+      "voto ponderando con la muestra",
+      "voto ponderando con la población"
+    ),
     p_psoe = c(psoe_mue, psoe_pob) / 100,
     p_pp = c(pp_mue, pp_pob) / 100
   )) |>
@@ -718,14 +788,18 @@ pe |>
   gt(rowname_col = "rec") |>
   tab_stubhead("recuerdo 23-J") |>
   cols_label(
-    muestra = "% en la muestra", poblacion = "% en la población",
-    p_psoe = "P(PSOE | recuerdo)", p_pp = "P(PP | recuerdo)"
+    muestra = "% en la muestra",
+    poblacion = "% en la población",
+    p_psoe = "P(PSOE | recuerdo)",
+    p_pp = "P(PP | recuerdo)"
   ) |>
   fmt_number(decimals = 1, dec_mark = ",", sep_mark = ".") |>
   sub_missing(missing_text = "") |>
   tab_style(cell_text(weight = "bold"), cells_body(rows = 8:9)) |>
   tab_style(cell_text(weight = "bold"), cells_stub(rows = 8:9)) |>
-  tab_caption("Probabilidades del modelo: casa media y si votara todo el mundo.")
+  tab_caption(
+    "Probabilidades del modelo: casa media y si votara todo el mundo."
+  )
 ```
 
 La muestra trae un `r num(100 * pe$muestra[pe$rec == "PSOE"], 1)` % de
@@ -771,7 +845,9 @@ res_stan <- read_csv_here("escanos_mrp_resumen.csv")
 res_stan |>
   mutate(across(where(is.numeric), ~ round(.x, 1))) |>
   gt() |>
-  tab_caption("Escaños del Congreso (D'Hondt por provincia sobre el posterior por celda, casa media, con participación). Mediana, media e IC90 por draw. `escanos`: medias redondeadas por resto mayor para que sumen 350. `p_mas_esc`: probabilidad de ser el partido con más escaños.")
+  tab_caption(
+    "Escaños del Congreso (D'Hondt por provincia sobre el posterior por celda, casa media, con participación). Mediana, media e IC90 por draw. `escanos`: medias redondeadas por resto mayor para que sumen 350. `p_mas_esc`: probabilidad de ser el partido con más escaños."
+  )
 ```
 
 ```{r escanos-dist}
@@ -791,7 +867,8 @@ as.data.frame(est$totales) |>
   scale_x_continuous(breaks = \(x) unique(floor(pretty(x)))) +
   scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
   labs(
-    x = "escaños", y = "probabilidad",
+    x = "escaños",
+    y = "probabilidad",
     caption = "1.000 draws de la posterior; D'Hondt por provincia en cada uno. Casa media, con participación."
   ) +
   theme_minimal()
@@ -800,13 +877,17 @@ as.data.frame(est$totales) |>
 ```{r stan-mayorias}
 n_draws <- nrow(est$totales)
 read.csv(file.path(dir_proy, "escanos_mrp_mayorias.csv")) |>
-  mutate(prob = case_when(
-    prob == 0 ~ sprintf("< %s %%", num(100 / n_draws, 1)),
-    prob == 1 ~ sprintf("> %s %%", num(100 - 100 / n_draws, 1)),
-    TRUE ~ paste(num(100 * prob, 1), "%")
-  )) |>
+  mutate(
+    prob = case_when(
+      prob == 0 ~ sprintf("< %s %%", num(100 / n_draws, 1)),
+      prob == 1 ~ sprintf("> %s %%", num(100 - 100 / n_draws, 1)),
+      TRUE ~ paste(num(100 * prob, 1), "%")
+    )
+  ) |>
   gt() |>
-  tab_caption("Probabilidades de mayoría (casa media, sin error del consenso). Investidura: el bloque de la investidura del 23-J más CC y AA.")
+  tab_caption(
+    "Probabilidades de mayoría (casa media, sin error del consenso). Investidura: el bloque de la investidura del 23-J más CC y AA."
+  )
 ```
 
 Ojo con ese "más del 99,9 %". No es que sea seguro: es que en los
@@ -861,7 +942,9 @@ res_rtmb <- read_csv_here("escanos_mrp_rtmb_resumen.csv")
 res_rtmb |>
   mutate(across(where(is.numeric), ~ round(.x, 1))) |>
   gt() |>
-  tab_caption("Escaños con RTMB (Laplace), el mismo modelo y datos que la tabla de Stan.")
+  tab_caption(
+    "Escaños con RTMB (Laplace), el mismo modelo y datos que la tabla de Stan."
+  )
 ```
 
 | backend | voto | participación |
