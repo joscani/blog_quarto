@@ -446,7 +446,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Fecha de última modificación</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">4 de noviembre de 2026</p>
+      <p class="date-modified">7 de noviembre de 2026</p>
     </div>
   </div>
     
@@ -630,7 +630,7 @@ Tabla&nbsp;1: Ratio de cada partido en tres provincias (voto en la provincia / v
 <h2 class="anchored" data-anchor-id="sec-shock">Paso 3. ¿Y si la geografía del voto ha cambiado?</h2>
 <p>Un partido no conserva exactamente su patrón entre elecciones. Por eso aplico al ratio un cambio al azar con dos partes:</p>
 <ul>
-<li><strong>Una común a la comunidad:</strong> afecta a todas las provincias de Andalucía. Sirve para casos como el PSC, que en 2023 subió en toda Cataluña.</li>
+<li><strong>Una común a la comunidad:</strong> mueve juntas todas las provincias de Andalucía. Así se movieron las provincias catalanas con el PSC en 2023. Es un cambio sin dirección: no predice un salto así, solo lo hace posible.</li>
 <li><strong>Otra propia de la provincia:</strong> afecta solo a Granada.</li>
 </ul>
 <p>A este cambio lo llamo <strong>shock</strong>.</p>
@@ -675,6 +675,143 @@ Tabla&nbsp;1: Ratio de cada partido en tres provincias (voto en la provincia / v
 </div>
 <p>En este sorteo, los dos cambios juntos multiplican el ratio de Granada por 0,89. Así, el ratio pasa de 1,30 a <strong>1,16</strong>.</p>
 <p><strong>¿Cómo de grande es el cambio?</strong> No lo elijo yo: sale de cuánto se movieron los ratios en elecciones pasadas. Para VOX, un cambio típico multiplica o divide el ratio por 1,26, antes de los ajustes del paso siguiente. Los valores <strong>tau</strong> indican precisamente eso: si los cambios de un partido suelen ser grandes o pequeños.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Un ejemplo con dos comunidades y cinco provincias
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Las cifras son inventadas. Es un sorteo del PP con solo cinco provincias, que hacen de toda España, y un voto nacional del 30 %. Cada provincia tiene su peso en votos: Granada 0,10, Almería 0,07, Sevilla 0,20, Barcelona 0,50 y Girona 0,13.</p>
+<p>En este sorteo, la parte común <code>eta</code> vale +0,08 en Andalucía y −0,05 en Cataluña. Cada provincia recibe además su parte propia <code>eps</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Provincia</th>
+<th style="text-align: right;"><code>eta</code></th>
+<th style="text-align: right;"><code>eps</code></th>
+<th style="text-align: right;"><code>eta + eps</code></th>
+<th style="text-align: right;">Multiplicador</th>
+<th style="text-align: right;">Ratio: 23J → con shock</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Granada</td>
+<td style="text-align: right;">+0,08</td>
+<td style="text-align: right;">−0,10</td>
+<td style="text-align: right;">−0,02</td>
+<td style="text-align: right;">0,980</td>
+<td style="text-align: right;">1,365 → 1,338</td>
+</tr>
+<tr class="even">
+<td>Almería</td>
+<td style="text-align: right;">+0,08</td>
+<td style="text-align: right;">+0,06</td>
+<td style="text-align: right;">+0,14</td>
+<td style="text-align: right;">1,150</td>
+<td style="text-align: right;">1,522 → 1,751</td>
+</tr>
+<tr class="odd">
+<td>Sevilla</td>
+<td style="text-align: right;">+0,08</td>
+<td style="text-align: right;">+0,02</td>
+<td style="text-align: right;">+0,10</td>
+<td style="text-align: right;">1,105</td>
+<td style="text-align: right;">1,207 → 1,334</td>
+</tr>
+<tr class="even">
+<td>Barcelona</td>
+<td style="text-align: right;">−0,05</td>
+<td style="text-align: right;">+0,03</td>
+<td style="text-align: right;">−0,02</td>
+<td style="text-align: right;">0,980</td>
+<td style="text-align: right;">0,840 → 0,823</td>
+</tr>
+<tr class="odd">
+<td>Girona</td>
+<td style="text-align: right;">−0,05</td>
+<td style="text-align: right;">−0,04</td>
+<td style="text-align: right;">−0,09</td>
+<td style="text-align: right;">0,914</td>
+<td style="text-align: right;">0,735 → 0,672</td>
+</tr>
+</tbody>
+</table>
+<p>Las tres provincias andaluzas comparten <code>eta</code> y suben juntas. <code>eps</code> las separa: Granada recibe −0,10 y queda por debajo de su ratio del 23J, aunque Andalucía sube.</p>
+<p>La media ponderada de los ratios con shock vale 1,022. Sin el recentrado del paso 4, el PP pasaría del 30 % al 30,7 % en España. Al dividir entre 1,022:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Provincia</th>
+<th style="text-align: right;">Ratio recentrado</th>
+<th style="text-align: right;">Voto con el ratio del 23J (%)</th>
+<th style="text-align: right;">Voto en este sorteo (%)</th>
+<th style="text-align: right;">Cambio (puntos)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Granada</td>
+<td style="text-align: right;">1,309</td>
+<td style="text-align: right;">40,9</td>
+<td style="text-align: right;">39,3</td>
+<td style="text-align: right;">−1,6</td>
+</tr>
+<tr class="even">
+<td>Almería</td>
+<td style="text-align: right;">1,713</td>
+<td style="text-align: right;">45,7</td>
+<td style="text-align: right;">51,4</td>
+<td style="text-align: right;">+5,7</td>
+</tr>
+<tr class="odd">
+<td>Sevilla</td>
+<td style="text-align: right;">1,305</td>
+<td style="text-align: right;">36,2</td>
+<td style="text-align: right;">39,2</td>
+<td style="text-align: right;">+3,0</td>
+</tr>
+<tr class="even">
+<td>Barcelona</td>
+<td style="text-align: right;">0,805</td>
+<td style="text-align: right;">25,2</td>
+<td style="text-align: right;">24,2</td>
+<td style="text-align: right;">−1,0</td>
+</tr>
+<tr class="odd">
+<td>Girona</td>
+<td style="text-align: right;">0,657</td>
+<td style="text-align: right;">22,0</td>
+<td style="text-align: right;">19,7</td>
+<td style="text-align: right;">−2,3</td>
+</tr>
+</tbody>
+</table>
+<p>El voto en España sigue en el 30 %: el shock solo mueve voto de Cataluña a Andalucía, y de Granada a Almería y Sevilla. El voto de cada provincia es 30 × su ratio.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="sec-ajustes" class="level2">
 <h2 class="anchored" data-anchor-id="sec-ajustes">Paso 4. ¿Siguen cuadrando las cuentas?</h2>
@@ -691,7 +828,7 @@ Tabla&nbsp;1: Ratio de cada partido en tres provincias (voto en la provincia / v
 </div>
 <p>El voto nacional lo decide el modelo, no estos cambios al azar. En este sorteo, la media de los ratios de VOX en las 52 provincias, ponderada por sus votos, vale 1,040. Debería valer 1. Por eso divido todos sus ratios entre 1,040, y el de Granada queda en <strong>1,12</strong>.</p>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -700,7 +837,7 @@ Tabla&nbsp;1: Ratio de cada partido en tres provincias (voto en la provincia / v
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>La provincia A tiene el 60 % de los votos y la B, el 40 %. Las dos parten de un ratio de 1. El shock lleva A a 1,10 y B a 0,95.</p>
 <p>La media ponderada es 0,6 × 1,10 + 0,4 × 0,95 = 1,04. Sin más, el partido ganaría un 4 % de voto nacional. Si divido entre 1,04, A queda en 1,058 y B en 0,913, y la media vuelve a 1. El partido solo ha movido voto de B a A.</p>

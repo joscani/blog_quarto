@@ -3,7 +3,7 @@ title: "Cómo repartimos el voto por provincias"
 description: 'Del voto nacional a los escaños de cada provincia, explicado paso a paso con VOX en Granada. Página de referencia para los posts de las generales de 2026.'
 author: 'José Luis Cañadas Reche'
 date: '2026-11-04'
-date-modified: '2026-11-04'
+date-modified: '2026-11-07'
 lang: es
 toc: true
 toc-depth: 2
@@ -126,8 +126,9 @@ El modelo de encuestas da a VOX un `r num_es(voto_vox, 2)` % en España. Multipl
 Un partido no conserva exactamente su patrón entre elecciones. Por eso aplico al ratio un
 cambio al azar con dos partes:
 
-- **Una común a la comunidad:** afecta a todas las provincias de Andalucía. Sirve para
-  casos como el PSC, que en 2023 subió en toda Cataluña.
+- **Una común a la comunidad:** mueve juntas todas las provincias de Andalucía. Así se
+  movieron las provincias catalanas con el PSC en 2023. Es un cambio sin dirección: no
+  predice un salto así, solo lo hace posible.
 - **Otra propia de la provincia:** afecta solo a Granada.
 
 A este cambio lo llamo **shock**.
@@ -178,6 +179,42 @@ En este sorteo, los dos cambios juntos multiplican el ratio de Granada por
 elecciones pasadas. Para VOX, un cambio típico multiplica o divide el ratio por
 `r num_es(exp(tau_total_vox), 2)`, antes de los ajustes del paso siguiente. Los valores
 **tau** indican precisamente eso: si los cambios de un partido suelen ser grandes o pequeños.
+
+::: {.callout-note collapse="true"}
+## Un ejemplo con dos comunidades y cinco provincias
+
+Las cifras son inventadas. Es un sorteo del PP con solo cinco provincias, que hacen de
+toda España, y un voto nacional del 30 %. Cada provincia tiene su peso en votos: Granada
+0,10, Almería 0,07, Sevilla 0,20, Barcelona 0,50 y Girona 0,13.
+
+En este sorteo, la parte común `eta` vale +0,08 en Andalucía y −0,05 en Cataluña. Cada
+provincia recibe además su parte propia `eps`:
+
+| Provincia | `eta` | `eps` | `eta + eps` | Multiplicador | Ratio: 23J → con shock |
+|---|---:|---:|---:|---:|---:|
+| Granada | +0,08 | −0,10 | −0,02 | 0,980 | 1,365 → 1,338 |
+| Almería | +0,08 | +0,06 | +0,14 | 1,150 | 1,522 → 1,751 |
+| Sevilla | +0,08 | +0,02 | +0,10 | 1,105 | 1,207 → 1,334 |
+| Barcelona | −0,05 | +0,03 | −0,02 | 0,980 | 0,840 → 0,823 |
+| Girona | −0,05 | −0,04 | −0,09 | 0,914 | 0,735 → 0,672 |
+
+Las tres provincias andaluzas comparten `eta` y suben juntas. `eps` las separa: Granada
+recibe −0,10 y queda por debajo de su ratio del 23J, aunque Andalucía sube.
+
+La media ponderada de los ratios con shock vale 1,022. Sin el recentrado del paso 4, el
+PP pasaría del 30 % al 30,7 % en España. Al dividir entre 1,022:
+
+| Provincia | Ratio recentrado | Voto con el ratio del 23J (%) | Voto en este sorteo (%) | Cambio (puntos) |
+|---|---:|---:|---:|---:|
+| Granada | 1,309 | 40,9 | 39,3 | −1,6 |
+| Almería | 1,713 | 45,7 | 51,4 | +5,7 |
+| Sevilla | 1,305 | 36,2 | 39,2 | +3,0 |
+| Barcelona | 0,805 | 25,2 | 24,2 | −1,0 |
+| Girona | 0,657 | 22,0 | 19,7 | −2,3 |
+
+El voto en España sigue en el 30 %: el shock solo mueve voto de Cataluña a Andalucía, y
+de Granada a Almería y Sevilla. El voto de cada provincia es 30 × su ratio.
+:::
 
 ## Paso 4. ¿Siguen cuadrando las cuentas? {#sec-ajustes}
 
