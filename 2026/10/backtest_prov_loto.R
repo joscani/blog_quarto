@@ -30,38 +30,23 @@ source(here::here("2026/10/shock_jerarquico.R"))
 
 # ---- 1. datos de ajuste ------------------------------------------------------
 #
-# Los taus (mod_tau_shock.rds / tau_shock_brms.csv) se ajustan con el dlr
-# de la sesión (construido con el preps actual, que separa UPN de PP y
-# reproduce los recuentos oficiales). El fit VIEJO se había ajustado con un
-# dlr anterior (dlr_sh) que incluía UPN-PP en PP por Navarra y tenía los
-# shares provinciales de VOX-23J inflados un +2%: los taus salían casi
-# iguales, pero por higiene todo el pipeline (baseline, LOTO y congelados)
-# se regeneró con el dlr actual.
+# El dlr se construye igual que en ajustar_tau_shock.R, que produce el fit
+# completo (mod_tau_shock.rds): voto_nacional = "presentes". Con esa regla,
+# los datos de los cinco fits (completo y LOTO) coinciden exactamente con
+# este dlr (comprobado el 7 nov 2026).
+#
+# Corrección del 7 nov 2026: esta cabecera decía que el fit se había
+# ajustado con el dlr "actual" y que el anterior incluía UPN-PP en el PP. No
+# era así. Este script usaba un objeto dlr de la sesión, construido a mano
+# con el voto nacional de cada familia calculado solo en las provincias donde
+# tiene votos. Ver construir_dlr() en shock_jerarquico.R.
 # ------------------------------------------------------------------------------
 
-fams_tau <- sort(unique(dlr$familia))
-stopifnot(identical(fams_tau, c("PP", "PSOE", "SUMAR", "VOX")))
-
-d_tau <- dlr |>
-  mutate(
-    repeticion = str_detect(etiqueta, "repetición"),
-    celda_sigma = factor(
-      paste(familia, repeticion, sep = "_"),
-      levels = as.vector(outer(fams_tau, c("FALSE", "TRUE"), paste, sep = "_"))
-    )
-  )
-
-# verificación contra el fit publicado (si está cargado en la sesión):
-# estructura común (el dlr puede diferir en valores si el fit es de un build
-# anterior — ver cabecera)
-if (exists("fit_tau")) {
-  stopifnot(
-    nrow(d_tau) == nrow(fit_tau$data),
-    identical(d_tau$repeticion, as.logical(fit_tau$data$repeticion)),
-    identical(d_tau$familia, as.character(fit_tau$data$familia)),
-    identical(d_tau$codigo_ccaa, as.character(fit_tau$data$codigo_ccaa))
-  )
+if (!exists("preps")) {
+  preps <- preparar_preps()
 }
+dlr <- construir_dlr(preps, voto_nacional = "presentes")
+d_tau <- preparar_d_tau(dlr)
 
 # ---- 2. refits LOTO (uno por transición excluida) ---------------------------
 
@@ -73,29 +58,7 @@ trans_loto <- tribble(
   "23j"     , "10n->23j"  , "fresca"
 )
 
-ajustar_tau_brm <- function(d, seed) {
-  brm(
-    bf(
-      dlr ~ 0 + familia + repeticion + (0 + familia || codigo_ccaa),
-      sigma ~ 0 + celda_sigma
-    ),
-    data = d,
-    prior = c(
-      prior(normal(0, 1), class = b),
-      prior(normal(0, 0.2), class = sd),
-      prior(normal(-2.1, 1), class = b, dpar = "sigma")
-    ),
-    chains = 4,
-    iter = 2000,
-    warmup = 1000,
-    cores = 4,
-    backend = "cmdstanr",
-    adapt_delta = 0.95,
-    seed = seed,
-    silent = 2,
-    refresh = 0
-  )
-}
+# ajustar_tau_brm() está en shock_jerarquico.R (la misma que el fit completo)
 
 # seeds fijos por fit (elección arbitraria, reproducible)
 seeds_fit <- c(
@@ -113,7 +76,13 @@ fits_loto <- setNames(
   map(trans_loto$transition, \(tr) {
     if (file.exists(f_fit_loto(tr))) {
       message("fit LOTO en caché: ", tr)
-      readRDS(f_fit_loto(tr))
+      f <- readRDS(f_fit_loto(tr))
+      stopifnot(isTRUE(all.equal(
+        d_tau$dlr[d_tau$transition != tr],
+        f$data$dlr,
+        tolerance = 1e-12
+      )))
+      f
     } else {
       message("refit LOTO: ", tr)
       f <- ajustar_tau_brm(d_tau |> filter(transition != tr), seeds_fit[[tr]])
@@ -124,24 +93,19 @@ fits_loto <- setNames(
   trans_loto$transition
 )
 
-# fit completo (in-sample): el de mod_tau_shock.rds (ajustado con el dlr
-# actual) si está, si no se reajusta
+# fit completo (in-sample): mod_tau_shock.rds, que produce
+# ajustar_tau_shock.R con el mismo dlr
 f_fit_full <- here::here("2026/10/mod_tau_shock.rds")
-fit_full <- if (file.exists(f_fit_full)) {
-  readRDS(f_fit_full)
-} else {
-  f <- ajustar_tau_brm(d_tau, 5183)
-  saveRDS(f, f_fit_full)
-  f
+if (!file.exists(f_fit_full)) {
+  stop("falta mod_tau_shock.rds: ejecuta antes 2026/10/ajustar_tau_shock.R")
 }
+fit_full <- readRDS(f_fit_full)
+stopifnot(isTRUE(all.equal(d_tau$dlr, fit_full$data$dlr, tolerance = 1e-12)))
 
 # ---- 3. backtests pareados ---------------------------------------------------
 
 b <- 2000
 mapa_bt <- mapa_ccaa_congreso()
-if (!exists("preps")) {
-  preps <- preparar_preps()
-}
 
 # una semilla por elección objetivo (la misma para las dos variantes, para
 # que la diferencia sea solo los tau)
