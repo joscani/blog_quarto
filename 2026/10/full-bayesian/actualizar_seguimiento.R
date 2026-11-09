@@ -112,6 +112,34 @@ log(
   as.character(enc_hasta)
 )
 
+# escaños medios por provincia y partido (sí van a git, a diferencia de
+# conjunto_sim.rds): la media es aditiva, así que el cambio nacional de cada
+# partido es la suma exacta de sus cambios provinciales. Empieza el 9 nov
+# 2026, con el ajuste del 3 nov reconstruido con las entradas de git
+sim <- readRDS(file.path(dir_vivo, "conjunto_sim.rds"))
+f_hprov <- file.path(dir_vivo, "historico_provincias.csv")
+fila_prov <- as_tibble(
+  apply(sim$prov_escanos, c(2, 3), mean),
+  rownames = "provincia"
+) |>
+  pivot_longer(-provincia, names_to = "partido", values_to = "media") |>
+  filter(media > 0) |>
+  mutate(
+    fecha_actualizacion = Sys.Date(),
+    encuestas_hasta = enc_hasta,
+    .before = 1
+  )
+hprov <- if (file.exists(f_hprov)) {
+  read_csv(f_hprov, show_col_types = FALSE) |>
+    filter(encuestas_hasta != !!enc_hasta)
+} else {
+  tibble()
+}
+hprov <- bind_rows(hprov, fila_prov) |>
+  arrange(encuestas_hasta, provincia, partido)
+write_csv(hprov, f_hprov)
+log("2b. histórico provincial:", nrow(hprov), "filas")
+
 # ---- 3. render ---------------------------------------------------------------
 
 log("3. render del tracker")
