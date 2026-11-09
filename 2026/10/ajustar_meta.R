@@ -81,6 +81,63 @@ min_encuestas_casa <- 1
 # encuestas: se baja a 1 para incluir los singletons (IMOP, Data10, NC
 # Report...), que el shrinkage jerárquico absorbe como efecto casa.
 
+# primer día del campo ("26 oct–6 nov 26" -> 2026-10-26; "2–4 nov 26" ->
+# 2026-11-02; un solo día -> la fecha final). `fin` es la fecha final ya
+# parseada (columna `fecha` de los CSV). Si el inicio queda después del fin,
+# el campo cruza de año
+inicio_campo <- function(campo, fin) {
+  meses <- c("ene", "feb", "mar", "abr", "may", "jun",
+             "jul", "ago", "sep", "oct", "nov", "dic")
+  rango <- grepl("^[0-9]+(\\s+[a-z]{3})?\\s*–", campo)
+  dia <- ifelse(rango, suppressWarnings(as.integer(sub("^([0-9]+).*", "\\1", campo))), NA)
+  con_mes <- grepl("^[0-9]+\\s+[a-z]{3}\\s*–", campo)
+  mes <- ifelse(con_mes, match(sub("^[0-9]+\\s+([a-z]{3}).*", "\\1", campo), meses), NA)
+  mes[is.na(mes)] <- as.integer(format(fin[is.na(mes)], "%m"))
+  anio <- as.integer(format(fin, "%Y"))
+  ini <- as.Date(sprintf("%d-%02d-%02d", anio, mes, dia))
+  ini[!is.na(ini) & ini > fin] <- as.Date(sprintf(
+    "%d-%02d-%02d", anio - 1L, mes, dia
+  ))[!is.na(ini) & ini > fin]
+  ini[is.na(dia)] <- fin[is.na(dia)]
+  ini
+}
+
+# Trackings con muestra acumulada (SW Demoscopia para La Séptima, 26 oct-
+# 23 nov 2026; SocioMétrica para El Español: "1 sep–25 oct" y "1 sep–1 nov"
+# suman sus oleadas sueltas de sep-oct, 1.200 + 1.000 + 1.000 ≈ 3.223):
+# cada entrega suma jornadas u oleadas a las anteriores, así que
+# meterlas todas cuenta varias veces las mismas entrevistas. Regla
+# (8-9 nov 2026): de una casa de esta lista solo entran entregas con campos
+# que no se solapan; una entrega solapada con otra posterior queda fuera.
+# Se aplica a prep_grande() y a prep_bloque() (esta, desde el 9 nov 2026).
+# `d` va en formato largo, con encuestadora, campo, enlace y fecha
+quitar_tracking_solapado <- function(d) {
+  casas_tracking <- c("SW Demoscopia", "SocioMétrica")
+  enc <- d |>
+    filter(encuestadora %in% casas_tracking) |>
+    distinct(encuestadora, campo, enlace, fecha) |>
+    mutate(inicio = inicio_campo(campo, fecha))
+  solapadas <- enc |>
+    inner_join(
+      select(enc, encuestadora, inicio_post = inicio, fecha_post = fecha),
+      by = "encuestadora",
+      relationship = "many-to-many"
+    ) |>
+    filter(fecha_post > fecha, inicio_post <= fecha) |>
+    distinct(encuestadora, campo, enlace)
+  if (nrow(solapadas) > 0) {
+    cat(
+      "Fuera (tracking, solapada con una entrega posterior):",
+      nrow(solapadas),
+      "entregas —",
+      paste(solapadas$encuestadora, solapadas$campo, collapse = "; "),
+      "\n"
+    )
+    d <- d |> anti_join(solapadas, by = c("encuestadora", "campo", "enlace"))
+  }
+  d
+}
+
 seed_fit <- 7314
 
 # ---- preparación de datos ---------------------------------------------------
@@ -157,6 +214,7 @@ prep_grande <- function(
     )
     g <- g |> filter(!encuestadora %in% casas_fuera)
   }
+  g <- quitar_tracking_solapado(g)
   wide <- g |>
     pivot_wider(
       id_cols = c(encuestadora, enlace, fecha, time, muestra),
@@ -180,6 +238,7 @@ prep_bloque <- function() {
     )
     b <- b_d
   }
+  b <- quitar_tracking_solapado(b)
   wide <- b |>
     pivot_wider(
       id_cols = c(
