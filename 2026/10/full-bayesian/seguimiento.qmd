@@ -556,6 +556,11 @@ y CC); PP y Vox; aliados de 2023 sin Junts (PSOE, FA, Podemos, AA, ERC, EH
 Bildu, PNV, BNG y CC); en el aire, cuando los aliados solo llegan con Junts;
 y ninguna, cuando ningún bloque suma 176.
 
+El gráfico no es idea mía: copio el estilo del que publica Kiko Llaneras en
+El País para su modelo de las generales, con la ventaja en votos en el eje y
+cada simulación coloreada según la mayoría que sale. Al César lo que es del
+César. Los datos y las categorías son los de mi modelo.
+
 ```{r}
 #| label: datos-mayorias
 cats_may <- c(
@@ -675,13 +680,35 @@ ggplot(d_may, aes(bin, fill = mayoria)) +
 ```{r}
 #| label: datos-ppvox
 r_ppvox <- cor(d_s$PP, d_s$VOX)
+# correlación entre el fallo del consenso con el PP y con Vox (Omega,
+# aprendida de las elecciones pasadas) y lo que estrecha la suma
+om_pv <- read_csv(
+  file.path(dir_vivo, "conjunto_parametros.csv"),
+  show_col_types = FALSE
+) |>
+  filter(parametro == "Omega", partido == "VOX-PP") |>
+  pull(mediana)
+sd_suma <- sd(d_s$PP + d_s$VOX)
+sd_indep <- sqrt(var(d_s$PP) + var(d_s$VOX))
 ```
 
-**PP y Vox se reparten el mismo voto.** En las simulaciones en las que el PP
-saca más escaños, Vox suele sacar menos, y al revés: la correlación entre
-sus escaños es de `r num_es(r_ppvox, 2)`. Por eso la suma se mueve menos que
-cada partido por separado, y la mayoría de PP y Vox depende sobre todo de
-cuánto suman los dos, no de cómo se lo repartan.
+**Cuando las encuestas fallan con el PP, suelen fallar al revés con Vox.**
+En las simulaciones en las que el PP saca más escaños, Vox suele sacar
+menos: la correlación entre sus escaños es de `r num_es(r_ppvox, 2)`. Ojo,
+eso no quiere decir que PP y Vox se peleen por los mismos votantes. Sale
+sobre todo del error del consenso: en las elecciones pasadas, cuando las
+encuestas se pasaban con el PP se quedaban cortas con Vox, y al revés. El
+modelo lo aprende como una correlación de `r num_es(om_pv, 2)` entre los dos
+fallos (lo cuento en [el post del modelo](full-bayesian.html)). Las encuestas
+se equivocan al **repartir** el voto entre los dos, y aciertan más con la
+suma.
+
+Por eso la suma se mueve menos que cada partido por separado: su desviación
+típica es de `r num_es(sd_suma, 0)` escaños, frente a los
+`r num_es(sd_indep, 0)` que tendría si los escaños de los dos no estuvieran
+correlacionados.
+Y la mayoría de PP y Vox depende sobre todo de cuánto suman, no de cómo se lo
+repartan.
 
 ```{r}
 #| label: fig-heatmap-ppvox
