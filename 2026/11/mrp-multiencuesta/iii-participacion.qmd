@@ -1,0 +1,575 @@
+---
+title: "MRP con varias encuestas (III): Algunos cambios. Voto más simpatía, participación. "
+date: '2026-11-08'
+date-modified: today
+draft: false
+categories:
+  - "2026"
+  - estadística
+  - encuestas electorales
+  - MRP
+  - R
+  - Bayesian
+  - Stan
+
+bibliography: references.bib
+description: 'MRP con las encuestas del 29-N, tercera parte. Los que están seguros de ir a votar no votan igual que los que no lo están, pero el censo no sabe quién está seguro. Cómo se mete eso al postestratificar, partiendo cada celda en dos.'
+execute:
+  message: false
+  warning: false
+  echo: true
+format:
+  html:
+    toc: true
+    fig-height: 5
+    fig-dpi: 300
+    fig-width: 8
+    fig-align: center
+    code-fold: true
+    code-summary: "Mostrar código"
+    code-tools:
+      source: true
+      toggle: true
+knitr:
+  opts_chunk:
+    out.width: 80%
+    fig.showtext: TRUE
+    collapse: true
+    comment: "#>"
+---
+
+::: callout-note
+## Listening
+
+<iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/3RarI3aibhHVM8CgOGE1Ou?utm_source=generator&si=b7c99b4d366d4435" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+:::
+
+## Dónde estábamos
+
+
+En la [parte (I)](https://muestrear-no-es-pecado.es/2026/11/mrp-multiencuesta/) construimos las bases, unimos microdatos y con raking creamos una tabla 
+de postestratificación con la distribución conjunta en la población. En la
+[parte (II)](https://muestrear-no-es-pecado.es/2026/11/mrp-multiencuesta/ii-modelo.html)
+ajustamos un MRP [@gelman1997; @park2004] para estimar el voto y repartir
+escaños por provincia. También teníamos un modelo de participación, aunque
+los dos iban por separado.
+
+Es decir, el modelo multinivel estimaba el voto según perfiles (edad, sexo, provincia, nivel de estudios, recuerdo de voto), y luego con el modelo de participación estimábamos qué perfiles tenían más probabilidad de estar seguros de ir a votar. Más tarde se ajustaba la participación nacional,
+para que coincidiera con la que hubo en 2023. Eso movía la participación de cada perfil.
+
+```{r ejemplo-30}
+#| include: false
+source(here::here("2026/11/mrp-multiencuesta/iii-funciones.R"))
+part_ej <- participacion_celdas()
+ej30 <- filter(
+    part_ej$post,
+    prov == "46",
+    sexo == "M",
+    edad == "65+",
+    edu == "baja",
+    rec == "ABST"
+)
+ej80 <- filter(
+    part_ej$post,
+    prov == "28",
+    sexo == "H",
+    edad == "45-54",
+    edu == "alta",
+    rec == "PP"
+)
+```
+
+Un ejemplo. Las mujeres de 65 años o más, con estudios bajos, de Valencia, que
+se abstuvieron el 23-J, dicen "10, seguro que voto" en un
+`r pct(100 * ej30$pi)`. Al ajustar la participación de España al
+`r pct(100 * part_ej$part_base)`, su participación sube al
+`r pct(100 * ej30$pi_cal_base)`. No todos los perfiles suben lo mismo: los
+hombres de 45 a 54 años, con estudios altos, de Madrid, que votaron al PP,
+pasan del `r pct(100 * ej80$pi)` al `r pct(100 * ej80$pi_cal_base)`.
+
+Pero esto tenía un problema: al aumentar la participación en una celda, suponíamos que la gente de esa celda seguiría votando como la media estimada de su celda. Es decir, que los nuevos votantes
+votan igual que los que ya iban a votar.
+
+¿Y si no es así?
+
+```{r setup}
+# las cuentas están en iii-funciones.R
+source(here::here("2026/11/mrp-multiencuesta/iii-funciones.R"))
+```
+
+## Seguros y no seguros
+
+En las encuestas se pregunta cómo de seguro está uno de ir a votar, de 0 a 10.
+Voy a llamar **seguros** a los que dicen 10 y **no seguros**, o *dudosos*, al resto.
+
+```{r muestra}
+enc <- leer_encuestas()
+muestra <- muestra_seg(enc) # seguro: dice 10
+count(muestra, seg)
+```
+
+Vamos a ver si votan igual. Un detalle: a partir de ahora voy a usar el voto más simpatía, también para el modelo de voto. Así recupero "intención de voto" para los que no dicen claramente a quién votan pero sí expresan su simpatía.
+
+```{r seg-voto}
+t_voto <- voto_seguros(muestra)
+tabla_seguros(t_voto)
+```
+
+```{r seg-cifras}
+#| include: false
+v <- function(partido, grupo) t_voto[[grupo]][t_voto$voto == partido]
+
+jov_dud <- 100 *
+    mean(
+        muestra$edad[muestra$seg == "no_seguro"] %in%
+            c("18-20", "21-24", "25-34")
+    )
+jov_seg <- 100 *
+    mean(
+        muestra$edad[muestra$seg == "seguro"] %in% c("18-20", "21-24", "25-34")
+    )
+abst_dud <- 100 * mean(muestra$rec[muestra$seg == "no_seguro"] == "ABST")
+abst_seg <- 100 * mean(muestra$rec[muestra$seg == "seguro"] == "ABST")
+```
+
+Claramente no. Los no seguros votan más en blanco (`r pct(v("BLANCO", "no_seguro"))`
+frente a `r pct(v("BLANCO", "seguro"))`) y más a partidos pequeños, y menos a
+PP y PSOE.
+
+Además, los no seguros son otra gente: el `r pct(jov_dud)` tiene menos de 35 años
+(entre los seguros, el `r pct(jov_seg)`), y el `r pct(abst_dud)` se abstuvo
+el 23-J (frente al `r pct(abst_seg)`). Tiene lógica: quien no fue la última
+vez suele estar menos seguro de ir esta.
+
+
+
+::: {.callout-note collapse="true"}
+## Voto + simpatía
+
+En la tabla, y en todo el post, la variable de voto es voto + simpatía. Muy
+simple: si no declaras voto pero me dices que, aunque no vayas a votar, tu
+preferida es Irene Montero, pues te creo y te apunto a Podemos. Así somos,
+nos creemos la simpatía de la peña. Con eso se ganan bastantes entrevistas.
+En bruto, sin ponderar nada:
+
+```{r simpatia}
+tabla_simpatia(enc)
+```
+
+:::
+
+Visto que los seguros y los dudosos no tienen la misma intención de voto,
+uno pensaría que basta con meter esta variable en el modelo multinivel de intención de voto. Pero en la parte de la postestratificación hay un problema.
+
+
+## El censo no sabe quién está seguro
+
+La tabla de postestratificación sale del censo y del
+23-J. Tenemos la distribución conjunta poblacional (estimada) por sexo, edad, estudios, provincia y recuerdo de voto.
+Pero no cuántos de ellos están seguros de ir a votar. Esa información está en las encuestas, pero no en la población.
+
+Pero hay solución: podemos meter en el MRP una variable que no está en la tabla de postestratificación.
+Hacen falta dos cosas: qué porcentaje de seguros hay en cada celda, y un modelo de voto
+que tenga en cuenta que los seguros y los dudosos votan diferente.
+
+
+
+### Cuántos seguros hay en cada celda
+
+Para eso está el modelo de participación del (II). Me da, para cada celda
+$c$, la proporción de gente que dice "10, seguro que voto" ($D = 0$):
+
+$$\pi_c = \text{logit}^{-1}(\eta^\text{part}_c)$$
+
+Pero decir "10" no es votar. Para un escenario de participación $T$ muevo
+todos los logit de participación lo mismo, un $\delta$, hasta que el total
+cuadra:
+
+$$\pi^\text{cal}_c = \text{logit}^{-1}(\eta^\text{part}_c + \delta), \qquad \text{con } \delta \text{ tal que } \frac{\sum_c N_c\, \pi^\text{cal}_c}{\sum_c N_c} = T$$
+
+O sea, el modelo dice qué celdas tienen más seguros y cuáles menos, y el escenario
+solo dice cuánto se vota en total. $\pi^\text{cal}_c$ es la participación de
+la celda en ese escenario.
+
+Ojo con una cosa. El modelo estima cuánta gente dice 10, no cuánta vota de verdad.
+En los escenarios supongo que todos los que dicen 10 votan, y que los votantes que
+faltan salen de los que dicen de 0 a 9. Es un supuesto de la simulación, no algo
+que digan los datos.
+
+```{r participacion}
+part <- participacion_celdas()
+post <- part$post
+part_base <- part$part_base
+
+# la tabla de postestratificación tiene ahora dos columnas más: pi y pi_cal.
+# Por ejemplo, hombres de 35 a 44 años, estudios bajos, de Madrid, según lo
+# que votaron en 2023
+madrid_35 <- post |>
+  filter(prov == "28", sexo == "H", edad == "35-44", edu == "baja") |>
+  select(rec, N, pi, pi_cal_base) |>
+  arrange(desc(N))
+madrid_35 |>
+  mutate(across(c(pi, pi_cal_base), \(x) round(x, 3)), N = round(N))
+
+seguros_pob <- 100 * weighted.mean(post$pi, post$N)
+seguros_votantes <- 100 * sum(post$N * post$pi) / sum(post$N * post$pi_cal_base)
+```
+
+En la misma Madrid, mismo sexo, edad y estudios, lo que votaste en 2023 lo
+cambia todo: los que votaron a PP, PSOE, VOX o SUMAR dicen "10" en un
+`r pct(100 * min(madrid_35$pi[madrid_35$rec %in% c("PP", "PSOE", "VOX", "SUMAR")]), 0)`
+o más; los que se abstuvieron, en un
+`r pct(100 * madrid_35$pi[madrid_35$rec == "ABST"], 0)`.
+
+En toda España, el `r pct(seguros_pob)` de la población dice "10". Con una
+participación del `r pct(100 * part_base)`, el `r pct(seguros_votantes)` de
+los votantes son seguros y el resto, no seguros. Y como la participación de
+cualquier escenario que miro está por encima de ese `r pct(seguros_pob)`, en
+cada celda $\pi^\text{cal}_c \geq \pi_c$: caben todos los seguros y sobra
+sitio para algunos no seguros.
+
+En resumen, si en una celda el 20 % son seguros pero, tras subir la participación de España hasta un escenario propuesto (digamos el 80 %), esa celda pasa a votar el 30 %, esos 10 puntos adicionales los pongo con dudosos, y su voto sale del modelo que tiene en cuenta esa variable. Así, si en un perfil el modelo de voto dice que los dudosos votan mucho más a Frente Amplio que los seguros, en ese escenario habría en ese perfil bastantes más votos a Frente Amplio.
+
+
+### El modelo de voto, con seguro dentro
+
+El modelo de voto es el del (II), multinomial con efectos de casa, mes, edad,
+estudios, recuerdo, CCAA y provincia, pero tras analizar los efectos aleatorios le quité la interacción entre CCAA y recuerdo de voto: metía muchos parámetros a estimar sin una mejora acorde.
+Le añado la variable $D$ (dudoso): 1 si el entrevistado dice cualquier cosa menos 10, 0 si dice 10.
+Ojo, es la $D$ que sale de lo que contesta cada entrevistado, no la probabilidad que estima
+el modelo de participación. Los dos modelos se ajustan por separado y solo se
+juntan al postestratificar.
+
+$$\mathbf{y}_c \sim \text{Multinomial}\big(n_c,\ \text{softmax}(\boldsymbol\eta_c + D_c\, \mathbf{d}_c)\big)$$
+
+$$d_{c,k} = b^\text{dud}_k + a^\text{dud, edad}_{\text{edad}[c],\,k} + a^\text{dud, recuerdo}_{\text{rec}[c],\,k}$$
+
+Es decir, $d_{c,k}$ es cuánto se mueve el logit del partido $k$ en la celda $c$
+si la persona es dudosa ($D_c = 1$). Si es segura, $D_c = 0$ y el término
+desaparece. Depende de la celda solo por su edad y por lo que votó en 2023:
+dos celdas con la misma edad y el mismo recuerdo tienen el mismo $d$. No tiene por qué ser lo mismo no estar seguro a los 20 que a los
+70, ni haber votado al PP que haberse abstenido. Con pooling parcial, claro. El código en Stan está en
+[`mrp_voto_seg.stan`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/stan/mrp_voto_seg.stan).
+
+Con esto, para cada celda tengo dos repartos de voto: $P(k \mid c, D=0)$,
+prediciendo con $D = 0$, y $P(k \mid c, D=1)$, prediciendo con $D = 1$.
+
+### Partir la celda en dos
+
+Antes de la fórmula, una celda ficticia.
+La tabla de postestratificación dice que en esa celda ficticia hay 1.000 personas, y el modelo de participación estima
+que el 40 % está seguro de ir a votar. O sea, 400 seguros y 600 no seguros.
+
+Ahora digo que en esa celda vota el 70 %: 700 votantes. Supongo que los 400
+seguros votan todos, así que los otros 300 votantes salen de los 600 no
+seguros.
+
+Para un partido cualquiera, el modelo de voto dice que lo vota el 30 % de los
+seguros (prediciendo con $D = 0$) y el 20 % de los no seguros (con $D = 1$).
+Pues:
+
+- seguros: 400 × 0,30 = 120 votos,
+- no seguros que votan: 300 × 0,20 = 60 votos,
+- total: 180 votos de 700 votantes, un 25,7 %.
+
+Y ya está. Con letras, para la celda $c$ y el partido $k$:
+
+$$V_{c,k} = N_c \Big[\pi_c\, P(k \mid c, D=0) + (\pi^\text{cal}_c - \pi_c)\, P(k \mid c, D=1)\Big]$$
+
+$N_c$ es la gente de la celda (los 1.000), $\pi_c$ la proporción de seguros
+que estima el modelo de participación (el 40 %) y $\pi^\text{cal}_c$ la
+participación de la celda en el escenario (el 70 %). $N_c\,\pi_c$ son los 400
+y $N_c\,(\pi^\text{cal}_c - \pi_c)$, los 300.
+
+Aquí he puesto el 70 % a mano, para esa celda.
+En el análisis de verdad no fijo la participación de cada celda, fijo la de
+España, y la de cada celda sale de mover todos los logit lo mismo, el
+$\delta$ de antes. Así que cada celda acaba con su propia
+$\pi^\text{cal}_c$.
+
+Luego, en cada draw de la posteriori, se suman en cada provincia los votos a cada partido de todas las celdas de esa provincia y se aplica D'Hondt (teniendo en cuenta las coaliciones, y cosas como lo de Adelante Andalucía).
+
+Este truco de meter en el MRP una variable que no está en el censo no me lo he inventado yo, se denomina MRP con variables no censales [@kastellec2015; @lopezmartin2022].
+
+Lo bueno es que, si sube la participación, la parte de los seguros no se
+mueve y solo crece la de los no seguros. Así que lo que importa es cómo votan
+los no seguros de cada celda, y no la media de la celda.
+
+## Una celda sin ninguna entrevista
+
+Una de las ventajas de usar multinivel es su estimación en *dominios pequeños* gracias al partial pooling, permitiendo estimaciones incluso en niveles no vistos por el modelo. La postestratificación en el MRP también permite dar estimaciones en combinaciones de celdas no vistas por el modelo. Un ejemplo:
+
+Hombres de 35 a 44 años, estudios bajos, de Madrid, que se abstuvieron en 2023.
+
+```{r celda-ejemplo}
+celda <- post |>
+  filter(
+    sexo == "H",
+    edad == "35-44",
+    edu == "baja",
+    rec == "ABST",
+    prov == "28"
+  )
+celda
+
+# entrevistas con ese perfil, en Madrid y en toda España
+perfil <- muestra |>
+  filter(sexo == "H", edad == "35-44", edu == "baja", rec == "ABST")
+n_perfil <- nrow(perfil)
+n_celda <- sum(perfil$prov %in% 28)
+```
+
+Son `r num(celda$N)` personas y en las encuestas hay `r n_celda` entrevistas
+de esa celda. En toda España, con ese perfil, hay `r n_perfil` entrevistados.
+
+Pero el modelo puede dar estimaciones para ese perfil en Madrid.
+
+Primero, cuántos votan. El modelo de participación dice que en esta celda
+$\pi_c$ = `r pct(100 * celda$pi)` dicen "10", así que
+`r num(celda$N)` × `r pct(100 * celda$pi)` = `r num(celda$N * celda$pi)`
+seguros.
+Con la participación base, la celda vota un
+$\pi^\text{cal}_c$ = `r pct(100 * celda$pi_cal_base)`, y los no seguros ponen
+el resto: `r num(celda$N)` × (`r pct(100 * celda$pi_cal_base)` −
+`r pct(100 * celda$pi)`) = `r num(celda$N * (celda$pi_cal_base - celda$pi))`.
+
+¿Y de dónde sale ese `r pct(100 * celda$pi_cal_base)`? A mano no lo he puesto.
+En toda España dice "10" un `r pct(100 * part$seguros_pob)`, y queremos que vote
+un `r pct(100 * part_base)`. Así que a todas las celdas se les suma lo mismo en
+el logit, el $\delta$ de antes. Ese $\delta$ no lo estima el modelo, lo calculo
+yo después: para cada draw de la posterior del modelo de participación busco el
+$\delta$ que hace que el total de España salga `r pct(100 * part_base)`. Así
+que hay un $\delta$ por draw; su mediana es
+`r num(median(part$delta_base), 2)` y el 90 % está entre
+`r num(quantile(part$delta_base, 0.05), 2)` y
+`r num(quantile(part$delta_base, 0.95), 2)`. En esta celda eso
+lleva a los que votan del `r pct(100 * celda$pi)` al
+`r pct(100 * celda$pi_cal_base)`. La celda no se ajusta para dar nada en
+concreto: sube lo que le toca para que, sumando todas, salga el
+`r pct(100 * part_base)` de España.
+
+Poca participación, como era de esperar en gente que se abstuvo la última vez.
+
+Y la mediana de la posterior para esa celda y para ese escenario de participación:
+
+```{r celda-cuentas}
+ej <- ejemplo_celda(celda, part$mes)
+tabla_celda(ej, part_base)
+```
+
+Lo mismo en un gráfico. Arriba, cómo se reparte la gente de la celda entre los
+seguros, los no seguros que acaban votando y los que no votan. Abajo, a quién
+vota cada una de las dos partes, ya con todos los partidos. Ojo, son
+estimaciones del modelo, no votos observados (en esta celda no hay ni una
+entrevista), y los porcentajes de voto son resúmenes de la posterior: la
+mediana y el intervalo del 90 %.
+
+Por cierto, en esta celda se ve bien una de las ventajas del MRP frente a ponderar directamente las entrevistas, por ejemplo con raking. Con ponderación podemos corregir la composición de la muestra, pero no podemos dar peso a una entrevista que no existe. Aquí no tenemos ni una entrevista de ese perfil en Madrid y, sin embargo, el modelo multinivel puede estimar su comportamiento aprovechando la información de otros perfiles. Después, la postestratificación permite aplicar esa estimación a las 25.408 personas de la celda.
+
+
+
+```{r celda-grafico}
+#| fig-height: 7
+grafico_celda(ej, part_base)
+```
+
+Si aumentara aún más la participación, en esta celda subiría el porcentaje de voto en blanco y bajaría el de VOX. En número de votos VOX seguiría sumando, solo que menos que su media en la celda.
+
+### Supuestos
+
+- Los seguros votan todos, y los votantes que faltan salen de los no seguros. Es
+  un supuesto de la simulación, no algo que hayamos medido.
+- Los no seguros que acaban votando votan como los no seguros de su celda que dan
+  partido en las encuestas. No sabemos si se parecen a los que de verdad acabarán
+  votando. Puede haber sesgos de selección, de no respuesta y de declaración del voto
+  que este modelo no resuelve. Si tuviéramos info de cómo lo hacen en elecciones
+  anteriores o similar, lo podríamos meter en el modelo bayesiano de alguna forma.
+- Las horquillas son las de "si las encuestas no se equivocan todas a la
+  vez": no llevan el error común de todas las casas, que se estimaba en el post de full bayesian. Aquí es una medición con los microdatos y corrigiendo por la distribución conjunta. 
+
+
+## ¿Y si vota más gente?
+
+Vale, ya tenemos el mecanismo, vamos a usarlo a ver si cambia algo.
+
+Repito de nuevo, no es lo que pasaría si vota más gente, es lo que sale si los que
+se suman son los no seguros de cada celda y votan como dicen en la encuesta.
+
+```{r escenarios}
+esc <- leer_escenarios(part_base)
+grafico_escenarios(esc$mayorias)
+```
+
+```{r escenarios-cifras}
+#| include: false
+mayorias <- esc$mayorias
+m_lo <- mayorias[which.min(mayorias$part), ]
+m_hi <- mayorias[which.max(mayorias$part), ]
+e <- function(partido) esc$entrantes$mediana[esc$entrantes$partido == partido]
+b <- function(partido) esc$voto_base$mediana[esc$voto_base$partido == partido]
+```
+
+Pues nuestro gozo en un pozo, apenas se mueve nada con estos supuestos. Del `r pct(100 * m_lo$part)` al `r pct(100 * m_hi$part)` de
+participación, PP + VOX pasa de `r num(m_lo$pp_vox_media, 1)` a
+`r num(m_hi$pp_vox_media, 1)` escaños. Y la mayoría absoluta (176) la tienen en todos los escenarios.
+
+¿Por qué se mueve tan poco? Así votan los que se suman al pasar del
+`r pct(100 * part_base)` al 80 %:
+
+```{r entrantes}
+tabla_entrantes(esc$entrantes)
+```
+
+Entre los que entran con un escenario del 80 %, PP + VOX suman un `r pct(e("PP") + e("VOX"))`,
+menos que el `r pct(b("PP") + b("VOX"))` que tienen con la participación
+base. Así que sí, entre los que entran (los dudosos) PP y VOX pesan menos. Ojo,
+esto es en porcentaje: en número de votos PP y VOX también suben, solo que menos
+que el resto. Y los que entran son pocos al lado de los que ya votaban: al 80 %,
+algo más de uno de cada diez votantes.
+
+Además, por lo que declaran en la encuesta los no seguros, un
+`r pct(e("OTROS") + e("BLANCO"))` de los que entran va a OTROS o en blanco, frente al
+`r pct(b("OTROS") + b("BLANCO"))` en el escenario base. En nuestro reparto ni
+BLANCO ni OTROS (que junta los partidos que no modelizo por separado) compiten
+por escaños. Así que una parte del voto nuevo no se lleva escaños de nadie. A eso
+se suma que los escaños se reparten provincia a provincia, y unos pocos votos más
+o menos no siempre mueven un escaño. No he medido cuánto pesa cada cosa por
+separado, así que tómalo como una explicación posible, no como algo demostrado.
+
+Y repito: no sabemos si los dudosos que contestan a las encuestas votarían como
+los que de verdad acabarían yendo a votar.
+
+```{r sin-seguro}
+#| include: false
+mc <- esc$mayorias_celda
+mc_base <- mc[abs(mc$part - part_base) < 0.0005, ]
+mc_hi <- mc[which.max(mc$part), ]
+ms_base <- mayorias[abs(mayorias$part - part_base) < 0.0005, ]
+```
+
+¿Y si no hubiera metido seguros y no seguros en el modelo de voto? Sería como
+suponer que todo el que vota en una celda, entre o no entre, vota como la media
+de su celda. Eso se puede calcular con el mismo modelo, mezclando en cada celda
+el voto de seguros y dudosos según cuántos seguros hay entre los que dan
+partido. No es un modelo ajustado sin la variable, es una aproximación. Con eso,
+PP + VOX tendrían `r num(mc_base$pp_vox_media, 1)` escaños con la participación
+base (frente a `r num(ms_base$pp_vox_media, 1)`) y `r num(mc_hi$pp_vox_media, 1)`
+al `r pct(100 * mc_hi$part, 0)` (frente a `r num(m_hi$pp_vox_media, 1)`). Ya en
+la base hay diferencia, porque también ahí parte de los votantes son no seguros.
+Y al subir la participación, sin la variable PP + VOX suben un pelín y con ella
+bajan un pelín. Pero son unos pocos escaños, con intervalos que se solapan
+(del `r mc_base$pp_vox_q05` al `r mc_base$pp_vox_q95` sin la variable y del
+`r ms_base$pp_vox_q05` al `r ms_base$pp_vox_q95` con ella, en la base).
+
+Después de todo el lío, con estos supuestos, subir la participación apenas cambia el reparto de escaños.
+Pero por el camino hemos metido en el MRP una variable que no está en la tabla de
+postestratificación, y hemos podido modelizar que seguros y dudosos no votan igual.
+Y eso vale para otras cosas.
+
+
+
+## Resultados del modelo para explorar y descargar
+
+Ya que tenemos el modelo ajustado, dejo aquí las estimaciones nacionales y
+provinciales, también por edad, para quien quiera curiosear. Hay dos escenarios
+de participación nacional: el `r pct(100 * part_base)` (la base) y el 80 %. Se
+pueden filtrar y descargar en CSV o Excel; la descarga se lleva todas las filas
+que pasan los filtros, no solo la página que se ve. La fila "Diferencia" es el
+80 % menos la base, calculada draw a draw (en puntos para el voto). Son
+estimaciones condicionadas a los supuestos del modelo, no resultados electorales
+garantizados: los intervalos (del 90 %) recogen la incertidumbre de este MRP,
+pero no el error común de las encuestadoras del
+[post de metaanálisis bayesiano](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html).
+
+```{r anexo}
+#| include: false
+anexo <- leer_anexo() # lo prepara completo/19_anexo_tablas.R
+et_voto <- c(
+  mediana = "Voto, mediana (%)",
+  p5 = "Voto, p5 (%)",
+  p95 = "Voto, p95 (%)"
+)
+et_esc <- c(
+  media = "Escaños, media",
+  mediana = "Escaños, mediana",
+  p5 = "Escaños, p5",
+  p95 = "Escaños, p95"
+)
+```
+
+::: {.panel-tabset}
+
+### Nacional
+
+```{r anexo-nacional}
+tabla_dt(
+  anexo$nacional,
+  c(et_voto, setNames(et_esc, paste0("esc_", names(et_esc)))),
+  c(
+    mediana = 1,
+    p5 = 1,
+    p95 = 1,
+    esc_media = 1,
+    esc_mediana = 0,
+    esc_p5 = 0,
+    esc_p95 = 0
+  ),
+  "mrp_iii_nacional"
+)
+```
+
+### Voto por provincia
+
+```{r anexo-voto-prov}
+tabla_dt(
+  anexo$voto_prov,
+  et_voto,
+  c(mediana = 1, p5 = 1, p95 = 1),
+  "mrp_iii_voto_provincia"
+)
+```
+
+### Escaños por provincia
+
+```{r anexo-escanos-prov}
+tabla_dt(
+  anexo$escanos_prov,
+  et_esc,
+  c(media = 2, mediana = 0, p5 = 0, p95 = 0),
+  "mrp_iii_escanos_provincia"
+)
+```
+
+### Voto por provincia y edad
+
+```{r anexo-voto-edad}
+tabla_dt(
+  anexo$voto_prov_edad,
+  et_voto,
+  c(mediana = 1, p5 = 1, p95 = 1),
+  "mrp_iii_voto_provincia_edad"
+)
+```
+
+:::
+
+## Referencias
+
+::: {#refs}
+:::
+
+## Apéndice: scripts
+
+Desde la raíz del repo; los datos están en
+[la release](https://github.com/joscani/blog_quarto/releases/tag/mrp-multiencuesta-completo)
+(`bash 2026/11/mrp-multiencuesta/completo/baja_datos.sh`).
+
+| Script | Qué hace |
+|---|---|
+| [`iii-funciones.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/iii-funciones.R) | las funciones que llama este post |
+| [`completo/10_datos_voto_seg.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/10_datos_voto_seg.R) | datos del modelo de voto con seguro / no seguro |
+| [`completo/11_ajusta_voto_seg.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/11_ajusta_voto_seg.R) | el ajuste en Stan (`mrp_voto_seg.stan`) |
+| [`completo/12_escenarios_voto_seg.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/12_escenarios_voto_seg.R) | escenarios de participación y escaños |
+| [`completo/17_votos_grupos.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/17_votos_grupos.R) | votos por grupos (`votos_grupos.rds`) |
+| [`completo/18_seg_dud_provincia.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/18_seg_dud_provincia.R) | voto seguro y dudoso por provincia y el mapa (`seg_dud_prov.rds`, `provincias_sf.rds`) |
+| [`completo/19_anexo_tablas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/19_anexo_tablas.R) | las tablas del anexo (nacional, provincia y provincia × edad) |
