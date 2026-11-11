@@ -25,7 +25,8 @@
 # Ajuste por familia porque la geografía de cada una se mueve distinto
 # (VOX 4 veces más que PP en componente de comunidad).
 #
-# Salida:
+# Este fichero solo define funciones. Los ficheros de salida los escribe
+# ajustar_tau_shock.R:
 #   2026/10/tau_shock.csv          — taus puntuales (lme4), por familia
 #   2026/10/mod_tau_shock.rds      — fit brms con la incertidumbre de los tau
 #   2026/10/tau_shock_draws.csv    — draws del posterior (interfaz de simular)
@@ -38,11 +39,29 @@
 
 library(lme4)
 
-construir_dlr <- function(preps, escala = c("ratio", "logit")) {
+construir_dlr <- function(
+  preps,
+  escala = c("ratio", "logit"),
+  voto_nacional = c("oficial", "presentes")
+) {
   # escala = "ratio": dlr = Δ log(p_prov/p_nac)  (el shock multiplicativo)
   # escala = "logit": dlr = Δ [logit(p_prov) - logit(p_nac)]  (el cambio del
   # log-odds ratio provincia/nación, lo que consume simular(swing = "logit"))
+  #
+  # voto_nacional: el denominador p_nac del ratio.
+  #   "oficial"   — votos de la familia / válidos de las 52 provincias
+  #                 (preps$real_nac, el resultado oficial)
+  #   "presentes" — votos de la familia / válidos SOLO de las provincias donde
+  #                 la familia tiene votos. Es la regla con la que se ajustó
+  #                 mod_tau_shock.rds (12 oct 2026); ajustar_tau_shock.R la
+  #                 usa para reproducirlo. Solo difiere del oficial cuando la
+  #                 familia falta en alguna provincia: PP en Navarra (UPN-PP,
+  #                 NA+) de 2015 a 2019 y VOX en Santa Cruz de Tenerife el 23J.
+  #                 Efecto en dlr: −0,0139 en PP 10N→23J, +0,0202 en VOX
+  #                 10N→23J y < 0,0003 en el resto, igual en todas las
+  #                 provincias de la transición.
   escala <- match.arg(escala)
+  voto_nacional <- match.arg(voto_nacional)
   fams <- c("PP", "PSOE", "VOX", "SUMAR")
   trans <- tribble(
     ~de   , ~a    , ~etiqueta              ,
@@ -65,7 +84,17 @@ construir_dlr <- function(preps, escala = c("ratio", "logit")) {
     p <- preps[[id]]$prov |>
       filter(familia %in% fams) |>
       left_join(mapa_ccaa, by = "codigo_provincia")
-    nac <- preps[[id]]$real_nac |> select(familia, pct_nac = pct)
+    nac <- if (voto_nacional == "oficial") {
+      preps[[id]]$real_nac |> select(familia, pct_nac = pct)
+    } else {
+      p |>
+        filter(votos > 0) |>
+        group_by(familia) |>
+        summarise(
+          pct_nac = 100 * sum(votos) / sum(validos_prov),
+          .groups = "drop"
+        )
+    }
     p |>
       left_join(nac, by = "familia") |>
       select(codigo_provincia, codigo_ccaa, familia, pct_prov, pct_nac) |>
@@ -310,4 +339,70 @@ extraer_tau_draws <- function(fit, b, seed = 9157, familias = NULL) {
       tau_p = exp(dr[[str_c("b_sigma_celda_sigma", f, "_FALSE")]][idx])
     )
   })
+}
+
+# ---- modelo brms de los tau de los grandes ----------------------------------
+# Datos del ajuste: el dlr con la columna celda_sigma (familia × repetición).
+# Lo usan ajustar_tau_shock.R (fit de producción) y backtest_prov_loto.R
+# (refits LOTO).
+preparar_d_tau <- function(dlr) {
+  fams_tau <- sort(unique(dlr$familia))
+  stopifnot(identical(fams_tau, c("PP", "PSOE", "SUMAR", "VOX")))
+  dlr |>
+    mutate(
+      repeticion = str_detect(etiqueta, "repetición"),
+      celda_sigma = factor(
+        paste(familia, repeticion, sep = "_"),
+        levels = as.vector(outer(fams_tau, c("FALSE", "TRUE"), paste, sep = "_"))
+      )
+    )
+}
+
+ajustar_tau_brm <- function(d, seed) {
+  brm(
+    bf(
+      dlr ~ 0 + familia + repeticion + (0 + familia || codigo_ccaa),
+      sigma ~ 0 + celda_sigma
+    ),
+    data = d,
+    prior = c(
+      prior(normal(0, 1), class = b),
+      prior(normal(0, 0.2), class = sd),
+      prior(normal(-2.1, 1), class = b, dpar = "sigma")
+    ),
+    chains = 4,
+    iter = 2000,
+    warmup = 1000,
+    cores = 4,
+    backend = "cmdstanr",
+    adapt_delta = 0.95,
+    seed = seed,
+    silent = 2,
+    refresh = 0
+  )
+}
+
+# mediana e IC90 de los tau, con TODOS los draws del posterior (4.000)
+resumir_tau_brm <- function(fit) {
+  dr <- as_draws_df(fit)
+  fams <- str_remove(
+    grep("^sd_codigo_ccaa__familia", names(dr), value = TRUE),
+    "sd_codigo_ccaa__familia"
+  )
+  map_dfr(fams, \(f) {
+    tibble(
+      familia = f,
+      tau_c = dr[[str_c("sd_codigo_ccaa__familia", f)]],
+      tau_p = exp(dr[[str_c("b_sigma_celda_sigma", f, "_FALSE")]])
+    )
+  }) |>
+    group_by(familia) |>
+    summarise(
+      tau_c_med = median(tau_c),
+      tau_c_ic05 = quantile(tau_c, 0.05),
+      tau_c_ic95 = quantile(tau_c, 0.95),
+      tau_p_med = median(tau_p),
+      tau_p_ic05 = quantile(tau_p, 0.05),
+      tau_p_ic95 = quantile(tau_p, 0.95)
+    )
 }
