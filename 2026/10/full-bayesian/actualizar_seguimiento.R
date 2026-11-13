@@ -143,9 +143,22 @@ log("2b. histórico provincial:", nrow(hprov), "filas")
 # ---- 3. render ---------------------------------------------------------------
 
 log("3. render del tracker")
-st <- system2("quarto", c("render", file.path(dir_fb, "seguimiento.qmd")))
+# La fecha del post es la de la actualización: así sale el primero en blog.qmd
+f_qmd <- file.path(dir_fb, "seguimiento.qmd")
+qmd <- readLines(f_qmd)
+qmd <- sub("^date: .*$", paste0("date: '", Sys.Date(), "'"), qmd)
+writeLines(qmd, f_qmd)
+log("3. fecha del post:", format(Sys.Date()))
+
+st <- system2("quarto", c("render", f_qmd))
 if (st != 0) {
   stop("Falló el render del tracker (status ", st, ")")
+}
+
+# Los listados no se regeneran al renderizar un post suelto
+for (lst in c("blog.qmd", "archive.qmd", "2026.qmd")) {
+  st <- system2("quarto", c("render", here::here(lst)))
+  if (st != 0) stop("Falló el render de ", lst, " (status ", st, ")")
 }
 
 log("Listo. Recuerda el commit y el push: los CSV de vivo/ van en git y el")

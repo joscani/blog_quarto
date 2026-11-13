@@ -1,5 +1,6 @@
 ---
 title: "Generales 2026: el pronóstico vivo del 29-N"
+date: '2026-11-13'
 description: 'Estado vivo del modelo bayesiano conjunto: tendencia del voto, escaños y probabilidad de mayoría. Se actualiza con cada encuesta nueva.'
 categories:
   - R
@@ -289,11 +290,14 @@ pero a la izquierda del PSOE las listas cambian según el territorio:
   Amplio retiró su lista el 21 de octubre. Su voto va a un sorteo centrado en
   55 % para el PSOE y 45 % fuera.
 - **Adelante Andalucía** se presenta sola en las `r n_regla("con_aa")`
-  provincias andaluzas. Las encuestas nacionales no la miden, así que su voto
-  sale de las autonómicas del 17 de mayo de 2026
-  (`r num_es(100 * sim$aa_pct_and)` % en Andalucía), con incertidumbre en el
-  paso de autonómicas a generales. Ese voto sale primero de "otros partidos"
-  y después de Podemos y el Frente Amplio.
+  provincias andaluzas. La mayoría de encuestas nacionales no la miden, así
+  que su voto en Andalucía sale del [MRP con varias
+  encuestas](../../11/mrp-multiencuesta/index.qmd)
+  (`r num_es(100 * sim$aa_pct_and)` %, con incertidumbre), y su reparto entre
+  provincias, de las autonómicas del 17 de mayo de 2026. Hasta el 12 de
+  noviembre usaba el 9,62 % de esas autonómicas, que es demasiado para unas
+  generales. Ese voto sale primero de "otros partidos" y después de Podemos y
+  el Frente Amplio, cada uno en proporción a su voto en la provincia.
 
 La cifra de cada partido es su media de escaños en las simulaciones,
 redondeada por mayores restos para que entre todos sumen 350. Las medianas,

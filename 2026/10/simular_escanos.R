@@ -273,6 +273,14 @@ aplicar_regla_mapa <- function(
     quede <- aa_share - de_resto
     pool <- names(aa_caniba)
     w <- aa_caniba / sum(aa_caniba)
+    # dentro del bloque PODEMOS + SUMAR, cada uno paga en proporción a su
+    # voto en la provincia (pierden la misma FRACCIÓN, no los mismos
+    # puntos). Con pesos en puntos, Podemos (1-2 %) quedaba a 0 en la
+    # mayoría de draws de Sevilla, Cádiz, Málaga o Granada (12 nov 2026)
+    izq <- intersect(c("PODEMOS", "SUMAR"), pool)
+    if (sum(v[izq]) > 0) {
+      w[izq] <- sum(w[izq]) * v[izq] / sum(v[izq])
+    }
     quita <- pmin(quede * w, v[pool])
     v[pool] <- v[pool] - quita
     sobra <- quede - sum(quita)
