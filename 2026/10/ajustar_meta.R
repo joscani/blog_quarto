@@ -110,9 +110,11 @@ inicio_campo <- function(campo, fin) {
 # (8-9 nov 2026): de una casa de esta lista solo entran entregas con campos
 # que no se solapan; una entrega solapada con otra posterior queda fuera.
 # Se aplica a prep_grande() y a prep_bloque() (esta, desde el 9 nov 2026).
+# ElectoPanel, desde el 14 nov 2026 ("9–12 nov" y "9–13 nov 26"): ya está
+# fuera de prep_grande() por casas_fuera, así que solo afecta a prep_bloque().
 # `d` va en formato largo, con encuestadora, campo, enlace y fecha
 quitar_tracking_solapado <- function(d) {
-  casas_tracking <- c("SW Demoscopia", "SocioMétrica")
+  casas_tracking <- c("SW Demoscopia", "SocioMétrica", "ElectoPanel")
   enc <- d |>
     filter(encuestadora %in% casas_tracking) |>
     distinct(encuestadora, campo, enlace, fecha) |>
