@@ -29,6 +29,9 @@ edu_lv <- c("baja", "media", "alta")
 # sensibilidad de la semilla (por defecto, sin excluir nada y alpha = 0,5)
 excluye <- "ninguno"
 alpha <- 0.5
+# de dónde sale la asociación entre variables en la semilla (sección 4):
+# "ccaa" (desde el 14 nov 2026) o "prov" (la semilla anterior).
+nivel_semilla <- "ccaa"
 
 # ---------------------------------------------------------------------------
 # 1. Censo: tabla 66600, provincia a provincia
@@ -388,6 +391,24 @@ cat(
   sum(semilla_encuesta == 0),
   sprintf("(%.0f%%)\n", 100 * mean(semilla_encuesta == 0))
 )
+
+# La asociación entre variables, de la comunidad (cambio del 14 nov 2026).
+# Con la de la provincia, la relación edad x recuerdo salía de un puñado de
+# personas: en Ourense, 16 jóvenes del CIS (8 recuerdan PSOE, 1 PP). Eso daba
+# a los jóvenes de Ourense más recuerdo PSOE que PP y el PSOE primero en el
+# mapa por edad. Ahora cada provincia lleva los recuentos de su comunidad,
+# reescalados a su número de entrevistas:
+#   recuentos_prov = n_prov * p_ccaa
+# Lo propio de cada provincia lo ponen los targets (Censo y 23-J), no la
+# semilla. En las uniprovinciales no cambia nada (p_prov = p_ccaa).
+if (nivel_semilla == "ccaa") {
+  ccaa_fila <- as.character(prov_ccaa$ccaa[match(dn$prov, prov_ccaa$prov)])
+  m_prov <- matrix(semilla_encuesta, nrow = dims[1]) # provincia x resto de celdas
+  m_ccaa <- rowsum(m_prov, ccaa_fila)[ccaa_fila, ] # recuentos de la comunidad
+  semilla_encuesta[] <- m_ccaa / rowSums(m_ccaa) * rowSums(m_prov)
+  stopifnot(abs(sum(semilla_encuesta) - nrow(sem_dat)) < 1e-6,
+            !anyNA(semilla_encuesta))
+}
 
 # Con 28.000 celdas y 11.000 entrevistas casi todo está vacío: se suaviza
 # mezclando con la independencia, como en el post de octubre

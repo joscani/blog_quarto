@@ -173,6 +173,57 @@ Tenerife (no usada; revisar si se usa).
   pista. Como glmmTMB: herramientas rápidas para decidir la estructura, el
   bayesiano para las cifras.
 
+## Semilla de la tabla a nivel de CCAA (14 nov 2026): qué falta por cambiar
+
+**Qué cambió.** En `02_poblacion_raking.R`, `nivel_semilla <- "ccaa"`. La
+asociación sexo × edad × estudios × recuerdo de la semilla sale ahora del CIS de
+la comunidad, reescalado al número de entrevistas de cada provincia. Antes salía
+del CIS de la provincia (`"prov"` lo recupera). Los targets (Censo y 23-J por
+provincia) no cambian.
+
+**Por qué.** En X señalaron que el mapa de ganador por edad ponía al PSOE primero
+entre los jóvenes de Ourense. Venía de la semilla: 16 jóvenes del CIS en Ourense
+(8 recuerdan PSOE, 1 PP), que daban a los jóvenes de Ourense más recuerdo PSOE
+(22 %) que PP (16 %). Con la semilla de Galicia: PP 23 %, PSOE 17 %. Se probó
+antes mezclar provincia y CCAA con 100 entrevistas ficticias (`k_ccaa = 100`):
+no bastaba (PSOE seguía primero en el 88 % de los draws).
+
+**Hecho (fase 1, sin reajustar Stan).**
+- `02_poblacion_raking.R` → `datos/tabla_post_prov.rds`.
+- Release `mrp-multiencuesta-datos`: `tabla_post_prov.rds` y
+  `tabla_postestratificacion_provincia.csv` (enlazado en el post I) son ya la
+  tabla nueva; las anteriores quedan como `tabla_post_prov_semilla_prov.rds` y
+  `tabla_postestratificacion_provincia_semilla_prov.csv`.
+- `datos/*.rds` fuera de git (antes iban `celdas_brms`, `celdas_part`,
+  `tabla_post_prov` y `prov_ccaa`); se bajan con `completo/baja_datos.sh`.
+- `completo/11b_entradas_escenarios.R` toma N de `tabla_post_prov.rds`.
+- `completo/12_escenarios_voto_seg.R`: `stopifnot` del delta relajado de 1e-4 a
+  5e-3 (diferencia observada con la tabla nueva: 1,4e-3 en logit).
+- Rehechos `11b`, `12`, `21` y `28` (`mapa_ganador_seguridad.png`).
+
+**Pendiente.**
+1. Fase 2, reajustar con la tabla nueva:
+   - `completo/10_datos_voto_seg.R`: reparte las entrevistas sin provincia
+     (More in Common, 2.861 de 3.802; Ateneo, 1.024 de 1.338) entre las
+     provincias de su CCAA con pesos de la tabla. Rehacer y reajustar
+     `11_ajusta_voto_seg.R` (Stan, ~4 h).
+   - Participación (`fit_separado_nuts_part.rds`, `mrp_part.stan`): su `delta`
+     calibra la participación del 23-J con las N de la tabla. Rehacer sus datos
+     y reajustar.
+   - Después, volver el `stopifnot` del delta en `12` a 1e-4 y rehacer 11b, 12, 21.
+2. Post I (`index.qmd`): el texto de la semilla (l. 256-293) dice "por
+   provincia". El CSV de la release (l. 344) ya es el nuevo: decir en el post
+   que la tabla cambió el 14 nov y enlazar la anterior (`_semilla_prov.csv`).
+3. Post II (`ii-modelo.qmd`): usa la tabla (l. 160) y habla de la semilla (l. 823).
+4. Post III (`iii-participacion.qmd` vía `iii-funciones.R`): lee
+   `entradas_escenarios.rds` y `escenarios_seg/`; re-renderizar y revisar cifras.
+5. Mapas por edad publicados en X: sustituir por `mapa_ganador_seguridad.png` nuevo.
+6. Release `mrp-multiencuesta-completo` (ficheros de `completo/datos/`): subir los
+   nuevos.
+7. Los posts están congelados (`freeze`): borrar su `_freeze/` antes de renderizar.
+8. Commit de `02`, `11b`, `12`, `28`, `GUIA.md`, `.gitignore`, `baja_datos.sh` y
+   el borrado de git de los 4 `.rds` de `datos/`.
+
 ## Decisiones y pendientes
 
 - **UPN** como categoría propia (ceros estructurales fuera de Navarra).

@@ -18,4 +18,13 @@ tar -xzf "$dir_completo/escenarios_seg.tar.gz" -C "$dir_completo"
 gh release download mrp-multiencuesta-datos --repo joscani/blog_quarto \
   --pattern fit_separado_nuts_part.rds --dir "$dir_proy/datos" --clobber
 
+# tabla de población y entradas pequeñas (hasta el 14 nov 2026 iban en git).
+# tabla_post_prov_semilla_prov.rds: la tabla anterior (semilla por provincia),
+# con la que se renderizaron los posts (I) y (II).
+for f in tabla_post_prov.rds tabla_post_prov_semilla_prov.rds prov_ccaa.rds \
+         celdas_brms.rds celdas_part.rds; do
+  gh release download mrp-multiencuesta-datos --repo joscani/blog_quarto \
+    --pattern "$f" --dir "$dir_proy/datos" --clobber
+done
+
 echo "Datos en $dir_completo"
