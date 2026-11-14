@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Baja de las releases lo necesario para trabajar en el post (III) en otra máquina.
+# Baja de las releases lo necesario para trabajar en los posts (III) y (IV) en otra máquina.
 # Requiere gh con sesión iniciada. Ejecutar desde cualquier carpeta del repositorio:
 #   bash 2026/11/mrp-multiencuesta/completo/baja_datos.sh
 set -euo pipefail
@@ -26,5 +26,12 @@ for f in tabla_post_prov.rds tabla_post_prov_semilla_prov.rds prov_ccaa.rds \
   gh release download mrp-multiencuesta-datos --repo joscani/blog_quarto \
     --pattern "$f" --dir "$dir_proy/datos" --clobber
 done
+
+# post (IV): la release mrp-multiencuesta-completo ya trae tabla_post.rds,
+# posterior_celdas_80.rds (unos 800 MB) y las salidas de 31-35. Falta el 23-J por
+# municipio, que usa 33_navarra_23j_zonas.R
+mkdir -p "$raiz/2026/10/mrp-raking/datos"
+gh release download mrp-multiencuesta-datos --repo joscani/blog_quarto \
+  --pattern mun_23j.rds --dir "$raiz/2026/10/mrp-raking/datos" --clobber
 
 echo "Datos en $dir_completo"
