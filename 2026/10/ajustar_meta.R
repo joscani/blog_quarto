@@ -112,9 +112,48 @@ inicio_campo <- function(campo, fin) {
 # Se aplica a prep_grande() y a prep_bloque() (esta, desde el 9 nov 2026).
 # ElectoPanel, desde el 14 nov 2026 ("9–12 nov" y "9–13 nov 26"): ya está
 # fuera de prep_grande() por casas_fuera, así que solo afecta a prep_bloque().
+# 40dB, desde el 15 nov 2026: tracking electoral para El País/SER
+# ("10–12 nov" n = 1.000 y "10–13 nov 26" n = 1.500).
 # `d` va en formato largo, con encuestadora, campo, enlace y fecha
+casas_tracking <- c("SW Demoscopia", "SocioMétrica", "ElectoPanel", "40dB")
+# Encuestas de una misma casa con campos solapados que SÍ son muestras
+# independientes (p. ej. dos clientes distintos). Formato "casa|campo",
+# con el campo de la entrega posterior. Vacío a 15 nov 2026.
+solapes_independientes <- character(0)
+
+# Detector (15 nov 2026): si una casa que no está en casas_tracking tiene
+# entregas con campos solapados, para el ajuste. Puede ser un tracking nuevo
+# que contaría entrevistas dos veces. Solución: añadir la casa a
+# casas_tracking o, si son muestras independientes, el par a
+# solapes_independientes.
+avisa_solapes_nuevos <- function(d) {
+  enc <- d |>
+    filter(!encuestadora %in% casas_tracking) |>
+    distinct(encuestadora, campo, enlace, fecha) |>
+    mutate(inicio = inicio_campo(campo, fecha))
+  pares <- enc |>
+    inner_join(
+      select(enc, encuestadora, campo_post = campo, inicio_post = inicio, fecha_post = fecha),
+      by = "encuestadora",
+      relationship = "many-to-many"
+    ) |>
+    filter(fecha_post > fecha | (fecha_post == fecha & campo_post > campo),
+           inicio_post <= fecha,
+           !paste(encuestadora, campo_post, sep = "|") %in% solapes_independientes)
+  if (nrow(pares) > 0) {
+    stop(
+      "Entregas solapadas de casas fuera de casas_tracking (¿tracking nuevo?): ",
+      paste0(pares$encuestadora, " '", pares$campo, "' y '", pares$campo_post, "'",
+             collapse = "; "),
+      ". Añade la casa a casas_tracking o el par a solapes_independientes en ajustar_meta.R.",
+      call. = FALSE
+    )
+  }
+  invisible(d)
+}
+
 quitar_tracking_solapado <- function(d) {
-  casas_tracking <- c("SW Demoscopia", "SocioMétrica", "ElectoPanel")
+  avisa_solapes_nuevos(d)
   enc <- d |>
     filter(encuestadora %in% casas_tracking) |>
     distinct(encuestadora, campo, enlace, fecha) |>
