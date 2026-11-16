@@ -19,11 +19,16 @@ colores <- c(PP = "#1D84CE", PSOE = "#E30613", VOX = "#5AC035", SUMAR = "#E5007D
              PNV = "#008135", BNG = "#ADCFEF", CCA = "#FFD700", AA = "#2E8B57",
              UPN = "#0A3A80", "UPN+PP" = "#0A3A80", OTROS = "grey60", BLANCO = "grey90")
 
-celdas <- readRDS(file.path(dir_completo, "tabla_post.rds")) |>
+# VARIANTE=semilla_mn_gp (16 nov 2026): lee tabla_post y posterior_celdas_80 de esa
+# variante y escribe con el sufijo _semilla_mn_gp (no toca lo publicado)
+variante <- Sys.getenv("VARIANTE", "")
+stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
+suf <- if (variante == "") "" else paste0("_", variante)
+celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds"))) |>
   mutate(tramo = case_when(edad %in% c("18-20", "21-24", "25-34") ~ "18-34",
                            edad == "65+" ~ "65+",
                            .default = "35-64"))
-posterior <- readRDS(file.path(dir_completo, "posterior_celdas_80.rds"))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
 provincias_sf <- readRDS(file.path(dir_completo, "provincias_sf.rds"))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 
@@ -81,5 +86,5 @@ g <- provincias_sf |>
         legend.position = "bottom", legend.box = "vertical",
         plot.margin = margin(10, 10, 10, 10))
 
-ggsave(here::here("2026/11/mrp-multiencuesta/completo/mapa_ganador_seguridad.png"), g,
+ggsave(here::here("2026/11/mrp-multiencuesta/completo", paste0("mapa_ganador_seguridad", suf, ".png")), g,
        width = 11, height = 4.6, dpi = 200, bg = "white")

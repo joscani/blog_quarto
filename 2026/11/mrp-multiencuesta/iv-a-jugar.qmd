@@ -56,6 +56,37 @@ La serie del MRP con varias encuestas:
 3. [MRP con varias encuestas (III): voto más simpatía, participación](iii-participacion.qmd)
 4. MRP con varias encuestas (IV): este post
 
+# Actualización (16 de noviembre)
+
+::: callout-important
+## Qué ha cambiado
+
+Después de publicar este post he revisado el modelo a raíz de los comentarios. Tres cambios:
+
+- **La tabla de postestratificación.** La relación entre edad y recuerdo de voto dentro de cada comunidad ya no se copia de los pocos encuestados de cada grupo: sale de un modelo multinivel que combina el patrón de toda España con lo propio de cada comunidad. Tiene menos ruido y predice mejor el recuerdo de voto de encuestas que no ha visto (incluido el postelectoral del CIS de 2023).
+- **El modelo de voto.** Usa el resultado del 23-J en cada provincia como predictor de grupo. Sobre todo para los de 18 a 20 años, que no tienen recuerdo de voto y heredaban la tendencia nacional: en el País Vasco el voto a VOX de ese grupo baja del 18 % al 13 %.
+- **Navarra.** El 29-N UPN y PP se presentan juntos, y así se suman en los mapas y en el reparto de escaños.
+
+En el total nacional casi nada cambia (menos de 0,1 puntos en el voto). Todo el post está recalculado con el modelo nuevo. Donde más cambia es en Cataluña de 25 a 34 años (ahora PSOE 20,1 % y VOX 19,3 %, un empate), Cataluña de 18 a 20 (ERC primero) y Navarra de 18 a 34 (PSOE 17,8 %, VOX 16,3 %); lo comento en cada caso.
+:::
+
+Estos son los dos mapas que tienen más sentido: el primer y el segundo partido en cada provincia y en cada comunidad, sin separar por edad. Son los que se podrán contrastar con el resultado del 29-N. El color pálido indica que ese puesto cambia de unas simulaciones a otras.
+
+Ojo, que esto **no es un pronóstico**. Junta encuestas de junio a octubre, de cuando muchas cosas eran distintas, y la incertidumbre que muestran los colores es solo la del modelo y la de las muestras: no lleva el error histórico de las encuestas, que suele ser bastante mayor. Para un pronóstico, con ese error y con más encuestas, está el [seguimiento](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/seguimiento).
+
+![Primer y segundo partido por provincia y comunidad, todas las edades, con la seguridad de cada puesto.](completo/mapa_ganador_segundo_80_semilla_mn_gp.png)
+
+::: callout-warning
+## Los resultados por edad: con mucha cautela
+
+Las estimaciones por edad dentro de una provincia o comunidad tienen mucha más incertidumbre de la que muestran los intervalos, y no se podrán comprobar con el resultado del 29-N (no hay datos oficiales por edad). Donde más dudas hemos visto:
+
+- **Los de 18 a 20 años**, que no tienen recuerdo de voto y son pocos en cada comunidad (29 en el País Vasco, 44 en Galicia).
+- **Los jóvenes de Navarra y el País Vasco**, sobre todo los que se abstuvieron o votaron a VOX en 2023: hay de 5 a 25 entrevistas por grupo y el modelo tira del patrón de toda España.
+- **Los mayores de Galicia**: la tabla nueva suaviza un patrón real (los mayores gallegos votan más al PP que en el resto), así que lo de Pontevedra con más de 65 años no hay que creérselo.
+- **Santa Cruz de Tenerife**, donde VOX no se presentó en 2023 y el modelo no tiene un recuerdo de VOX en el que apoyarse.
+- **Cataluña de 25 a 34**: las encuestas dan cosas muy distintas (un 15 % de VOX en el CIS y entre el 26 % y el 31 % en las demás), y el resultado depende de suponer que los jóvenes que se abstuvieron en 2023 votarán como dicen.
+:::
 
 Este post  tiene dos partes, que se pueden leer de forma independiente, creo yo.  Una que ha surgido hoy a raíz de un post en X que puse y que ha tenido cierta repercusión. Al leer algunos comentarios me planteé cambiar alguna cosa y comprobar otras. Esa es  la [primera parte](#primera-parte). 
 
@@ -119,7 +150,7 @@ en los datos. Y otras, el modelo, sencillamente, no lo puede ver.
 
 Nos comentaban que no tenía sentido que el PSOE saliera primero entre los jóvenes en Ourense, y la causa era que la relación edad x recuerdo de voto salía de 16 jóvenes entrevistados por el CIS donde 8 recordaban haber votado al PSOE y 1 al PP.  Como comentaba antes, el procedimiento de raking fija los totales de cada provincia por edad (y sexo y estudios) y por recuerdo de voto, pero fijadas esas marginales, el recuerdo de a quién se ha votado en cada tramo de edad sale de la encuesta. Al usar el nivel de provincia esa distribución conjunta puede ser engañosa. 
 
-Rehaciendo usando esa tabla saldría lo siguiente. De hecho justo este perfil, en el que hay 17 
+Rehaciendo la tabla saldría lo siguiente. La segunda tabla compara, con el mismo modelo de voto, tres formas de construir la tabla de postestratificación: con la relación edad × recuerdo de cada provincia (la del mapa del tuit), con la de cada comunidad (la del 14 de noviembre) y con la semilla multinivel de la actualización. Con las dos últimas el PP vuelve a salir primero entre los jóvenes de Ourense. De hecho justo este perfil, en el que hay 17 
 entrevistas en la unión de encuestas, sirve para ejemplificar por qué ponderar no es suficiente y son importantes cosas como los modelos multinivel para dar resultados plausibles. 
 
 
@@ -136,7 +167,7 @@ ourense
 
 ### Badajoz: ¿el PSOE gana entre los jóvenes?
 
-En el mapa original, al poner solo el color de quien ganaba en cada provincia, se exageraba la seguridad del ganador. Por ejemplo en Badajoz entre los jóvenes de 18 a 34 años, el modelo da casi un triple empate. En las simulaciones, el PSOE sería primero en el 60% de las mismas. 
+En el mapa original, al poner solo el color de quien ganaba en cada provincia, se exageraba la seguridad del ganador. Por ejemplo en Badajoz entre los jóvenes de 18 a 34 años, el modelo daba casi un triple empate y el PSOE era primero en el 60 % de las simulaciones. Con el modelo actualizado el PSOE sale primero con más claridad (en el 88 % de las simulaciones), con PP y VOX empatados detrás. 
 
 ```{r badajoz}
 tabla_comentario("badajoz")
@@ -145,7 +176,7 @@ tabla_comentario("badajoz")
 
 ### Navarra: ¿VOX antes que Bildu entre los jóvenes?
 
-Otro comentario iba sobre que no se veía que Vox fuera por delante de Bildu entre los jóvenes en Navarra.  Y puff, a mí también me cuesta creerlo. Si sumamos los % de UPN y PP sería esta coalición la ganadora en ese tramo de edad. Vox y Bildu empatados.  
+Otro comentario iba sobre que no se veía que Vox fuera por delante de Bildu entre los jóvenes en Navarra.  Y puff, a mí también me cuesta creerlo. Con el modelo actualizado, UPN y PP, que el 29-N van juntos, suman un 22,8 % y serían la primera opción en ese tramo de edad. Por separado, el PSOE queda primero (17,8 %) y Vox y Bildu, empatados detrás (16,3 % y 16,2 %).  
 
 Es posible que aquí el MRP se columpie un poco, pero viendo el dato bruto y los ponderados están bastante empatados Vox y Bildu. Sigue costándome pensar que eso es así. Habrá que ver si se puede ver algo si sale un postelectoral.
 
@@ -154,9 +185,9 @@ tabla_comentario("navarra", c("VOX", "BILDU", "PSOE", "UPN", "PP"))
 ```
 ## Un mapa que dice cuán seguro es el ganador
 
-Bueno, el mapa corrigiendo la tabla de postestratificación e intentando reflejar la incertidumbre quedaría así. 
+Bueno, el mapa con el modelo actualizado (la tabla de postestratificación nueva y el predictor de grupo) e intentando reflejar la incertidumbre quedaría así. 
 
-![El mapa con la tabla nueva y la seguridad del ganador.](completo/mapa_ganador_seguridad.png)
+![El mapa con el modelo actualizado y la seguridad del ganador.](completo/mapa_ganador_seguridad_semilla_mn_gp.png)
 
 El código de este mapa está en [`28_mapa_seguridad_ganador.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/28_mapa_seguridad_ganador.R). El del mapa del tuit está en la sección 3.7 de [`20_preguntas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/20_preguntas.R), que entonces usaba la tabla anterior.
 
@@ -165,7 +196,7 @@ El código de este mapa está en [`28_mapa_seguridad_ganador.R`](https://github.
 ### Cataluña: ¿VOX primera fuerza entre los jóvenes?
 
 Entre jóvenes de 25 a 34 en Cataluña con 507 entrevistas hay datos suficientes, 
-y tanto el dato bruto, como ponderando dicen que vox sería primera fuerza en ese tramo. Cuesta creerlo, lo sé. Pero a la vista del dato bruto y el ponderado parece eso. Sin embargo, el MRP baja esa estimación respecto a las ponderadas y la deja cerca del dato bruto: Vox sigue primero, pero con menos ventaja sobre el psoe, y sube algo el % de ERC. 
+y tanto el dato bruto, como ponderando dicen que vox sería primera fuerza en ese tramo. Cuesta creerlo, lo sé. Pero a la vista del dato bruto y el ponderado parece eso. Sin embargo, el MRP baja esa estimación respecto a las ponderadas y, con el modelo actualizado, queda en un empate entre el PSOE (20,1 %) y Vox (19,3 %), con ERC detrás. Ojo: aquí las encuestas dicen cosas muy distintas (un 15 % de Vox en el CIS y entre el 26 % y el 31 % en las demás), y parte de ese voto a Vox viene de jóvenes que se abstuvieron en 2023 y dicen que ahora le votarían. 
 
 
 ```{r cataluna}
@@ -177,7 +208,7 @@ tabla_comentario("cataluna_25_34", c("VOX", "PSOE", "ERC", "JUNTS", "PP"))
 
 También comentaron que en Galicia el BNG sería primera fuerza entre menores de 45. Y tiene sentido teniendo en cuenta sus resultados en las últimas autonómicas. Pero en los datos que tenemos no se ve eso. 
 
-En bruto primera fuerza sería el psoe, ponderando (con y sin recuerdo de voto) también sería el psoe, y en el MRP sería el PP, pero por poco, un empate con el psoe en realidad.
+En bruto primera fuerza sería el psoe, ponderando (con y sin recuerdo de voto) también sería el psoe, y en el MRP sería el PP (26,0 % frente al 22,0 % del PSOE).
 
 ```{r galicia}
 tabla_comentario("galicia_menos_45", c("PSOE", "PP", "BNG", "VOX"))
@@ -200,7 +231,7 @@ tabla_navarra_municipios()
 
 Las encuestas para 2026 ofrecen como mucho dato a nivel provincial, así que hasta ahí llega su granularidad. No podemos dar cosa más fina. 
 
-Según estas encuestas, y [son varias agregadas](https://muestrear-no-es-pecado.es/2026/11/mrp-multiencuesta/)  el % de votos a Vox está en torno al 10%, un 13 % según el modelo. 
+Según estas encuestas, y [son varias agregadas](https://muestrear-no-es-pecado.es/2026/11/mrp-multiencuesta/)  el % de votos a Vox está en torno al 10%, un 12 % según el modelo. 
 
 ```{r navarra-total}
 tabla_comentario("navarra_total", c("PSOE", "PP", "BILDU", "VOX"))
@@ -209,7 +240,9 @@ tabla_comentario("navarra_total", c("PSOE", "PP", "BILDU", "VOX"))
 
 ### Los de 18 a 20: la curva de edad es nacional
 
-La gente que hoy tiene entre 18 y 20 años son nuevos votantes, y no tienen "recuerdo de voto".  En este grupo de edad es donde más se separa el MRP del bruto, cosas como que en el País Vasco en bruto el voto a vox sea del 3,4 % y que en el MRP llegue al 18 % hace sospechar que aquí el partial pooling se ha columpiado. El modelo multinivel detecta una subida grande del voto a Vox entre los más jóvenes y el partial pooling le presta esa subida a los jóvenes del País Vasco.  Y con tan solo 29 entrevistas en ese grupo de edad en el País Vasco, el partial pooling tira más hacia la info general.  No free lunch, como se decía en época pre IA. 
+La gente que hoy tiene entre 18 y 20 años son nuevos votantes, y no tienen "recuerdo de voto".  En este grupo de edad es donde más se separa el MRP del bruto, cosas como que en el País Vasco en bruto el voto a vox sea del 3,4 % y que en el MRP de la primera versión llegase al 18 % hace sospechar que aquí el partial pooling se ha columpiado. El modelo multinivel detecta una subida grande del voto a Vox entre los más jóvenes y el partial pooling le presta esa subida a los jóvenes del País Vasco.  Y con tan solo 29 entrevistas en ese grupo de edad en el País Vasco, el partial pooling tira más hacia la info general.  No free lunch, como se decía en época pre IA. 
+
+El problema de fondo es que, al no tener recuerdo de voto, a los de 18 a 20 no les llega la información política de su provincia. El modelo actualizado usa como predictor de grupo el resultado del 23-J en cada provincia, y con eso el voto a Vox de los de 18 a 20 en el País Vasco baja al 12,6 %. Sigue por encima del dato bruto: el predictor corrige lo que explica el voto de cada provincia en toda España, y con 29 entrevistas el modelo no se fía del todo de lo que se sale de ahí. 
 
 
 ```{r cataluna-18-20}
@@ -273,7 +306,7 @@ La tabla de postestratificación: quiénes son y cuántos. Una fila por celda
 Tenemos 12300 celdas y en cada una una columna N que indica cuánta población hay ahí. Su suma es la población de 18 años y más (Censo anual de Población del INE)
 ```{r p2-tablas}
 #| code-fold: false
-celdas <- readRDS(file.path(dir_completo, "tabla_post.rds"))
+celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", sufijo_modelo, ".rds")))
 celdas
 
 sum(celdas$N) # población de 18 y más
@@ -287,7 +320,7 @@ En posterior tenemos 12 millones 300 mil filas: 12300 celdas x 1000 draws en cad
 
 ```{r p2-posterior}
 #| code-fold: false
-posterior <- readRDS(file.path(dir_completo, "posterior_celdas_80.rds"))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", sufijo_modelo, ".rds")))
 posterior
 
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
@@ -804,16 +837,19 @@ efecto(
      labs(title = "Madrid: voto por edad")
 ```
 
-El zigzag del PP en Madrid (más alto entre los de 21 a 24 años que entre los
-de 25 a 34) no es una cosa de la edad, sino de la tabla de
-postestratificación. En la tabla, el 29,0 % de los madrileños de 21 a 24 años
-votó al PP en 2023, frente al 17,8 % de los de 25 a 34. Esa relación entre
+En la primera versión de este post había un zigzag del PP en Madrid (más alto
+entre los de 21 a 24 años que entre los de 25 a 34) que no era una cosa de la
+edad, sino de la tabla de postestratificación. En aquella tabla, el 29,0 % de
+los madrileños de 21 a 24 años votó al PP en 2023, frente al 17,8 % de los de
+25 a 34; con la tabla nueva son el 21,1 % y el 19,6 %, y el zigzag casi
+desaparece. Esa relación entre
 edad y recuerdo sale de la semilla del raking, que solo usa entrevistas del
 CIS: en Madrid, 34 de 103 jóvenes de 21 a 24 años recuerdan haber votado al
 PP (33 %), frente a 60 de 289 de 25 a 34 (21 %). En las otras tres casas no
 pasa: 15 de 90 (17 %) entre los de 21 a 24 y 55 de 288 (19 %) entre los de 25
 a 34. Es lo mismo que en Ourense, con más entrevistas: el cruce edad ×
-recuerdo dentro de cada provincia arrastra el ruido de la muestra del CIS.
+recuerdo dentro de cada provincia arrastraba el ruido de la muestra del CIS,
+y es justo lo que corrige la semilla multinivel.
 
 ```{r p2-territorio-cataluna}
 efecto(
@@ -1071,6 +1107,9 @@ escanos <- celdas |> distinct(cod, escanos)
 
 reparto <- function(votos) {
   votos |>
+    # el 29-N, UPN y PP van juntos en Navarra (cod 31): una sola lista
+    mutate(partido = if_else(cod == 31 & partido == "UPN", "PP", partido)) |>
+    summarise(votos = sum(votos), pct = sum(pct), .by = c(draw, cod, partido)) |>
     filter(pct >= 3, !partido %in% c("OTROS", "BLANCO")) |>
     left_join(escanos, by = "cod") |>
     cross_join(tibble(divisor = 1:37)) |>
@@ -1115,7 +1154,7 @@ congresos |>
   )
 ```
 
-Si solo votasen los de 18 a 34, VOX sería el partido más votado, con unos 121 escaños. Si solo votasen los de 65 y más, ganaría el PSOE, con unos 150. Pero lo curioso es que PP + VOX suman mayoría absoluta en todos los electorados; solo entre los mayores no es seguro (en el 67 % de los draws).
+Si solo votasen los de 18 a 34, VOX sería el partido más votado, con unos 121 escaños. Si solo votasen los de 65 y más, ganaría el PSOE, con unos 150. PP + VOX suman mayoría absoluta en todos los draws si solo votasen los jóvenes, los hombres o todo el mundo; si solo votasen las mujeres, en el 89 %, y si solo votasen los mayores, en el 34 %.
 
 ## El votante típico de cada partido
 

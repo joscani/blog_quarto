@@ -26,9 +26,14 @@ encuestas <- readRDS(file.path(dir_completo, "encuestas_completo.rds")) |>
 bruto <- encuestas |>
   summarise(n = n(), votos_vox = sum(vox), bruto = 100 * mean(vox), .by = c(ccaa, tramo))
 
-celdas <- readRDS(file.path(dir_completo, "tabla_post.rds")) |>
+# VARIANTE=semilla_mn_gp (16 nov 2026): lee tabla_post y posterior_celdas_80 de esa
+# variante y escribe con el sufijo _semilla_mn_gp (no toca lo publicado)
+variante <- Sys.getenv("VARIANTE", "")
+stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
+suf <- if (variante == "") "" else paste0("_", variante)
+celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds"))) |>
   transmute(celda, N, ccaa, tramo = tramo(as.character(edad)))
-mrp_draws <- readRDS(file.path(dir_completo, "posterior_celdas_80.rds")) |>
+mrp_draws <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds"))) |>
   select(draw, celda, part, VOX) |>
   left_join(celdas, by = "celda") |>
   summarise(vox = 100 * sum(N * part * VOX) / sum(N * part), .by = c(draw, ccaa, tramo))
@@ -54,4 +59,4 @@ print(tabla |>
 cat("\nz medio por tramo:\n")
 print(tabla |> summarise(z_medio = mean(z), .by = tramo))
 
-saveRDS(tabla, file.path(dir_completo, "vox_18_20_ccaa.rds"))
+saveRDS(tabla, file.path(dir_completo, paste0("vox_18_20_ccaa", suf, ".rds")))

@@ -16,6 +16,9 @@ suppressPackageStartupMessages({
 
 dir_proy <- here::here("2026/11/mrp-multiencuesta")
 dir_completo <- file.path(dir_proy, "completo", "datos")
+# Modelo del post (16 nov 2026): semilla multinivel + predictor de grupo. Los
+# ficheros publicados el 14 nov (sin sufijo) siguen en el disco; "" vuelve a ellos.
+sufijo_modelo <- "_semilla_mn_gp"
 
 # ---- Formato -------------------------------------------------------------------
 
@@ -31,7 +34,7 @@ gt_es <- function(d, ...) {
 
 # ---- 1. El cambio de semilla ---------------------------------------------------
 
-semillas <- function() readRDS(file.path(dir_completo, "compara_semillas.rds"))
+semillas <- function() readRDS(file.path(dir_completo, paste0("compara_semillas", sufijo_modelo, ".rds")))
 
 tabla_semillas <- function() {
   semillas()$resumen |>
@@ -46,8 +49,14 @@ tabla_semillas <- function() {
 
 # % de un grupo y partido con la tabla vieja y la nueva
 semilla_grupo <- function(grupo, partidos) {
-  semillas()$res |>
+  r <- semillas()$res |>
     filter(agregado == "Provincia x edad (3 tramos)", .data$grupo == !!grupo, partido %in% partidos)
+  # con el modelo nuevo: tres tablas (provincia, comunidad, multinivel), misma posterior
+  if ("pct_ccaa" %in% names(r)) {
+    r <- r |> transmute(grupo, partido, semilla_provincia = pct_vieja, semilla_comunidad = pct_ccaa,
+                        semilla_multinivel = pct_nueva)
+  }
+  r |> mutate(across(where(is.double), \(x) round(x, 1)))
 }
 
 # ---- 2. Jóvenes de una comunidad -----------------------------------------------
@@ -97,7 +106,7 @@ tabla_navarra_municipios <- function() {
 
 # ---- 4. VOX en 18-20 por comunidad ---------------------------------------------
 
-vox_18_20 <- function() readRDS(file.path(dir_completo, "vox_18_20_ccaa.rds"))
+vox_18_20 <- function() readRDS(file.path(dir_completo, paste0("vox_18_20_ccaa", sufijo_modelo, ".rds")))
 
 tabla_vox_18_20 <- function(n_min = 20) {
   vox_18_20() |>
@@ -117,7 +126,7 @@ tabla_vox_18_20 <- function(n_min = 20) {
 # Filas: bruto, ponderada sin recuerdo, ponderada con recuerdo y MRP (con su
 # intervalo del 90 %). Columnas: entrevistas y los partidos en disputa.
 
-comentarios <- function() readRDS(file.path(dir_completo, "comentarios.rds"))
+comentarios <- function() readRDS(file.path(dir_completo, paste0("comentarios", sufijo_modelo, ".rds")))
 
 nombres_fuente <- c(bruto = "Bruto", sin_rec = "Ponderada sin recuerdo",
                     con_rec = "Ponderada con recuerdo", mrp = "MRP")

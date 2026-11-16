@@ -16,7 +16,18 @@ library(dplyr)
 dir_proy <- here::here("2026/11/mrp-multiencuesta")
 dir_completo <- file.path(dir_proy, "completo", "datos")
 
-celdas <- readRDS(file.path(dir_completo, "tabla_post.rds"))
+# VARIANTE=semilla_mn_gp (16 nov 2026): tres tablas con la posterior nueva:
+# vieja (semilla de provincia), ccaa (semilla de comunidad, 14 nov) y nueva
+# (semilla multinivel). Escribe compara_semillas_semilla_mn_gp.rds.
+variante <- Sys.getenv("VARIANTE", "")
+stopifnot(variante %in% c("", "semilla_mn_gp"))
+suf <- if (variante == "") "" else paste0("_", variante)
+celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds")))
+if (variante != "") {
+  celdas <- celdas |>
+    left_join(readRDS(file.path(dir_completo, "tabla_post.rds")) |> select(celda, N_ccaa = N), by = "celda")
+  stopifnot(!anyNA(celdas$N_ccaa), abs(sum(celdas$N_ccaa) - sum(celdas$N)) / sum(celdas$N) < 1e-6)
+}
 vieja <- readRDS(file.path(dir_proy, "datos", "tabla_post_prov_semilla_prov.rds"))
 
 # N de la tabla vieja en las mismas celdas
@@ -35,7 +46,7 @@ stopifnot(!anyNA(celdas$N_vieja),
           abs(sum(celdas$N_vieja) - sum(vieja)) / sum(vieja) < 1e-6,
           abs(sum(celdas$N) - sum(vieja)) / sum(vieja) < 1e-6)
 
-posterior <- readRDS(file.path(dir_completo, "posterior_celdas_80.rds"))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 stopifnot(all(posterior$celda %in% celdas$celda))
 
@@ -58,7 +69,9 @@ pct_por <- function(grupo, columna_N) {
 compara <- function(nombre, grupo) {
   inner_join(pct_por(grupo, "N_vieja"), pct_por(grupo, "N"),
              by = c("grupo", "partido"), suffix = c("_vieja", "_nueva")) |>
-    mutate(agregado = nombre, dif = pct_nueva - pct_vieja)
+    mutate(agregado = nombre, dif = pct_nueva - pct_vieja) |>
+    (\(r) if (variante == "") r else
+      left_join(r, pct_por(grupo, "N_ccaa") |> rename(pct_ccaa = pct), by = c("grupo", "partido")))()
 }
 
 celdas <- celdas |> mutate(prov_tramo = paste(provincia, tramo), espana = "España")
@@ -90,5 +103,5 @@ cambios <- ganador |> filter(primero_vieja != primero_nueva)
 print(cambios, n = Inf)
 
 saveRDS(list(res = res, resumen = resumen, cambios = cambios),
-        file.path(dir_completo, "compara_semillas.rds"))
-cat("guardado compara_semillas.rds\n")
+        file.path(dir_completo, paste0("compara_semillas", suf, ".rds")))
+cat("guardado", paste0("compara_semillas", suf, ".rds"), "\n")

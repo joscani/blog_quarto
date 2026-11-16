@@ -44,8 +44,13 @@ casos <- list(
 )
 
 encuestas_todas <- readRDS(file.path(dir_completo, "encuestas_completo.rds"))
-celdas_todas <- readRDS(file.path(dir_completo, "tabla_post.rds"))
-posterior <- readRDS(file.path(dir_completo, "posterior_celdas_80.rds"))
+# VARIANTE=semilla_mn_gp (16 nov 2026): lee tabla_post y posterior_celdas_80 de esa
+# variante y escribe con el sufijo _semilla_mn_gp (no toca lo publicado)
+variante <- Sys.getenv("VARIANTE", "")
+stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
+suf <- if (variante == "") "" else paste0("_", variante)
+celdas_todas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds")))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 
 # % de voto por partido a partir de pesos (1 = bruto)
@@ -135,5 +140,5 @@ print(resumen |> mutate(across(where(is.double), \(x) round(x, 1))), n = Inf)
 print(entrevistas |> filter(fuente == "bruto"))
 
 saveRDS(list(casos = casos, fuentes = fuentes, entrevistas = entrevistas),
-        file.path(dir_completo, "comentarios.rds"))
+        file.path(dir_completo, paste0("comentarios", suf, ".rds")))
 cat("guardado comentarios.rds\n")
