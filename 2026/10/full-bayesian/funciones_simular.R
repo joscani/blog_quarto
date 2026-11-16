@@ -40,18 +40,24 @@ combinar_conjunto <- function(v, e) {
   out
 }
 
-# share andaluza de Adelante Andalucía (AA) en el tracker: la del MRP
+# share andaluza de Adelante Andalucía (AA) en el tracker: el centro que
+# implican las últimas encuestas nacionales que la miden (~1,5 % nacional,
+# con AA solo en Andalucía, ~17 % del censo => ~7,8 % andaluz). Tercer centro
+# del tracker: hasta el 11 nov el 9,62 % de las autonómicas de mayo (valor
+# por defecto de simular(), que sigue usando los posts congelados de
+# octubre), con el que AA superaba en Sevilla y Cádiz el voto de Podemos y
+# Sumar juntos y los dejaba a 0; del 12 al 15 nov el 3,36 % del MRP
 # multiencuesta (2026/11/mrp-multiencuesta/escanos_mrp_provincias.csv, del 29
-# oct 2026), media de las medianas provinciales ponderada por los votos
-# válidos de las autonómicas de mayo = 3,36 %. Sustituye desde el 12 nov 2026
-# al 9,62 % de las autonómicas (valor por defecto de simular(), que siguen
-# usando los posts congelados de octubre): con él AA superaba en Sevilla y
-# Cádiz el voto de Podemos y Sumar juntos y los dejaba a 0
-aa_pct_and_mrp <- 0.0336
+# oct 2026)
+aa_pct_and_enc <- 0.078
 
 # escaños con el escenario mapa a partir del ajuste conjunto
-simular_conjunto <- function(fit, dc, seed = 2029,
-                             aa_pct_and = aa_pct_and_mrp) {
+simular_conjunto <- function(
+  fit,
+  dc,
+  seed = 2029,
+  aa_pct_and = aa_pct_and_enc
+) {
   Kc <- dc$K[dc$C]
   Tc <- dc$T[dc$C]
   v <- unclass(fit$draws(
