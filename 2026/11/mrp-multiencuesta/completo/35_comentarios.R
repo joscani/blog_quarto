@@ -49,8 +49,13 @@ encuestas_todas <- readRDS(file.path(dir_completo, "encuestas_completo.rds"))
 variante <- Sys.getenv("VARIANTE", "")
 stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
 suf <- if (variante == "") "" else paste0("_", variante)
+# PART=70 (17 nov 2026): posterior_celdas_70 (participación del 23-J); por
+# defecto, 80. Con otra participación, la salida lleva _70 / _75 delante del sufijo.
+part_cod <- Sys.getenv("PART", "80")
+stopifnot(part_cod %in% c("70", "75", "80"))
+suf_part <- if (part_cod == "80") "" else paste0("_", part_cod)
 celdas_todas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds")))
-posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_", part_cod, suf, ".rds")))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 
 # % de voto por partido a partir de pesos (1 = bruto)
@@ -140,5 +145,5 @@ print(resumen |> mutate(across(where(is.double), \(x) round(x, 1))), n = Inf)
 print(entrevistas |> filter(fuente == "bruto"))
 
 saveRDS(list(casos = casos, fuentes = fuentes, entrevistas = entrevistas),
-        file.path(dir_completo, paste0("comentarios", suf, ".rds")))
+        file.path(dir_completo, paste0("comentarios", suf_part, suf, ".rds")))
 cat("guardado comentarios.rds\n")
