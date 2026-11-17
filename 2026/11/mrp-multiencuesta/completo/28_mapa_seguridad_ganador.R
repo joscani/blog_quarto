@@ -24,11 +24,16 @@ colores <- c(PP = "#1D84CE", PSOE = "#E30613", VOX = "#5AC035", SUMAR = "#E5007D
 variante <- Sys.getenv("VARIANTE", "")
 stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
 suf <- if (variante == "") "" else paste0("_", variante)
+# PART=70 (17 nov 2026): posterior_celdas_70 (participación del 23-J, 70,4 %);
+# por defecto, 80. Las salidas llevan el código de la participación.
+part_cod <- Sys.getenv("PART", "80")
+stopifnot(part_cod %in% c("70", "75", "80"))
+part_txt <- c("70" = "70,4 %", "75" = "75 %", "80" = "80 %")[[part_cod]]
 celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds"))) |>
   mutate(tramo = case_when(edad %in% c("18-20", "21-24", "25-34") ~ "18-34",
                            edad == "65+" ~ "65+",
                            .default = "35-64"))
-posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_", part_cod, suf, ".rds")))
 provincias_sf <- readRDS(file.path(dir_completo, "provincias_sf.rds"))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 
@@ -77,7 +82,7 @@ g <- provincias_sf |>
   labs(fill = NULL, alpha = "Gana en el … de las simulaciones",
        title = "Partido más votado por provincia: ¿con qué seguridad?",
        subtitle = "Color pálido: el ganador cambia de unas simulaciones a otras. Versión corregida (14 nov): el recuerdo de voto por edad sale de la comunidad, no de la provincia.",
-       caption = "MRP multiencuesta, octubre de 2026, participación del 80 %. En Navarra, UPN y PP sumados. Ganador: mayor % medio. Seguridad: % de las 1.000 simulaciones (draws de la posterior) en que ese partido es el primero.") +
+       caption = paste0("MRP multiencuesta, octubre de 2026, participación del ", part_txt, ". En Navarra, UPN y PP sumados. Ganador: mayor % medio. Seguridad: % de las 1.000 simulaciones (draws de la posterior) en que ese partido es el primero.")) +
   theme_void(base_size = 12) +
   theme(plot.title = element_text(face = "bold"),
         plot.subtitle = element_text(colour = "grey30", size = 10),
@@ -86,5 +91,5 @@ g <- provincias_sf |>
         legend.position = "bottom", legend.box = "vertical",
         plot.margin = margin(10, 10, 10, 10))
 
-ggsave(here::here("2026/11/mrp-multiencuesta/completo", paste0("mapa_ganador_seguridad", suf, ".png")), g,
+ggsave(here::here("2026/11/mrp-multiencuesta/completo", paste0("mapa_ganador_seguridad", if (part_cod == "80") "" else paste0("_", part_cod), suf, ".png")), g,
        width = 11, height = 4.6, dpi = 200, bg = "white")

@@ -437,7 +437,10 @@ dhondt_draws <- function(v, escanos) {
          dimnames = list(NULL, colnames(v)))
 }
 
-resultados_provinciales <- function(part = c(0.704, 0.80)) {
+# navarra_junta = TRUE (modelo del 16 nov, post IV): en Navarra los votos de UPN se
+# suman a PP antes del D'Hondt, como en 12_escenarios_voto_seg.R; el voto se
+# sigue dando por separado y la fila de escaños de PP en Navarra es UPN+PP.
+resultados_provinciales <- function(part = c(0.704, 0.80), navarra_junta = FALSE) {
   x <- readRDS(file.path(dir_esc, "escenarios.rds"))
   ie <- match(round(part, 3), round(x$escenarios, 3))
   stopifnot(!anyNA(ie))
@@ -458,6 +461,10 @@ resultados_provinciales <- function(part = c(0.704, 0.80)) {
                list(NULL, NULL, NULL, partidos_dh))
   for (i in seq_len(nrow(provs))) {
     p <- matrix(pct_v[, , i, ] / 100, ne * nd, length(partidos), dimnames = list(NULL, partidos))
+    if (navarra_junta && as.integer(provs$codigo_provincia[i]) == 31) {
+      p[, "PP"] <- p[, "PP"] + p[, "UPN"]
+      p[, "UPN"] <- 0
+    }
     p[p < 0.03] <- 0
     p[, c("OTROS", "BLANCO")] <- 0
     esc[, , i, ] <- dhondt_draws(p[, partidos_dh], provs$diputados[i])
@@ -501,6 +508,7 @@ resultados_provinciales <- function(part = c(0.704, 0.80)) {
     arrange(provincia, partido, escenario)
   list(voto = orden(voto) |> select(provincia, partido, escenario, mediana, p5, p95),
        escanos = orden(escanos) |>
+         filter(!(navarra_junta & provincia == "Navarra" & partido == "UPN")) |>
          select(provincia, partido, escenario, media, mediana, p5, p95),
        v = v, pct_v = pct_v, esc = esc, etq = etq, prov_ref = provs)
 }

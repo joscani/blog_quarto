@@ -18,6 +18,11 @@ suppressPackageStartupMessages({
 variante <- Sys.getenv("VARIANTE", "")
 stopifnot(variante %in% c("", "semilla_mn", "semilla_mn_gp"))
 suf <- if (variante == "") "" else paste0("_", variante)
+# PART=70 (17 nov 2026): posterior_celdas_70 (participación del 23-J, 70,4 %);
+# por defecto, 80. Las salidas llevan el código de la participación.
+part_cod <- Sys.getenv("PART", "80")
+stopifnot(part_cod %in% c("70", "75", "80"))
+part_txt <- c("70" = "70,4 %", "75" = "75 %", "80" = "80 %")[[part_cod]]
 dir_completo <- here::here("2026/11/mrp-multiencuesta/completo/datos")
 dir_salida <- here::here("2026/11/mrp-multiencuesta/completo")
 
@@ -27,7 +32,7 @@ colores <- c(PP = "#1D84CE", PSOE = "#E30613", VOX = "#5AC035", SUMAR = "#E5007D
              "UPN+PP" = "#0A3A80", OTROS = "grey60", BLANCO = "grey90")
 
 celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds")))
-posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", suf, ".rds")))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_", part_cod, suf, ".rds")))
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
 stopifnot(nrow(posterior) == 1000 * nrow(celdas))
 
@@ -69,9 +74,9 @@ geo <- bind_rows(
 stopifnot(nrow(geo) == 52 + 19)
 pt <- suppressWarnings(st_point_on_surface(geo))
 
-pie <- paste0("MRP multiencuesta (CIS, 40dB, More in Common y Ateneo del Dato), octubre de 2026. Participación del 80 %.\n",
+pie <- paste0("MRP multiencuesta (CIS, 40dB, More in Common y Ateneo del Dato), octubre de 2026. Participación del ", part_txt, ".\n",
               "% de voto válido, media de 1.000 simulaciones. Seguridad: % de simulaciones en que ese partido es el primero. En Navarra, UPN y PP sumados.",
-              if (variante == "semilla_mn_gp") " Semilla multinivel y predictor de grupo (provisional)." else "",
+              if (variante == "semilla_mn_gp") " Semilla multinivel y predictor de grupo." else "",
               "\nmuestrear-no-es-pecado.es")
 g <- ggplot(geo) +
   geom_sf(aes(fill = partido, alpha = nivel), colour = "white", linewidth = 0.15) +
@@ -83,13 +88,13 @@ g <- ggplot(geo) +
          alpha = guide_legend(order = 2, override.aes = list(fill = "grey30"))) +
   labs(fill = NULL, alpha = "Gana en el … de las simulaciones",
        title = "Partido más votado, todas las edades: ¿con qué seguridad?",
-       subtitle = "Si votase el 80 %. Color pálido: el ganador cambia de unas simulaciones a otras.", caption = pie) +
+       subtitle = paste0("Si votase el ", part_txt, ". Color pálido: el ganador cambia de unas simulaciones a otras."), caption = pie) +
   theme_void(base_size = 12) +
   theme(plot.title = element_text(face = "bold"), plot.subtitle = element_text(colour = "grey30", size = 10),
         plot.caption = element_text(colour = "grey50", hjust = 0, size = 8),
         strip.text = element_text(face = "bold", size = 12),
         legend.position = "bottom", legend.box = "vertical", plot.margin = margin(10, 10, 10, 10))
-f_png <- file.path(dir_salida, paste0("mapa_ganador_total_80", suf, ".png"))
+f_png <- file.path(dir_salida, paste0("mapa_ganador_total_", part_cod, suf, ".png"))
 suppressWarnings(ggsave(f_png, g, width = 14, height = 7.5, dpi = 250, bg = "white"))
 
 # ---- primero y segundo, 2 x 2 (filas: puesto; columnas: provincia / comunidad) ----
@@ -110,7 +115,7 @@ g2 <- ggplot(geo2) +
          alpha = guide_legend(order = 2, override.aes = list(fill = "grey30"))) +
   labs(fill = NULL, alpha = "Ocupa ese puesto en el … de las simulaciones",
        title = "Primer y segundo partido, todas las edades: ¿con qué seguridad?",
-       subtitle = "Si votase el 80 %. Color pálido: el puesto cambia de unas simulaciones a otras.",
+       subtitle = paste0("Si votase el ", part_txt, ". Color pálido: el puesto cambia de unas simulaciones a otras."),
        caption = sub("Seguridad: % de simulaciones en que ese partido es el primero.",
                      "Seguridad: % de simulaciones en que ese partido ocupa ese puesto.", pie, fixed = TRUE)) +
   theme_void(base_size = 12) +
@@ -118,9 +123,9 @@ g2 <- ggplot(geo2) +
         plot.caption = element_text(colour = "grey50", hjust = 0, size = 8),
         strip.text = element_text(face = "bold", size = 12), strip.text.y.left = element_text(angle = 90),
         legend.position = "bottom", legend.box = "vertical", plot.margin = margin(10, 10, 10, 10))
-f_png2 <- file.path(dir_salida, paste0("mapa_ganador_segundo_80", suf, ".png"))
+f_png2 <- file.path(dir_salida, paste0("mapa_ganador_segundo_", part_cod, suf, ".png"))
 suppressWarnings(ggsave(f_png2, g2, width = 14, height = 13, dpi = 250, bg = "white"))
-saveRDS(list(provincia = gs_prov, ccaa = gs_ccaa), file.path(dir_completo, paste0("ganador_segundo_80", suf, ".rds")))
+saveRDS(list(provincia = gs_prov, ccaa = gs_ccaa), file.path(dir_completo, paste0("ganador_segundo_", part_cod, suf, ".rds")))
 cat("guardado:", f_png2, "\n")
 
 cat("provincias por ganador y seguridad:\n"); print(count(g_prov, partido, nivel) |> pivot_wider(names_from = nivel, values_from = n, values_fill = 0))

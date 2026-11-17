@@ -19,6 +19,16 @@
 # Salida: completo/datos/anexo_tablas.rds (lo lee el post).
 #
 #   Rscript 2026/11/mrp-multiencuesta/completo/19_anexo_tablas.R
+#
+# VARIANTE=semilla_mn_gp (17 nov 2026, post IV): el modelo nuevo. No repite el
+# bucle de 3: suma por provincia x edad las posteriores por celda de 21
+# (posterior_celdas_70_ y _75_semilla_mn_gp.rds: 70,4 % y 75 %; 21 ya comprueba que reproducen
+# escenarios.rds). En Navarra, UPN y PP juntos para los escaños, como en 12.
+# Salida: completo/datos/anexo_tablas_semilla_mn_gp.rds
+#
+#   VARIANTE=semilla_mn_gp PART=0.704 Rscript 2026/11/mrp-multiencuesta/completo/21_posterior_celdas.R
+#   VARIANTE=semilla_mn_gp PART=0.75 Rscript 2026/11/mrp-multiencuesta/completo/21_posterior_celdas.R
+#   VARIANTE=semilla_mn_gp Rscript 2026/11/mrp-multiencuesta/completo/19_anexo_tablas.R
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -31,6 +41,12 @@ dir_proy <- here::here("2026/11/mrp-multiencuesta")
 source(file.path(dir_proy, "iii-funciones.R")) # resultados_provinciales(), num(), dirs
 source(file.path(dir_proy, "00_partidos.R")) # territorio
 
+variante <- Sys.getenv("VARIANTE", "")
+stopifnot(variante %in% c("", "semilla_mn_gp"))
+suf <- if (variante == "") "" else paste0("_", variante)
+dir_esc <- file.path(dir_completo, paste0("escenarios_seg", suf)) # lo usa resultados_provinciales()
+
+if (variante == "") {
 # ---- 1. Celdas, niveles y draws (como 12, método seg) ---------------------------
 
 nd <- 1000L
@@ -136,9 +152,45 @@ for (d in seq_len(nd)) {
 }
 cat("minutos:", round(as.numeric(difftime(Sys.time(), t0, units = "mins")), 1), "\n")
 
+} else {
+# ---- 1-3 (variante): provincia x edad desde la posterior por celda de 21 ----------
+
+nd <- 1000L
+x_esc <- readRDS(file.path(dir_esc, "escenarios.rds"))
+prov_ref <- x_esc$prov_ref
+voto_lv <- dimnames(x_esc$votos)$partido
+J <- length(voto_lv)
+part_base <- readRDS(file.path(dir_completo, "entradas_escenarios_semilla_mn.rds"))$part_obj
+escenarios <- c(part_base, 0.75) # 17 nov: 75 % en vez de 80 % (el 80 % no se da desde 1982)
+stopifnot(all(sapply(escenarios, \(e) any(abs(x_esc$escenarios - e) < 1e-9))))
+celdas <- readRDS(file.path(dir_completo, paste0("tabla_post", suf, ".rds")))
+lv <- list(edad = levels(celdas$edad))
+i_pr <- match(as.integer(as.character(celdas$cod)), as.integer(prov_ref$codigo_provincia))
+stopifnot(!anyNA(i_pr), !anyNA(celdas$edad))
+grupos <- expand_grid(i_prov = seq_len(nrow(prov_ref)), i_edad = seq_along(lv$edad))
+g_celda <- (i_pr - 1) * length(lv$edad) + as.integer(celdas$edad)
+G <- nrow(grupos)
+stopifnot(setequal(g_celda, seq_len(G))) # todos los grupos tienen celdas
+
+votos_pe <- array(0, c(length(escenarios), nd, G, J), list(NULL, NULL, NULL, voto_lv))
+for (e in seq_along(escenarios)) { # dos ficheros: no hay bucle por draw
+  f <- sprintf("posterior_celdas_%02d%s.rds", round(100 * escenarios[e]), suf)
+  po <- readRDS(file.path(dir_completo, f))
+  stopifnot(identical(sort(unique(po$draw)), seq_len(nd)), all(voto_lv %in% names(po)))
+  ic <- match(po$celda, celdas$celda)
+  stopifnot(!anyNA(ic))
+  v <- as.matrix(po[voto_lv]) * (celdas$N[ic] * po$part)
+  m <- rowsum(v, (po$draw - 1L) * G + g_celda[ic]) # filas: draw por fuera, grupo por dentro
+  stopifnot(nrow(m) == nd * G, identical(as.integer(rownames(m)), seq_len(nd * G)))
+  votos_pe[e, , , ] <- aperm(array(m, c(G, nd, J)), c(2, 1, 3))
+  cat("leído:", f, "\n")
+}
+rm(po, v, m)
+}
+
 # ---- 4. Provincia (voto y escaños) y comprobaciones -----------------------------
 
-pr <- resultados_provinciales(escenarios) # comprueba escaños = totales de 12
+pr <- resultados_provinciales(escenarios, navarra_junta = variante != "") # comprueba escaños = totales de 12
 # provincia x edad sumado por edades = votos provinciales de escenarios.rds
 idx <- array(votos_pe, c(length(escenarios), nd, length(lv$edad), nrow(prov_ref), J))
 vp <- apply(idx, c(1, 2, 4, 5), sum)
@@ -217,6 +269,7 @@ t_pe <- resume_arr(pct_pe, nombres_pe) |>
 anexo <- list(nacional = t_nac, voto_prov = pr$voto, escanos_prov = pr$escanos,
               voto_prov_edad = t_pe, escenarios = escenarios, etiquetas = niv_esc,
               nd = nd)
-saveRDS(anexo, file.path(dir_completo, "anexo_tablas.rds"))
+f_anexo <- file.path(dir_completo, paste0("anexo_tablas", suf, ".rds"))
+saveRDS(anexo, f_anexo)
 cat("filas:", sapply(anexo[1:4], nrow), "\n")
-cat("guardado:", file.path(dir_completo, "anexo_tablas.rds"), "\n")
+cat("guardado:", f_anexo, "\n")

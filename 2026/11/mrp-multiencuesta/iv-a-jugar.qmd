@@ -70,11 +70,11 @@ Después de publicar este post he revisado el modelo a raíz de los comentarios.
 En el total nacional casi nada cambia (menos de 0,1 puntos en el voto). Todo el post está recalculado con el modelo nuevo. Donde más cambia es en Cataluña de 25 a 34 años (ahora PSOE 20,1 % y VOX 19,3 %, un empate), Cataluña de 18 a 20 (ERC primero) y Navarra de 18 a 34 (PSOE 17,8 %, VOX 16,3 %); lo comento en cada caso.
 :::
 
-Estos son los dos mapas que tienen más sentido: el primer y el segundo partido en cada provincia y en cada comunidad, sin separar por edad. Son los que se podrán contrastar con el resultado del 29-N. El color pálido indica que ese puesto cambia de unas simulaciones a otras.
+Estos son los dos mapas que tienen más sentido: el primer y el segundo partido en cada provincia y en cada comunidad, sin separar por edad, con la misma participación que el 23-J (el 70,4 %). Son los que se podrán contrastar con el resultado del 29-N. El color pálido indica que ese puesto cambia de unas simulaciones a otras.
 
 Ojo, que esto **no es un pronóstico**. Junta encuestas de junio a octubre, de cuando muchas cosas eran distintas, y la incertidumbre que muestran los colores es solo la del modelo y la de las muestras: no lleva el error histórico de las encuestas, que suele ser bastante mayor. Para un pronóstico, con ese error y con más encuestas, está el [seguimiento](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/seguimiento).
 
-![Primer y segundo partido por provincia y comunidad, todas las edades, con la seguridad de cada puesto.](completo/mapa_ganador_segundo_80_semilla_mn_gp.png)
+![Primer y segundo partido por provincia y comunidad, todas las edades, con la seguridad de cada puesto.](completo/mapa_ganador_segundo_70_semilla_mn_gp.png)
 
 ::: callout-warning
 ## Los resultados por edad: con mucha cautela
@@ -85,6 +85,7 @@ Las estimaciones por edad dentro de una provincia o comunidad tienen mucha más 
 - **Los jóvenes de Navarra y el País Vasco**, sobre todo los que se abstuvieron o votaron a VOX en 2023: hay de 5 a 25 entrevistas por grupo y el modelo tira del patrón de toda España.
 - **Los mayores de Galicia**: la tabla nueva suaviza un patrón real (los mayores gallegos votan más al PP que en el resto), así que lo de Pontevedra con más de 65 años no hay que creérselo.
 - **Santa Cruz de Tenerife**, donde VOX no se presentó en 2023 y el modelo no tiene un recuerdo de VOX en el que apoyarse.
+- **Las Palmas y Canarias**: el modelo pone a VOX primero en Las Palmas (30 %), lejos de su 14,5 % del 23-J. No es solo cosa del modelo: reponderando las entrevistas solo por recuerdo de voto, VOX también sale primero (27 %). Canarias tiene los efectos de comunidad y provincia más altos de VOX de toda España, sobre todo por el 40dB (40 % en Las Palmas), y los que se abstuvieron en 2023, que allí son muchos, votan a VOX más que en ningún otro sitio (42 % frente al 29 % de España). Puede ser real o un sesgo de las encuestas en Canarias; con estos datos no lo puedo separar.
 - **Cataluña de 25 a 34**: las encuestas dan cosas muy distintas (un 15 % de VOX en el CIS y entre el 26 % y el 31 % en las demás), y el resultado depende de suponer que los jóvenes que se abstuvieron en 2023 votarán como dicen.
 :::
 
@@ -185,9 +186,9 @@ tabla_comentario("navarra", c("VOX", "BILDU", "PSOE", "UPN", "PP"))
 ```
 ## Un mapa que dice cuán seguro es el ganador
 
-Bueno, el mapa con el modelo actualizado (la tabla de postestratificación nueva y el predictor de grupo) e intentando reflejar la incertidumbre quedaría así. 
+Bueno, el mapa con el modelo actualizado (la tabla de postestratificación nueva y el predictor de grupo) e intentando reflejar la incertidumbre quedaría así, con la participación del 23-J (70,4 %). 
 
-![El mapa con el modelo actualizado y la seguridad del ganador.](completo/mapa_ganador_seguridad_semilla_mn_gp.png)
+![El mapa con el modelo actualizado y la seguridad del ganador.](completo/mapa_ganador_seguridad_70_semilla_mn_gp.png)
 
 El código de este mapa está en [`28_mapa_seguridad_ganador.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/28_mapa_seguridad_ganador.R). El del mapa del tuit está en la sección 3.7 de [`20_preguntas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/20_preguntas.R), que entonces usaba la tabla anterior.
 
@@ -1294,7 +1295,98 @@ geometría. Y el modelo no tiene interacciones sexo × edad ni edad × estudios:
 el mapa enseña lo que dejan ver los efectos de cada variable y la composición
 de cada perfil. Además, el mapa se hace con la media de los draws, así que no enseña la incertidumbre de la posterior.
 
+# Resultados del modelo para explorar y descargar
 
+```{r anexo}
+#| include: false
+anexo <- leer_anexo() # lo prepara completo/19_anexo_tablas.R
+et_voto <- c(
+  mediana = "Voto, mediana (%)",
+  p5 = "Voto, p5 (%)",
+  p95 = "Voto, p95 (%)"
+)
+et_esc <- c(
+  media = "Escaños, media",
+  mediana = "Escaños, mediana",
+  p5 = "Escaños, p5",
+  p95 = "Escaños, p95"
+)
+```
+
+Como en la [parte (III)](iii-participacion.qmd), dejo las estimaciones
+nacionales y provinciales, también por edad, ahora con el modelo actualizado
+(la tabla de postestratificación nueva y el predictor de grupo). Hay dos
+escenarios de participación nacional: el `r pct(100 * anexo$escenarios[1])` (la
+base) y el 75 %. Se pueden filtrar y descargar en CSV o Excel; la descarga se
+lleva todas las filas que pasan los filtros, no solo la página que se ve. La
+fila "Diferencia" es el 75 % menos la base, calculada draw a draw (en puntos
+para el voto). En Navarra, UPN y PP se presentan juntos el 29-N: el voto se da
+por separado, pero los escaños se reparten con los votos sumados y salen en la
+fila del PP.
+
+Son estimaciones condicionadas a los supuestos del modelo, no un pronóstico:
+los intervalos (del 90 %) recogen la incertidumbre de este MRP, pero no el
+error común de las encuestadoras del
+[post de metaanálisis bayesiano](https://muestrear-no-es-pecado.es/2026/10/full-bayesian/full-bayesian.html).
+Y lo dicho arriba sobre las edades: la pestaña de provincia y edad es la que
+menos hay que creerse.
+
+
+::: {.panel-tabset}
+
+### Nacional
+
+```{r anexo-nacional}
+tabla_dt(
+  anexo$nacional,
+  c(et_voto, setNames(et_esc, paste0("esc_", names(et_esc)))),
+  c(
+    mediana = 1,
+    p5 = 1,
+    p95 = 1,
+    esc_media = 1,
+    esc_mediana = 0,
+    esc_p5 = 0,
+    esc_p95 = 0
+  ),
+  "mrp_iv_nacional"
+)
+```
+
+### Voto por provincia
+
+```{r anexo-voto-prov}
+tabla_dt(
+  anexo$voto_prov,
+  et_voto,
+  c(mediana = 1, p5 = 1, p95 = 1),
+  "mrp_iv_voto_provincia"
+)
+```
+
+### Escaños por provincia
+
+```{r anexo-escanos-prov}
+tabla_dt(
+  anexo$escanos_prov,
+  et_esc,
+  c(media = 2, mediana = 0, p5 = 0, p95 = 0),
+  "mrp_iv_escanos_provincia"
+)
+```
+
+### Voto por provincia y edad
+
+```{r anexo-voto-edad}
+tabla_dt(
+  anexo$voto_prov_edad,
+  et_voto,
+  c(mediana = 1, p5 = 1, p95 = 1),
+  "mrp_iv_voto_provincia_edad"
+)
+```
+
+:::
 
 # Referencias
 
@@ -1315,3 +1407,4 @@ de cada perfil. Además, el mapa se hace con la media de los draws, así que no 
 | [`completo/34_vox_18_20_ccaa.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/34_vox_18_20_ccaa.R) | VOX en 18-20 por comunidad, bruto frente a MRP |
 | [`completo/20_preguntas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/20_preguntas.R) | las preguntas de la segunda parte, como script |
 | [`completo/35_comentarios.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/35_comentarios.R) | cada comentario de X: bruto, ponderadas y MRP |
+| [`completo/19_anexo_tablas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/19_anexo_tablas.R) | las tablas del final (nacional, provincia y provincia × edad), con `VARIANTE=semilla_mn_gp` |

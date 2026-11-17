@@ -171,3 +171,51 @@ tabla_comentario <- function(caso, partidos = NULL) {
                            "Primero en los draws del MRP: ", primero, ".")) |>
     tab_source_note("Bruto: entrevistas con voto + simpatía, sin ponderar. Ponderadas: raking de la comunidad por sexo, edad, estudios y provincia (y recuerdo del 23-J); no entran las entrevistas sin provincia.")
 }
+
+# ---- Anexo: resultados para explorar y descargar (como en el post III) ------------
+
+# lee las tablas que prepara completo/19_anexo_tablas.R (VARIANTE=semilla_mn_gp)
+leer_anexo <- function() readRDS(file.path(dir_completo, paste0("anexo_tablas", sufijo_modelo, ".rds")))
+
+# DT con filtros por columna, 15 filas por página y botones CSV / Excel. Los
+# botones exportan todas las filas que pasan los filtros (no solo la página).
+# etiquetas: nombre visible de cada columna; digitos: decimales por columna numérica.
+tabla_dt <- function(d, etiquetas, digitos, nombre) {
+  base <- c(provincia = "Provincia", partido = "Partido", edad = "Edad",
+            escenario = "Escenario")
+  etiquetas <- c(base, etiquetas)
+  stopifnot(all(names(d) %in% names(etiquetas)), all(names(digitos) %in% names(d)))
+  exporta <- list(modifier = list(page = "all", search = "applied"))
+  dt <- DT::datatable(
+    d,
+    rownames = FALSE,
+    colnames = unname(etiquetas[names(d)]),
+    filter = "top",
+    extensions = "Buttons",
+    options = list(
+      dom = "Bltip",
+      pageLength = 15,
+      lengthMenu = c(15, 50, 200),
+      autoWidth = TRUE,
+      scrollX = TRUE,
+      buttons = list(
+        list(extend = "csv", text = "CSV", filename = nombre, exportOptions = exporta),
+        list(extend = "excel", text = "Excel", filename = nombre, exportOptions = exporta)
+      ),
+      language = list(
+        lengthMenu = "Mostrar _MENU_ filas",
+        info = "Filas _START_ a _END_ de _TOTAL_",
+        infoFiltered = "(filtradas de _MAX_)",
+        infoEmpty = "Sin filas",
+        paginate = list(previous = "Anterior", `next` = "Siguiente"),
+        zeroRecords = "No hay filas con ese filtro",
+        thousands = "."
+      )
+    )
+  )
+  for (k in unique(digitos)) {
+    cols <- match(names(digitos)[digitos == k], names(d))
+    dt <- DT::formatRound(dt, cols, digits = k, mark = ".", dec.mark = ",")
+  }
+  dt
+}
