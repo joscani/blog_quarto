@@ -143,6 +143,12 @@ tabla_comentario <- function(caso, partidos = NULL) {
       pull(partido)
   }
   mrp <- f |> filter(fuente == "mrp")
+  # Resto = 100 - partidos de la tabla (los demás partidos, OTROS y BLANCO), para
+  # que cada fila sume 100. Comprobación: todos los partidos suman 100 en cada fuente.
+  resto <- f |>
+    summarise(total = sum(pct, na.rm = TRUE),
+              Resto = total - sum(pct[partido %in% partidos], na.rm = TRUE), .by = fuente)
+  stopifnot(max(abs(resto$total - 100)) < 1e-6, all(resto$Resto > -1e-9))
   celdas_txt <- f |>
     filter(partido %in% partidos) |>
     mutate(txt = if_else(fuente == "mrp",
@@ -151,10 +157,11 @@ tabla_comentario <- function(caso, partidos = NULL) {
     select(fuente, partido, txt) |>
     pivot_wider(names_from = partido, values_from = txt, values_fill = "0,0") |>
     left_join(com$entrevistas |> filter(id == caso) |> select(fuente, n), by = "fuente") |>
+    left_join(resto |> transmute(fuente, Resto = num(Resto, 1)), by = "fuente") |>
     mutate(n = if_else(is.na(n), "—", num(n)),
            fuente = factor(nombres_fuente[fuente], nombres_fuente)) |>
     arrange(fuente) |>
-    select(fuente, n, all_of(partidos))
+    select(fuente, n, all_of(partidos), Resto)
   primero <- mrp |>
     filter(p_primero >= 1) |>
     arrange(desc(p_primero)) |>
@@ -168,7 +175,8 @@ tabla_comentario <- function(caso, partidos = NULL) {
                                               cells_stub(rows = fuente == "MRP"))) |>
     tab_header(title = f$etiqueta[1], subtitle = "% de voto válido") |>
     tab_source_note(paste0("MRP: media e intervalo del 90 % (participación del 80 %, casa media). ",
-                           "Primero en los draws del MRP: ", primero, ".")) |>
+                           "Primero en los draws del MRP: ", primero, ". ",
+                           "Resto: los demás partidos, otros y voto en blanco; cada fila suma 100.")) |>
     tab_source_note("Bruto: entrevistas con voto + simpatía, sin ponderar. Ponderadas: raking de la comunidad por sexo, edad, estudios y provincia (y recuerdo del 23-J); no entran las entrevistas sin provincia.")
 }
 

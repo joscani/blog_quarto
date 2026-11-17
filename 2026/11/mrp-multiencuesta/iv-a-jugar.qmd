@@ -69,7 +69,7 @@ Después de publicar este post he revisado el modelo a raíz de los comentarios.
 
 En el total nacional casi nada cambia (menos de 0,1 puntos en el voto). Todo el post está recalculado con el modelo nuevo. Donde más cambia es en Cataluña de 25 a 34 años (ahora PSOE 20,1 % y VOX 19,3 %, un empate), Cataluña de 18 a 20 (ERC primero) y Navarra de 18 a 34 (PSOE 17,8 %, VOX 16,3 %); lo comento en cada caso.
 
-**La participación (17 de noviembre).** Los mapas y las tablas del final usan la participación del 23-J (70,4 %). Antes usaba el 80 %, pero desde 1982 no ha votado tanta gente. Además, subir al 80 % quita casi un punto al PP (27,9 % → 27,0 %), mientras VOX se queda igual (19,7 % → 19,6 %). Con eso VOX gana un escaño y medio a costa del PP. Las tablas de los comentarios y la segunda parte siguen al 80 %: con el 70,4 % no cambia el partido más votado en ningún caso, y las diferencias no pasan de 1,7 puntos.
+**La participación (17 de noviembre).** Los mapas y las tablas del final usan la participación del 23-J (70,4 %). Antes usaba el 80 %, pero desde 1982 no ha votado tanta gente. Además, subir al 80 % quita casi un punto al PP (27,9 % → 27,0 %), mientras VOX se queda igual (19,7 % → 19,6 %). Con eso VOX gana un escaño y medio a costa del PP. La segunda parte (las preguntas a la posterior) también usa el 70,4 %. Las tablas de los comentarios siguen al 80 %: con el 70,4 % no cambia el partido más votado en ningún caso, y las diferencias no pasan de 1,7 puntos.
 :::
 
 Estos son los dos mapas que tienen más sentido: el primer y el segundo partido en cada provincia y en cada comunidad, sin separar por edad, con la misma participación que el 23-J (el 70,4 %). Son los que se podrán contrastar con el resultado del 29-N. El color pálido indica que ese puesto cambia de unas simulaciones a otras.
@@ -273,7 +273,7 @@ cuatro operaciones:
 3. **Resumir:** media e intervalo de los 1.000 draws.
 4. **Contar:** la probabilidad de algo es la proporción de draws en que ocurre.
 
-Todas las cifras son para octubre de 2026, con una participación del 80 % (si he pensado poner que vota el 80%, ya vimos en el post anterior que no cambiaba mucho y los posibles motivos de por qué no)
+Todas las cifras son para octubre de 2026, con la participación del 23-J (70,4 %), la misma que en los mapas del principio.
 
 ```{r p2-setup}
 #| code-fold: false
@@ -323,7 +323,7 @@ En posterior tenemos 12 millones 300 mil filas: 12300 celdas x 1000 draws en cad
 
 ```{r p2-posterior}
 #| code-fold: false
-posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_80", sufijo_modelo, ".rds")))
+posterior <- readRDS(file.path(dir_completo, paste0("posterior_celdas_70", sufijo_modelo, ".rds"))) # participación del 70,4 %
 posterior
 
 partidos <- setdiff(names(posterior), c("draw", "celda", "part"))
@@ -363,7 +363,7 @@ post_ejemplo |>
 ```
 
 ¿Cuántos de ellos votarían? La columna `part` es la probabilidad de votar de
-la celda, con la participación de toda España calibrada al 80 % en cada draw.
+la celda, con la participación de toda España calibrada al 70,4 % en cada draw.
 
 ```{r p2-celda-participacion}
 #| code-fold: false
@@ -376,7 +376,7 @@ part_ejemplo <- post_ejemplo |>
 part_ejemplo
 ```
 
-Si en España votase el 80 %, en esta celda votaría el
+Si en España votase el 70,4 %, en esta celda votaría el
 `r format(round(part_ejemplo$media, 1), decimal.mark = ",")` %
 (intervalo del 90 %: `r format(round(part_ejemplo$q05, 1), decimal.mark = ",")`-`r format(round(part_ejemplo$q95, 1), decimal.mark = ",")` %):
 unos `r format(round(ejemplo$N * part_ejemplo$media / 100, -2), big.mark = ".")`
@@ -561,8 +561,8 @@ tema <- theme_minimal(base_size = 12) +
     legend.position = "top",
     strip.text = element_text(face = "bold", size = 12)
   )
-fuente <- "MRP multiencuesta, octubre de 2026, participación del 80 %. Media e intervalo de credibilidad del 90 %."
-fuente_media <- "MRP multiencuesta, octubre de 2026, participación del 80 %. Media de los 1.000 draws."
+fuente <- "MRP multiencuesta, octubre de 2026, participación del 70,4 %. Media e intervalo de credibilidad del 90 %."
+fuente_media <- "MRP multiencuesta, octubre de 2026, participación del 70,4 %. Media de los 1.000 draws."
 
 # % de voto de cada grupo real (postestratificado), no "con lo demás constante":
 # si los jóvenes tienen más estudios, eso entra en la curva de la edad
@@ -989,7 +989,7 @@ ggplot(
 
 ## ¿Quién vota?
 
-La participación total es el 80 % por construcción; lo que cambia es quién.
+La participación total es el 70,4 % por construcción; lo que cambia es quién.
 
 ```{r p2-participacion}
 #| code-fold: false
@@ -1147,7 +1147,7 @@ congresos |>
   arrange(desc(Todos))
 
 # contar: probabilidad de mayoría absoluta de PP + VOX en cada electorado
-congresos |>
+mayorias <- congresos |>
   filter(partido %in% c("PP", "VOX")) |>
   summarise(escanos = sum(escanos), .by = c(electorado, draw)) |>
   summarise(
@@ -1155,9 +1155,21 @@ congresos |>
     p_mayoria = mean(escanos >= 176),
     .by = electorado
   )
+mayorias
 ```
 
-Si solo votasen los de 18 a 34, VOX sería el partido más votado, con unos 121 escaños. Si solo votasen los de 65 y más, ganaría el PSOE, con unos 150. PP + VOX suman mayoría absoluta en todos los draws si solo votasen los jóvenes, los hombres o todo el mundo; si solo votasen las mujeres, en el 89 %, y si solo votasen los mayores, en el 34 %.
+```{r p2-congresos-texto}
+#| include: false
+# cifras del párrafo siguiente, sacadas de congresos y mayorias
+esc_medio <- congresos |> summarise(escanos = mean(escanos), .by = c(electorado, partido))
+primero_de <- function(e) esc_medio |> filter(electorado == e) |> slice_max(escanos, n = 1)
+jov <- primero_de("18-34")
+may <- primero_de("65+")
+p_may <- \(e) round(100 * mayorias$p_mayoria[mayorias$electorado == e])
+stopifnot(nrow(jov) == 1, nrow(may) == 1)
+```
+
+Si solo votasen los de 18 a 34, `r jov$partido` sería el partido con más escaños, unos `r round(jov$escanos)`. Si solo votasen los de 65 y más, ganaría el `r may$partido`, con unos `r round(may$escanos)`. PP + VOX suman mayoría absoluta en el `r p_may("18-34")` % de los draws si solo votasen los jóvenes, en el `r p_may("Hombres")` % si solo votasen los hombres y en el `r p_may("Todos")` % si votase todo el mundo; si solo votasen las mujeres, en el `r p_may("Mujeres")` %, y si solo votasen los mayores, en el `r p_may("65+")` %.
 
 ## El votante típico de cada partido
 
@@ -1401,7 +1413,7 @@ tabla_dt(
 |---|---|
 | [`iv-funciones.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/iv-funciones.R) | las funciones que llama este post |
 | [`02_poblacion_raking.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/02_poblacion_raking.R) | la tabla de postestratificación (`nivel_semilla = "ccaa"`) |
-| [`completo/21_posterior_celdas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/21_posterior_celdas.R) | la posterior por celda (`posterior_celdas_80.rds`) |
+| [`completo/21_posterior_celdas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/21_posterior_celdas.R) | la posterior por celda (`posterior_celdas_70.rds` en la segunda parte, `posterior_celdas_80.rds` en las tablas de los comentarios) |
 | [`completo/28_mapa_seguridad_ganador.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/28_mapa_seguridad_ganador.R) | el mapa con la seguridad del ganador |
 | [`completo/31_compara_semillas.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/31_compara_semillas.R) | tabla vieja frente a nueva |
 | [`completo/32_jovenes_provincia.R`](https://github.com/joscani/blog_quarto/blob/master/2026/11/mrp-multiencuesta/completo/32_jovenes_provincia.R) | voto joven por comunidad y provincia |
