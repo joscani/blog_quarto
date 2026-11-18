@@ -173,16 +173,25 @@ stopifnot(setequal(fams14, unique(ref14$partido)))
 # VOX en Santa Cruz de Tenerife: el 23J no tuvo lista al Congreso porque sus
 # candidatos renunciaron a última hora, así que su ratio en la ref es 0. Un
 # ratio 0 significa "no se presenta" y anularía su voto el 29-N, donde sí
-# compite. Se usa el ratio del 10N, su última general allí: 11,54 % en la
-# provincia / 15,08 % nacional = 0,765 (voto real en
-# backtest_prov_celdas_shock_brms.csv). Los CSV conservan el resultado real del
+# compite. Hasta el 16 nov 2026 se usaba el ratio del 10N, su última general
+# allí: 11,54 % en la provincia / 15,08 % nacional = 0,765. Desde el 16 nov
+# 2026: 1,03 = ratio de Las Palmas el 23J (14,6 / 12,4 = 1,18) x la relación
+# Tenerife / Las Palmas de 2019, estable en las dos generales (0,59 / 0,68 en
+# 28A y 0,77 / 0,88 en 10N: 0,87). El 0,765 no recogía que VOX creció en
+# Canarias más que en España entre 2019 y 2023 (Las Palmas: 0,88 -> 1,18).
+# El avance del CIS 3584 da 1,23 (n = 833 en la provincia; acierta Las Palmas:
+# 1,22 frente a 1,18), así que 1,03 es, si acaso, conservador. Voto real en
+# backtest_prov_celdas_shock_brms.csv. Los CSV conservan el resultado real del
 # 23J; ref13_23j queda sin corregir para sim_validacion_23j().
 ref13_23j <- ref13
 corregir_ausencias_23j <- function(ref) {
   es_vox_tf <- ref$codigo_provincia == "38" & ref$partido == "VOX"
   es_tf <- ref$codigo_provincia == "38" & ref$partido != "SALF"
   stopifnot(sum(es_vox_tf) == 1, ref$votos[es_vox_tf] == 0)
-  ratio_10n <- 0.765
+  # RATIO_VOX_TF: para probar otro valor (0.765 = el del 10N; 1.232 = el del
+  # avance del CIS 3584). Sin la variable, 1,03 (ver arriba).
+  ratio_10n <- as.numeric(Sys.getenv("RATIO_VOX_TF", "1.03"))
+  stopifnot(is.finite(ratio_10n), ratio_10n > 0)
   pct <- ratio_10n * ref$pct_nac[es_vox_tf]
   ref$ratio[es_vox_tf] <- ratio_10n
   ref$pct_prov[es_vox_tf] <- pct
@@ -670,6 +679,10 @@ simular <- function(
   aa_sd_logit = 0.2,
   aa_caniba_alpha = c(PODEMOS = 4, SUMAR = 4, PSOE = 1),
   f_mapa = f_mapa_listas,
+  # 29-N (16 nov 2026): en Navarra, UPN y PP se presentan juntos. TRUE suma el
+  # voto de UPN al PP en Navarra antes del umbral y del D'Hondt (UPN queda a 0 y
+  # la coalición cuenta como PP, también en el bloque de la derecha)
+  upn_pp_juntos = FALSE,
   # voto nacional ya calculado fuera (matriz n_draws x familias del modelo,
   # en %, con el error incluido): sustituye a extraer_shares13(). Lo usa
   # 2026/10/full-bayesian/04_simular.R
@@ -916,6 +929,10 @@ simular <- function(
           pi_caniba[k, ],
           transfer_fa = pi_fa[k, "PSOE"]
         )
+      }
+      if (upn_pp_juntos && pd$codigo_provincia == "31") {
+        v["PP"] <- v["PP"] + v["UPN"]
+        v["UPN"] <- 0
       }
       if (provincial) {
         v_prov[i, ] <- v

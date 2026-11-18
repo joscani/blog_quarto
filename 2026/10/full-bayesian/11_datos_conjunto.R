@@ -89,7 +89,10 @@ encuestas_2026_agregadas <- function() {
     return(NULL)
   }
   a <- read_csv(f, show_col_types = FALSE) |>
-    filter(!is.na(muestra))
+    filter(!is.na(muestra)) |>
+    # 16 nov 2026: también aquí fuera las entregas solapadas de los trackings
+    # (Sigma Dos) y el detector de solapes nuevos, como en prep_grande()
+    quitar_tracking_solapado()
   if (nrow(a) == 0) {
     return(NULL)
   }

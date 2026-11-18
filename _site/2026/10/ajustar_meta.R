@@ -108,14 +108,19 @@ inicio_campo <- function(campo, fin) {
 # cada entrega suma jornadas u oleadas a las anteriores, así que
 # meterlas todas cuenta varias veces las mismas entrevistas. Regla
 # (8-9 nov 2026): de una casa de esta lista solo entran entregas con campos
-# que no se solapan; una entrega solapada con otra posterior queda fuera.
+# que no se solapan (desde el 17 nov 2026, selección voraz por fecha; ver abajo).
 # Se aplica a prep_grande() y a prep_bloque() (esta, desde el 9 nov 2026).
 # ElectoPanel, desde el 14 nov 2026 ("9–12 nov" y "9–13 nov 26"): ya está
 # fuera de prep_grande() por casas_fuera, así que solo afecta a prep_bloque().
 # 40dB, desde el 15 nov 2026: tracking electoral para El País/SER
 # ("10–12 nov" n = 1.000 y "10–13 nov 26" n = 1.500).
-# `d` va en formato largo, con encuestadora, campo, enlace y fecha
-casas_tracking <- c("SW Demoscopia", "SocioMétrica", "ElectoPanel", "40dB")
+# Sigma Dos, desde el 16 nov 2026: tracking acumulativo para El Mundo ("3–11",
+# "3–12" y "3–13 nov 26"). Está en encuestas_meta_agregadas.csv, que el modelo
+# conjunto lee en 11_datos_conjunto.R (encuestas_2026_agregadas).
+# Sondaxe, desde el 18 nov 2026: ventana móvil de 5 días para La Voz de
+# Galicia ("11–15 nov" y "12–16 nov 26", n = 1.000 cada una).
+# `d` va en formato largo, con encuestadora, campo, enlace, fecha y muestra
+casas_tracking <- c("SW Demoscopia", "SocioMétrica", "ElectoPanel", "40dB", "Sigma Dos", "Sondaxe")
 # Encuestas de una misma casa con campos solapados que SÍ son muestras
 # independientes (p. ej. dos clientes distintos). Formato "casa|campo",
 # con el campo de la entrega posterior. Vacío a 15 nov 2026.
@@ -152,23 +157,38 @@ avisa_solapes_nuevos <- function(d) {
   invisible(d)
 }
 
+# Regla (17 nov 2026): selección voraz por fecha. Dentro de cada casa, de la
+# entrega más reciente a la más antigua (empate en fecha final: mayor n), una
+# entrega entra si no se solapa con ninguna ya aceptada. Se prioriza lo más
+# reciente aunque tenga menos n: 40dB pasó a ventana móvil ("10–15 nov" n =
+# 2.500, "12–16 nov 26" n = 2.000) y Sigma Dos publica tomas diarias
+# ("3–13 nov" n = 5.370 con una base de 3.120; "11–14 nov 26" n = 3.002).
+# Elegir por mayor n dejaba fuera los últimos días de campaña. A diferencia
+# de la regla del 8-9 nov (fuera toda entrega solapada con una posterior),
+# la voraz no descarta una entrega si la que la tapaba también cae.
+# El bucle es secuencial: aceptar una entrega depende de las ya aceptadas.
 quitar_tracking_solapado <- function(d) {
   avisa_solapes_nuevos(d)
   enc <- d |>
     filter(encuestadora %in% casas_tracking) |>
-    distinct(encuestadora, campo, enlace, fecha) |>
-    mutate(inicio = inicio_campo(campo, fecha))
-  solapadas <- enc |>
-    inner_join(
-      select(enc, encuestadora, inicio_post = inicio, fecha_post = fecha),
-      by = "encuestadora",
-      relationship = "many-to-many"
-    ) |>
-    filter(fecha_post > fecha, inicio_post <= fecha) |>
-    distinct(encuestadora, campo, enlace)
+    distinct(encuestadora, campo, enlace, fecha, muestra) |>
+    mutate(inicio = inicio_campo(campo, fecha)) |>
+    arrange(encuestadora, desc(fecha), desc(muestra), desc(campo))
+  stopifnot(
+    "tracking sin n publicado" = !anyNA(enc$muestra),
+    "campo sin fecha de inicio" = !anyNA(enc$inicio),
+    "una entrega con dos n distintos" =
+      !anyDuplicated(enc[c("encuestadora", "campo", "enlace")])
+  )
+  entra <- logical(nrow(enc))
+  for (i in seq_len(nrow(enc))) {
+    ya <- entra & enc$encuestadora == enc$encuestadora[i]
+    entra[i] <- !any(ya & enc$inicio <= enc$fecha[i] & enc$fecha >= enc$inicio[i])
+  }
+  solapadas <- enc[!entra, ] |> distinct(encuestadora, campo, enlace)
   if (nrow(solapadas) > 0) {
     cat(
-      "Fuera (tracking, solapada con una entrega posterior):",
+      "Fuera (tracking, solapada con una entrega más reciente):",
       nrow(solapadas),
       "entregas —",
       paste(solapadas$encuestadora, solapadas$campo, collapse = "; "),

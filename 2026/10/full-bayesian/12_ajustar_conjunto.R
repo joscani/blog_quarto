@@ -40,6 +40,9 @@ variante <- if (length(args) > 0) args[1] else "principal"
 pr <- priors_conjunto
 pr$sigma_rw_campana <- as.integer(variante != "v2")
 sufijo <- if (variante == "principal") "" else paste0("_", variante)
+# SUFIJO_SALIDA (16 nov 2026): sufijo extra para probar cambios sin tocar los
+# ficheros vivos (p. ej. SUFIJO_SALIDA=_sigma). Sin la variable, como antes.
+sufijo <- paste0(sufijo, Sys.getenv("SUFIJO_SALIDA", ""))
 dir_vivo <- file.path(dir_fb, "vivo")
 dir.create(dir_vivo, showWarnings = FALSE)
 f_sal <- \(nombre, ext = "csv") {

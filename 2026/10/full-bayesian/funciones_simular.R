@@ -56,6 +56,7 @@ simular_conjunto <- function(
   fit,
   dc,
   seed = 2029,
+  upn_pp_juntos = TRUE, # 29-N: UPN y PP juntos en Navarra (simular_escanos.R); desde el 16 nov 2026
   aa_pct_and = aa_pct_and_enc
 ) {
   Kc <- dc$K[dc$C]
@@ -74,7 +75,8 @@ simular_conjunto <- function(
     listas = "mapa",
     provincial = TRUE,
     aa_pct_and = aa_pct_and,
-    shares_ext = shares
+    shares_ext = shares,
+    upn_pp_juntos = upn_pp_juntos
   )
   sim$shares <- shares
   sim
