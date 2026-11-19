@@ -471,6 +471,12 @@ rellenar_regionales_o176 <- function(
     if (nrow(cand) == 0) {
       next
     }
+    # trackings diarios (40dB, Sigma Dos): varias entregas caen en ±tol_dias.
+    # Si una sola termina el mismo día, es esa; si no, no se adivina
+    if (nrow(cand) > 1) {
+      mismo_dia <- cand |> filter(fecha == enc$fecha_fin[i])
+      if (nrow(mismo_dia) == 1) cand <- mismo_dia
+    }
     if (nrow(cand) > 1) {
       cat(
         "AVISO: casa ambigua para",
